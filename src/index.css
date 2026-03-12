@@ -1,1 +1,28 @@
 @import "tailwindcss";
+
+/* ==========================================
+   FITLIFE GYM - DESIGN SYSTEM (THEME)
+   ========================================== */
+@theme {
+    --color-primary-light: #22c55e;
+    --color-primary:       #16a34a;
+    --color-primary-dark:  #15803d;
+
+    --color-secondary-light: #3b82f6;
+    --color-secondary:       #2563eb;
+    --color-secondary-dark:  #1d4ed8;
+
+    --color-dark-bg:      #111827;
+    --color-dark-card:    #1f2937;
+    --color-dark-border:  #374151;
+
+    --color-danger:  #ef4444;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+}
+
+@layer base {
+    body {
+        @apply antialiased text-gray-800 bg-gray-50;
+    }
+}
