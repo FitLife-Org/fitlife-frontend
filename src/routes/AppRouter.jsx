@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { create } from 'zustand';
 import axios from 'axios';
 import { User, Lock, LogIn, Dumbbell } from 'lucide-react';
+import Register from '../pages/auth/Register';
 
 // ==========================================
 // 1. KÉT SẮT LƯU TRỮ (Zustand Store)
@@ -180,8 +181,10 @@ const AppRouter = () => {
     return (
         <BrowserRouter>
             <Routes>
+                {/* PUBLIC ROUTES */}
                 <Route path="/login" element={<Login />} />
-
+                {/* Thêm dòng này: */}
+                <Route path="/register" element={<Register />} />
                 <Route
                     path="/"
                     element={
