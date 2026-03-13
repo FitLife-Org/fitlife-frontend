@@ -6,6 +6,7 @@ import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 import Dashboard from '../pages/Dashboard';
+import Packages from '../pages/Packages';
 
 // --- IMPORT BỘ KHUNG (LAYOUT THẬT) ---
 import MainLayout from '../components/layout/MainLayout';
@@ -25,7 +26,11 @@ const AppRouter = () => {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
 
-                {/* PRIVATE ROUTES (Bắt buộc phải có Token) */}
+                {/* ==========================================
+                    PRIVATE ROUTES (Bắt buộc phải có Token)
+                    ========================================== */}
+
+                {/* 1. TRANG CHỦ (DASHBOARD) */}
                 <Route
                     path="/"
                     element={
@@ -36,6 +41,19 @@ const AppRouter = () => {
                         </PrivateRoute>
                     }
                 />
+
+                {/* 2. TRANG DANH SÁCH GÓI TẬP (PACKAGES) */}
+                <Route
+                    path="/packages"
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <Packages />
+                            </MainLayout>
+                        </PrivateRoute>
+                    }
+                />
+
             </Routes>
         </BrowserRouter>
     );
