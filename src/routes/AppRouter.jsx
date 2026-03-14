@@ -7,6 +7,7 @@ import Register from '../pages/auth/Register';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 import Dashboard from '../pages/Dashboard';
 import Packages from '../pages/Packages';
+import PaymentResult from "../pages/PaymentResult.jsx";
 
 // --- IMPORT BỘ KHUNG (LAYOUT THẬT) ---
 import MainLayout from '../components/layout/MainLayout';
@@ -53,8 +54,10 @@ const AppRouter = () => {
                         </PrivateRoute>
                     }
                 />
-
+                <Route path="/payment-result" element={<PaymentResult />} />
             </Routes>
+
+
         </BrowserRouter>
     );
 };
