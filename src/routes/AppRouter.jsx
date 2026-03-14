@@ -7,7 +7,8 @@ import Register from '../pages/auth/Register';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 import Dashboard from '../pages/Dashboard';
 import Packages from '../pages/Packages';
-import PaymentResult from "../pages/PaymentResult.jsx";
+import PaymentResult from '../pages/PaymentResult';
+import AiWorkout from '../pages/AiWorkout'; // 1. IMPORT TRANG AI VÀO ĐÂY
 
 // --- IMPORT BỘ KHUNG (LAYOUT THẬT) ---
 import MainLayout from '../components/layout/MainLayout';
@@ -54,10 +55,22 @@ const AppRouter = () => {
                         </PrivateRoute>
                     }
                 />
+
+                {/* 3. TRANG TRỢ LÝ AI (AI WORKOUT) - THÊM VÀO ĐÂY */}
+                <Route
+                    path="/ai-pt"
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <AiWorkout />
+                            </MainLayout>
+                        </PrivateRoute>
+                    }
+                />
+
+                {/* TRANG KẾT QUẢ THANH TOÁN (Cho phép VNPay gọi thẳng về) */}
                 <Route path="/payment-result" element={<PaymentResult />} />
             </Routes>
-
-
         </BrowserRouter>
     );
 };

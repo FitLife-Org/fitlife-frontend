@@ -13,7 +13,7 @@ const Sidebar = () => {
     const menuItems = [
         { path: '/', name: 'Trang Chủ', icon: Home, roles: ['MEMBER', 'ADMIN', 'STAFF'] },
         { path: '/packages', name: 'Mua Gói Tập', icon: CreditCard, roles: ['MEMBER'] },
-        { path: '/workout-ai', name: 'Lịch Tập AI (Gemini)', icon: Activity, roles: ['MEMBER'] },
+        { path: '/ai-pt', name: 'Lịch Tập AI (Gemini)', icon: Activity, roles: ['MEMBER'] },
         { path: '/checkin', name: 'Mã Check-in', icon: QrCode, roles: ['MEMBER'] },
         { path: '/admin/members', name: 'Quản Lý Hội Viên', icon: Users, roles: ['ADMIN', 'STAFF'] },
         { path: '/admin/packages', name: 'Quản Lý Gói Tập', icon: CalendarDays, roles: ['ADMIN', 'STAFF'] },
