@@ -8,12 +8,12 @@ import ForgotPassword from '../pages/auth/ForgotPassword';
 import Dashboard from '../pages/Dashboard';
 import Packages from '../pages/Packages';
 import PaymentResult from '../pages/PaymentResult';
-import AiWorkout from '../pages/AiWorkout'; // 1. IMPORT TRANG AI VÀO ĐÂY
+import AiWorkout from '../pages/AiWorkout';
+import MyWorkout from '../pages/MyWorkout'; // 1. IMPORT TRANG THEO DÕI TẬP LUYỆN
 
 // --- IMPORT BỘ KHUNG (LAYOUT THẬT) ---
 import MainLayout from '../components/layout/MainLayout';
 
-// COMPONENT BẢO VỆ TUYẾN ĐƯỜNG (Private Route)
 const PrivateRoute = ({ children }) => {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     return isAuthenticated ? children : <Navigate to="/login" replace />;
@@ -23,16 +23,12 @@ const AppRouter = () => {
     return (
         <BrowserRouter>
             <Routes>
-                {/* PUBLIC ROUTES (Ai cũng vào được) */}
+                {/* PUBLIC ROUTES */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
 
-                {/* ==========================================
-                    PRIVATE ROUTES (Bắt buộc phải có Token)
-                    ========================================== */}
-
-                {/* 1. TRANG CHỦ (DASHBOARD) */}
+                {/* PRIVATE ROUTES */}
                 <Route
                     path="/"
                     element={
@@ -44,7 +40,6 @@ const AppRouter = () => {
                     }
                 />
 
-                {/* 2. TRANG DANH SÁCH GÓI TẬP (PACKAGES) */}
                 <Route
                     path="/packages"
                     element={
@@ -56,7 +51,6 @@ const AppRouter = () => {
                     }
                 />
 
-                {/* 3. TRANG TRỢ LÝ AI (AI WORKOUT) - THÊM VÀO ĐÂY */}
                 <Route
                     path="/ai-pt"
                     element={
@@ -68,7 +62,18 @@ const AppRouter = () => {
                     }
                 />
 
-                {/* TRANG KẾT QUẢ THANH TOÁN (Cho phép VNPay gọi thẳng về) */}
+                {/* 2. ĐƯỜNG DẪN THEO DÕI TẬP LUYỆN HÀNG NGÀY */}
+                <Route
+                    path="/my-workout"
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <MyWorkout />
+                            </MainLayout>
+                        </PrivateRoute>
+                    }
+                />
+
                 <Route path="/payment-result" element={<PaymentResult />} />
             </Routes>
         </BrowserRouter>
