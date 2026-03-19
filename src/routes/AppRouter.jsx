@@ -15,6 +15,7 @@ import MyWorkout from '../pages/MyWorkout'; // 1. IMPORT TRANG THEO DÕI TẬP L
 import MainLayout from '../components/layout/MainLayout';
 
 import AdminGymPackage from '../pages/admin/AdminGymPackage';
+import AdminMember from "../pages/admin/AdminMember.jsx";
 
 const PrivateRoute = ({ children }) => {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -90,6 +91,7 @@ const AppRouter = () => {
                         </PrivateRoute>
                     }
                 />
+                <Route path="/admin/members" element={ <PrivateRoute><MainLayout><AdminMember /></MainLayout></PrivateRoute> } />
             </Routes>
         </BrowserRouter>
     );
