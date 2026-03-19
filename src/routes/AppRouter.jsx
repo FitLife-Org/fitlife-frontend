@@ -30,7 +30,7 @@ const AppRouter = () => {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
 
-                {/* PRIVATE ROUTES */}
+                {/* USER ROUTES */}
                 <Route
                     path="/"
                     element={
@@ -78,7 +78,18 @@ const AppRouter = () => {
 
                 <Route path="/payment-result" element={<PaymentResult />} />
 
-                <Route path="/admin/packages" element={<AdminGymPackage />} />
+                {/* 3. ADMIN ROUTES (Bọc bằng AdminLayout) */}
+                <Route
+                    path="/admin/packages"
+                    element={
+                        <PrivateRoute>
+                            {/* Cần tạo component AdminLayout (chứa Sidebar đen, Header Admin) */}
+                            <MainLayout>
+                                <AdminGymPackage />
+                            </MainLayout>
+                        </PrivateRoute>
+                    }
+                />
             </Routes>
         </BrowserRouter>
     );
