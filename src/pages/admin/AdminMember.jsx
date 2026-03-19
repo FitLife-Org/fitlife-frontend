@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from "../../api/axiosClient.js";
-import { Users, Search, ChevronLeft, ChevronRight, Lock, Unlock, Mail, Phone, Edit, UserCog } from 'lucide-react';
+import { Users, Search, ChevronLeft, ChevronRight, Lock, Unlock, Mail, Phone, Edit, UserPlus, UserCog } from 'lucide-react';
 
 export default function AdminMember() {
     const [members, setMembers] = useState([]);
@@ -13,7 +13,7 @@ export default function AdminMember() {
     const [keyword, setKeyword] = useState('');
     const [searchInput, setSearchInput] = useState('');
 
-    // State cho Modal Cập nhật
+    // State cho Modal (Thêm/Sửa)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({
@@ -61,24 +61,41 @@ export default function AdminMember() {
         }
     };
 
-    // 3. MỞ MODAL SỬA
-    const openModal = (member) => {
-        setEditingId(member.id);
-        setFormData({
-            fullName: member.fullName || '',
-            email: member.email || '',
-            phone: member.phone || ''
-        });
+    // 3. MỞ MODAL (Cho cả THÊM và SỬA)
+    const openModal = (member = null) => {
+        if (member) {
+            // Chế độ SỬA
+            setEditingId(member.id);
+            setFormData({
+                fullName: member.fullName || '',
+                email: member.email || '',
+                phone: member.phone || ''
+            });
+        } else {
+            // Chế độ THÊM MỚI
+            setEditingId(null);
+            setFormData({
+                fullName: '',
+                email: '',
+                phone: ''
+            });
+        }
         setIsModalOpen(true);
     };
 
-    // 4. SUBMIT UPDATE FORM
+    // 4. SUBMIT FORM (CREATE / UPDATE)
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Gọi API Update (chú ý payload phải khớp với MemberCreationRequest hoặc UpdateRequest của em)
-            await axiosClient.put(`/admin/members/${editingId}`, formData);
-            alert("Cập nhật thông tin hội viên thành công!");
+            if (editingId) {
+                // Gọi API Update
+                await axiosClient.put(`/admin/members/${editingId}`, formData);
+                alert("Cập nhật thông tin hội viên thành công!");
+            } else {
+                // Gọi API Create
+                await axiosClient.post(`/admin/members`, formData);
+                alert("Thêm hội viên mới thành công!");
+            }
             setIsModalOpen(false);
             fetchMembers(); // Load lại bảng
         } catch (error) {
@@ -98,6 +115,13 @@ export default function AdminMember() {
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">Tra cứu thông tin và quản lý trạng thái tài khoản khách hàng</p>
                     </div>
+                    {/* NÚT THÊM HỘI VIÊN MỚI ĐÂY RỒI! */}
+                    <button
+                        onClick={() => openModal()}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm"
+                    >
+                        <UserPlus size={20} /> Thêm Hội Viên
+                    </button>
                 </div>
 
                 {/* Thanh công cụ: Search */}
@@ -218,14 +242,14 @@ export default function AdminMember() {
                 </div>
             </div>
 
-            {/* MODAL CẬP NHẬT THÔNG TIN HỘI VIÊN */}
+            {/* MODAL THÊM MỚI / CẬP NHẬT THÔNG TIN HỘI VIÊN */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         <div className="p-6 border-b border-gray-100 flex items-center gap-2">
-                            <UserCog className="text-blue-600" />
+                            {editingId ? <UserCog className="text-blue-600" /> : <UserPlus className="text-blue-600" />}
                             <h2 className="text-xl font-bold text-gray-800">
-                                Cập Nhật Hồ Sơ Hội Viên
+                                {editingId ? 'Cập Nhật Hồ Sơ Hội Viên' : 'Thêm Hội Viên Mới'}
                             </h2>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6">
@@ -276,7 +300,7 @@ export default function AdminMember() {
                                     type="submit"
                                     className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors"
                                 >
-                                    Lưu Thay Đổi
+                                    {editingId ? 'Lưu Thay Đổi' : 'Thêm Hội Viên'}
                                 </button>
                             </div>
                         </form>
