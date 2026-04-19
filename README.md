@@ -1,16 +1,38 @@
-# React + Vite
+# 🎨 FitLife Frontend - Client Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)]()
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)]()
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)]()
 
-Currently, two official plugins are available:
+> The modern, responsive, and blazing-fast user interface for the FitLife Ecosystem, designed for both Gym Admins and Members.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📸 UI Previews
+| Smart Dashboard | AI Workout Generator |
+| :---: | :---: |
+| *(Add Dashboard Screenshot here)* | *(Add AI Generator Screenshot here)* |
 
-## React Compiler
+## ✨ Core Features & Tech Stack
+- **Build Tool:** **Vite** for blazing-fast HMR (Hot Module Replacement) and optimized production builds.
+- **State Management:** **Zustand** for clean, scalable, and boilerplate-free global state management.
+- **Styling:** **TailwindCSS** for a utility-first, fully responsive mobile-first design.
+- **API Communication:** **Axios** instance configured with custom Interceptors for automatic JWT Bearer token injection and centralized error handling (e.g., auto-logout on 401 Unauthorized).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Quick Start
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Install Dependencies
+```bash
+npm install
+```
+### 2. Environment Setup
+Create a `.env` file in the root directory to point to the Backend API:
+```Code snippet
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
+### 3. Run Development Server
+```bash
+npm run dev
+```
+### 4. Build for Production
+```bash
+npm run build
+```
