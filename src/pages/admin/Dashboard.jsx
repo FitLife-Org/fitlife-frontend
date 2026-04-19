@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import useAuthStore from '../store/authStore';
+import useAuthStore from '../../store/authStore.js';
 import { Users, TrendingUp, Activity, Calendar, HeartPulse, Info, Edit3, X } from 'lucide-react';
-import axiosInstance from '../services/axiosInstance';
+import axiosInstance from '../../services/axiosInstance.js';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {

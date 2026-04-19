@@ -1,5 +1,5 @@
-import Sidebar from './Sidebar';
-import Header from './Header';
+import Sidebar from './Sidebar.jsx';
+import Header from './Header.jsx';
 
 const MainLayout = ({ children }) => {
     return (

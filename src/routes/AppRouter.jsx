@@ -5,17 +5,23 @@ import useAuthStore from '../store/authStore';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import ForgotPassword from '../pages/auth/ForgotPassword';
-import Dashboard from '../pages/Dashboard';
-import Packages from '../pages/Packages';
-import PaymentResult from '../pages/PaymentResult';
-import AiWorkout from '../pages/AiWorkout';
-import MyWorkout from '../pages/MyWorkout'; // 1. IMPORT TRANG THEO DÕI TẬP LUYỆN
+import Dashboard from '../pages/admin/Dashboard.jsx';
+import Packages from '../pages/payment/Packages.jsx';
+import PaymentResult from '../pages/payment/PaymentResult.jsx';
+import AiWorkout from '../pages/member/AiWorkout.jsx';
+import MyWorkout from '../pages/member/MyWorkout.jsx'; // 1. IMPORT TRANG THEO DÕI TẬP LUYỆN
 
 // --- IMPORT BỘ KHUNG (LAYOUT THẬT) ---
-import MainLayout from '../components/layout/MainLayout';
+import MainLayout from '../layouts/MainLayout';
 
 import AdminGymPackage from '../pages/admin/AdminGymPackage';
 import AdminMember from "../pages/admin/AdminMember.jsx";
+
+// -- UI test
+import AiWorkoutMock from '../pages/showcase/AiWorkout';
+import Subscription from "../pages/showcase/Subscription.jsx";
+import Paymentresult from '../pages/payment/Paymentresult.jsx';
+import Progress from '../pages/showcase/Progress.jsx';
 
 const PrivateRoute = ({ children }) => {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -92,6 +98,13 @@ const AppRouter = () => {
                     }
                 />
                 <Route path="/admin/members" element={ <PrivateRoute><MainLayout><AdminMember /></MainLayout></PrivateRoute> } />
+
+
+                <Route path="/mock-ai" element={<AiWorkoutMock />} />
+                <Route path="/mock-subscription" element={<Subscription />} />
+                <Route path="/mock-payment-result" element={<Paymentresult />} />
+                <Route path={"/mock-progress"} element={<Progress />} />
+
             </Routes>
         </BrowserRouter>
     );

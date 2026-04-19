@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Check, Dumbbell, Zap, Crown, Loader2 } from 'lucide-react';
-import axiosInstance from '../services/axiosInstance';
-import useAuthStore from '../store/authStore'; // Lấy user để kiểm tra đăng nhập
+import axiosInstance from '../../services/axiosInstance.js';
+import useAuthStore from '../../store/authStore.js'; // Lấy user để kiểm tra đăng nhập
 
 const Packages = () => {
     const user = useAuthStore((state) => state.user);

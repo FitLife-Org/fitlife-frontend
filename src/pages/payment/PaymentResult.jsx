@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react';
 
 // ĐÃ XÓA MOCK DATA VÀ MỞ IMPORT THẬT
-import axiosInstance from '../services/axiosInstance';
+import axiosInstance from '../../services/axiosInstance.js';
 
 const PaymentResult = () => {
     const [searchParams] = useSearchParams();

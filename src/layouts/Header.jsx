@@ -1,5 +1,5 @@
 import { Bell, Search, LogOut, User as UserIcon } from 'lucide-react';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../store/authStore.js';
 
 const Header = () => {
     const user = useAuthStore((state) => state.user);
