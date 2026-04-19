@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, CreditCard, Activity, QrCode, Users, Dumbbell, CalendarDays, ClipboardCheck } from 'lucide-react';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../store/authStore.js';
 
 const Sidebar = () => {
     const location = useLocation();

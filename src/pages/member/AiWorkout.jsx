@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Sparkles, Target, Flame, Calendar, Bot, Loader2, AlertTriangle, CheckCircle, Activity } from 'lucide-react';
-import axiosInstance from '../services/axiosInstance';
+import axiosInstance from '../../services/axiosInstance.js';
 
 const AiWorkout = () => {
     const [formData, setFormData] = useState({

@@ -6,10 +6,27 @@
 
 > The modern, responsive, and blazing-fast user interface for the FitLife Ecosystem, designed for both Gym Admins and Members.
 
-## 📸 UI Previews
-| Smart Dashboard | AI Workout Generator |
-| :---: | :---: |
-| *(Add Dashboard Screenshot here)* | *(Add AI Generator Screenshot here)* |
+## 📸 System UI Showcase
+
+### 🤖 1. AI-Powered Workout Planner (Google Gemini)
+Generates personalized, highly optimized weekly workout routines based on member metrics and goals.
+![ai-workout-main.png](docs/screenshots/ai-workout-main.png)
+![ai-workout-generated.png](docs/screenshots/ai-workout-generated.png)
+
+### 📈 2. Member Health Analytics & Gamification
+Comprehensive dashboard for tracking BMI, weight loss journeys, activity heatmaps, and Fit_coin rewards to boost retention.
+![Health Dashboard Main](./docs/screenshots/progress-1.png)
+<div align="center">
+  <img src="./docs/screenshots/progress-2.png" width="48%" />
+  <img src="./docs/screenshots/progress-3.png" width="48%" />
+</div>
+
+### 💳 3. Subscription & Secure Payment (VNPay)
+Transparent tier-based pricing model with secure payment validation via HMAC SHA-512 Checksum.
+<div align="center">
+  <img src="./docs/screenshots/subscription.png" width="48%" />
+  <img src="./docs/screenshots/payment-result.png" width="48%" />
+</div>
 
 ## ✨ Core Features & Tech Stack
 - **Build Tool:** **Vite** for blazing-fast HMR (Hot Module Replacement) and optimized production builds.
@@ -22,7 +39,6 @@
 ### 1. Install Dependencies
 ```bash
 npm install
-```
 ### 2. Environment Setup
 Create a `.env` file in the root directory to point to the Backend API:
 ```Code snippet

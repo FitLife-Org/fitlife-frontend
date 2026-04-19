@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Calendar, CheckCircle2, Circle, Dumbbell, Info, Loader2, Trophy, Clock, X } from 'lucide-react';
-import axiosInstance from '../services/axiosInstance';
+import axiosInstance from '../../services/axiosInstance.js';
 
 const MyWorkout = () => {
     const [plan, setPlan] = useState(null);
