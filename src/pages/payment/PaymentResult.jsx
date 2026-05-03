@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react';
 
 // ĐÃ XÓA MOCK DATA VÀ MỞ IMPORT THẬT
-import axiosInstance from '../../services/axiosInstance.js';
+import axiosInstance from '../../api/axiosClient';
 
 const PaymentResult = () => {
     const [searchParams] = useSearchParams();
@@ -15,6 +15,12 @@ const PaymentResult = () => {
 
     // Khóa chống React StrictMode gọi API 2 lần
     const hasCalledAPI = useRef(false);
+    let statusClass = 'bg-primary';
+    if (status === 'success') {
+        statusClass = 'bg-success';
+    } else if (status === 'error') {
+        statusClass = 'bg-danger';
+    }
 
     useEffect(() => {
         const verifyPayment = async () => {
@@ -64,9 +70,7 @@ const PaymentResult = () => {
             <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100 max-w-lg w-full text-center relative overflow-hidden">
 
                 {/* HIỆU ỨNG TRANG TRÍ MỜ MỜ CHUYỂN MÀU THEO TRẠNG THÁI */}
-                <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full opacity-10 blur-3xl ${
-                    status === 'success' ? 'bg-success' : status === 'error' ? 'bg-danger' : 'bg-primary'
-                }`}></div>
+                <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full opacity-10 blur-3xl ${statusClass}`}></div>
 
                 {status === 'processing' && (
                     <div className="flex flex-col items-center">

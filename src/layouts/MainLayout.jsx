@@ -3,17 +3,14 @@ import Header from './Header.jsx';
 
 const MainLayout = ({ children }) => {
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-            {/* Cột trái: Sidebar cố định */}
+        <div className="flex h-screen overflow-hidden bg-slate-950 font-sans text-slate-200">
             <Sidebar />
 
-            {/* Cột phải: Header + Nội dung chính */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col overflow-hidden bg-slate-950">
                 <Header />
 
-                {/* Vùng chứa nội dung các trang (Dashboard, Packages,...) */}
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6 md:p-8">
-                    <div className="max-w-7xl mx-auto">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900 p-4 sm:p-6 lg:p-8">
+                    <div className="mx-auto w-full max-w-7xl">
                         {children}
                     </div>
                 </main>

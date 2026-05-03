@@ -22,16 +22,16 @@ const Sidebar = () => {
     const filteredMenu = menuItems.filter(item => item.roles.includes(role));
 
     return (
-        <div className="flex flex-col w-64 bg-dark-bg text-white h-full border-r border-dark-border transition-all duration-300">
-            <div className="flex items-center justify-center h-20 border-b border-dark-border">
-                <Dumbbell className="w-8 h-8 text-primary-light mr-3" />
+        <div className="flex h-full w-64 flex-col border-r border-slate-800 bg-slate-950 text-slate-200 transition-all duration-300">
+            <div className="flex h-20 items-center justify-center border-b border-slate-800">
+                <Dumbbell className="mr-3 h-8 w-8 text-sky-500" />
                 <h1 className="text-2xl font-bold uppercase tracking-wider text-white">
-                    Fit<span className="text-primary-light">Life</span>
+                    Fit<span className="text-sky-500">Life</span>
                 </h1>
             </div>
 
             <div className="flex-1 overflow-y-auto py-6">
-                <nav className="px-4 space-y-2">
+                <nav className="space-y-2 px-4">
                     {filteredMenu.map((item) => {
                         const isActive = location.pathname === item.path;
                         const Icon = item.icon;
@@ -42,11 +42,11 @@ const Sidebar = () => {
                                 to={item.path}
                                 className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
                                     isActive
-                                        ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                                        : 'text-gray-400 hover:bg-dark-card hover:text-white'
+                                        ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30'
+                                        : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
                                 }`}
                             >
-                                <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-primary-light'}`} />
+                                <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-sky-500'}`} />
                                 <span className="font-medium">{item.name}</span>
                             </Link>
                         );
@@ -54,10 +54,10 @@ const Sidebar = () => {
                 </nav>
             </div>
 
-            <div className="p-4 border-t border-dark-border">
-                <div className="bg-dark-card rounded-xl p-4 text-center border border-dark-border">
-                    <p className="text-xs text-gray-400">Phiên bản 1.0.0</p>
-                    <p className="text-xs text-primary-light font-semibold mt-1">Hệ thống Gym thông minh</p>
+            <div className="border-t border-slate-800 p-4">
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-center">
+                    <p className="text-xs text-slate-400">Phiên bản 1.0.0</p>
+                    <p className="mt-1 text-xs font-semibold text-sky-500">Hệ thống Gym thông minh</p>
                 </div>
             </div>
         </div>
