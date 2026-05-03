@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, KeyRound, Lock, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import axiosInstance from '../../services/axiosInstance';
+import axiosInstance from '../../api/axiosClient';
 
 const ForgotPassword = () => {
     const [step, setStep] = useState(1);
@@ -13,6 +13,10 @@ const ForgotPassword = () => {
     const [error, setError] = useState('');
 
     const navigate = useNavigate();
+
+    const stepIcon = step === 1 ? <Mail className="text-secondary-light w-8 h-8" /> : step === 2 ? <KeyRound className="text-secondary-light w-8 h-8" /> : <CheckCircle2 className="text-success w-8 h-8" />;
+    const stepTitle = step === 1 ? 'Quên mật khẩu?' : step === 2 ? 'Nhập mã xác nhận' : 'Khôi phục thành công!';
+    const stepDescription = step === 1 ? 'Nhập email của bạn để nhận mã khôi phục.' : step === 2 ? `Mã gồm 6 chữ số đã được gửi tới ${email}` : 'Mật khẩu của bạn đã được thay đổi an toàn.';
 
     // Bước 1: Gửi Email lấy OTP
     const handleSendEmail = async (e) => {
@@ -59,18 +63,13 @@ const ForgotPassword = () => {
 
                 <div className="text-center mb-8">
                     <div className="mx-auto bg-secondary/20 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                        {step === 1 ? <Mail className="text-secondary-light w-8 h-8" /> :
-                            step === 2 ? <KeyRound className="text-secondary-light w-8 h-8" /> :
-                                <CheckCircle2 className="text-success w-8 h-8" />}
+                        {stepIcon}
                     </div>
                     <h2 className="text-2xl font-bold text-white">
-                        {step === 1 ? 'Quên mật khẩu?' :
-                            step === 2 ? 'Nhập mã xác nhận' : 'Khôi phục thành công!'}
+                        {stepTitle}
                     </h2>
                     <p className="text-gray-400 mt-2 text-sm">
-                        {step === 1 ? 'Nhập email của bạn để nhận mã khôi phục.' :
-                            step === 2 ? `Mã gồm 6 chữ số đã được gửi tới ${email}` :
-                                'Mật khẩu của bạn đã được thay đổi an toàn.'}
+                        {stepDescription}
                     </p>
                 </div>
 

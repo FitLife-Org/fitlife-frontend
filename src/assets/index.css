@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ==========================================
-   FITLIFE GYM - DESIGN SYSTEM (THEME)
+   FITLIFE GYM - DESIGN SYSTEM (CANONICAL)
    ========================================== */
 @theme {
     --color-primary-light: #38bdf8;
@@ -27,3 +27,4 @@
         color-scheme: dark;
     }
 }
+
