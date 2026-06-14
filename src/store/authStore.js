@@ -11,12 +11,11 @@ const getStoredUser = () => {
 const getStoredToken = () => localStorage.getItem('token') || localStorage.getItem('auth_token') || null;
 
 const useAuthStore = create((set) => ({
-    // Trạng thái ban đầu: Lấy từ LocalStorage xem trước đó có đăng nhập chưa
+
     user: getStoredUser(),
     token: getStoredToken(),
     isAuthenticated: !!getStoredToken(),
 
-    // Hàm xử lý khi Đăng nhập thành công
     login: (userData, token) => {
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('token', token);
@@ -24,7 +23,7 @@ const useAuthStore = create((set) => ({
         set({ user: userData, token, isAuthenticated: true });
     },
 
-    // Hàm xử lý khi Đăng xuất
+
     logout: () => {
         localStorage.removeItem('user');
         localStorage.removeItem('token');

@@ -3,9 +3,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import AuthLayout from '../layouts/AuthLayout';
 import MainLayout from '../layouts/MainLayout';
-import Login from '../pages/auth/Login';
-import Register from '../pages/auth/Register';
-import ForgotPassword from '../pages/auth/ForgotPassword.jsx';
+import AuthPage from '../pages/auth/AuthPage';
+import ForgotPassword from '../pages/auth/ForgotPassword';
 import Profile from '../pages/profile/Profile';
 import Packages from '../pages/package/Packages';
 import PaymentResult from '../pages/package/PaymentResult';
@@ -49,7 +48,7 @@ export default function AppRouter() {
           path="/login"
           element={(
             <PublicRoute>
-              <Login />
+              <AuthPage />
             </PublicRoute>
           )}
         />
@@ -57,7 +56,7 @@ export default function AppRouter() {
           path="/register"
           element={(
             <PublicRoute>
-              <Register />
+              <AuthPage />
             </PublicRoute>
           )}
         />
