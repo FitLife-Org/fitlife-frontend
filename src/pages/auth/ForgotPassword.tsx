@@ -30,7 +30,7 @@ const ForgotPassword = () => {
         }
     }, { dependencies: [step], scope: containerRef });
 
-    // Bước 1: Gửi Email lấy OTP
+    
     const handleSendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
@@ -45,7 +45,6 @@ const ForgotPassword = () => {
         }
     };
 
-    // Bước 2: Xác nhận OTP và Đổi mật khẩu
     const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
@@ -66,7 +65,7 @@ const ForgotPassword = () => {
 
     return (
         <div ref={containerRef} className="relative min-h-screen text-slate-100 selection:bg-sky-500/30 overflow-hidden flex items-center justify-center px-4 py-10 sm:px-6">
-            {/* Ảnh nền và Lớp phủ giống hệt AuthPage */}
+        
             <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop')" }}
@@ -109,7 +108,7 @@ const ForgotPassword = () => {
                         </div>
                     )}
 
-                    {/* ==================== BƯỚC 1 ==================== */}
+                
                     {step === 1 && (
                         <form onSubmit={handleSendEmail} className="space-y-6">
                             <div className="space-y-1.5">
@@ -136,7 +135,6 @@ const ForgotPassword = () => {
                         </form>
                     )}
 
-                    {/* ==================== BƯỚC 2 ==================== */}
                     {step === 2 && (
                         <form onSubmit={handleResetPassword} className="space-y-6">
                             <div className="space-y-1.5">
@@ -187,7 +185,7 @@ const ForgotPassword = () => {
                         </form>
                     )}
 
-                    {/* ==================== BƯỚC 3 ==================== */}
+               
                     {step === 3 && (
                         <button 
                             onClick={() => navigate('/login')}
