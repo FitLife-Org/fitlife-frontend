@@ -251,7 +251,7 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
             const token = response.data?.data?.token;
 
             if (token) {
-                localStorage.setItem('user', JSON.stringify({ state: { token: token } }));
+                localStorage.setItem('token', token);
                 login(token);
                 navigate('/me');
             } else {
@@ -277,7 +277,7 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
                 const token = response.data?.data?.token;
 
                 if (token) {
-                   localStorage.setItem('user', JSON.stringify({ state: { token: token } }));
+                    localStorage.setItem('token', token);
                     login(token); 
                     navigate('/me');
                 } else {
