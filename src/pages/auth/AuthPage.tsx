@@ -251,6 +251,7 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
             const token = response.data?.data?.token;
 
             if (token) {
+                localStorage.setItem('user', JSON.stringify({ state: { token: token } }));
                 login(token);
                 navigate('/me');
             } else {
@@ -268,7 +269,7 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
                 setIsSubmitting(true);
                 setErrorMessage("");
                 
-                // Gửi token lấy được từ Google xuống Backend
+              
                 const response = await axiosInstance.post('/auth/google', {
                     token: tokenResponse.access_token
                 });
@@ -276,8 +277,9 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
                 const token = response.data?.data?.token;
 
                 if (token) {
-                    login(token); // Lưu token hệ thống FitLife
-                    navigate('/me'); // Chuyển hướng
+                   localStorage.setItem('user', JSON.stringify({ state: { token: token } }));
+                    login(token); 
+                    navigate('/me');
                 } else {
                     setErrorMessage("Đăng nhập Google thất bại, không nhận được token.");
                 }
@@ -476,7 +478,7 @@ function RegisterForm({ onToggle }: { onToggle: () => void }) {
         try {
             await axiosInstance.post('/auth/register', {
                 username: form.username,
-                fullname: form.fullname,
+                fullName: form.fullname,
                 email: form.email,
                 phone: form.phone,
                 password: form.password

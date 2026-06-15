@@ -1,10 +1,4 @@
-import axiosClient, { normalizeApiError } from './axiosClient';
-
-export interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-}
+import axiosInstance from './axiosClient';
 
 export interface MemberProfileResponse {
   id: number;
@@ -13,19 +7,30 @@ export interface MemberProfileResponse {
   phone: string;
   email: string;
   status: string;
-  avatarUrl: string | null;
-  height: number | null;
-  weight: number | null;
-  bmi: number | null;
-  fitnessGoal: string | null;
+  avatarUrl: string;
+  height: number;
+  weight: number;
+  bmi: number;
+  fitnessGoal: string;
 }
 
-export const getMyProfile = async () => {
-  try {
-    const response = await axiosClient.get<ApiResponse<MemberProfileResponse>>('/members/me');
-    return response.data;
-  } catch (error) {
-    throw normalizeApiError(error);
+export const memberApi = {
+
+  getMyProfile: () => {
+    return axiosInstance.get<any, { data: { data: MemberProfileResponse } }>('/members/me');
+  },
+
+  updateMyProfile: (data: any) => {
+    return axiosInstance.put('/members/me', data);
+  },
+
+  uploadAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axiosInstance.post('/members/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 };
-

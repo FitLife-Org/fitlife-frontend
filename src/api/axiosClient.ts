@@ -17,8 +17,7 @@ export interface FitLifeApiError extends Error {
   data?: unknown;
 }
 
-const AUTH_STORAGE_KEYS = ['token', 'auth_token'] as const;
-const AUTH_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
+
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1';
 const isBrowser = typeof window !== 'undefined';
 
@@ -30,15 +29,19 @@ const axiosClient: AxiosInstance = axios.create({
   },
 });
 
-export const getStoredToken = (): string | null => {
-  if (!isBrowser) {
-    return null;
-  }
 
-  for (const key of AUTH_STORAGE_KEYS) {
-    const token = localStorage.getItem(key);
-    if (token) {
-      return token;
+export const getStoredToken = (): string | null => {
+  if (!isBrowser) return null
+  const userStorage = localStorage.getItem('user');
+  
+  if (userStorage) {
+    try {
+      const parsed = JSON.parse(userStorage);
+
+      if (typeof parsed === 'string') return parsed;
+      return parsed?.state?.token || parsed?.token || null;
+    } catch (e) {
+      return userStorage !== 'null' && userStorage !== 'undefined' ? userStorage : null;
     }
   }
 
@@ -46,20 +49,15 @@ export const getStoredToken = (): string | null => {
 };
 
 export const clearStoredAuth = (): void => {
-  if (!isBrowser) {
-    return;
-  }
-
-  AUTH_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+  if (!isBrowser) return;
   localStorage.removeItem('user');
+  localStorage.removeItem('token');
+  localStorage.removeItem('auth_token');
 };
 
 const isAuthEndpoint = (url?: string): boolean => {
-  if (!url) {
-    return false;
-  }
-
-  return AUTH_PATHS.some((path) => url.includes(path));
+  if (!url) return false;
+  return ['/login', '/register', '/forgot-password', '/reset-password'].some((path) => url.includes(path));
 };
 
 export const normalizeApiError = (error: unknown): FitLifeApiError => {
@@ -67,42 +65,23 @@ export const normalizeApiError = (error: unknown): FitLifeApiError => {
     const axiosError = error as AxiosError<ApiErrorResponse>;
     const status = axiosError.response?.status;
     const payload = axiosError.response?.data;
-
-    const fallbackMessage =
-      status === 401
-        ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
-        : status === 403
-          ? 'Bạn không có quyền truy cập tài nguyên này.'
-          : status === 404
-            ? 'Không tìm thấy tài nguyên yêu cầu.'
-            : status === 500
-              ? 'Máy chủ đang gặp lỗi. Vui lòng thử lại sau.'
-              : 'Đã xảy ra lỗi. Vui lòng thử lại.';
-
+    const fallbackMessage = status === 401 ? 'Phiên đăng nhập hết hạn.' : status === 403 ? 'Bạn không có quyền truy cập.' : 'Đã xảy ra lỗi.';
     const normalizedError = new Error(payload?.message || axiosError.message || fallbackMessage) as FitLifeApiError;
-    normalizedError.name = 'FitLifeApiError';
     normalizedError.status = status;
-    normalizedError.code = payload?.code ?? status;
-    normalizedError.data = payload?.data ?? payload;
-
     return normalizedError;
   }
-
-  if (error instanceof Error) {
-    return error as FitLifeApiError;
-  }
-
-  return new Error('Đã xảy ra lỗi không xác định. Vui lòng thử lại.') as FitLifeApiError;
+  return new Error('Đã xảy ra lỗi.') as FitLifeApiError;
 };
 
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getStoredToken();
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("🟢 Trạng thái: Token đã được gắn vào Header!");
+    } else {
+      console.log("🔴 Trạng thái: KHÔNG TÌM THẤY TOKEN!");
     }
-
     return config;
   },
   (error) => Promise.reject(normalizeApiError(error))
@@ -111,20 +90,9 @@ axiosClient.interceptors.request.use(
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError<ApiErrorResponse>) => {
-    const status = error.response?.status;
-    const requestUrl = error.config?.url;
-
-    if (status === 401 && !isAuthEndpoint(requestUrl)) {
-      clearStoredAuth();
-
-      if (isBrowser && window.location.pathname !== '/login') {
-        window.location.replace('/login');
-      }
-    }
-
+    if (error.response?.status === 401) clearStoredAuth();
     return Promise.reject(normalizeApiError(error));
   }
 );
 
 export default axiosClient;
-
