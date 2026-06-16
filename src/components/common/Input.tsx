@@ -1,20 +1,26 @@
-import type { InputHTMLAttributes, ReactNode } from 'react';
+import type { InputHTMLAttributes, ReactNode } from "react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
-  helperText?: ReactNode;
+  icon?: ReactNode;
+  error?: string;
 }
 
-export default function Input({ label, helperText, className = '', ...props }: InputProps) {
+export default function Input({ label, icon, error, className = "", id, ...props }: InputProps) {
+  const inputId = id || props.name;
+
   return (
-    <label className="block">
-      {label ? <span className="mb-2 block text-sm font-medium text-slate-200">{label}</span> : null}
-      <input
-        className={`w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3.5 text-slate-100 placeholder:text-slate-500 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 ${className}`}
-        {...props}
-      />
-      {helperText ? <span className="mt-2 block text-xs text-slate-400">{helperText}</span> : null}
+    <label className="block" htmlFor={inputId}>
+      {label && <span className="text-sm font-medium text-slate-700">{label}</span>}
+      <div className={`mt-2 flex min-h-12 items-center rounded-xl border bg-white px-4 transition ${error ? "border-red-400 focus-within:ring-2 focus-within:ring-red-100" : "border-fit-border focus-within:border-fit-primary focus-within:ring-2 focus-within:ring-emerald-100"}`}>
+        {icon && <span className="mr-3 text-slate-400">{icon}</span>}
+        <input
+          id={inputId}
+          className={`w-full bg-transparent py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 ${className}`}
+          {...props}
+        />
+      </div>
+      {error && <span className="block text-sm text-red-600">{error}</span>}
     </label>
   );
 }
-

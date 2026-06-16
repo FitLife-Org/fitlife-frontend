@@ -1,0 +1,265 @@
+Đây là **cấu trúc code frontend chuẩn cho FitLife** dùng React + Vite + TypeScript + Tailwind + Axios.
+
+```text
+fitlife-frontend/
+├── public/
+│   └── vite.svg
+│
+├── src/
+│   ├── assets/
+│   │   ├── images/
+│   │   ├── icons/
+│   │   └── logos/
+│   │
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── Table.tsx
+│   │   │   ├── Loading.tsx
+│   │   │   └── ConfirmDialog.tsx
+│   │   │
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   └── DashboardLayout.tsx
+│   │   │
+│   │   └── guards/
+│   │       ├── ProtectedRoute.tsx
+│   │       └── RoleRoute.tsx
+│   │
+│   ├── config/
+│   │   ├── env.ts
+│   │   └── routes.ts
+│   │
+│   ├── services/
+│   │   ├── apiClient.ts
+│   │   ├── authService.ts
+│   │   ├── userService.ts
+│   │   ├── memberService.ts
+│   │   ├── packageService.ts
+│   │   ├── subscriptionService.ts
+│   │   ├── paymentService.ts
+│   │   ├── checkinService.ts
+│   │   ├── equipmentService.ts
+│   │   ├── trainerService.ts
+│   │   ├── bookingService.ts
+│   │   ├── aiService.ts
+│   │   ├── dashboardService.ts
+│   │   └── uploadService.ts
+│   │
+│   ├── types/
+│   │   ├── auth.type.ts
+│   │   ├── user.type.ts
+│   │   ├── member.type.ts
+│   │   ├── package.type.ts
+│   │   ├── subscription.type.ts
+│   │   ├── payment.type.ts
+│   │   ├── checkin.type.ts
+│   │   ├── equipment.type.ts
+│   │   ├── trainer.type.ts
+│   │   ├── booking.type.ts
+│   │   ├── ai.type.ts
+│   │   └── common.type.ts
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.ts
+│   │   ├── useDebounce.ts
+│   │   └── usePagination.ts
+│   │
+│   ├── store/
+│   │   ├── authStore.ts
+│   │   └── uiStore.ts
+│   │
+│   ├── utils/
+│   │   ├── formatDate.ts
+│   │   ├── formatCurrency.ts
+│   │   ├── token.ts
+│   │   ├── validation.ts
+│   │   └── constants.ts
+│   │
+│   ├── pages/
+│   │   ├── auth/
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── RegisterPage.tsx
+│   │   │   ├── ForgotPasswordPage.tsx
+│   │   │   ├── ResetPasswordPage.tsx
+│   │   │   └── GoogleCallbackPage.tsx
+│   │   │
+│   │   ├── dashboard/
+│   │   │   └── DashboardPage.tsx
+│   │   │
+│   │   ├── admin/
+│   │   │   ├── UserManagementPage.tsx
+│   │   │   ├── PackageManagementPage.tsx
+│   │   │   ├── EquipmentManagementPage.tsx
+│   │   │   ├── TrainerManagementPage.tsx
+│   │   │   └── ReportPage.tsx
+│   │   │
+│   │   ├── staff/
+│   │   │   ├── CheckinPage.tsx
+│   │   │   ├── MemberLookupPage.tsx
+│   │   │   └── SubscriptionSupportPage.tsx
+│   │   │
+│   │   ├── trainer/
+│   │   │   ├── TrainerSchedulePage.tsx
+│   │   │   ├── MyMembersPage.tsx
+│   │   │   └── WorkoutTrackingPage.tsx
+│   │   │
+│   │   ├── member/
+│   │   │   ├── MemberHomePage.tsx
+│   │   │   ├── MemberProfilePage.tsx
+│   │   │   ├── BodyMetricPage.tsx
+│   │   │   ├── PackageListPage.tsx
+│   │   │   ├── MySubscriptionPage.tsx
+│   │   │   ├── PaymentPage.tsx
+│   │   │   ├── CheckinHistoryPage.tsx
+│   │   │   ├── BookingPage.tsx
+│   │   │   ├── AiFitnessPage.tsx
+│   │   │   └── NutritionPage.tsx
+│   │   │
+│   │   ├── error/
+│   │   │   ├── NotFoundPage.tsx
+│   │   │   └── ForbiddenPage.tsx
+│   │   │
+│   │   └── HomePage.tsx
+│   │
+│   ├── router/
+│   │   └── AppRouter.tsx
+│   │
+│   ├── styles/
+│   │   └── index.css
+│   │
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── vite-env.d.ts
+│
+├── .env
+├── .env.example
+├── .gitignore
+├── index.html
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+├── vite.config.ts
+├── tailwind.config.js
+└── postcss.config.js
+```
+
+## Cấu trúc tối thiểu nên làm trước
+
+Bây giờ chưa cần làm hết. Để team code nhanh, trước mắt chỉ cần tạo các folder chính này:
+
+```text
+src/
+├── components/
+│   ├── common/
+│   └── layout/
+├── config/
+├── services/
+├── types/
+├── hooks/
+├── store/
+├── utils/
+├── pages/
+│   ├── auth/
+│   ├── admin/
+│   ├── staff/
+│   ├── trainer/
+│   ├── member/
+│   └── dashboard/
+├── router/
+├── styles/
+├── App.tsx
+└── main.tsx
+```
+
+## Phân chia cho team frontend
+
+| Người    | Phần frontend nên làm                                                       |
+| -------- | --------------------------------------------------------------------------- |
+| **Khoa** | Layout, Sidebar, Header, Login/Register UI, Dashboard UI, Package UI, AI UI |
+| **Huy**  | Axios interceptor, auth flow, token, route guard, kết nối backend           |
+| **Đức**  | Equipment UI, Check-in UI, test giao diện với API                           |
+| **Trâm** | Member Profile UI, Body Metrics UI, Trainer/Booking UI                      |
+
+## File quan trọng cần có đầu tiên
+
+### `src/services/apiClient.ts`
+
+```ts
+import axios from "axios";
+
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("accessToken");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+export default apiClient;
+```
+
+### `.env.example`
+
+```env
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+### `src/config/routes.ts`
+
+```ts
+export const ROUTES = {
+  HOME: "/",
+  LOGIN: "/login",
+  REGISTER: "/register",
+  FORGOT_PASSWORD: "/forgot-password",
+
+  DASHBOARD: "/dashboard",
+
+  ADMIN_USERS: "/admin/users",
+  ADMIN_PACKAGES: "/admin/packages",
+  ADMIN_EQUIPMENT: "/admin/equipment",
+  ADMIN_REPORTS: "/admin/reports",
+
+  MEMBER_HOME: "/member/home",
+  MEMBER_PROFILE: "/member/profile",
+  MEMBER_PACKAGES: "/member/packages",
+  MEMBER_SUBSCRIPTION: "/member/subscription",
+  MEMBER_AI: "/member/ai",
+  MEMBER_BOOKING: "/member/booking",
+
+  STAFF_CHECKIN: "/staff/checkin",
+
+  TRAINER_SCHEDULE: "/trainer/schedule",
+};
+```
+
+## Chốt cấu trúc cho FitLife
+
+Bạn dùng cấu trúc này là hợp lý nhất:
+
+```text
+components = component dùng lại
+pages = màn hình chính
+services = gọi API backend
+types = kiểu dữ liệu TypeScript
+store = lưu trạng thái đăng nhập/UI
+router = khai báo route
+utils = hàm phụ trợ
+config = cấu hình route/env
+```
+
+Bước tiếp theo nên làm: **tạo folder frontend sạch → tạo apiClient → tạo AppRouter → tạo Login/Register layout trước**, rồi mới chia module cho team.
