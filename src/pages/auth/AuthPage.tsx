@@ -3,7 +3,7 @@ import { AlertCircle, User, Eye, EyeOff, Loader2, Lock, ArrowRight, Mail, Phone,
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import useAuthStore from "../../store/authStore"; 
+import useAuthStore from "../../store/authStore";
 import axiosInstance from '../../api/axiosClient';
 import { useGoogleLogin } from '@react-oauth/google';
 
@@ -13,9 +13,7 @@ interface RegisterFormState { username: string; fullname: string; phone: string;
 export default function AuthPage() {
     const location = useLocation();
     const navigate = useNavigate();
-
-   
-    const isLogin = location.pathname !== "/register"; 
+    const isLogin = location.pathname !== "/register";
 
     const containerRef = useRef<HTMLDivElement>(null);
     const leftPanelRef = useRef<HTMLElement>(null);
@@ -31,7 +29,6 @@ export default function AuthPage() {
         }, 1200);
         return () => clearInterval(interval);
     }, []);
-    
 
     useGSAP(() => {
         gsap.fromTo(
@@ -178,7 +175,7 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
     const navigate = useNavigate();
     const login = useAuthStore((state) => state.login);
     const [form, setForm] = useState<LoginFormState>({ username: "", password: "" });
-    const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({}); 
+    const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({});
     const [rememberMe, setRememberMe] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
@@ -211,7 +208,6 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
-    
         if (fieldErrors[e.target.name as keyof typeof fieldErrors]) {
             setFieldErrors({ ...fieldErrors, [e.target.name]: undefined });
         }
@@ -225,7 +221,6 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
             errors.username = "Username không được để trống";
             isValid = false;
         }
-
         if (!form.password) {
             errors.password = "Mật khẩu không được để trống";
             isValid = false;
@@ -238,8 +233,7 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
     const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
         setErrorMessage("");
-        
-        if (!validateForm()) return; // Chặn Submit nếu lỗi
+        if (!validateForm()) return;
 
         setIsSubmitting(true);
         try {
@@ -249,7 +243,6 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
             });
 
             const token = response.data?.data?.token;
-
             if (token) {
                 localStorage.setItem('token', token);
                 login(token);
@@ -268,23 +261,26 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
             try {
                 setIsSubmitting(true);
                 setErrorMessage("");
-                
-              
+
+                const accessToken = tokenResponse.access_token;
+                console.log("Access Token gửi lên Backend:", accessToken);
+
+         
                 const response = await axiosInstance.post('/auth/google', {
-                    token: tokenResponse.access_token
+                    token: accessToken
                 });
 
-                const token = response.data?.data?.token;
-
-                if (token) {
-                    localStorage.setItem('token', token);
-                    login(token); 
+                const jwtToken = response.data?.data?.token;
+                if (jwtToken) {
+                    localStorage.setItem('token', jwtToken);
+                    login(jwtToken);
                     navigate('/me');
                 } else {
-                    setErrorMessage("Đăng nhập Google thất bại, không nhận được token.");
+                    setErrorMessage("Đăng nhập Google thất bại, không nhận được token nội bộ.");
                 }
             } catch (err: any) {
-                setErrorMessage(err.response?.data?.message || "Lỗi xác thực Google với Backend.");
+                console.error("Lỗi xác thực:", err.response?.data);
+                setErrorMessage(err.response?.data?.message || "Lỗi kết nối với máy chủ.");
             } finally {
                 setIsSubmitting(false);
             }
@@ -297,9 +293,8 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
     return (
         <div ref={formRef}>
             <div className="field-row mb-10 text-center">
-              <img src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png" alt="FitLife" className="w-24 mx-auto mb-2" />
-                
-              <h2 className="tracking-tight text-white font-bold text-3xl">Welcome back</h2>
+                <img src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png" alt="FitLife" className="w-24 mx-auto mb-2" />
+                <h2 className="tracking-tight text-white font-bold text-3xl">Welcome back</h2>
                 <p className="mt-2 text-slate-300 text-sm">Enter your details to access your account.</p>
             </div>
 
@@ -310,14 +305,14 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
                 </div>
             )}
 
+            {/* Các Input Username / Password giữ nguyên */}
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-                {/* Form Inputs (Giữ nguyên như cũ) */}
                 <div className="field-row space-y-1.5">
                     <label className="text-slate-200 pl-1 text-sm">Username</label>
                     <div className="relative group">
                         <User className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transition-colors ${fieldErrors.username ? 'text-red-400' : 'text-slate-400 group-focus-within:text-sky-400'}`} />
-                        <input name="username" type="text" value={form.username} onChange={handleChange} placeholder="your_username" 
-                            className={`w-full rounded-2xl border bg-black/40 px-12 py-4 text-slate-100 outline-none transition-all duration-200 shadow-inner ${fieldErrors.username ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/20'}`} />
+                        <input name="username" type="text" value={form.username} onChange={handleChange} placeholder="your_username"
+                               className={`w-full rounded-2xl border bg-black/40 px-12 py-4 text-slate-100 outline-none transition-all duration-200 shadow-inner ${fieldErrors.username ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/20'}`} />
                     </div>
                     {fieldErrors.username && <p className="text-red-400 text-xs pl-1 mt-1">{fieldErrors.username}</p>}
                 </div>
@@ -326,8 +321,8 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
                     <label className="text-slate-200 pl-1 text-sm">Password</label>
                     <div className="relative group">
                         <Lock className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transition-colors ${fieldErrors.password ? 'text-red-400' : 'text-slate-400 group-focus-within:text-sky-400'}`} />
-                        <input name="password" type={showPassword ? "text" : "password"} value={form.password} onChange={handleChange} placeholder="••••••••" 
-                            className={`w-full rounded-2xl border bg-black/40 px-12 py-4 text-slate-100 outline-none transition-all duration-200 shadow-inner ${fieldErrors.password ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/20'}`} />
+                        <input name="password" type={showPassword ? "text" : "password"} value={form.password} onChange={handleChange} placeholder="••••••••"
+                               className={`w-full rounded-2xl border bg-black/40 px-12 py-4 text-slate-100 outline-none transition-all duration-200 shadow-inner ${fieldErrors.password ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/20'}`} />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-sky-400 transition-colors">
                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
@@ -362,10 +357,10 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
             </div>
 
             <div className="field-row">
-          
-                <button 
-                    type="button" 
-                    onClick={() => handleGoogleLogin()} 
+                {/* Dùng lại nút button custom gọn gàng thay vì Component của Google */}
+                <button
+                    type="button"
+                    onClick={() => handleGoogleLogin()}
                     disabled={isSubmitting}
                     className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-4 text-white hover:bg-white/[0.1] font-semibold text-sm transition-all duration-200 disabled:opacity-70"
                 >
@@ -386,13 +381,12 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
             </div>
         </div>
     );
-
 }
 
 function RegisterForm({ onToggle }: { onToggle: () => void }) {
     const [form, setForm] = useState<RegisterFormState>({ username: "", fullname: "", phone: "", email: "", password: "", confirmPassword: "" });
-    const [fieldErrors, setFieldErrors] = useState<Partial<RegisterFormState>>({}); 
-    
+    const [fieldErrors, setFieldErrors] = useState<Partial<RegisterFormState>>({});
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -442,7 +436,7 @@ function RegisterForm({ onToggle }: { onToggle: () => void }) {
             errors.fullname = "Họ tên không được để trống";
             isValid = false;
         }
-        
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(form.email)) {
             errors.email = "Định dạng email không hợp lệ";
@@ -471,7 +465,6 @@ function RegisterForm({ onToggle }: { onToggle: () => void }) {
     const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
         setErrorMessage("");
-        
         if (!validateForm()) return;
 
         setIsSubmitting(true);
@@ -486,7 +479,6 @@ function RegisterForm({ onToggle }: { onToggle: () => void }) {
 
             alert("Đăng ký thành công! Vui lòng đăng nhập.");
             onToggle();
-
         } catch (err: any) {
             setErrorMessage(err.response?.data?.message || "Email hoặc Username đã tồn tại.");
         } finally {
@@ -494,7 +486,7 @@ function RegisterForm({ onToggle }: { onToggle: () => void }) {
         }
     };
 
-    const getInputClass = (fieldName: keyof RegisterFormState) => 
+    const getInputClass = (fieldName: keyof RegisterFormState) =>
         `w-full rounded-2xl border bg-black/40 px-12 py-3 text-slate-100 outline-none transition-all duration-200 shadow-inner ${fieldErrors[fieldName] ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/20'}`;
 
     return (

@@ -14,7 +14,9 @@ export interface MemberProfileResponse {
   fitnessGoal: string;
 }
 
+
 export const memberApi = {
+
 
   getMyProfile: () => {
     return axiosInstance.get<any, { data: { data: MemberProfileResponse } }>('/members/me');
@@ -33,4 +35,5 @@ export const memberApi = {
       },
     });
   }
+  
 };

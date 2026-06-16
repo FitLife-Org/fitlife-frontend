@@ -74,17 +74,23 @@ export const normalizeApiError = (error: unknown): FitLifeApiError => {
 };
 
 axiosClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getStoredToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log("🟢 Trạng thái: Token đã được gắn vào Header!");
-    } else {
-      console.log("🔴 Trạng thái: KHÔNG TÌM THẤY TOKEN!");
-    }
-    return config;
-  },
-  (error) => Promise.reject(normalizeApiError(error))
+    (config: InternalAxiosRequestConfig) => {
+      const isPublic = isAuthEndpoint(config.url) || config.url?.includes('/auth/google');
+
+      if (!isPublic) {
+        const token = getStoredToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        } else {
+          console.log(" Trạng thái: KHÔNG TÌM THẤY TOKEN - Request vẫn được gửi (Public endpoint hoặc chưa login)");
+        }
+      } else {
+        console.log(" Trạng thái: Request công khai, bỏ qua chèn token.");
+      }
+
+      return config;
+    },
+    (error) => Promise.reject(normalizeApiError(error))
 );
 
 axiosClient.interceptors.response.use(
