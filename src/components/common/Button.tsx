@@ -1,29 +1,28 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+
+type ButtonVariant = "primary" | "outline" | "danger" | "ghost";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  isLoading?: boolean;
   children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'danger';
 }
 
-const variantClassNames: Record<NonNullable<ButtonProps['variant']>, string> = {
-  primary: 'bg-sky-500 text-white hover:bg-sky-400',
-  secondary: 'bg-slate-900 text-slate-100 border border-slate-700 hover:bg-slate-800',
-  danger: 'bg-red-500 text-white hover:bg-red-400',
+const variants: Record<ButtonVariant, string> = {
+  primary: "bg-fit-primary text-white hover:bg-fit-primaryHover focus:ring-emerald-500",
+  outline: "border border-fit-border bg-white text-fit-text hover:bg-slate-50 focus:ring-emerald-500",
+  danger: "bg-fit-danger text-white hover:bg-red-600 focus:ring-red-500",
+  ghost: "bg-transparent text-fit-text hover:bg-slate-100 focus:ring-slate-300",
 };
 
-export default function Button({
-  children,
-  variant = 'primary',
-  className = '',
-  ...props
-}: ButtonProps) {
+export default function Button({ variant = "primary", isLoading, children, className = "", disabled, ...props }: ButtonProps) {
   return (
     <button
-      className={`inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70 ${variantClassNames[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`}
+      disabled={disabled || isLoading}
       {...props}
     >
-      {children}
+      {isLoading ? "Đang xử lý..." : children}
     </button>
   );
 }
-
