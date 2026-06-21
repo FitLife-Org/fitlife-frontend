@@ -1,7 +1,7 @@
-export interface ApiResponse<T> {
+export interface ApiResponse<T = unknown> {
   code?: number;
   message?: string;
-  data: T;
+  data?: T;
 }
 
 export interface PageResult<T> {
@@ -12,6 +12,15 @@ export interface PageResult<T> {
   size: number;
 }
 
-export type Role = "ADMIN" | "STAFF" | "TRAINER" | "MEMBER";
+export type Role =
+    | "ROLE_ADMIN"
+    | "ROLE_STAFF"
+    | "ROLE_PT"
+    | "ROLE_MEMBER";
 
-export type Status = "ACTIVE" | "INACTIVE" | "PENDING" | "EXPIRED";
+export type Status =
+    | "ACTIVE"
+    | "INACTIVE"
+    | "LOCKED"
+    | "PENDING"
+    | "EXPIRED";
