@@ -128,7 +128,7 @@ export default function RegisterPage() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="gsap-form-element grid gap-4 sm:grid-cols-2">
+                <div className="gsap-form-element">
                   <Input
                     label="Họ tên"
                     name="fullName"

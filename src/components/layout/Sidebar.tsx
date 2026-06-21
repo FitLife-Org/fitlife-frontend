@@ -15,7 +15,7 @@ type MenuItemType = {
 };
 
 const menuItems: MenuItemType[] = [
-  // MEMBER Routes
+ 
   { label: "Dashboard", path: ROUTES.MEMBER_HOME, icon: Home, roles: ["MEMBER"] },
   { label: "Gói tập", path: ROUTES.MEMBER_PACKAGES, icon: Package, roles: ["MEMBER"] },
   { label: "Lịch tập", path: ROUTES.MEMBER_BOOKING, icon: CalendarDays, roles: ["MEMBER"] },
