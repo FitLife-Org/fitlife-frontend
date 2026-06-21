@@ -150,77 +150,66 @@ export default function RegisterPage() {
                       </div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="gsap-form-element">
-                      <Input
-                          label="Tên đăng nhập"
-                          name="username"
-                          value={form.username}
-                          onChange={updateField}
-                          required
-                          error={fieldErrors.username}
-                          className="bg-white"
-                      />
-                    </div>
-                    <div className="gsap-form-element grid gap-4 sm:grid-cols-2">
-                      <Input
-                          label="Họ tên"
-                          name="fullName"
-                          value={form.fullName}
-                          onChange={updateField}
-                          required
-                          error={fieldErrors.fullName}
-                          className="bg-white"
-                      />
-                    </div>
-                    <div className="gsap-form-element">
-                      <Input
-                          label="Email"
-                          name="email"
-                          type="email"
-                          value={form.email}
-                          onChange={updateField}
-                          required
-                          error={fieldErrors.email}
-                          className="bg-white"
-                      />
-                    </div>
-                    <div className="gsap-form-element">
-                      <Input
-                          label="Số điện thoại"
-                          name="phone"
-                          value={form.phone}
-                          onChange={updateField}
-                          error={fieldErrors.phone}
-                          className="bg-white"
-                      />
-                    </div>
-                    <div className="gsap-form-element">
-                      <Input
-                          label="Mật khẩu"
-                          name="password"
-                          type="password"
-                          value={form.password}
-                          onChange={updateField}
-                          required
-                          minLength={6}
-                          error={fieldErrors.password}
-                          className="bg-white"
-                      />
-                    </div>
-                    <div className="gsap-form-element">
-                      <Input
-                          label="Xác nhận mật khẩu"
-                          name="confirmPassword"
-                          type="password"
-                          value={form.confirmPassword}
-                          onChange={updateField}
-                          required
-                          minLength={6}
-                          error={fieldErrors.confirmPassword}
-                          className="bg-white"
-                      />
-                    </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="gsap-form-element">
+                  <Input
+                    label="Họ tên"
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={updateField}
+                    required
+                    error={fieldErrors.fullName}
+                    className="bg-white"
+                  />
+                </div>
+                <div className="gsap-form-element">
+                  <Input
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={updateField}
+                    required
+                    error={fieldErrors.email}
+                    className="bg-white"
+                  />
+                </div>
+                <div className="gsap-form-element">
+                  <Input
+                    label="Số điện thoại"
+                    name="phone"
+                    value={form.phone}
+                    onChange={updateField}
+                    error={fieldErrors.phone}
+                    className="bg-white"
+                  />
+                </div>
+                <div className="gsap-form-element">
+                  <Input
+                    label="Mật khẩu"
+                    name="password"
+                    type="password"
+                    value={form.password}
+                    onChange={updateField}
+                    required
+                    minLength={6}
+                    error={fieldErrors.password}
+                    className="bg-white"
+                  />
+                </div>
+                <div className="gsap-form-element">
+                  <Input
+                    label="Xác nhận mật khẩu"
+                    name="confirmPassword"
+                    type="password"
+                    value={form.confirmPassword}
+                    onChange={updateField}
+                    required
+                    minLength={6}
+                    error={fieldErrors.confirmPassword}
+                    className="bg-white"
+                  />
+                </div>
 
                     <div className="gsap-form-element pt-4">
                       <Button
