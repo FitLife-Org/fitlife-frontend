@@ -8,6 +8,14 @@ export default function Header() {
   const logout = useAuthStore((state) => state.logout);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
+  const getRoleLabel = (roles?: string[]) => {
+    if (!roles || roles.length === 0) return "Hội viên";
+    if (roles.includes("ADMIN")) return "Quản trị viên";
+    if (roles.includes("STAFF")) return "Nhân viên";
+    if (roles.includes("TRAINER")) return "Huấn luyện viên";
+    return "Hội viên";
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200/60 bg-white/80 px-4 backdrop-blur-md transition-all lg:px-8">
       <div className="flex items-center gap-4">
@@ -29,8 +37,8 @@ export default function Header() {
         <div className="hidden h-8 w-[1px] bg-slate-200 sm:block" />
         
         <div className="hidden text-right sm:block">
-          <p className="text-sm font-bold text-slate-900">{user?.fullName || user?.username || "FitLife User"}</p>
-          <p className="text-xs font-bold uppercase tracking-wider text-fit-primary">{user?.role === "ADMIN" ? "Quản trị viên" : "Premium"}</p>
+          <p className="text-sm font-bold text-slate-900">{user?.fullName || user?.email || "FitLife User"}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-fit-primary">{getRoleLabel(user?.roles)}</p>
         </div>
         
         <div className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-fit-primarySoft to-emerald-100 text-fit-primary shadow-inner transition-transform hover:scale-105 active:scale-95 border border-white">
