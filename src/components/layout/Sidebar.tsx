@@ -1,4 +1,4 @@
-import { Bot, CalendarDays, ClipboardCheck, Dumbbell, Gauge, HeartPulse, Home, Package, ShieldCheck, UserRound, Users, WalletCards, Wrench } from "lucide-react";
+import { Bot, CalendarDays, ClipboardCheck, Dumbbell, Gauge, HeartPulse, Home, Package, ShieldCheck, UserRound, Users, WalletCards, Wrench, Zap, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { ROUTES } from "../../config/routes";
 import { useAuthStore } from "../../store/authStore";
@@ -19,6 +19,7 @@ const menuItems: Array<{ label: string; path: string; icon: typeof Home; roles: 
   { label: "Thiết bị", path: ROUTES.ADMIN_EQUIPMENT, icon: Wrench, roles: ["ADMIN", "STAFF"] },
   { label: "Check-in", path: ROUTES.STAFF_CHECKIN, icon: ClipboardCheck, roles: ["STAFF", "ADMIN"] },
   { label: "Lịch trainer", path: ROUTES.TRAINER_SCHEDULE, icon: CalendarDays, roles: ["TRAINER", "ADMIN"] },
+  { label: "Cài đặt", path: ROUTES.COMMON_SETTINGS, icon: Settings, roles: ["MEMBER", "ADMIN", "STAFF", "TRAINER"] },
 ];
 
 export default function Sidebar() {
@@ -28,18 +29,18 @@ export default function Sidebar() {
   const role = user?.role || "MEMBER";
 
   return (
-    <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-40 w-[260px] border-r border-fit-border bg-white transition lg:static lg:translate-x-0`}>
-      <div className="flex h-28 items-center gap-3 px-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-fit-primarySoft text-fit-primary">
-          <Dumbbell className="h-7 w-7" />
+    <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-40 w-[280px] bg-slate-950 border-r border-slate-900 transition-transform duration-500 ease-out lg:static lg:translate-x-0 flex flex-col shadow-2xl lg:shadow-none`}>
+      <div className="flex h-28 shrink-0 items-center gap-4 px-8">
+        <div className="flex">
+          <img src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png" alt="FitLife Logo" className=" w-25" />
         </div>
         <div>
-          <p className="text-3xl font-black text-fit-primary">FitLife</p>
-          <p className="text-xs font-medium text-fit-muted">Sống khỏe mỗi ngày</p>
+          <p className="text-3xl font-black tracking-tighter text-white uppercase italic">FitLife</p>
+          <p className="text-xs font-bold tracking-widest text-fit-primary uppercase">No Pain No Gain</p>
         </div>
       </div>
 
-      <nav className="space-y-2 px-3">
+      <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-4 scrollbar-hide">
         {menuItems
           .filter((item) => item.roles.includes(role))
           .map((item) => {
@@ -51,30 +52,49 @@ export default function Sidebar() {
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-4 rounded-2xl px-5 py-4 text-base font-semibold transition ${
-                    isActive ? "bg-fit-primarySoft text-fit-primary" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+                  `group relative flex items-center gap-4 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wide transition-all duration-300 ease-out overflow-hidden ${
+                    isActive 
+                      ? "bg-fit-primary/10 text-fit-primary shadow-[inset_4px_0_0_0_#10b981]" 
+                      : "text-slate-400 hover:bg-slate-900 hover:text-white hover:translate-x-2"
                   }`
                 }
               >
-                <Icon className="h-5 w-5" />
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    <Icon className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'group-hover:scale-110'}`} />
+                    <span className="relative z-10">{item.label}</span>
+                    {isActive && (
+                      <div className="absolute inset-0 z-0 bg-gradient-to-r from-fit-primary/20 to-transparent opacity-50" />
+                    )}
+                  </>
+                )}
               </NavLink>
             );
           })}
       </nav>
-      <div className="absolute bottom-6 left-5 right-5 rounded-2xl border border-fit-border bg-white p-4 shadow-soft">
-        <div className="flex gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-fit-primary text-white">
-            <ShieldCheck className="h-5 w-5" />
+      
+     <div className="relative mt-auto shrink-0 p-5">
+        {/* Bóng mờ gradient che phần scroll của menu */}
+        <div className="pointer-events-none absolute -top-6 left-0 w-full h-6 bg-gradient-to-t from-slate-950 to-transparent" />
+        
+        <div className="group relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-b from-slate-900 to-slate-950 p-5 shadow-[0_8px_30px_rgb(0,0,0,0.5)] transition-all duration-500 hover:border-amber-500/50 hover:shadow-[0_8px_30px_rgba(245,158,11,0.15)]">
+          {/* Animated background glow */}
+          <div className="absolute -inset-10 animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_0deg_at_50%_50%,rgba(245,158,11,0.1)_0deg,transparent_60deg,transparent_300deg,rgba(245,158,11,0.1)_360deg)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+            </div>
+            <div>
+              <p className="bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-sm font-black uppercase tracking-tight text-transparent">Gói Premium</p>
+              <p className="mt-0.5 text-[11px] font-semibold tracking-wide text-slate-400">Mở khóa toàn bộ tính năng</p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold text-fit-text">Nâng cấp gói</p>
-            <p className="mt-1 text-xs text-fit-muted">Mở khóa tính năng cao cấp.</p>
-          </div>
+          <button className="relative z-10 mt-5 w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-sm font-black uppercase tracking-wider text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95" type="button">
+            <span className="relative z-10">Nâng cấp ngay</span>
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 ease-in-out group-hover:animate-[shimmer_2s_infinite]" />
+          </button>
         </div>
-        <button className="mt-4 w-full rounded-xl bg-fit-primary py-3 text-sm font-bold text-white hover:bg-fit-primaryHover" type="button">
-          Nâng cấp ngay
-        </button>
       </div>
     </aside>
   );

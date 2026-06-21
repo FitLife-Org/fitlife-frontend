@@ -12,9 +12,11 @@ const normalizeSession = (payload: any): AuthSession => {
 
   return {
     token,
-    user: payload?.user || {
-      username: "fitlife-user",
-      role: "MEMBER",
+    user: {
+      userId: payload?.userId || 0,
+      email: payload?.email || "unknown@email.com",
+      fullName: payload?.fullName || "User",
+      roles: payload?.roles || ["MEMBER"],
     },
   };
 };

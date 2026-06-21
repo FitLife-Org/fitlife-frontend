@@ -36,5 +36,7 @@ export const ROUTES = {
   TRAINER_MEMBERS: "/trainer/members",
   TRAINER_WORKOUT_TRACKING: "/trainer/workouts",
 
+  COMMON_SETTINGS: "/settings",
+
   FORBIDDEN: "/403",
 } as const;

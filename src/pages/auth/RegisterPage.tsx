@@ -8,12 +8,13 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
-import { isEmail, isVietnamesePhone } from "../../utils/validation";
+import { validateRegister } from "../../utils/validators/registerValidator";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: "", fullName: "", email: "", phone: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
 
@@ -24,24 +25,19 @@ export default function RegisterPage() {
   const updateField = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    setFieldErrors({});
 
-    if (!isEmail(form.email)) {
-      setError("Email không hợp lệ.");
-      return;
-    }
-
-    if (!isVietnamesePhone(form.phone)) {
-      setError("Số điện thoại không hợp lệ.");
-      return;
-    }
-
-    if (form.password !== form.confirmPassword) {
-      setError("Mật khẩu và xác nhận mật khẩu không khớp!");
+    const validationErrors = validateRegister(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
       return;
     }
 
@@ -139,14 +135,7 @@ export default function RegisterPage() {
                     value={form.fullName}
                     onChange={updateField}
                     required
-                    className="bg-white"
-                  />
-                  <Input
-                    label="Tên đăng nhập"
-                    name="username"
-                    value={form.username}
-                    onChange={updateField}
-                    required
+                    error={fieldErrors.fullName}
                     className="bg-white"
                   />
                 </div>
@@ -158,6 +147,7 @@ export default function RegisterPage() {
                     value={form.email}
                     onChange={updateField}
                     required
+                    error={fieldErrors.email}
                     className="bg-white"
                   />
                 </div>
@@ -167,7 +157,7 @@ export default function RegisterPage() {
                     name="phone"
                     value={form.phone}
                     onChange={updateField}
-                    required
+                    error={fieldErrors.phone}
                     className="bg-white"
                   />
                 </div>
@@ -179,6 +169,8 @@ export default function RegisterPage() {
                     value={form.password}
                     onChange={updateField}
                     required
+                    minLength={6}
+                    error={fieldErrors.password}
                     className="bg-white"
                   />
                 </div>
@@ -190,6 +182,8 @@ export default function RegisterPage() {
                     value={form.confirmPassword}
                     onChange={updateField}
                     required
+                    minLength={6}
+                    error={fieldErrors.confirmPassword}
                     className="bg-white"
                   />
                 </div>

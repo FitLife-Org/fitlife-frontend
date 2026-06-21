@@ -1,12 +1,11 @@
 import type { Role } from "./common.type";
 
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  username: string;
   fullName: string;
   email: string;
   phone: string;
@@ -14,11 +13,10 @@ export interface RegisterRequest {
 }
 
 export interface AuthUser {
-  id?: number;
-  username: string;
-  fullName?: string;
-  email?: string;
-  role: Role;
+  userId: number;
+  email: string;
+  fullName: string;
+  roles: string[];
 }
 
 export interface AuthSession {

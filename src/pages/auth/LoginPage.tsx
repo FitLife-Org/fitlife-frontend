@@ -10,6 +10,7 @@ import Input from "../../components/common/Input";
 import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
 import { useAuthStore } from "../../store/authStore";
+import { validateLogin } from "../../utils/validators/loginValidator";
 
 // Tách riêng Icon Google để JSX bên dưới không bị rối mắt bởi đoạn SVG quá dài
 const GoogleIcon = () => (
@@ -27,8 +28,9 @@ export default function LoginPage() {
   const setSession = useAuthStore((state) => state.setSession);
 
   // Gộp state form để dễ quản lý và mở rộng
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
 
@@ -45,6 +47,9 @@ export default function LoginPage() {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   // Xử lý Đăng nhập qua Google
@@ -77,6 +82,14 @@ export default function LoginPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    setFieldErrors({});
+
+    const validationErrors = validateLogin(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -216,12 +229,13 @@ export default function LoginPage() {
                 <div className="space-y-4">
                   <div className="gsap-form-element">
                     <Input
-                        label="Tên đăng nhập"
-                        name="username"
-                        value={formData.username}
+                        label="Email"
+                        name="email"
+                        value={formData.email}
                         onChange={handleInputChange}
-                        required
+                        error={fieldErrors.email}
                         className="bg-white"
+                        type="email"
                     />
                   </div>
                   <div className="gsap-form-element">
@@ -231,7 +245,7 @@ export default function LoginPage() {
                         type="password"
                         value={formData.password}
                         onChange={handleInputChange}
-                        required
+                        error={fieldErrors.password}
                         className="bg-white"
                     />
                   </div>
@@ -252,7 +266,7 @@ export default function LoginPage() {
     </label>
   </div>
 
-  {/* Phần Link Quên mật khẩu */}
+ 
   <Link 
     to={ROUTES.FORGOT_PASSWORD}
     className="text-sm font-bold text-sky-600 transition-colors hover:text-sky-500"
