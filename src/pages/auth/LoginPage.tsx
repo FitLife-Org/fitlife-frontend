@@ -1,7 +1,7 @@
-import { FormEvent, useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Dumbbell, Loader2, ArrowRight } from "lucide-react";
-import { useGoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
+import { Loader2, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -52,31 +52,34 @@ export default function LoginPage() {
     }
   };
 
-  // Xử lý Đăng nhập qua Google
-  const handleGoogleLogin = useGoogleLogin({
-    onSuccess: async (credentialResponse) => {
-      try {
-        setLoading(true);
-        setError("");
-        console.log("Google Credentials:", credentialResponse);
-        if (credentialResponse.access_token) {
-          const session = await authService.googleLogin(credentialResponse.access_token);
-          setSession(session);
-          navigate(from, { replace: true });
-        } else {
-          throw new Error("Không nhận được token từ Google");
-        }
-      } catch (error) {
-        console.error("Google login thất bại:", error);
-        setError("Đăng nhập Google thất bại. Vui lòng thử lại.");
-      } finally {
-        setLoading(false);
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      console.log("Google credential response:", credentialResponse);
+
+      const idToken = credentialResponse.credential;
+
+      if (!idToken) {
+        throw new Error("Không nhận được ID token từ Google.");
       }
-    },
-    onError: () => {
-      setError("Cửa sổ đăng nhập Google đã đóng hoặc có lỗi xảy ra.");
+
+      const session = await authService.googleLogin(idToken);
+
+      setSession(session);
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error("Google login thất bại:", error);
+      setError(
+          error instanceof Error
+              ? error.message
+              : "Đăng nhập Google thất bại. Vui lòng thử lại."
+      );
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
   // Xử lý Đăng nhập truyền thống
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -93,7 +96,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const session = await authService.login(formData);
+      const session = await authService.login({
+        identifier: formData.email,
+        password: formData.password,
+      });
       setSession(session);
       navigate(from, { replace: true });
     } catch (err) {
@@ -104,30 +110,30 @@ export default function LoginPage() {
   };
 
   // Hiệu ứng GSAP
-  const { contextSafe } = useGSAP(() => {
+  useGSAP(() => {
     const tl = gsap.timeline();
 
     if (introRef.current) {
       tl.fromTo(
-        introRef.current.children,
-        { opacity: 0, x: -50 },
-        { opacity: 1, x: 0, duration: 0.8, stagger: 0.2, ease: "power3.out" }
+          introRef.current.children,
+          { opacity: 0, x: -50 },
+          { opacity: 1, x: 0, duration: 0.8, stagger: 0.2, ease: "power3.out" }
       );
     }
 
     if (formRef.current) {
       tl.fromTo(
-        formRef.current,
-        { opacity: 0, y: 30, scale: 0.95 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" },
-        "-=0.4"
+          formRef.current,
+          { opacity: 0, y: 30, scale: 0.95 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" },
+          "-=0.4"
       );
 
       tl.fromTo(
-        formRef.current.querySelectorAll('.gsap-form-element'),
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" },
-        "-=0.4"
+          formRef.current.querySelectorAll(".gsap-form-element"),
+          { opacity: 0, y: 15 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+          "-=0.4"
       );
     }
   }, { scope: containerRef });
@@ -229,7 +235,7 @@ export default function LoginPage() {
                 <div className="space-y-4">
                   <div className="gsap-form-element">
                     <Input
-                        label="Email"
+                        label="Email hoặc tên đăng nhập"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
@@ -293,22 +299,24 @@ export default function LoginPage() {
                 </div>
 
                 {/* Đăng nhập Google */}
-                <div className="gsap-form-element">
-                  <button
-                      type="button"
-                      onClick={() => handleGoogleLogin()}
-                      disabled={loading}
-                      className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-slate-700 hover:bg-slate-50 hover:border-slate-200 font-bold text-base transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                  >
-                    {loading ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-slate-400"/>
-                    ) : (
-                        <>
-                          <GoogleIcon/>
-                          Tiếp tục với Google
-                        </>
-                    )}
-                  </button>
+                <div className="gsap-form-element mt-6 flex w-full justify-center">
+                  {loading ? (
+                      <div className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-slate-500 font-bold">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Đang xử lý...
+                      </div>
+                  ) : (
+                      <GoogleLogin
+                          onSuccess={handleGoogleSuccess}
+                          onError={() => {
+                            setError("Đăng nhập Google thất bại. Vui lòng thử lại.");
+                          }}
+                          useOneTap={false}
+                          text="signin_with"
+                          shape="pill"
+                          width="360"
+                      />
+                  )}
                 </div>
 
                 <div className="gsap-form-element mt-8 text-center font-medium text-slate-500">
