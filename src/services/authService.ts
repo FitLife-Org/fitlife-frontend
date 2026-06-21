@@ -1,10 +1,21 @@
 import apiClient from "./apiClient";
 import type { ApiResponse } from "../types/common.type";
-import type { AuthSession, LoginRequest, RegisterRequest, GoogleLoginRequest } from "../types/auth.type";
+import type {
+  AuthResponsePayload,
+  AuthSession,
+  LoginRequest,
+  RegisterRequest,
+} from "../types/auth.type";
 import { tokenStorage } from "../utils/token";
 
-const normalizeSession = (payload: any): AuthSession => {
-  const token = payload?.token || payload?.accessToken;
+import type { Role } from "../types/common.type";
+
+const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
+  if (!payload) {
+    throw new Error("Máy chủ không trả về dữ liệu đăng nhập.");
+  }
+
+  const token = payload.accessToken || payload.token;
 
   if (!token) {
     throw new Error("Không nhận được token từ máy chủ.");
@@ -13,37 +24,86 @@ const normalizeSession = (payload: any): AuthSession => {
   return {
     token,
     user: {
-      userId: payload?.userId || 0,
-      email: payload?.email || "unknown@email.com",
-      fullName: payload?.fullName || "User",
-      roles: payload?.roles || ["MEMBER"],
+      userId: payload.userId ?? 0,
+      email: payload.email ?? "unknown@email.com",
+      fullName: payload.fullName ?? "User",
+      roles: payload.roles ?? (["ROLE_MEMBER"] as Role[]),
     },
   };
 };
 
+const extractErrorMessage = (error: unknown): string => {
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const axiosError = error as {
+      response?: {
+        data?: {
+          message?: string;
+        };
+      };
+    };
+
+    return (
+        axiosError.response?.data?.message ||
+        "Có lỗi xảy ra. Vui lòng thử lại."
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Có lỗi xảy ra. Vui lòng thử lại.";
+};
+
 export const authService = {
   async login(credentials: LoginRequest): Promise<AuthSession> {
-    const response = await apiClient.post<ApiResponse<AuthSession> | AuthSession>("/auth/login", credentials);
-    const payload = "data" in response.data && response.data.data ? response.data.data : response.data;
-    const session = normalizeSession(payload);
-    tokenStorage.set(session.token);
-    return session;
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
+          "/auth/login",
+          credentials
+      );
+
+      const session = normalizeSession(response.data.data);
+      tokenStorage.set(session.token);
+
+      return session;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
   },
 
-  async register(data: RegisterRequest): Promise<string> {
-    const response = await apiClient.post<ApiResponse<string>>("/auth/register", data);
-    const payload = "data" in response.data && response.data.data ? response.data.data : response.data;
-    
-    // API trả về string message
-    return typeof payload === 'string' ? payload : "Đăng ký thành công";
+  async register(data: RegisterRequest): Promise<AuthSession> {
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
+          "/auth/register",
+          data
+      );
+
+      const session = normalizeSession(response.data.data);
+      tokenStorage.set(session.token);
+
+      return session;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
   },
 
-  async googleLogin(token: string): Promise<AuthSession> {
-    const response = await apiClient.post<ApiResponse<AuthSession> | AuthSession>("/auth/google", { token });
-    const payload = "data" in response.data && response.data.data ? response.data.data : response.data;
-    const session = normalizeSession(payload);
-    tokenStorage.set(session.token);
-    return session;
+  async googleLogin(idToken: string): Promise<AuthSession> {
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
+          "/auth/google-login",
+          {
+            idToken,
+          }
+      );
+
+      const session = normalizeSession(response.data.data);
+      tokenStorage.set(session.token);
+
+      return session;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
   },
 
   logout(): void {
