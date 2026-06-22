@@ -1,37 +1,32 @@
 export interface AiWorkoutRequest {
   goal: string;
-  fitnessLevel: string;
+  level: string;
   daysPerWeek: number;
-  injuries?: string;
-  equipment?: string;
-  dietPreference?: string;
+  durationMinutes: number;
+  equipment?: string[];
+  healthNotes?: string;
 }
 
-export interface AiExercise {
-  exerciseName: string;
+export interface AiWorkoutExercise {
+  name: string;
   sets: number;
   reps: string;
-  restSeconds: number;
-  notes?: string;
+  restSeconds?: number;
+  note?: string;
 }
 
-export interface AiSession {
-  dayName: string;
-  focusArea: string;
-  exercises: AiExercise[];
+export interface AiWorkoutDay {
+  day: number;
+  title: string;
+  focus: string;
+  exercises: AiWorkoutExercise[];
 }
 
-export interface AiWorkoutResponse {
-  planName: string;
+export interface AiWorkoutPlan {
+  title: string;
   goal: string;
-  estimatedDurationWeeks: number;
-  fitnessLevel: string;
-  sessions: AiSession[];
-}
-
-export interface ChatMessage {
-  id: string;
-  sender: "user" | "ai";
-  text: string;
-  timestamp: string;
+  level: string;
+  summary: string;
+  days: AiWorkoutDay[];
+  notes?: string[];
 }
