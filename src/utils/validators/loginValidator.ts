@@ -1,13 +1,13 @@
 type LoginForm = {
-  email: string;
+  identifier: string;
   password: string;
 };
 
 export function validateLogin(form: LoginForm) {
   const errors: Record<string, string> = {};
 
-  if (!form.email.trim()) {
-    errors.email = "Email hoặc tên đăng nhập là bắt buộc.";
+  if (!form.identifier.trim()) {
+    errors.identifier = "Email hoặc tên đăng nhập là bắt buộc.";
   }
 
   if (!form.password) {
