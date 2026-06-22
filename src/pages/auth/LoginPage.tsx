@@ -69,6 +69,8 @@ export default function LoginPage() {
 
             const idToken = credentialResponse.credential;
 
+            console.log("Google ID Token:", idToken);
+
             if (!idToken) {
                 throw new Error("Không nhận được ID token từ Google.");
             }
@@ -76,7 +78,7 @@ export default function LoginPage() {
             const session = await authService.googleLogin(idToken);
 
             setSession(session);
-            navigate(from, {replace: true});
+            navigate(from, { replace: true });
         } catch (error) {
             console.error("Google login thất bại:", error);
             setError(
