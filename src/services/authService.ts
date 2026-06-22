@@ -7,7 +7,6 @@ import type {
   RegisterRequest,
 } from "../types/auth.type";
 import { tokenStorage } from "../utils/token";
-
 import type { Role } from "../types/common.type";
 
 const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
