@@ -17,6 +17,17 @@ export interface GoogleLoginRequest {
   idToken: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export interface AuthResponsePayload {
   accessToken?: string;
   token?: string;
