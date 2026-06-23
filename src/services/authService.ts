@@ -30,17 +30,23 @@ export const authService = {
     return session;
   },
 
-  async register(data: RegisterRequest): Promise<string> {
-    const response = await apiClient.post<ApiResponse<string>>("/auth/register", data);
+  async register(data: RegisterRequest): Promise<AuthSession> {
+    const response = await apiClient.post<ApiResponse<AuthSession> | AuthSession>("/auth/register", data);
     const payload = "data" in response.data && response.data.data ? response.data.data : response.data;
-    
-    // API trả về string message
-    return typeof payload === 'string' ? payload : "Đăng ký thành công";
+    const session = normalizeSession(payload);
+    tokenStorage.set(session.token);
+    return session;
   },
 
-  async googleLogin(token: string): Promise<AuthSession> {
-    const response = await apiClient.post<ApiResponse<AuthSession> | AuthSession>("/auth/google", { token });
-    const payload = "data" in response.data && response.data.data ? response.data.data : response.data;
+  async googleLogin(requestData: GoogleLoginRequest): Promise<AuthSession> {
+    const response = await apiClient.post<ApiResponse<AuthSession>>(
+      "/auth/google-login", requestData);
+
+    const payload =
+        "data" in response.data && response.data.data
+            ? response.data.data
+            : response.data;
+
     const session = normalizeSession(payload);
     tokenStorage.set(session.token);
     return session;

@@ -1,13 +1,10 @@
-import { isEmail } from "../validation";
 import type { LoginRequest } from "../../types/auth.type";
 
 export const validateLogin = (data: LoginRequest): Record<string, string> => {
   const errors: Record<string, string> = {};
 
-  if (!data.email?.trim()) {
-    errors.email = "Email không được để trống.";
-  } else if (!isEmail(data.email)) {
-    errors.email = "Email không hợp lệ.";
+  if (!data.identifier?.trim()) {
+    errors.identifier = "Email hoặc tên đăng nhập không được để trống.";
   }
 
   if (!data.password?.trim()) {

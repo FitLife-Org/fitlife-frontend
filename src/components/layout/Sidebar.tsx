@@ -26,7 +26,7 @@ export default function Sidebar() {
   const user = useAuthStore((state) => state.user);
   const sidebarOpen = useUiStore((state) => state.sidebarOpen);
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
-  const role = user?.role || "MEMBER";
+  const userRoles = user?.roles || ["MEMBER"];
 
   return (
     <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-40 w-[280px] bg-slate-950 border-r border-slate-900 transition-transform duration-500 ease-out lg:static lg:translate-x-0 flex flex-col shadow-2xl lg:shadow-none`}>
@@ -42,7 +42,7 @@ export default function Sidebar() {
 
       <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-4 scrollbar-hide">
         {menuItems
-          .filter((item) => item.roles.includes(role))
+          .filter((item) => item.roles.some((r) => userRoles.includes(r)))
           .map((item) => {
             const Icon = item.icon;
 

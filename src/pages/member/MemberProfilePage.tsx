@@ -1,3 +1,4 @@
+import { useState, useEffect, ChangeEvent } from "react";
 import { 
   Camera, User, Calendar, Activity, Lock, ChevronRight, CheckCircle2, 
   Image as ImageIcon, Edit3, ShieldCheck, Info as InfoIcon, Crown, Ruler, Weight 
@@ -7,8 +8,78 @@ import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import PageHeader from "../../components/common/PageHeader";
+import { profileService } from "../../services/profileService";
+import type { ProfileResponse, MembershipResponse, UpdateProfileRequest } from "../../types/profile.type";
 
 export default function MemberProfilePage() {
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [membership, setMembership] = useState<MembershipResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState<UpdateProfileRequest>({});
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const profileData = await profileService.getProfile();
+      setProfile(profileData);
+      setFormData({
+        fullName: profileData.fullName,
+        phone: profileData.phone,
+        gender: profileData.gender,
+        dateOfBirth: profileData.dateOfBirth,
+        address: profileData.address,
+        height: profileData.height,
+        weight: profileData.weight,
+        target: profileData.target,
+        activityLevel: profileData.activityLevel
+      });
+
+      // Bắt try catch riêng cho membership vì có thể chưa có gói
+      try {
+        const membershipData = await profileService.getMyMembership();
+        setMembership(membershipData);
+      } catch {
+        setMembership(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const updatedProfile = await profileService.updateProfile(formData);
+      setProfile(updatedProfile);
+      alert("Cập nhật hồ sơ thành công!");
+    } catch (error) {
+      console.error("Failed to update profile", error);
+      alert("Cập nhật thất bại. Vui lòng thử lại.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-8 text-center text-slate-500">Đang tải hồ sơ...</div>;
+  }
+
+  if (!profile) {
+    return <div className="p-8 text-center text-red-500">Không thể tải thông tin hồ sơ.</div>;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -22,7 +93,7 @@ export default function MemberProfilePage() {
           <div className="relative mx-auto h-32 w-32">
             <div className="h-full w-full overflow-hidden rounded-full border-4 border-slate-50 bg-slate-100">
               <img 
-                src="https://i.pravatar.cc/150?u=minh" 
+                src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)} 
                 alt="Avatar" 
                 className="h-full w-full object-cover" 
               />
@@ -33,40 +104,48 @@ export default function MemberProfilePage() {
           </div>
           
           <div className="mt-4 text-center">
-            <h2 className="text-2xl font-bold text-slate-900">Minh Nguyễn</h2>
+            <h2 className="text-2xl font-bold text-slate-900">{profile.fullName}</h2>
             <div className="mt-2 flex justify-center">
-              <Badge variant="success">
-                <span className="flex items-center gap-1">
-                  <Crown className="h-3.5 w-3.5" /> Thành viên Premium
-                </span>
-              </Badge>
+              {membership ? (
+                <Badge variant="success">
+                  <span className="flex items-center gap-1">
+                    <Crown className="h-3.5 w-3.5" /> Gói {membership.packageName}
+                  </span>
+                </Badge>
+              ) : (
+                <Badge variant="warning">
+                  <span className="flex items-center gap-1">
+                    Chưa đăng ký gói
+                  </span>
+                </Badge>
+              )}
             </div>
           </div>
 
           <div className="mt-8 space-y-4 text-sm">
             <div className="flex items-center justify-between pb-2">
               <span className="flex items-center gap-2 text-slate-500">
-                <Calendar className="h-4 w-4" /> Tuổi
+                <Calendar className="h-4 w-4" /> Ngày sinh
               </span>
-              <span className="font-medium text-slate-900">28</span>
+              <span className="font-medium text-slate-900">{profile.dateOfBirth || "Chưa cập nhật"}</span>
             </div>
             <div className="flex items-center justify-between pb-2">
               <span className="flex items-center gap-2 text-slate-500">
                 <Ruler className="h-4 w-4" /> Chiều cao
               </span>
-              <span className="font-medium text-slate-900">175 cm</span>
+              <span className="font-medium text-slate-900">{profile.height || 0} cm</span>
             </div>
             <div className="flex items-center justify-between pb-2">
               <span className="flex items-center gap-2 text-slate-500">
                 <Weight className="h-4 w-4" /> Cân nặng
               </span>
-              <span className="font-medium text-slate-900">68 kg</span>
+              <span className="font-medium text-slate-900">{profile.weight || 0} kg</span>
             </div>
             <div className="flex items-center justify-between pb-2">
               <span className="flex items-center gap-2 text-slate-500">
                 <Calendar className="h-4 w-4" /> Thành viên từ
               </span>
-              <span className="font-medium text-slate-900">01/06/2025</span>
+              <span className="font-medium text-slate-900">{profile.memberSince || "Gần đây"}</span>
             </div>
           </div>
 
@@ -89,22 +168,52 @@ export default function MemberProfilePage() {
               <h2 className="text-lg font-bold text-slate-900">Thông tin cá nhân</h2>
             </div>
             <div className="grid gap-6 md:grid-cols-2">
-              <Input label="Họ và tên" defaultValue="Minh Nguyễn" />
-              <Input label="Ngày sinh" icon={<Calendar className="h-4 w-4" />} defaultValue="12/06/1996" />
-              <Input label="Email" defaultValue="minh.nguyen@gmail.com" />
+              <Input 
+                name="fullName"
+                label="Họ và tên" 
+                value={formData.fullName || ""} 
+                onChange={handleInputChange} 
+              />
+              <Input 
+                name="dateOfBirth"
+                type="date"
+                label="Ngày sinh" 
+                icon={<Calendar className="h-4 w-4" />} 
+                value={formData.dateOfBirth || ""} 
+                onChange={handleInputChange} 
+              />
+              <Input 
+                name="email"
+                label="Email" 
+                value={profile.email || ""} 
+                disabled 
+                readOnly 
+              />
               
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Giới tính</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
                   <User className="mr-3 h-4 w-4 text-blue-500" />
-                  <select className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none">
-                    <option>Nam</option>
-                    <option>Nữ</option>
+                  <select 
+                    name="gender" 
+                    value={formData.gender || ""} 
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
+                  >
+                    <option value="">Chọn giới tính</option>
+                    <option value="MALE">Nam</option>
+                    <option value="FEMALE">Nữ</option>
+                    <option value="OTHER">Khác</option>
                   </select>
                 </div>
               </label>
               
-              <Input label="Số điện thoại" defaultValue="0987 654 321" />
+              <Input 
+                name="phone"
+                label="Số điện thoại" 
+                value={formData.phone || ""} 
+                onChange={handleInputChange} 
+              />
             </div>
           </Card>
 
@@ -119,7 +228,13 @@ export default function MemberProfilePage() {
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Chiều cao</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <input className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none" defaultValue="175" />
+                  <input 
+                    name="height"
+                    type="number"
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none" 
+                    value={formData.height || ""} 
+                    onChange={handleInputChange} 
+                  />
                   <span className="text-sm text-slate-500">cm</span>
                 </div>
               </label>
@@ -127,7 +242,13 @@ export default function MemberProfilePage() {
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Cân nặng</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <input className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none" defaultValue="68" />
+                  <input 
+                    name="weight"
+                    type="number"
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none" 
+                    value={formData.weight || ""} 
+                    onChange={handleInputChange} 
+                  />
                   <span className="text-sm text-slate-500">kg</span>
                 </div>
               </label>
@@ -135,9 +256,16 @@ export default function MemberProfilePage() {
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Mục tiêu</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <select className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none">
-                    <option>Giảm cân</option>
-                    <option>Tăng cơ</option>
+                  <select 
+                    name="target"
+                    value={formData.target || ""} 
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
+                  >
+                    <option value="">Chọn mục tiêu</option>
+                    <option value="LOSE_WEIGHT">Giảm cân</option>
+                    <option value="GAIN_MUSCLE">Tăng cơ</option>
+                    <option value="MAINTAIN">Duy trì vóc dáng</option>
                   </select>
                 </div>
               </label>
@@ -148,10 +276,16 @@ export default function MemberProfilePage() {
                 Mức độ vận động <InfoIcon className="inline h-3 w-3 text-slate-400"/>
               </span>
               <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                <select className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none">
-                  <option>Vận động vừa phải (3-5 buổi/tuần)</option>
-                  <option>Ít vận động</option>
-                  <option>Vận động nhiều (6-7 buổi/tuần)</option>
+                <select 
+                  name="activityLevel"
+                  value={formData.activityLevel || ""} 
+                  onChange={handleInputChange}
+                  className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
+                >
+                  <option value="">Chọn mức độ</option>
+                  <option value="SEDENTARY">Ít vận động</option>
+                  <option value="MODERATE">Vận động vừa phải (3-5 buổi/tuần)</option>
+                  <option value="ACTIVE">Vận động nhiều (6-7 buổi/tuần)</option>
                 </select>
               </div>
             </label>
@@ -227,7 +361,13 @@ export default function MemberProfilePage() {
           </Card>
 
           <div className="flex justify-end">
-            <Button className="w-full sm:w-auto min-w-[140px]">Lưu thay đổi</Button>
+            <Button 
+              className="w-full sm:w-auto min-w-[140px]" 
+              onClick={handleSave} 
+              disabled={saving}
+            >
+              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+            </Button>
           </div>
         </div>
       </div>

@@ -11,9 +11,11 @@ interface RoleRouteProps {
 
 export default function RoleRoute({ roles, children }: RoleRouteProps) {
   const user = useAuthStore((state) => state.user);
-  const role = user?.role || "MEMBER";
+  const userRoles = user?.roles || ["MEMBER"];
 
-  if (!roles.includes(role)) {
+  const hasAccess = userRoles.some(r => roles.includes(r as Role));
+
+  if (!hasAccess) {
     return <Navigate to={ROUTES.FORBIDDEN} replace />;
   }
 

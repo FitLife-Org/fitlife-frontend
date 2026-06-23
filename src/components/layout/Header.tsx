@@ -29,8 +29,8 @@ export default function Header() {
         <div className="hidden h-8 w-[1px] bg-slate-200 sm:block" />
         
         <div className="hidden text-right sm:block">
-          <p className="text-sm font-bold text-slate-900">{user?.fullName || user?.username || "FitLife User"}</p>
-          <p className="text-xs font-bold uppercase tracking-wider text-fit-primary">{user?.role === "ADMIN" ? "Quản trị viên" : "Premium"}</p>
+          <p className="text-sm font-bold text-slate-900">{user?.fullName || user?.email || "FitLife User"}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-fit-primary">{user?.roles?.includes("ADMIN") ? "Quản trị viên" : "Premium"}</p>
         </div>
         
         <div className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-fit-primarySoft to-emerald-100 text-fit-primary shadow-inner transition-transform hover:scale-105 active:scale-95 border border-white">

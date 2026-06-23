@@ -6,13 +6,16 @@ import { useGSAP } from "@gsap/react";
 
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
+import CustomCursor from "../../components/common/CustomCursor";
 import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
+import { useAuthStore } from "../../store/authStore";
 import { validateRegister } from "../../utils/validators/registerValidator";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ fullName: "", email: "", phone: "", password: "", confirmPassword: "" });
+  const setSession = useAuthStore((state) => state.setSession);
+  const [form, setForm] = useState({ username: "", fullName: "", email: "", phone: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -44,9 +47,10 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const { confirmPassword, ...registerData } = form;
-      const message = await authService.register(registerData);
-      alert(message || "Đăng ký thành công, vui lòng đăng nhập!");
-      navigate(ROUTES.LOGIN, { replace: true });
+      const session = await authService.register(registerData);
+      setSession(session);
+      alert("Đăng ký thành công!");
+      navigate(ROUTES.MEMBER_HOME, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đăng ký thất bại.");
     } finally {
@@ -95,17 +99,19 @@ export default function RegisterPage() {
       ref={containerRef}
       className="relative min-h-screen w-full overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
     >
+      <CustomCursor />
       {/* Overlay sáng mờ phủ toàn bộ background để hợp với tone sáng */}
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] transition-all duration-700" />
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-[4px] transition-all duration-700" />
 
       {/* Nội dung chính */}
       <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-2">
 
         {/* Cột trái (Form đăng ký): order-2 lg:order-1 */}
         <section className="flex items-center justify-center p-4 lg:p-12 order-2 lg:order-1">
-          <div ref={formRef} className="relative w-full max-w-md rounded-[2rem] bg-white/80 p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.15)] backdrop-blur-2xl border border-white/60 lg:p-10 overflow-hidden">
-            <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-sky-300/20 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-blue-300/20 blur-3xl pointer-events-none" />
+          <div ref={formRef} className="relative w-full max-w-md rounded-[2.5rem] bg-white/60 p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.2)] backdrop-blur-2xl border border-white/80 lg:p-10 overflow-hidden hover:shadow-[0_16px_60px_-12px_rgba(0,0,0,0.3)] transition-all duration-500">
+            <div className="absolute inset-0 bg-gradient-to-tr from-sky-50/50 via-transparent to-blue-50/50 opacity-50"></div>
+            <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
 
             <div className="relative z-10 flex flex-col">
               <header className="mb-8 text-center lg:text-left gsap-form-element">
@@ -129,6 +135,17 @@ export default function RegisterPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="gsap-form-element grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label="Tên đăng nhập"
+                    name="username"
+                    value={form.username}
+                    onChange={updateField}
+                    required
+                    minLength={4}
+                    maxLength={50}
+                    error={fieldErrors.username}
+                    className="bg-white"
+                  />
                   <Input
                     label="Họ tên"
                     name="fullName"
@@ -190,7 +207,7 @@ export default function RegisterPage() {
 
                 <div className="gsap-form-element pt-4">
                   <Button
-                    className="w-full py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white transition-all font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 text-base"
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white transition-all duration-300 font-black shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:-translate-y-1 active:translate-y-0 text-base border border-sky-400/50"
                     type="submit"
                     isLoading={loading}
                   >
@@ -245,7 +262,7 @@ export default function RegisterPage() {
                     >
                       {text}
                     </span>
-                    {idx > 0 && <ArrowRight className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-500 ${isActive ? "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]" : "text-slate-800"} rotate-180`} />}
+                    {idx > 0 && <ArrowRight className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-500 ${isActive ? "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]" : "text-slate-800"}`} />}
                   </div>
                 );
               })}

@@ -1,11 +1,12 @@
 import type { Role } from "./common.type";
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
 }
 
 export interface RegisterRequest {
+  username: string;
   fullName: string;
   email: string;
   phone: string;
@@ -25,5 +26,6 @@ export interface AuthSession {
 }
 
 export interface GoogleLoginRequest {
-  token: string;
+  idToken?: string;
+  code?: string;
 }
