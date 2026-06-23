@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
-import { Loader2, ArrowRight } from "lucide-react";
+import {useState, useRef, useEffect, type ChangeEvent, type FormEvent} from "react";
+import {Link, useNavigate} from "react-router-dom";
+import {GoogleLogin, type CredentialResponse} from "@react-oauth/google";
+import {Loader2, ArrowRight} from "lucide-react";
 import gsap from "gsap";
 import {useGSAP} from "@gsap/react";
 
@@ -11,7 +11,7 @@ import {ROUTES} from "../../config/routes";
 import {authService} from "../../services/authService";
 import {useAuthStore} from "../../store/authStore";
 import {validateLogin} from "../../utils/validators/loginValidator";
-import { getRedirectPathByRoles } from "../../utils/authRedirect";
+import {getRedirectPathByRoles} from "../../utils/authRedirect";
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -43,11 +43,7 @@ export default function LoginPage() {
             setLoading(true);
             setError("");
 
-            console.log("Google credential response:", credentialResponse);
-
             const idToken = credentialResponse.credential;
-
-            console.log("Google ID Token:", idToken);
 
             if (!idToken) {
                 throw new Error("Không nhận được ID token từ Google.");
@@ -58,9 +54,8 @@ export default function LoginPage() {
             setSession(session);
 
             const redirectPath = getRedirectPathByRoles(session.user.roles);
-            navigate(redirectPath, { replace: true });
+            navigate(redirectPath, {replace: true});
         } catch (error) {
-            console.error("Google login thất bại:", error);
             setError(
                 error instanceof Error
                     ? error.message
@@ -99,7 +94,7 @@ export default function LoginPage() {
 
         console.log("Redirect path:", redirectPath);
 
-        navigate(redirectPath, { replace: true });
+        navigate(redirectPath, {replace: true});
     };
 
     // Hiệu ứng GSAP
