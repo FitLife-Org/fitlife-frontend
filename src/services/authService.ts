@@ -37,12 +37,14 @@ const extractErrorMessage = (error: unknown): string => {
       response?: {
         data?: {
           message?: string;
+          error?: string;
         };
       };
     };
 
     return (
         axiosError.response?.data?.message ||
+        axiosError.response?.data?.error ||
         "Có lỗi xảy ra. Vui lòng thử lại."
     );
   }
