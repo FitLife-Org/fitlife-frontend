@@ -3,8 +3,10 @@ import type { ApiResponse } from "../types/common.type";
 import type {
   AuthResponsePayload,
   AuthSession,
+  ForgotPasswordRequest,
   LoginRequest,
   RegisterRequest,
+  ResetPasswordRequest,
 } from "../types/auth.type";
 import { tokenStorage } from "../utils/token";
 import type { Role } from "../types/common.type";
@@ -93,15 +95,39 @@ export const authService = {
     try {
       const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
           "/auth/google-login",
-          {
-            idToken,
-          }
+          { idToken }
       );
 
       const session = normalizeSession(response.data.data);
       tokenStorage.set(session.token);
 
       return session;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  async forgotPassword(data: ForgotPasswordRequest): Promise<string> {
+    try {
+      const response = await apiClient.post<ApiResponse<void>>(
+          "/auth/forgot-password",
+          data
+      );
+
+      return response.data.message || "OTP đã được gửi đến email của bạn.";
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  async resetPassword(data: ResetPasswordRequest): Promise<string> {
+    try {
+      const response = await apiClient.post<ApiResponse<void>>(
+          "/auth/reset-password",
+          data
+      );
+
+      return response.data.message || "Đặt lại mật khẩu thành công.";
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
