@@ -1,11 +1,21 @@
-import { Bot, CalendarDays, ClipboardCheck, Dumbbell, Gauge, HeartPulse, Home, Package, ShieldCheck, UserRound, Users, WalletCards, Wrench, Zap, Settings } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Bot, CalendarDays, ClipboardCheck, Dumbbell, Gauge, HeartPulse, Home, Package, ShieldCheck, UserRound, Users, WalletCards, Wrench, Zap, Settings, BarChart, Flame, Apple, Bell, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { ROUTES } from "../../config/routes";
 import { useAuthStore } from "../../store/authStore";
 import { useUiStore } from "../../store/uiStore";
 import type { Role } from "../../types/common.type";
 
-const menuItems: Array<{ label: string; path: string; icon: typeof Home; roles: Role[] }> = [
+type MenuItemType = {
+  label: string;
+  path?: string;
+  icon: any;
+  roles: Role[];
+  children?: { label: string; path: string }[];
+};
+
+const menuItems: MenuItemType[] = [
+ 
   { label: "Dashboard", path: ROUTES.MEMBER_HOME, icon: Home, roles: ["MEMBER"] },
   { label: "Gói tập", path: ROUTES.MEMBER_PACKAGES, icon: Package, roles: ["MEMBER"] },
   { label: "Lịch tập", path: ROUTES.MEMBER_BOOKING, icon: CalendarDays, roles: ["MEMBER"] },
@@ -13,12 +23,28 @@ const menuItems: Array<{ label: string; path: string; icon: typeof Home; roles: 
   { label: "AI Fitness", path: ROUTES.MEMBER_AI, icon: Bot, roles: ["MEMBER"] },
   { label: "Thanh toán", path: ROUTES.MEMBER_PAYMENT, icon: WalletCards, roles: ["MEMBER"] },
   { label: "Hồ sơ", path: ROUTES.MEMBER_PROFILE, icon: UserRound, roles: ["MEMBER"] },
-  { label: "Dashboard", path: ROUTES.ADMIN_DASHBOARD, icon: Gauge, roles: ["ADMIN", "STAFF", "TRAINER"] },
-  { label: "Thành viên", path: ROUTES.ADMIN_MEMBERS, icon: ShieldCheck, roles: ["ADMIN"] },
-  { label: "Quản lý gói", path: ROUTES.ADMIN_PACKAGES, icon: Package, roles: ["ADMIN"] },
-  { label: "Thiết bị", path: ROUTES.ADMIN_EQUIPMENT, icon: Wrench, roles: ["ADMIN", "STAFF"] },
-  { label: "Check-in", path: ROUTES.STAFF_CHECKIN, icon: ClipboardCheck, roles: ["STAFF", "ADMIN"] },
-  { label: "Lịch trainer", path: ROUTES.TRAINER_SCHEDULE, icon: CalendarDays, roles: ["TRAINER", "ADMIN"] },
+  
+  // ADMIN/STAFF/TRAINER Routes based on user screenshot
+  { label: "Tổng quan", path: ROUTES.ADMIN_DASHBOARD, icon: Gauge, roles: ["ADMIN", "STAFF", "TRAINER"] },
+  { label: "Hội viên", path: ROUTES.ADMIN_MEMBERS, icon: Users, roles: ["ADMIN"] },
+  { label: "Gói tập", path: ROUTES.ADMIN_PACKAGES, icon: Package, roles: ["ADMIN"] },
+  { label: "Lịch tập", path: "/admin/schedule", icon: CalendarDays, roles: ["ADMIN", "STAFF", "TRAINER"] },
+  { label: "Huấn luyện viên", path: ROUTES.ADMIN_TRAINERS || "/admin/trainers", icon: UserRound, roles: ["ADMIN"] },
+  { label: "Bài tập", path: "/admin/workouts", icon: Flame, roles: ["ADMIN", "TRAINER"] },
+  { label: "Dinh dưỡng", path: "/admin/nutrition", icon: Apple, roles: ["ADMIN", "TRAINER"] },
+  { 
+    label: "Trang thiết bị", 
+    icon: Dumbbell, 
+    roles: ["ADMIN", "STAFF"],
+    children: [
+      { label: "Danh sách thiết bị", path: ROUTES.ADMIN_EQUIPMENT },
+      { label: "Danh mục thiết bị", path: "/admin/equipment-categories" },
+      { label: "Bảo trì & sửa chữa", path: "/admin/equipment-maintenance" },
+      { label: "Kiểm kê", path: "/admin/equipment-inventory" },
+    ]
+  },
+  { label: "Báo cáo", path: ROUTES.ADMIN_REPORTS || "/admin/reports", icon: BarChart, roles: ["ADMIN"] },
+  { label: "Thông báo", path: "/admin/notifications", icon: Bell, roles: ["ADMIN", "STAFF", "TRAINER"] },
   { label: "Cài đặt", path: ROUTES.COMMON_SETTINGS, icon: Settings, roles: ["MEMBER", "ADMIN", "STAFF", "TRAINER"] },
 ];
 
@@ -27,6 +53,16 @@ export default function Sidebar() {
   const sidebarOpen = useUiStore((state) => state.sidebarOpen);
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
   const userRoles = user?.roles || ["MEMBER"];
+  
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    "Trang thiết bị": true // Default expanded for equipment based on screenshot
+  });
+  
+  const toggleMenu = (label: string) => {
+    setExpandedMenus((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  const location = useLocation();
 
   return (
     <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-40 w-[280px] bg-slate-950 border-r border-slate-900 transition-transform duration-500 ease-out lg:static lg:translate-x-0 flex flex-col shadow-2xl lg:shadow-none`}>
@@ -45,11 +81,61 @@ export default function Sidebar() {
           .filter((item) => item.roles.some((r) => userRoles.includes(r)))
           .map((item) => {
             const Icon = item.icon;
+            const hasChildren = item.children && item.children.length > 0;
+            const isExpanded = expandedMenus[item.label];
+            
+            // Check if any child is active
+            const isChildActive = hasChildren && item.children?.some(child => location.pathname === child.path);
+
+            if (hasChildren) {
+              return (
+                <div key={item.label} className="space-y-1">
+                  <button
+                    onClick={() => toggleMenu(item.label)}
+                    className={`w-full group relative flex items-center justify-between rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wide transition-all duration-300 ease-out overflow-hidden ${
+                      isChildActive || isExpanded
+                        ? "bg-fit-primary/10 text-fit-primary shadow-[inset_4px_0_0_0_#10b981]" 
+                        : "text-slate-400 hover:bg-slate-900 hover:text-white hover:translate-x-2"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <Icon className={`h-5 w-5 transition-transform duration-300 ${isChildActive || isExpanded ? 'scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'group-hover:scale-110'}`} />
+                      <span className="relative z-10">{item.label}</span>
+                    </div>
+                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {(isChildActive || isExpanded) && (
+                      <div className="absolute inset-0 z-0 bg-gradient-to-r from-fit-primary/20 to-transparent opacity-50" />
+                    )}
+                  </button>
+                  
+                  {isExpanded && (
+                    <div className="pl-12 pr-4 py-1 space-y-1">
+                      {item.children?.map((child) => (
+                        <NavLink
+                          key={child.path}
+                          to={child.path}
+                          onClick={() => setSidebarOpen(false)}
+                          className={({ isActive }) =>
+                            `block rounded-lg px-3 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+                              isActive
+                                ? "bg-fit-primary/10 text-fit-primary"
+                                : "text-slate-500 hover:bg-slate-900 hover:text-slate-300"
+                            }`
+                          }
+                        >
+                          {child.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
             return (
               <NavLink
                 key={item.path}
-                to={item.path}
+                to={item.path!}
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
                   `group relative flex items-center gap-4 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wide transition-all duration-300 ease-out overflow-hidden ${

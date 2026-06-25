@@ -33,8 +33,14 @@ export const validateRegister = (data: RegisterFormData): Record<string, string>
   
   if (!data.password) {
     errors.password = "Mật khẩu không được để trống.";
-  } else if (data.password.length < 6) {
-    errors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+  } else {
+    if (data.password.length < 6) {
+      errors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+    } else if (!/[A-Z]/.test(data.password)) {
+      errors.password = "Mật khẩu phải chứa ít nhất 1 chữ viết hoa.";
+    } else if (!/[0-9]/.test(data.password)) {
+      errors.password = "Mật khẩu phải chứa ít nhất 1 chữ số.";
+    }
   }
 
   if (data.password !== data.confirmPassword) {
