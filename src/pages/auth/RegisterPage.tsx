@@ -102,7 +102,7 @@ export default function RegisterPage() {
   return (
     <main
       ref={containerRef}
-      className="relative min-h-screen w-full overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
+      className="fit-page relative w-full overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
     >
       <CustomCursor />
       {/* Overlay sáng mờ phủ toàn bộ background để hợp với tone sáng */}
@@ -113,7 +113,7 @@ export default function RegisterPage() {
 
         {/* Cột trái (Form đăng ký): order-2 lg:order-1 */}
         <section className="flex items-center justify-center p-4 lg:p-12 order-2 lg:order-1">
-          <div ref={formRef} className="relative w-full max-w-md rounded-[2.5rem] bg-white/60 p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.2)] backdrop-blur-2xl border border-white/80 lg:p-10 overflow-hidden hover:shadow-[0_16px_60px_-12px_rgba(0,0,0,0.3)] transition-all duration-500">
+          <div ref={formRef} className="fit-card relative w-full max-w-md p-8 lg:p-10 overflow-hidden hover:shadow-2xl transition-all duration-500">
             <div className="absolute inset-0 bg-gradient-to-tr from-fit-primarySoft via-transparent to-fit-teal/10 opacity-50"></div>
             <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-fit-primary/20 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-fit-teal/20 blur-3xl pointer-events-none" />
@@ -125,8 +125,8 @@ export default function RegisterPage() {
                     <span>FitLife</span>
                   </div>
                 </div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight text-center">Tạo tài khoản</h2>
-                <p className="mt-2 text-slate-500 font-medium text-center">Bắt đầu theo dõi tiến độ của bạn.</p>
+                <h2 className="fit-title text-center">Tạo tài khoản</h2>
+                <p className="fit-subtitle text-center">Bắt đầu theo dõi tiến độ của bạn.</p>
               </header>
 
               {error && (
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                     minLength={4}
                     maxLength={50}
                     error={fieldErrors.username}
-                    className="bg-white"
+                    className="bg-transparent"
                   />
                   <Input
                     label="Họ tên"
@@ -158,7 +158,7 @@ export default function RegisterPage() {
                     onChange={updateField}
                     required
                     error={fieldErrors.fullName}
-                    className="bg-white"
+                    className="bg-transparent"
                   />
                 </div>
                 <div className="gsap-form-element">
@@ -170,7 +170,7 @@ export default function RegisterPage() {
                     onChange={updateField}
                     required
                     error={fieldErrors.email}
-                    className="bg-white"
+                    className="bg-transparent"
                   />
                 </div>
                 <div className="gsap-form-element">
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                     value={form.phone}
                     onChange={updateField}
                     error={fieldErrors.phone}
-                    className="bg-white"
+                    className="bg-transparent"
                   />
                 </div>
                 <div className="gsap-form-element">
@@ -193,7 +193,7 @@ export default function RegisterPage() {
                     required
                     minLength={6}
                     error={fieldErrors.password}
-                    className="bg-white"
+                    className="bg-transparent"
                   />
                 </div>
                 <div className="gsap-form-element">
@@ -206,7 +206,7 @@ export default function RegisterPage() {
                     required
                     minLength={6}
                     error={fieldErrors.confirmPassword}
-                    className="bg-white"
+                    className="bg-transparent"
                   />
                 </div>
 

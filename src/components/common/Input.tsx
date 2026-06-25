@@ -11,16 +11,16 @@ export default function Input({ label, icon, error, className = "", id, ...props
 
   return (
     <label className="block" htmlFor={inputId}>
-      {label && <span className="text-sm font-medium text-slate-700">{label}</span>}
-      <div className={`mt-2 flex min-h-12 items-center rounded-xl border bg-white px-4 transition ${error ? "border-red-400 focus-within:ring-2 focus-within:ring-red-100" : "border-fit-border focus-within:border-fit-primary focus-within:ring-2 focus-within:ring-emerald-100"}`}>
-        {icon && <span className="mr-3 text-slate-400">{icon}</span>}
+      {label && <span className="text-sm font-medium text-fit-text">{label}</span>}
+      <div className="relative mt-2">
+        {icon && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-fit-muted">{icon}</span>}
         <input
           id={inputId}
-          className={`w-full bg-transparent py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 ${className}`}
+          className={`fit-auth-input w-full outline-none placeholder:text-fit-muted ${icon ? 'pl-11 pr-4' : 'px-4'} ${error ? "border-fit-danger focus:border-fit-danger focus:ring-fit-danger/10" : ""} ${className}`}
           {...props}
         />
       </div>
-      {error && <span className="block text-sm text-red-600">{error}</span>}
+      {error && <span className="mt-1 block text-sm text-fit-danger">{error}</span>}
     </label>
   );
 }

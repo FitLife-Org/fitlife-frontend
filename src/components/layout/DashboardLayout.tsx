@@ -9,7 +9,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
 
   return (
-    <div className="min-h-screen bg-fit-bg lg:flex">
+    <div className="fit-page lg:flex">
       {sidebarOpen && <button className="fixed inset-0 z-30 bg-slate-950/30 lg:hidden" type="button" aria-label="Đóng menu" onClick={() => setSidebarOpen(false)} />}
       <Sidebar />
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
