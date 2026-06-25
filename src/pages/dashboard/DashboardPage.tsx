@@ -28,19 +28,19 @@ const workouts = [
 ];
 
 const quickActions = [
-  { name: "Tạo lịch tập", icon: CalendarDays, color: "text-blue-500", bg: "bg-blue-50" },
-  { name: "Xem meal plan", icon: Apple, color: "text-green-500", bg: "bg-green-50" },
-  { name: "Đo chỉ số cơ thể", icon: Target, color: "text-purple-500", bg: "bg-purple-50" },
-  { name: "Hỏi FitAI", icon: Sparkles, color: "text-rose-500", bg: "bg-rose-50" },
+  { name: "Tạo lịch tập", icon: CalendarDays, color: "text-fit-admin", bg: "bg-fit-adminSoft" },
+  { name: "Xem meal plan", icon: Apple, color: "text-fit-primary", bg: "bg-fit-primarySoft" },
+  { name: "Đo chỉ số cơ thể", icon: Target, color: "text-fit-staff", bg: "bg-fit-staffSoft" },
+  { name: "Hỏi FitAI", icon: Sparkles, color: "text-fit-danger", bg: "bg-fit-dangerSoft" },
 ];
 
 // Component Tooltip tùy chỉnh cho biểu đồ
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-        <div className="rounded-xl border border-slate-100 bg-white/95 p-3 shadow-lg backdrop-blur-sm">
-          <p className="mb-1 text-sm font-semibold text-slate-500">{label}</p>
-          <p className="text-base font-bold text-emerald-600">
+        <div className="rounded-xl border border-fit-border bg-white/95 p-3 shadow-lg backdrop-blur-sm">
+          <p className="mb-1 text-sm font-semibold text-fit-muted">{label}</p>
+          <p className="text-base font-bold text-fit-primary">
             {payload[0].value} {payload[0].dataKey === 'weight' ? 'kg' : '%'}
           </p>
         </div>
@@ -87,12 +87,12 @@ export default function DashboardPage() {
             <Card className="flex h-full flex-col p-6 transition-shadow duration-300 hover:shadow-xl">
               <div className="mb-5 flex items-center justify-between">
                 <h2 className="text-xl font-bold tracking-tight text-fit-text">Lịch tập hôm nay</h2>
-                <a className="group flex items-center gap-1 text-sm font-semibold text-fit-primary transition-colors hover:text-green-600" href="/member/booking">
+                <a className="group flex items-center gap-1 text-sm font-semibold text-fit-primary transition-colors hover:text-fit-primaryHover" href="/member/booking">
                   Xem lịch <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </a>
               </div>
 
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div className="rounded-2xl border border-fit-border bg-fit-bg p-4">
                 <p className="text-sm font-semibold text-fit-primary">18:00 - 19:15</p>
                 <div className="mt-1 flex items-center justify-between">
                   <p className="font-bold text-fit-text">Push (Ngực - Vai - Tay sau)</p>
@@ -102,9 +102,9 @@ export default function DashboardPage() {
 
               <div className="mt-6 flex-1 space-y-2">
                 {workouts.map(([name, reps], index) => (
-                    <div className="group flex items-center justify-between rounded-xl p-2 -mx-2 text-sm transition-all hover:bg-slate-50" key={name}>
+                    <div className="group flex items-center justify-between rounded-xl p-2 -mx-2 text-sm transition-all hover:bg-fit-bg" key={name}>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 font-bold text-slate-500 transition-colors group-hover:bg-fit-primary group-hover:text-white">{index + 1}</div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 font-bold text-fit-muted transition-colors group-hover:bg-fit-primary group-hover:text-white">{index + 1}</div>
                         <span className="font-medium text-fit-text">{name}</span>
                       </div>
                       <span className="font-medium text-fit-muted">{reps}</span>
@@ -125,45 +125,45 @@ export default function DashboardPage() {
                 <select
                     value={chartType}
                     onChange={(e) => setChartType(e.target.value as "weight" | "fat")}
-                    className="cursor-pointer rounded-xl border border-fit-border bg-slate-50 px-3 py-2 text-sm font-medium text-fit-text outline-none transition-colors hover:border-fit-primary focus:border-fit-primary focus:ring-2 focus:ring-fit-primarySoft"
+                    className="cursor-pointer rounded-xl border border-fit-border bg-fit-bg px-3 py-2 text-sm font-medium text-fit-text outline-none transition-colors hover:border-fit-primary focus:border-fit-primary focus:ring-2 focus:ring-fit-primarySoft"
                 >
                   <option value="weight">Cân nặng (kg)</option>
                   <option value="fat">Mỡ cơ thể (%)</option>
                 </select>
               </div>
 
-              <div className="relative flex-1 min-h-[250px] rounded-2xl border border-emerald-100/50 bg-white p-2">
+              <div className="relative flex-1 min-h-[250px] rounded-2xl border border-fit-primarySoft bg-white p-2" style={{ minWidth: 0, minHeight: 250 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={progressData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#059669" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#059669" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                     <XAxis
                         dataKey="week"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
+                        tick={{ fill: '#64748b', fontSize: 12 }}
                         dy={10}
                     />
                     <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
+                        tick={{ fill: '#64748b', fontSize: 12 }}
                         domain={['dataMin - 2', 'dataMax + 2']}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Area
                         type="monotone"
                         dataKey={chartType}
-                        stroke="#10b981"
+                        stroke="#059669"
                         strokeWidth={4}
                         fillOpacity={1}
                         fill="url(#colorValue)"
-                        activeDot={{ r: 6, strokeWidth: 0, fill: '#059669' }}
+                        activeDot={{ r: 6, strokeWidth: 0, fill: '#047857' }}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -182,14 +182,14 @@ export default function DashboardPage() {
             <Card className="flex h-full flex-col p-6 transition-shadow duration-300 hover:shadow-xl">
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-xl font-bold tracking-tight text-fit-text">Mục tiêu tháng này</h2>
-                <a className="group flex items-center gap-1 text-sm font-semibold text-fit-primary transition-colors hover:text-green-600" href="/member/body-metrics">
+                <a className="group flex items-center gap-1 text-sm font-semibold text-fit-primary transition-colors hover:text-fit-primaryHover" href="/member/body-metrics">
                   Chi tiết <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </a>
               </div>
               <div className="flex-1 space-y-4">
                 <Goal title="Giảm mỡ" value="-1.8 kg" target="Mục tiêu: -3.0 kg" progress={60} color="bg-fit-primary" bg="bg-fit-primarySoft" />
-                <Goal title="Tăng cơ" value="+0.6 kg" target="Mục tiêu: +1.5 kg" progress={40} color="bg-fit-blue" bg="bg-fit-blueSoft" />
-                <Goal title="Số ngày tập" value="12 ngày" target="Mục tiêu: 20 ngày" progress={60} color="bg-fit-purple" bg="bg-fit-purpleSoft" />
+                <Goal title="Tăng cơ" value="+0.6 kg" target="Mục tiêu: +1.5 kg" progress={40} color="bg-fit-admin" bg="bg-fit-adminSoft" />
+                <Goal title="Số ngày tập" value="12 ngày" target="Mục tiêu: 20 ngày" progress={60} color="bg-fit-staff" bg="bg-fit-staffSoft" />
               </div>
             </Card>
           </div>
@@ -203,13 +203,13 @@ export default function DashboardPage() {
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {quickActions.map((item) => (
-                  <button className="group relative flex flex-col items-start justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 text-left transition-all hover:-translate-y-1 hover:border-fit-primary hover:shadow-lg" key={item.name} type="button">
+                  <button className="group relative flex flex-col items-start justify-between overflow-hidden rounded-2xl border border-fit-border bg-white p-5 text-left transition-all hover:-translate-y-1 hover:border-fit-primary hover:shadow-lg" key={item.name} type="button">
                     <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110 ${item.bg} ${item.color}`}>
                       <item.icon className="h-6 w-6" />
                     </div>
                     <div className="flex w-full items-center justify-between">
-                      <span className="font-bold text-slate-800">{item.name}</span>
-                      <ArrowRight className="h-5 w-5 text-slate-400 transition-all group-hover:translate-x-1 group-hover:text-fit-primary" />
+                      <span className="font-bold text-fit-text">{item.name}</span>
+                      <ArrowRight className="h-5 w-5 text-fit-muted transition-all group-hover:translate-x-1 group-hover:text-fit-primary" />
                     </div>
                   </button>
               ))}
@@ -220,18 +220,17 @@ export default function DashboardPage() {
   );
 }
 
-// Giữ nguyên các function MetricCard, Summary, Goal của bạn ở dưới đây...
 function MetricCard({ icon, label, value, progress, tone, footer }: { icon: ReactNode; label: string; value: string; progress?: number; tone: "green" | "blue" | "purple"; footer?: ReactNode }) {
   const tones = {
-    green: "from-emerald-50 to-emerald-100/50 text-fit-primary border-emerald-100",
-    blue: "from-blue-50 to-blue-100/50 text-fit-blue border-blue-100",
-    purple: "from-purple-50 to-purple-100/50 text-fit-purple border-purple-100",
+    green: "from-fit-primarySoft to-white text-fit-primary border-fit-primary/20",
+    blue: "from-fit-adminSoft to-white text-fit-admin border-fit-admin/20",
+    purple: "from-fit-staffSoft to-white text-fit-staff border-fit-staff/20",
   };
 
   const progressColors = {
     green: "bg-fit-primary",
-    blue: "bg-fit-blue",
-    purple: "bg-fit-purple",
+    blue: "bg-fit-admin",
+    purple: "bg-fit-staff",
   };
 
   return (
@@ -251,7 +250,7 @@ function MetricCard({ icon, label, value, progress, tone, footer }: { icon: Reac
                 <span>Tiến độ</span>
                 <span>{progress}%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-fit-bg">
                 <div className={`h-full rounded-full transition-all duration-1000 ease-out ${progressColors[tone]}`} style={{ width: `${progress}%` }} />
               </div>
             </div>
@@ -265,12 +264,12 @@ function MetricCard({ icon, label, value, progress, tone, footer }: { icon: Reac
 
 function Summary({ label, value, active, trend }: { label: string; value: string; active?: boolean; trend?: "up" | "down" }) {
   return (
-      <div className={`relative overflow-hidden rounded-2xl border p-4 text-center transition-all ${active ? "border-fit-primary bg-fit-primarySoft shadow-sm" : "border-slate-200 bg-white"}`}>
+      <div className={`relative overflow-hidden rounded-2xl border p-4 text-center transition-all ${active ? "border-fit-primary bg-fit-primarySoft shadow-sm" : "border-fit-border bg-white"}`}>
         <p className="text-xs font-semibold uppercase tracking-wider text-fit-muted">{label}</p>
         <div className="mt-2 flex items-center justify-center gap-1">
           <p className={`text-lg font-black tracking-tight ${active ? "text-fit-primary" : "text-fit-text"}`}>{value}</p>
           {trend === "down" && <TrendingUp className="h-4 w-4 rotate-180 text-fit-primary" />}
-          {trend === "up" && <TrendingUp className="h-4 w-4 text-rose-500" />}
+          {trend === "up" && <TrendingUp className="h-4 w-4 text-fit-danger" />}
         </div>
       </div>
   );
@@ -278,13 +277,13 @@ function Summary({ label, value, active, trend }: { label: string; value: string
 
 function Goal({ title, value, target, progress, color, bg }: { title: string; value: string; target: string; progress: number; color: string; bg: string }) {
   return (
-      <div className="group rounded-2xl border border-slate-100 bg-white p-5 transition-all hover:border-slate-200 hover:shadow-md">
+      <div className="group rounded-2xl border border-fit-border bg-white p-5 transition-all hover:border-fit-primary/50 hover:shadow-md">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="font-bold text-slate-800">{title}</p>
-            <p className="mt-1 text-xs font-medium text-slate-500">{target}</p>
+            <p className="font-bold text-fit-text">{title}</p>
+            <p className="mt-1 text-xs font-medium text-fit-muted">{target}</p>
           </div>
-          <p className="text-xl font-black tracking-tight text-slate-800">{value}</p>
+          <p className="text-xl font-black tracking-tight text-fit-text">{value}</p>
         </div>
         <div className={`h-3 w-full overflow-hidden rounded-full ${bg}`}>
           <div className={`relative h-full rounded-full transition-all duration-1000 ease-out ${color}`} style={{ width: `${progress}%` }}>

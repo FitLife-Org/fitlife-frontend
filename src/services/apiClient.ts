@@ -33,7 +33,10 @@ const toApiError = (error: unknown): ApiError => {
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = tokenStorage.get();
 
-  if (token) {
+  // Do not send token for authentication endpoints
+  const isAuthEndpoint = config.url?.includes('/auth/login') || config.url?.includes('/auth/register') || config.url?.includes('/auth/google-login');
+
+  if (token && !isAuthEndpoint) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 

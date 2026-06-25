@@ -10,13 +10,16 @@ const normalizeSession = (payload: any): AuthSession => {
     throw new Error("Không nhận được token từ máy chủ.");
   }
 
+  const rawRoles: string[] = payload?.roles || ["MEMBER"];
+  const normalizedRoles = rawRoles.map(role => role.replace(/^ROLE_/, ''));
+
   return {
     token,
     user: {
       userId: payload?.userId || 0,
       email: payload?.email || "unknown@email.com",
       fullName: payload?.fullName || "User",
-      roles: payload?.roles || ["MEMBER"],
+      roles: normalizedRoles,
     },
   };
 };

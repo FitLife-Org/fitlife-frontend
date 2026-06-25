@@ -68,8 +68,13 @@ export default function LoginPage() {
       const session = await authService.login(formData);
       setSession(session);
       navigate(getRedirectPath(session.user.roles), { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Tài khoản hoặc mật khẩu không chính xác.");
+    } catch (err: any) {
+      if (err.data && typeof err.data === 'object') {
+        setFieldErrors(err.data as Record<string, string>);
+        setError(err.message || "Đăng nhập thất bại.");
+      } else {
+        setError(err.message || "Tài khoản hoặc mật khẩu không chính xác.");
+      }
     } finally {
       setLoading(false);
     }
@@ -132,33 +137,33 @@ export default function LoginPage() {
                     className=" w-35 object-contain"
                 />
               </div>
-              <span className="tracking-tight text-5xl  bg-clip-text  bg-gradient-to-r from-green-500  to-cyan-500">FitLife</span>
+              <span className="tracking-tight text-5xl bg-clip-text text-transparent bg-gradient-to-r from-fit-primary to-fit-teal">FitLife</span>
             </div>
 
             <div className="max-w-x2">
               <h1 className="text-5xl lg:text-5xl font-black leading-[1.15] mb-6 text-slate-900">
                 Làm chủ phòng gym<br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-cyan-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-fit-primary to-fit-teal">
                 gọn – chuẩn – chiến
               </span> mỗi ngày.
               </h1>
 
-              <p className="text-lg leading-relaxed text-slate-700 border-l-4 border-sky-500 pl-6 bg-white/50 backdrop-blur-sm py-3 pr-4 rounded-r-xl shadow-sm border-white/60 border-y border-r">
+              <p className="text-lg leading-relaxed text-slate-700 border-l-4 border-fit-primary pl-6 bg-white/50 backdrop-blur-sm py-3 pr-4 rounded-r-xl shadow-sm border-white/60 border-y border-r">
                 Quản lý hội viên, gói tập, check-in, lịch PT và thanh toán — tất cả trong một hệ thống mượt, nhanh, không độ trễ. Vận hành trơn tru, tập trung build cơ – không build stress.
               </p>
 
-              <div className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-sky-500/40 pl-6">
+              <div className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-fit-primary/40 pl-6">
                 {["EAT", "SLEEP", "GYM", "REPEAT"].map((text, idx) => {
                   const isActive = activeStep === idx;
                   return (
                       <div key={text} className="flex items-center gap-2 sm:gap-4">
                             <span
-                                className={`font-black tracking-widest transition-all duration-500 ${isActive ? "scale-110 bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(56,189,248,0.6)]" : "scale-100 text-slate-600"}`}
+                                className={`font-black tracking-widest transition-all duration-500 ${isActive ? "scale-110 bg-gradient-to-r from-fit-primary to-fit-teal bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(5,150,105,0.6)]" : "scale-100 text-slate-600"}`}
                                 style={{ fontSize: "1.5rem" }}
                             >
                                 {text}
                             </span>
-                        {idx < 3 && <ArrowRight className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-500 ${isActive ? "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]" : "text-slate-800"}`} />}
+                        {idx < 3 && <ArrowRight className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-500 ${isActive ? "text-fit-primary drop-shadow-[0_0_8px_rgba(5,150,105,0.8)]" : "text-slate-800"}`} />}
                       </div>
                   );
                 })}
@@ -169,14 +174,14 @@ export default function LoginPage() {
           {/* Cột phải: Form đăng nhập */}
           <section className="flex items-center justify-center p-4 lg:p-12">
             <div ref={formRef} className="relative w-full max-w-md rounded-[2.5rem] bg-white/60 p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.2)] backdrop-blur-2xl border border-white/80 lg:p-10 overflow-hidden hover:shadow-[0_16px_60px_-12px_rgba(0,0,0,0.3)] transition-all duration-500">
-              <div className="absolute inset-0 bg-gradient-to-tr from-sky-50/50 via-transparent to-blue-50/50 opacity-50"></div>
-              <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-fit-primarySoft via-transparent to-fit-teal/10 opacity-50"></div>
+              <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-fit-primary/20 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-fit-teal/20 blur-3xl pointer-events-none" />
 
               <div className="relative z-10 flex flex-col">
                 <header className="mb-8 text-center lg:text-left gsap-form-element">
-                  <div className="inline-block rounded-xl bg-sky-50 px-3 py-1 mb-4 lg:hidden">
-                    <div className="flex items-center gap-2 text-sky-600 font-bold">
+                  <div className="inline-block rounded-xl bg-fit-primarySoft px-3 py-1 mb-4 lg:hidden">
+                    <div className="flex items-center gap-2 text-fit-primary font-bold">
                       <span>FitLife</span>
                     </div>
                   </div>
@@ -223,7 +228,7 @@ export default function LoginPage() {
                       <input
                           type="checkbox"
                           id="remember-me"
-                          className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer"
+                          className="w-4 h-4 text-fit-primary border-gray-300 rounded focus:ring-fit-primary cursor-pointer"
                       />
                       <label
                           htmlFor="remember-me"
@@ -235,7 +240,7 @@ export default function LoginPage() {
 
                     <Link
                         to={ROUTES.FORGOT_PASSWORD}
-                        className="text-sm font-bold text-sky-600 transition-colors hover:text-sky-500"
+                        className="text-sm font-bold text-fit-primary transition-colors hover:text-fit-primaryHover"
                     >
                       Quên mật khẩu?
                     </Link>
@@ -243,7 +248,7 @@ export default function LoginPage() {
 
                   <div className="gsap-form-element pt-2">
                     <Button
-                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white transition-all duration-300 font-black shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:-translate-y-1 active:translate-y-0 text-base border border-sky-400/50"
+                        className="fit-auth-button"
                         type="submit"
                         isLoading={loading}
                     >
@@ -293,7 +298,7 @@ export default function LoginPage() {
 
                   <div className="gsap-form-element mt-8 text-center font-medium text-slate-500">
                     Chưa có tài khoản?{" "}
-                    <Link to={ROUTES.REGISTER} className="text-sky-600 hover:text-sky-500 font-bold transition-colors">
+                    <Link to={ROUTES.REGISTER} className="fit-auth-link">
                       Đăng ký ngay
                     </Link>
                   </div>

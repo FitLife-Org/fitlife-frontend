@@ -25,13 +25,13 @@ export default function AiFitnessPage() {
           </div>
 
           <Card className="mt-6 p-6">
-            <div className="ml-auto max-w-xl rounded-2xl bg-blue-50 p-5 text-fit-text">
+            <div className="ml-auto max-w-xl rounded-2xl bg-fit-primarySoft p-5 text-fit-text">
               Mình muốn tăng cơ giảm mỡ, bạn hãy tạo giúp mình lịch tập 5 buổi/tuần phù hợp nhé!
               <p className="mt-3 text-right text-xs text-fit-muted">10:30</p>
             </div>
             <div className="mt-5 flex gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-fit-primarySoft text-fit-primary"><Bot /></div>
-              <div className="max-w-2xl rounded-2xl border border-emerald-100 bg-emerald-50 p-5 leading-7 text-fit-text">
+              <div className="max-w-2xl rounded-2xl border border-fit-primary/20 bg-white shadow-sm p-5 leading-7 text-fit-text">
                 Chào Minh! Dựa trên mục tiêu tăng cơ giảm mỡ và tần suất 5 buổi/tuần, mình gợi ý lịch tập:
                 <ul className="mt-3 space-y-1">
                   <li>✓ Thứ 2: Push (Ngực - Vai - Tay sau)</li>
