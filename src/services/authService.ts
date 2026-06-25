@@ -55,6 +55,11 @@ export const authService = {
     return session;
   },
 
+  async forgotPassword(email: string): Promise<any> {
+    const response = await apiClient.post("/auth/forgot-password", { email });
+    return response.data;
+  },
+
   logout(): void {
     tokenStorage.clear();
   },

@@ -142,14 +142,15 @@ export default function LoginPage() {
 
             <div className="max-w-x2">
               <h1 className="text-5xl lg:text-5xl font-black leading-[1.15] mb-6 text-slate-900">
-                Làm chủ phòng gym<br/>
+                Làm chủ bản thân<br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-fit-primary to-fit-teal">
                 gọn – chuẩn – chiến
+                <br></br>
               </span> mỗi ngày.
               </h1>
 
               <p className="text-lg leading-relaxed text-slate-700 border-l-4 border-fit-primary pl-6 bg-white/50 backdrop-blur-sm py-3 pr-4 rounded-r-xl shadow-sm border-white/60 border-y border-r">
-                Quản lý hội viên, gói tập, check-in, lịch PT và thanh toán — tất cả trong một hệ thống mượt, nhanh, không độ trễ. Vận hành trơn tru, tập trung build cơ – không build stress.
+               Move your body, feel alive – in the gym, we thrive.
               </p>
 
               <div className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-fit-primary/40 pl-6">

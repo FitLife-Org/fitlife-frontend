@@ -1,6 +1,6 @@
 import { Check, Dumbbell, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { showAlert } from "../../utils/alert";
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
@@ -29,7 +29,7 @@ export default function PackageListPage() {
         setPackages(pkgs.filter(p => p.status === "ACTIVE"));
         setMySubscription(sub);
       } catch (error) {
-        toast.error("Không thể tải danh sách gói tập");
+        showAlert.error("Lỗi", "Không thể tải danh sách gói tập");
       } finally {
         setLoading(false);
       }
@@ -48,12 +48,12 @@ export default function PackageListPage() {
       if (result.paymentUrl) {
         window.location.href = result.paymentUrl;
       } else {
-        toast.success("Đăng ký thành công!");
+        showAlert.success("Thành công", "Đăng ký thành công!");
         const sub = await subscriptionService.getMySubscription();
         setMySubscription(sub);
       }
     } catch (error) {
-      toast.error("Lỗi khi xử lý thanh toán");
+      showAlert.error("Lỗi", "Lỗi khi xử lý thanh toán");
     } finally {
       setProcessingId(null);
     }
