@@ -48,7 +48,7 @@ export default function AdminDashboardPage() {
 }
 
 function AdminMetric({ icon, label, value, note, tone = "green" }: { icon: ReactNode; label: string; value: string; note: string; tone?: "green" | "blue" | "orange" }) {
-  const tones = { green: "bg-fit-primarySoft text-fit-primary", blue: "bg-fit-blueSoft text-fit-blue", orange: "bg-fit-orangeSoft text-fit-orange" };
+  const tones = { green: "bg-fit-primarySoft text-fit-primary", blue: "bg-fit-adminSoft text-fit-admin", orange: "bg-fit-trainerSoft text-fit-trainer" };
   return <Card className="p-6"><div className="flex items-center gap-4"><div className={`flex h-16 w-16 items-center justify-center rounded-full ${tones[tone]}`}>{icon}</div><div><p className="text-sm text-fit-muted">{label}</p><p className="mt-2 text-3xl font-black text-fit-primary">{value}</p></div></div><p className="mt-4 text-sm text-fit-muted">{note}</p></Card>;
 }
 

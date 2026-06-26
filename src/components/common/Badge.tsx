@@ -3,11 +3,11 @@ import type { ReactNode } from "react";
 type BadgeVariant = "success" | "warning" | "danger" | "info" | "purple" | "default";
 
 const variants: Record<BadgeVariant, string> = {
-  success: "bg-emerald-50 text-emerald-700",
-  warning: "bg-orange-50 text-orange-700",
-  danger: "bg-red-50 text-red-700",
-  info: "bg-blue-50 text-blue-700",
-  purple: "bg-purple-50 text-purple-700",
+  success: "bg-fit-primarySoft text-fit-primary",
+  warning: "bg-fit-trainerSoft text-fit-trainer",
+  danger: "bg-fit-dangerSoft text-fit-danger",
+  info: "bg-fit-adminSoft text-fit-admin",
+  purple: "bg-slate-100 text-slate-700",
   default: "bg-slate-100 text-slate-700",
 };
 

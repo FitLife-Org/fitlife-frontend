@@ -1,6 +1,6 @@
 import { Check, Dumbbell, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { showAlert } from "../../utils/alert";
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
@@ -29,7 +29,7 @@ export default function PackageListPage() {
         setPackages(pkgs.filter(p => p.status === "ACTIVE"));
         setMySubscription(sub);
       } catch (error) {
-        toast.error("Không thể tải danh sách gói tập");
+        showAlert.error("Lỗi", "Không thể tải danh sách gói tập");
       } finally {
         setLoading(false);
       }
@@ -48,12 +48,12 @@ export default function PackageListPage() {
       if (result.paymentUrl) {
         window.location.href = result.paymentUrl;
       } else {
-        toast.success("Đăng ký thành công!");
+        showAlert.success("Thành công", "Đăng ký thành công!");
         const sub = await subscriptionService.getMySubscription();
         setMySubscription(sub);
       }
     } catch (error) {
-      toast.error("Lỗi khi xử lý thanh toán");
+      showAlert.error("Lỗi", "Lỗi khi xử lý thanh toán");
     } finally {
       setProcessingId(null);
     }
@@ -89,11 +89,11 @@ export default function PackageListPage() {
               const isPopular = item.name.toLowerCase().includes("standard") || item.name.toLowerCase().includes("phổ biến");
 
               return (
-                <Card className={`relative flex flex-col p-6 ${isPopular ? "border-fit-primary" : ""} ${isCurrent ? "border-fit-blue" : ""}`} key={item.id}>
+                <Card className={`relative flex flex-col p-6 ${isPopular ? "border-fit-primary" : ""} ${isCurrent ? "border-fit-admin" : ""}`} key={item.id}>
                   {isPopular && !isCurrent && <div className="absolute -top-3 left-1/2 -translate-x-1/2"><Badge variant="success">Phổ biến nhất</Badge></div>}
                   {isCurrent && <div className="absolute -top-3 left-1/2 -translate-x-1/2"><Badge variant="info">Gói hiện tại</Badge></div>}
                   <h2 className="mt-3 text-2xl font-black text-fit-text">{item.name}</h2>
-                  <p className={`mt-4 text-3xl font-black ${isCurrent ? "text-fit-blue" : "text-fit-primary"}`}>
+                  <p className={`mt-4 text-3xl font-black ${isCurrent ? "text-fit-admin" : "text-fit-primary"}`}>
                     {formatCurrency(item.price)}
                     <span className="text-sm font-medium text-fit-muted"> / {item.durationDays} ngày</span>
                   </p>
@@ -151,9 +151,9 @@ export default function PackageListPage() {
           )}
         </div>
         <aside className="space-y-6">
-          <Card className="overflow-hidden bg-gradient-to-b from-sky-100 to-orange-50 p-6">
+          <Card className="overflow-hidden bg-gradient-to-b from-fit-primarySoft to-fit-trainerSoft p-6">
             <h2 className="text-xl font-black text-fit-text">Ưu đãi mùa hè</h2>
-            <p className="mt-4 text-4xl font-black text-fit-orange">GIẢM 20%</p>
+            <p className="mt-4 text-4xl font-black text-fit-trainer">GIẢM 20%</p>
             <p className="mt-3 text-fit-muted">Áp dụng cho tất cả gói tập khi đăng ký theo năm</p>
             <div className="mt-5 grid grid-cols-4 gap-2 text-center">
               {["06 Ngày", "23 Giờ", "48 Phút", "12 Giây"].map((time) => (

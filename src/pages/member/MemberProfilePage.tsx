@@ -91,14 +91,14 @@ export default function MemberProfilePage() {
         {/* Left Column: Profile Card */}
         <Card className="p-6">
           <div className="relative mx-auto h-32 w-32">
-            <div className="h-full w-full overflow-hidden rounded-full border-4 border-slate-50 bg-slate-100">
+            <div className="h-full w-full overflow-hidden rounded-full border-4 border-white bg-fit-bg">
               <img 
                 src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)} 
                 alt="Avatar" 
                 className="h-full w-full object-cover" 
               />
             </div>
-            <button className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50">
+            <button className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border border-fit-border bg-white text-fit-muted shadow-sm transition-colors hover:bg-fit-bg">
               <Camera className="h-4 w-4" />
             </button>
           </div>
@@ -130,19 +130,19 @@ export default function MemberProfilePage() {
               <span className="font-medium text-slate-900">{profile.dateOfBirth || "Chưa cập nhật"}</span>
             </div>
             <div className="flex items-center justify-between pb-2">
-              <span className="flex items-center gap-2 text-slate-500">
+              <span className="flex items-center gap-2 text-fit-muted">
                 <Ruler className="h-4 w-4" /> Chiều cao
               </span>
               <span className="font-medium text-slate-900">{profile.height || 0} cm</span>
             </div>
             <div className="flex items-center justify-between pb-2">
-              <span className="flex items-center gap-2 text-slate-500">
+              <span className="flex items-center gap-2 text-fit-muted">
                 <Weight className="h-4 w-4" /> Cân nặng
               </span>
               <span className="font-medium text-slate-900">{profile.weight || 0} kg</span>
             </div>
             <div className="flex items-center justify-between pb-2">
-              <span className="flex items-center gap-2 text-slate-500">
+              <span className="flex items-center gap-2 text-fit-muted">
                 <Calendar className="h-4 w-4" /> Thành viên từ
               </span>
               <span className="font-medium text-slate-900">{profile.memberSince || "Gần đây"}</span>
@@ -150,10 +150,10 @@ export default function MemberProfilePage() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
-            <Button variant="outline" className="w-full justify-center text-slate-700">
+            <Button variant="outline" className="w-full justify-center text-fit-text border-fit-border hover:bg-fit-bg">
               <ImageIcon className="h-4 w-4 mr-1" /> Đổi ảnh
             </Button>
-            <Button className="w-full justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus:ring-emerald-500">
+            <Button className="w-full justify-center bg-fit-primarySoft text-fit-primary hover:bg-fit-primary hover:text-white focus:ring-fit-primary">
               <Edit3 className="h-4 w-4 mr-1" /> Chỉnh sửa hồ sơ
             </Button>
           </div>
@@ -163,9 +163,9 @@ export default function MemberProfilePage() {
         <div className="space-y-6">
           {/* Thông tin cá nhân */}
           <Card className="p-6">
-            <div className="mb-6 flex items-center gap-2 text-emerald-600">
+            <div className="mb-6 flex items-center gap-2 text-fit-primary">
               <User className="h-5 w-5" />
-              <h2 className="text-lg font-bold text-slate-900">Thông tin cá nhân</h2>
+              <h2 className="text-lg font-bold text-fit-text">Thông tin cá nhân</h2>
             </div>
             <div className="grid gap-6 md:grid-cols-2">
               <Input 
@@ -219,9 +219,9 @@ export default function MemberProfilePage() {
 
           {/* Thông tin sức khỏe */}
           <Card className="p-6">
-            <div className="mb-6 flex items-center gap-2 text-emerald-600">
+            <div className="mb-6 flex items-center gap-2 text-fit-primary">
               <Activity className="h-5 w-5" />
-              <h2 className="text-lg font-bold text-slate-900">Thông tin sức khỏe</h2>
+              <h2 className="text-lg font-bold text-fit-text">Thông tin sức khỏe</h2>
             </div>
             
             <div className="mb-6 grid gap-6 md:grid-cols-3">
@@ -272,8 +272,8 @@ export default function MemberProfilePage() {
             </div>
             
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">
-                Mức độ vận động <InfoIcon className="inline h-3 w-3 text-slate-400"/>
+              <span className="text-sm font-medium text-fit-text">
+                Mức độ vận động <InfoIcon className="inline h-3 w-3 text-fit-muted"/>
               </span>
               <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
                 <select 
@@ -296,24 +296,24 @@ export default function MemberProfilePage() {
             <div className="grid gap-10 md:grid-cols-2">
               {/* Left: Bảo mật */}
               <div>
-                <div className="mb-6 flex items-center gap-2 text-emerald-600">
+                <div className="mb-6 flex items-center gap-2 text-fit-primary">
                   <ShieldCheck className="h-5 w-5" />
-                  <h2 className="text-lg font-bold text-slate-900">Bảo mật tài khoản</h2>
+                  <h2 className="text-lg font-bold text-fit-text">Bảo mật tài khoản</h2>
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-colors hover:bg-slate-100">
+                  <div className="flex cursor-pointer items-center justify-between rounded-xl border border-fit-border bg-fit-bg p-4 transition-colors hover:border-fit-primary/50">
                     <div className="flex items-center gap-3">
-                      <Lock className="h-5 w-5 text-slate-400" />
+                      <Lock className="h-5 w-5 text-fit-muted" />
                       <div>
-                        <p className="text-sm font-medium text-slate-900">Đổi mật khẩu</p>
-                        <p className="text-xl leading-none tracking-[0.2em] text-slate-400">••••••••</p>
+                        <p className="text-sm font-medium text-fit-text">Đổi mật khẩu</p>
+                        <p className="text-xl leading-none tracking-[0.2em] text-fit-muted">••••••••</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-slate-400" />
+                    <ChevronRight className="h-5 w-5 text-fit-muted" />
                   </div>
                   
-                  <div className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-colors hover:bg-slate-100">
+                  <div className="flex cursor-pointer items-center justify-between rounded-xl border border-fit-border bg-fit-bg p-4 transition-colors hover:border-fit-primary/50">
                     <div className="flex items-center gap-3">
                       <svg className="h-5 w-5" viewBox="0 0 24 24">
                         <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0112 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z"/>
@@ -322,11 +322,11 @@ export default function MemberProfilePage() {
                         <path fill="#FBBC05" d="M5.275 14.128A7.067 7.067 0 014.922 12c0-.735.13-1.444.353-2.115L1.24 6.65C.448 8.243 0 10.05 0 12c0 1.95.448 3.757 1.24 5.35l4.035-3.222z"/>
                       </svg>
                       <div>
-                        <p className="text-sm font-medium text-slate-900">Liên kết Google</p>
-                        <p className="flex items-center gap-1 text-sm text-emerald-600">Đã liên kết</p>
+                        <p className="text-sm font-medium text-fit-text">Liên kết Google</p>
+                        <p className="flex items-center gap-1 text-sm text-fit-primary">Đã liên kết</p>
                       </div>
                     </div>
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    <CheckCircle2 className="h-5 w-5 text-fit-primary" />
                   </div>
                 </div>
               </div>
@@ -338,20 +338,20 @@ export default function MemberProfilePage() {
                 <div className="space-y-6 pt-1">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-medium text-slate-900">Thông báo qua email</p>
-                      <p className="text-sm text-slate-500">Nhận thông báo về lịch tập, ưu đãi</p>
+                      <p className="font-medium text-fit-text">Thông báo qua email</p>
+                      <p className="text-sm text-fit-muted">Nhận thông báo về lịch tập, ưu đãi</p>
                     </div>
-                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-emerald-500 transition-colors">
+                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-fit-primary transition-colors">
                       <span className="inline-block h-4 w-4 translate-x-6 transform rounded-full bg-white transition-transform" />
                     </div>
                   </div>
-                  <hr className="border-slate-100" />
+                  <hr className="border-fit-border" />
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-medium text-slate-900">Nhắc nhở tập luyện</p>
-                      <p className="text-sm text-slate-500">Nhận nhắc nhở theo lịch tập cá nhân</p>
+                      <p className="font-medium text-fit-text">Nhắc nhở tập luyện</p>
+                      <p className="text-sm text-fit-muted">Nhận nhắc nhở theo lịch tập cá nhân</p>
                     </div>
-                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-emerald-500 transition-colors">
+                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-fit-primary transition-colors">
                       <span className="inline-block h-4 w-4 translate-x-6 transform rounded-full bg-white transition-transform" />
                     </div>
                   </div>

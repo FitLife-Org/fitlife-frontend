@@ -22,6 +22,9 @@ const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
     throw new Error("Không nhận được token từ máy chủ.");
   }
 
+  const rawRoles: string[] = payload?.roles || ["MEMBER"];
+  const normalizedRoles = rawRoles.map(role => role.replace(/^ROLE_/, ''));
+
   return {
     token,
     user: {
@@ -131,6 +134,11 @@ export const authService = {
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
+  },
+
+  async forgotPassword(email: string): Promise<any> {
+    const response = await apiClient.post("/auth/forgot-password", { email });
+    return response.data;
   },
 
   logout(): void {
