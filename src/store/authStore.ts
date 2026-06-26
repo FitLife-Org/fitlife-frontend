@@ -8,7 +8,7 @@ const getUserFromStorage = (): AuthUser | null => {
   try {
     const userStr = localStorage.getItem(USER_KEY);
     return userStr ? JSON.parse(userStr) : null;
-  } catch (e) {
+  } catch {
     return null;
   }
 };
@@ -25,18 +25,26 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: tokenStorage.get(),
   user: getUserFromStorage(),
   isAuthenticated: Boolean(tokenStorage.get()),
+
   setSession: (session) => {
     tokenStorage.set(session.token);
     localStorage.setItem(USER_KEY, JSON.stringify(session.user));
+
     set({
       token: session.token,
       user: session.user,
       isAuthenticated: true,
     });
   },
+
   logout: () => {
     tokenStorage.clear();
     localStorage.removeItem(USER_KEY);
-    set({ token: null, user: null, isAuthenticated: false });
+
+    set({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+    });
   },
 }));

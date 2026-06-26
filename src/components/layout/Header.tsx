@@ -10,9 +10,12 @@ export default function Header() {
 
   const getRoleLabel = (roles?: string[]) => {
     if (!roles || roles.length === 0) return "Hội viên";
-    if (roles.includes("ADMIN")) return "Quản trị viên";
-    if (roles.includes("STAFF")) return "Nhân viên";
-    if (roles.includes("TRAINER")) return "Huấn luyện viên";
+
+    if (roles.includes("ROLE_ADMIN")) return "Quản trị viên";
+    if (roles.includes("ROLE_STAFF")) return "Nhân viên";
+    if (roles.includes("ROLE_PT")) return "Huấn luyện viên";
+    if (roles.includes("ROLE_MEMBER")) return "Hội viên";
+
     return "Hội viên";
   };
 

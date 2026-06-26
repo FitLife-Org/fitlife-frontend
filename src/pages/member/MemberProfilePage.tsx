@@ -39,6 +39,7 @@ export default function MemberProfilePage() {
         activityLevel: profileData.activityLevel
       });
 
+      // Bắt try catch riêng cho membership vì có thể chưa có gói
       try {
         const membershipData = await profileService.getMyMembership();
         setMembership(membershipData);
@@ -72,11 +73,11 @@ export default function MemberProfilePage() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-fit-muted">Đang tải hồ sơ...</div>;
+    return <div className="p-8 text-center text-slate-500">Đang tải hồ sơ...</div>;
   }
 
   if (!profile) {
-    return <div className="p-8 text-center text-fit-danger">Không thể tải thông tin hồ sơ.</div>;
+    return <div className="p-8 text-center text-red-500">Không thể tải thông tin hồ sơ.</div>;
   }
 
   return (
@@ -103,7 +104,7 @@ export default function MemberProfilePage() {
           </div>
           
           <div className="mt-4 text-center">
-            <h2 className="text-2xl font-bold text-fit-text">{profile.fullName}</h2>
+            <h2 className="text-2xl font-bold text-slate-900">{profile.fullName}</h2>
             <div className="mt-2 flex justify-center">
               {membership ? (
                 <Badge variant="success">
@@ -123,28 +124,28 @@ export default function MemberProfilePage() {
 
           <div className="mt-8 space-y-4 text-sm">
             <div className="flex items-center justify-between pb-2">
-              <span className="flex items-center gap-2 text-fit-muted">
+              <span className="flex items-center gap-2 text-slate-500">
                 <Calendar className="h-4 w-4" /> Ngày sinh
               </span>
-              <span className="font-medium text-fit-text">{profile.dateOfBirth || "Chưa cập nhật"}</span>
+              <span className="font-medium text-slate-900">{profile.dateOfBirth || "Chưa cập nhật"}</span>
             </div>
             <div className="flex items-center justify-between pb-2">
               <span className="flex items-center gap-2 text-fit-muted">
                 <Ruler className="h-4 w-4" /> Chiều cao
               </span>
-              <span className="font-medium text-fit-text">{profile.height || 0} cm</span>
+              <span className="font-medium text-slate-900">{profile.height || 0} cm</span>
             </div>
             <div className="flex items-center justify-between pb-2">
               <span className="flex items-center gap-2 text-fit-muted">
                 <Weight className="h-4 w-4" /> Cân nặng
               </span>
-              <span className="font-medium text-fit-text">{profile.weight || 0} kg</span>
+              <span className="font-medium text-slate-900">{profile.weight || 0} kg</span>
             </div>
             <div className="flex items-center justify-between pb-2">
               <span className="flex items-center gap-2 text-fit-muted">
                 <Calendar className="h-4 w-4" /> Thành viên từ
               </span>
-              <span className="font-medium text-fit-text">{profile.memberSince || "Gần đây"}</span>
+              <span className="font-medium text-slate-900">{profile.memberSince || "Gần đây"}</span>
             </div>
           </div>
 
@@ -177,7 +178,7 @@ export default function MemberProfilePage() {
                 name="dateOfBirth"
                 type="date"
                 label="Ngày sinh" 
-                icon={<Calendar className="h-4 w-4 text-fit-muted" />} 
+                icon={<Calendar className="h-4 w-4" />} 
                 value={formData.dateOfBirth || ""} 
                 onChange={handleInputChange} 
               />
@@ -190,14 +191,14 @@ export default function MemberProfilePage() {
               />
               
               <label className="block">
-                <span className="text-sm font-medium text-fit-text">Giới tính</span>
-                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-fit-border bg-white px-4 focus-within:border-fit-primary focus-within:ring-2 focus-within:ring-fit-primarySoft">
-                  <User className="mr-3 h-4 w-4 text-fit-admin" />
+                <span className="text-sm font-medium text-slate-700">Giới tính</span>
+                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
+                  <User className="mr-3 h-4 w-4 text-blue-500" />
                   <select 
                     name="gender" 
                     value={formData.gender || ""} 
                     onChange={handleInputChange}
-                    className="w-full bg-transparent py-3 text-sm text-fit-text outline-none"
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
                   >
                     <option value="">Chọn giới tính</option>
                     <option value="MALE">Nam</option>
@@ -225,41 +226,41 @@ export default function MemberProfilePage() {
             
             <div className="mb-6 grid gap-6 md:grid-cols-3">
               <label className="block">
-                <span className="text-sm font-medium text-fit-text">Chiều cao</span>
-                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-fit-border bg-white px-4 focus-within:border-fit-primary focus-within:ring-2 focus-within:ring-fit-primarySoft">
+                <span className="text-sm font-medium text-slate-700">Chiều cao</span>
+                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
                   <input 
                     name="height"
                     type="number"
-                    className="w-full bg-transparent py-3 text-sm text-fit-text outline-none" 
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none" 
                     value={formData.height || ""} 
                     onChange={handleInputChange} 
                   />
-                  <span className="text-sm text-fit-muted">cm</span>
+                  <span className="text-sm text-slate-500">cm</span>
                 </div>
               </label>
               
               <label className="block">
-                <span className="text-sm font-medium text-fit-text">Cân nặng</span>
-                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-fit-border bg-white px-4 focus-within:border-fit-primary focus-within:ring-2 focus-within:ring-fit-primarySoft">
+                <span className="text-sm font-medium text-slate-700">Cân nặng</span>
+                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
                   <input 
                     name="weight"
                     type="number"
-                    className="w-full bg-transparent py-3 text-sm text-fit-text outline-none" 
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none" 
                     value={formData.weight || ""} 
                     onChange={handleInputChange} 
                   />
-                  <span className="text-sm text-fit-muted">kg</span>
+                  <span className="text-sm text-slate-500">kg</span>
                 </div>
               </label>
               
               <label className="block">
-                <span className="text-sm font-medium text-fit-text">Mục tiêu</span>
-                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-fit-border bg-white px-4 focus-within:border-fit-primary focus-within:ring-2 focus-within:ring-fit-primarySoft">
+                <span className="text-sm font-medium text-slate-700">Mục tiêu</span>
+                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
                   <select 
                     name="target"
                     value={formData.target || ""} 
                     onChange={handleInputChange}
-                    className="w-full bg-transparent py-3 text-sm text-fit-text outline-none"
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
                   >
                     <option value="">Chọn mục tiêu</option>
                     <option value="LOSE_WEIGHT">Giảm cân</option>
@@ -274,12 +275,12 @@ export default function MemberProfilePage() {
               <span className="text-sm font-medium text-fit-text">
                 Mức độ vận động <InfoIcon className="inline h-3 w-3 text-fit-muted"/>
               </span>
-              <div className="mt-2 flex min-h-12 items-center rounded-xl border border-fit-border bg-white px-4 focus-within:border-fit-primary focus-within:ring-2 focus-within:ring-fit-primarySoft">
+              <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
                 <select 
                   name="activityLevel"
                   value={formData.activityLevel || ""} 
                   onChange={handleInputChange}
-                  className="w-full bg-transparent py-3 text-sm text-fit-text outline-none"
+                  className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
                 >
                   <option value="">Chọn mức độ</option>
                   <option value="SEDENTARY">Ít vận động</option>
@@ -361,7 +362,7 @@ export default function MemberProfilePage() {
 
           <div className="flex justify-end">
             <Button 
-              className="w-full sm:w-auto min-w-[140px] bg-fit-primary hover:bg-fit-primaryHover text-white border-0" 
+              className="w-full sm:w-auto min-w-[140px]" 
               onClick={handleSave} 
               disabled={saving}
             >
