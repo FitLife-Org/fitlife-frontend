@@ -73,6 +73,7 @@ export default function LoginPage() {
         setFieldErrors({});
 
         const validationErrors = validateLogin(formData);
+
         if (Object.keys(validationErrors).length > 0) {
             setFieldErrors(validationErrors);
             return;
@@ -80,21 +81,25 @@ export default function LoginPage() {
 
         setLoading(true);
 
-        const session = await authService.login({
-            identifier: formData.identifier.trim(),
-            password: formData.password,
-        });
+        try {
+            const session = await authService.login({
+                identifier: formData.identifier.trim(),
+                password: formData.password,
+            });
 
-        console.log("Login session:", session);
-        console.log("Login roles:", session.user.roles);
+            setSession(session);
 
-        setSession(session);
-
-        const redirectPath = getRedirectPathByRoles(session.user.roles);
-
-        console.log("Redirect path:", redirectPath);
-
-        navigate(redirectPath, {replace: true});
+            const redirectPath = getRedirectPathByRoles(session.user.roles);
+            navigate(redirectPath, { replace: true });
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Email, tên đăng nhập hoặc mật khẩu không chính xác."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Hiệu ứng GSAP

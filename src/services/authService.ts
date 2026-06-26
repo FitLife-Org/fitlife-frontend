@@ -42,12 +42,17 @@ const extractErrorMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null && "response" in error) {
     const axiosError = error as {
       response?: {
+        status?: number;
         data?: {
           message?: string;
           error?: string;
         };
       };
     };
+
+    if (axiosError.response?.status === 401) {
+      return "Email, tên đăng nhập hoặc mật khẩu không chính xác.";
+    }
 
     return (
         axiosError.response?.data?.message ||
@@ -136,6 +141,10 @@ export const authService = {
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
+  },
+
+  logout(): void {
+    tokenStorage.clear();
   },
 
   isAuthenticated(): boolean {
