@@ -172,6 +172,9 @@ export default function LoginPage() {
                             nhanh, không độ trễ. Vận hành trơn tru, tập trung build cơ – không build stress.
                         </p>
 
+              <p className="text-lg leading-relaxed text-slate-700 border-l-4 border-sky-500 pl-6 bg-white/50 backdrop-blur-sm py-3 pr-4 rounded-r-xl shadow-sm border-white/60 border-y border-r">
+                Quản lý hội viên, gói tập, check-in, lịch PT và thanh toán — tất cả trong một hệ thống mượt, nhanh, không độ trễ. Vận hành trơn tru, tập trung build cơ – không build stress.
+              </p>
 
                         <div
                             className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-sky-500/40 pl-6">

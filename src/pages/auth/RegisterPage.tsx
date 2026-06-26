@@ -6,8 +6,10 @@ import { useGSAP } from "@gsap/react";
 
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
+import CustomCursor from "../../components/common/CustomCursor";
 import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
+import { useAuthStore } from "../../store/authStore";
 import { validateRegister } from "../../utils/validators/registerValidator";
 import { useAuthStore } from "../../store/authStore";
 
