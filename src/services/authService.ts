@@ -22,8 +22,10 @@ const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
     throw new Error("Không nhận được token từ máy chủ.");
   }
 
-  const rawRoles: string[] = payload?.roles || ["MEMBER"];
-  const normalizedRoles = rawRoles.map(role => role.replace(/^ROLE_/, ''));
+  const roles: Role[] =
+      payload.roles && payload.roles.length > 0
+          ? payload.roles
+          : ["ROLE_MEMBER"];
 
   return {
     token,
@@ -31,7 +33,7 @@ const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
       userId: payload.userId ?? 0,
       email: payload.email ?? "unknown@email.com",
       fullName: payload.fullName ?? "User",
-      roles: payload.roles ?? (["ROLE_MEMBER"] as Role[]),
+      roles,
     },
   };
 };
@@ -134,15 +136,6 @@ export const authService = {
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
-  },
-
-  async forgotPassword(email: string): Promise<any> {
-    const response = await apiClient.post("/auth/forgot-password", { email });
-    return response.data;
-  },
-
-  logout(): void {
-    tokenStorage.clear();
   },
 
   isAuthenticated(): boolean {
