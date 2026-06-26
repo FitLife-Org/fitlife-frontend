@@ -13,12 +13,15 @@ import {useAuthStore} from "../../store/authStore";
 import {validateLogin} from "../../utils/validators/loginValidator";
 import {getRedirectPathByRoles} from "../../utils/authRedirect";
 
+const REMEMBERED_IDENTIFIER_KEY = "fitlife_remembered_identifier";
+
 export default function LoginPage() {
     const navigate = useNavigate();
     const setSession = useAuthStore((state) => state.setSession);
 
     // Gộp state form để dễ quản lý và mở rộng
     const [formData, setFormData] = useState({identifier: "", password: ""});
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState("");
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
@@ -87,6 +90,15 @@ export default function LoginPage() {
                 password: formData.password,
             });
 
+            if (rememberMe) {
+                localStorage.setItem(
+                    REMEMBERED_IDENTIFIER_KEY,
+                    formData.identifier.trim()
+                );
+            } else {
+                localStorage.removeItem(REMEMBERED_IDENTIFIER_KEY);
+            }
+
             setSession(session);
 
             const redirectPath = getRedirectPathByRoles(session.user.roles);
@@ -132,6 +144,17 @@ export default function LoginPage() {
     }, {scope: containerRef});
 
     useEffect(() => {
+        const rememberedIdentifier = localStorage.getItem(REMEMBERED_IDENTIFIER_KEY);
+
+        if (rememberedIdentifier) {
+            setFormData((prev) => ({
+                ...prev,
+                identifier: rememberedIdentifier,
+            }));
+
+            setRememberMe(true);
+        }
+
         const interval = setInterval(() => {
             setActiveStep((prev) => (prev + 1) % 4);
         }, 1200);
@@ -270,13 +293,15 @@ export default function LoginPage() {
                                         <input
                                             type="checkbox"
                                             id="remember-me"
+                                            checked={rememberMe}
+                                            onChange={(event) => setRememberMe(event.target.checked)}
                                             className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer"
                                         />
                                         <label
                                             htmlFor="remember-me"
                                             className="text-sm text-gray-700 cursor-pointer select-none"
                                         >
-                                            Remember me?
+                                            Ghi nhớ tài khoản
                                         </label>
                                     </div>
 
