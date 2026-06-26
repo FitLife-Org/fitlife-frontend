@@ -1,45 +1,48 @@
-import { isEmail, isVietnamesePhone } from "../validation";
-import type { RegisterRequest } from "../../types/auth.type";
+type RegisterForm = {
+  username: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  password: string;
+  confirmPassword: string;
+};
 
-export interface RegisterFormData extends RegisterRequest {
-  confirmPassword?: string;
-}
-
-export const validateRegister = (data: RegisterFormData): Record<string, string> => {
+export function validateRegister(form: RegisterForm) {
   const errors: Record<string, string> = {};
 
-  if (!data.username?.trim()) {
-    errors.username = "Tên đăng nhập không được để trống.";
-  } else if (data.username.length < 4 || data.username.length > 50) {
-    errors.username = "Tên đăng nhập phải từ 4 đến 50 ký tự.";
+  if (!form.username.trim()) {
+    errors.username = "Tên đăng nhập là bắt buộc.";
+  } else if (form.username.trim().length < 4) {
+    errors.username = "Tên đăng nhập phải có ít nhất 4 ký tự.";
+  } else if (!/^[a-zA-Z0-9_]+$/.test(form.username.trim())) {
+    errors.username = "Tên đăng nhập chỉ được chứa chữ, số và dấu gạch dưới.";
   }
 
-  if (!data.fullName?.trim()) {
-    errors.fullName = "Họ tên không được để trống.";
+  if (!form.fullName.trim()) {
+    errors.fullName = "Họ tên là bắt buộc.";
   }
 
-  if (!data.email?.trim()) {
-    errors.email = "Email không được để trống.";
-  } else if (!isEmail(data.email)) {
+  if (!form.email.trim()) {
+    errors.email = "Email là bắt buộc.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
     errors.email = "Email không hợp lệ.";
   }
 
-  if (data.phone && !isVietnamesePhone(data.phone)) {
+  if (form.phone && !/^(0|\+84)[0-9]{9,10}$/.test(form.phone.trim())) {
     errors.phone = "Số điện thoại không hợp lệ.";
   }
-  if (data.phone && data.phone.length < 10) {
-    errors.phone = "Số điện thoại phải có ít nhất 10 ký tự.";
-  }
-  
-  if (!data.password) {
-    errors.password = "Mật khẩu không được để trống.";
-  } else if (data.password.length < 6) {
+
+  if (!form.password) {
+    errors.password = "Mật khẩu là bắt buộc.";
+  } else if (form.password.length < 6) {
     errors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
   }
 
-  if (data.password !== data.confirmPassword) {
+  if (!form.confirmPassword) {
+    errors.confirmPassword = "Vui lòng xác nhận mật khẩu.";
+  } else if (form.password !== form.confirmPassword) {
     errors.confirmPassword = "Mật khẩu xác nhận không khớp.";
   }
 
   return errors;
-};
+}

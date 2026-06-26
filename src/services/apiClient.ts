@@ -1,36 +1,14 @@
-import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
-import { env } from "../config/env";
+import axios from "axios";
 import { tokenStorage } from "../utils/token";
 
-export interface ApiError extends Error {
-  status?: number;
-  code?: number;
-  data?: unknown;
-}
-
 const apiClient = axios.create({
-  baseURL: env.apiBaseUrl,
-  timeout: 15000,
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-const toApiError = (error: unknown): ApiError => {
-  if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<{ code?: number; message?: string; data?: unknown }>;
-    const payload = axiosError.response?.data;
-    const normalized = new Error(payload?.message || axiosError.message || "Request failed") as ApiError;
-    normalized.status = axiosError.response?.status;
-    normalized.code = payload?.code;
-    normalized.data = payload?.data;
-    return normalized;
-  }
-
-  return new Error("Unexpected error") as ApiError;
-};
-
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+apiClient.interceptors.request.use((config) => {
   const token = tokenStorage.get();
 
   if (token) {
@@ -39,16 +17,5 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   return config;
 });
-
-apiClient.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      tokenStorage.clear();
-    }
-
-    return Promise.reject(toApiError(error));
-  },
-);
 
 export default apiClient;

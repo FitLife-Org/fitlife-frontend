@@ -1,21 +1,23 @@
-import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { ROUTES } from "../../config/routes";
 import { useAuthStore } from "../../store/authStore";
 import type { Role } from "../../types/common.type";
 
-interface RoleRouteProps {
+type RoleRouteProps = {
   roles: Role[];
-  children: ReactNode;
-}
+  children: React.ReactNode;
+};
 
 export default function RoleRoute({ roles, children }: RoleRouteProps) {
   const user = useAuthStore((state) => state.user);
-  const userRoles = user?.roles || ["MEMBER"];
 
-  const hasAccess = userRoles.some(r => roles.includes(r as Role));
+  if (!user) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
 
-  if (!hasAccess) {
+  const hasPermission = roles.some((role) => user.roles.includes(role));
+
+  if (!hasPermission) {
     return <Navigate to={ROUTES.FORBIDDEN} replace />;
   }
 

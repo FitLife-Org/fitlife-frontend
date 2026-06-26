@@ -1,15 +1,18 @@
-import type { LoginRequest } from "../../types/auth.type";
+type LoginForm = {
+  identifier: string;
+  password: string;
+};
 
-export const validateLogin = (data: LoginRequest): Record<string, string> => {
+export function validateLogin(form: LoginForm) {
   const errors: Record<string, string> = {};
 
-  if (!data.identifier?.trim()) {
-    errors.identifier = "Email hoặc tên đăng nhập không được để trống.";
+  if (!form.identifier.trim()) {
+    errors.identifier = "Email hoặc tên đăng nhập là bắt buộc.";
   }
 
-  if (!data.password?.trim()) {
-    errors.password = "Mật khẩu không được để trống.";
+  if (!form.password) {
+    errors.password = "Mật khẩu là bắt buộc.";
   }
 
   return errors;
-};
+}
