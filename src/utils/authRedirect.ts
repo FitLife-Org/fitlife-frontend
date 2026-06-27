@@ -10,7 +10,7 @@ export function getRedirectPathByRoles(roles: Role[]): string {
         return ROUTES.STAFF_CHECKIN;
     }
 
-    if (roles.includes("ROLE_PT")) {
+    if (roles.includes("ROLE_TRAINER")) {
         return ROUTES.TRAINER_SCHEDULE;
     }
 
