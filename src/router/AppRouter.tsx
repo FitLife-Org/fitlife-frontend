@@ -185,7 +185,7 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.TRAINER_SCHEDULE}
                             element={
-                                <RoleGuard roles={["ROLE_PT", "ROLE_ADMIN"]}>
+                                <RoleGuard roles={["ROLE_TRAINER", "ROLE_ADMIN"]}>
                                     <TrainerSchedulePage/>
                                 </RoleGuard>
                             }
@@ -194,7 +194,7 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.TRAINER_MEMBERS}
                             element={
-                                <RoleGuard roles={["ROLE_PT", "ROLE_ADMIN"]}>
+                                <RoleGuard roles={["ROLE_TRAINER", "ROLE_ADMIN"]}>
                                     <MyMembersPage/>
                                 </RoleGuard>
                             }
@@ -203,7 +203,7 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.TRAINER_WORKOUT_TRACKING}
                             element={
-                                <RoleGuard roles={["ROLE_PT", "ROLE_ADMIN"]}>
+                                <RoleGuard roles={["ROLE_TRAINER", "ROLE_ADMIN"]}>
                                     <WorkoutTrackingPage/>
                                 </RoleGuard>
                             }
