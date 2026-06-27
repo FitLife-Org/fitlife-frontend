@@ -4,12 +4,12 @@ import type { ProfileResponse, UpdateProfileRequest, MembershipResponse } from "
 
 export const profileService = {
   async getProfile(): Promise<ProfileResponse> {
-    const response = await apiClient.get<ApiResponse<ProfileResponse>>("/profile");
+    const response = await apiClient.get<ApiResponse<ProfileResponse>>("/members/me/profile");
     return response.data.data;
   },
 
   async updateProfile(data: UpdateProfileRequest): Promise<ProfileResponse> {
-    const response = await apiClient.put<ApiResponse<ProfileResponse>>("/profile", data);
+    const response = await apiClient.put<ApiResponse<ProfileResponse>>("/members/me/profile", data);
     return response.data.data;
   },
 
