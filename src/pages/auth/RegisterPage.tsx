@@ -11,7 +11,6 @@ import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
 import { useAuthStore } from "../../store/authStore";
 import { validateRegister } from "../../utils/validators/registerValidator";
-import { useAuthStore } from "../../store/authStore";
 
 export default function RegisterPage() {
   const navigate = useNavigate();

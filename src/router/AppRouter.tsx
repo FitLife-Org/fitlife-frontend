@@ -10,6 +10,7 @@ import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import ReportPage from "../pages/admin/ReportPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
+import AccountManagementPage from "../pages/admin/AccountManagementPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage";
 import LoginPage from "../pages/auth/LoginPage";
@@ -106,7 +107,11 @@ export default function AppRouter() {
 
                         <Route
                             path={ROUTES.ADMIN_USERS}
-                            element={<Navigate to={ROUTES.ADMIN_MEMBERS} replace/>}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <AccountManagementPage/>
+                                </RoleGuard>
+                            }
                         />
 
                         <Route

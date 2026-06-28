@@ -135,12 +135,6 @@ export const authService = {
       throw new Error(extractErrorMessage(error));
     }
   },
-
-  async forgotPassword(email: string): Promise<any> {
-    const response = await apiClient.post("/auth/forgot-password", { email });
-    return response.data;
-  },
-
   logout(): void {
     tokenStorage.clear();
   },

@@ -10,6 +10,12 @@ export interface MemberProfile {
   height?: number;
   weight?: number;
   status: Status;
+  avatarUrl?: string;
+  address?: string;
+  fitnessGoal?: string;
+  activityLevel?: string;
+  memberCode?: string;
+  memberSince?: string;
 }
 
 export interface BodyMetric {

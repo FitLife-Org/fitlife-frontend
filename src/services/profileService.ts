@@ -1,16 +1,16 @@
 import apiClient from "./apiClient";
-import type { ApiResponse, PageResult } from "../types/common.type";
+import type { ApiResponse } from "../types/common.type";
 import type { ProfileResponse, UpdateProfileRequest, MembershipResponse } from "../types/profile.type";
 
 export const profileService = {
   async getProfile(): Promise<ProfileResponse> {
-    const response = await apiClient.get<ApiResponse<ProfileResponse>>("/members/me/profile");
-    return response.data.data;
+    const response = await apiClient.get<ProfileResponse>("/members/me/profile");
+    return response.data;
   },
 
   async updateProfile(data: UpdateProfileRequest): Promise<ProfileResponse> {
-    const response = await apiClient.put<ApiResponse<ProfileResponse>>("/members/me/profile", data);
-    return response.data.data;
+    const response = await apiClient.put<ProfileResponse>("/members/me/profile", data);
+    return response.data;
   },
 
   async updateAvatar(file: File): Promise<ProfileResponse> {
@@ -27,3 +27,4 @@ export const profileService = {
     return response.data.data;
   }
 };
+

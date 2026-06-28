@@ -1,14 +1,16 @@
 import { useState, useEffect, ChangeEvent } from "react";
-import { 
-  Camera, User, Calendar, Activity, Lock, ChevronRight, CheckCircle2, 
-  Image as ImageIcon, Edit3, ShieldCheck, Info as InfoIcon, Crown, Ruler, Weight 
+import {
+  Camera, User, Calendar, Activity, Lock, ChevronRight, CheckCircle2,
+  Image as ImageIcon, Edit3, ShieldCheck, Info as InfoIcon, Crown, Ruler, Weight
 } from "lucide-react";
 import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
 import PageHeader from "../../components/common/PageHeader";
 import { profileService } from "../../services/profileService";
+import { userService } from "../../services/userService";
 import type { ProfileResponse, MembershipResponse, UpdateProfileRequest } from "../../types/profile.type";
 
 export default function MemberProfilePage() {
@@ -17,6 +19,13 @@ export default function MemberProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateProfileRequest>({});
+
+  // Change password states
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -35,7 +44,7 @@ export default function MemberProfilePage() {
         address: profileData.address,
         height: profileData.height,
         weight: profileData.weight,
-        target: profileData.target,
+        fitnessGoal: profileData.fitnessGoal,
         activityLevel: profileData.activityLevel
       });
 
@@ -72,6 +81,41 @@ export default function MemberProfilePage() {
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      alert("Vui lòng điền đầy đủ các thông tin mật khẩu!");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert("Mật khẩu mới và xác nhận mật khẩu không trùng khớp!");
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert("Mật khẩu mới phải có tối thiểu 6 ký tự!");
+      return;
+    }
+
+    try {
+      setPasswordSaving(true);
+      await userService.changePassword({
+        oldPassword,
+        newPassword
+      });
+      alert("Đổi mật khẩu thành công!");
+      setPasswordModalOpen(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("Failed to change password:", error);
+      const errorMsg = error?.response?.data?.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.";
+      alert(errorMsg);
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Đang tải hồ sơ...</div>;
   }
@@ -82,9 +126,9 @@ export default function MemberProfilePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Hồ sơ cá nhân" 
-        description="Quản lý thông tin tài khoản, sức khỏe và mục tiêu tập luyện" 
+      <PageHeader
+        title="Hồ sơ cá nhân"
+        description="Quản lý thông tin tài khoản, sức khỏe và mục tiêu tập luyện"
       />
 
       <div className="grid gap-6 xl:grid-cols-[320px_1fr] items-start">
@@ -92,17 +136,17 @@ export default function MemberProfilePage() {
         <Card className="p-6">
           <div className="relative mx-auto h-32 w-32">
             <div className="h-full w-full overflow-hidden rounded-full border-4 border-white bg-fit-bg">
-              <img 
-                src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)} 
-                alt="Avatar" 
-                className="h-full w-full object-cover" 
+              <img
+                src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)}
+                alt="Avatar"
+                className="h-full w-full object-cover"
               />
             </div>
             <button className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border border-fit-border bg-white text-fit-muted shadow-sm transition-colors hover:bg-fit-bg">
               <Camera className="h-4 w-4" />
             </button>
           </div>
-          
+
           <div className="mt-4 text-center">
             <h2 className="text-2xl font-bold text-slate-900">{profile.fullName}</h2>
             <div className="mt-2 flex justify-center">
@@ -168,35 +212,35 @@ export default function MemberProfilePage() {
               <h2 className="text-lg font-bold text-fit-text">Thông tin cá nhân</h2>
             </div>
             <div className="grid gap-6 md:grid-cols-2">
-              <Input 
+              <Input
                 name="fullName"
-                label="Họ và tên" 
-                value={formData.fullName || ""} 
-                onChange={handleInputChange} 
+                label="Họ và tên"
+                value={formData.fullName || ""}
+                onChange={handleInputChange}
               />
-              <Input 
+              <Input
                 name="dateOfBirth"
                 type="date"
-                label="Ngày sinh" 
-                icon={<Calendar className="h-4 w-4" />} 
-                value={formData.dateOfBirth || ""} 
-                onChange={handleInputChange} 
+                label="Ngày sinh"
+                icon={<Calendar className="h-4 w-4" />}
+                value={formData.dateOfBirth || ""}
+                onChange={handleInputChange}
               />
-              <Input 
+              <Input
                 name="email"
-                label="Email" 
-                value={profile.email || ""} 
-                disabled 
-                readOnly 
+                label="Email"
+                value={profile.email || ""}
+                disabled
+                readOnly
               />
-              
+
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Giới tính</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
                   <User className="mr-3 h-4 w-4 text-blue-500" />
-                  <select 
-                    name="gender" 
-                    value={formData.gender || ""} 
+                  <select
+                    name="gender"
+                    value={formData.gender || ""}
                     onChange={handleInputChange}
                     className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
                   >
@@ -207,12 +251,12 @@ export default function MemberProfilePage() {
                   </select>
                 </div>
               </label>
-              
-              <Input 
+
+              <Input
                 name="phone"
-                label="Số điện thoại" 
-                value={formData.phone || ""} 
-                onChange={handleInputChange} 
+                label="Số điện thoại"
+                value={formData.phone || ""}
+                onChange={handleInputChange}
               />
             </div>
           </Card>
@@ -223,42 +267,42 @@ export default function MemberProfilePage() {
               <Activity className="h-5 w-5" />
               <h2 className="text-lg font-bold text-fit-text">Thông tin sức khỏe</h2>
             </div>
-            
+
             <div className="mb-6 grid gap-6 md:grid-cols-3">
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Chiều cao</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <input 
+                  <input
                     name="height"
                     type="number"
-                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none" 
-                    value={formData.height || ""} 
-                    onChange={handleInputChange} 
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
+                    value={formData.height || ""}
+                    onChange={handleInputChange}
                   />
                   <span className="text-sm text-slate-500">cm</span>
                 </div>
               </label>
-              
+
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Cân nặng</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <input 
+                  <input
                     name="weight"
                     type="number"
-                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none" 
-                    value={formData.weight || ""} 
-                    onChange={handleInputChange} 
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
+                    value={formData.weight || ""}
+                    onChange={handleInputChange}
                   />
                   <span className="text-sm text-slate-500">kg</span>
                 </div>
               </label>
-              
+
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Mục tiêu</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <select 
-                    name="target"
-                    value={formData.target || ""} 
+                  <select
+                    name="fitnessGoal"
+                    value={formData.fitnessGoal || ""}
                     onChange={handleInputChange}
                     className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
                   >
@@ -270,15 +314,15 @@ export default function MemberProfilePage() {
                 </div>
               </label>
             </div>
-            
+
             <label className="block">
               <span className="text-sm font-medium text-fit-text">
-                Mức độ vận động <InfoIcon className="inline h-3 w-3 text-fit-muted"/>
+                Mức độ vận động <InfoIcon className="inline h-3 w-3 text-fit-muted" />
               </span>
               <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                <select 
+                <select
                   name="activityLevel"
-                  value={formData.activityLevel || ""} 
+                  value={formData.activityLevel || ""}
                   onChange={handleInputChange}
                   className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
                 >
@@ -300,9 +344,12 @@ export default function MemberProfilePage() {
                   <ShieldCheck className="h-5 w-5" />
                   <h2 className="text-lg font-bold text-fit-text">Bảo mật tài khoản</h2>
                 </div>
-                
+
                 <div className="space-y-4">
-                  <div className="flex cursor-pointer items-center justify-between rounded-xl border border-fit-border bg-fit-bg p-4 transition-colors hover:border-fit-primary/50">
+                  <div 
+                    onClick={() => setPasswordModalOpen(true)}
+                    className="flex cursor-pointer items-center justify-between rounded-xl border border-fit-border bg-fit-bg p-4 transition-colors hover:border-fit-primary/50"
+                  >
                     <div className="flex items-center gap-3">
                       <Lock className="h-5 w-5 text-fit-muted" />
                       <div>
@@ -312,14 +359,14 @@ export default function MemberProfilePage() {
                     </div>
                     <ChevronRight className="h-5 w-5 text-fit-muted" />
                   </div>
-                  
+
                   <div className="flex cursor-pointer items-center justify-between rounded-xl border border-fit-border bg-fit-bg p-4 transition-colors hover:border-fit-primary/50">
                     <div className="flex items-center gap-3">
                       <svg className="h-5 w-5" viewBox="0 0 24 24">
-                        <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0112 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z"/>
-                        <path fill="#34A853" d="M16.04 18.013c-1.09.703-2.474 1.078-4.04 1.078a7.076 7.076 0 01-6.725-4.962L1.248 17.24C3.208 21.2 7.282 24 12 24c2.923 0 5.377-1.054 7.185-2.822l-3.145-3.165z"/>
-                        <path fill="#4A90E2" d="M23.989 12.276c0-.81-.073-1.589-.208-2.333H12v4.61h6.716c-.29 1.498-1.123 2.768-2.362 3.61l3.146 3.165C21.343 19.62 23.989 16.335 23.989 12.276z"/>
-                        <path fill="#FBBC05" d="M5.275 14.128A7.067 7.067 0 014.922 12c0-.735.13-1.444.353-2.115L1.24 6.65C.448 8.243 0 10.05 0 12c0 1.95.448 3.757 1.24 5.35l4.035-3.222z"/>
+                        <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0112 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z" />
+                        <path fill="#34A853" d="M16.04 18.013c-1.09.703-2.474 1.078-4.04 1.078a7.076 7.076 0 01-6.725-4.962L1.248 17.24C3.208 21.2 7.282 24 12 24c2.923 0 5.377-1.054 7.185-2.822l-3.145-3.165z" />
+                        <path fill="#4A90E2" d="M23.989 12.276c0-.81-.073-1.589-.208-2.333H12v4.61h6.716c-.29 1.498-1.123 2.768-2.362 3.61l3.146 3.165C21.343 19.62 23.989 16.335 23.989 12.276z" />
+                        <path fill="#FBBC05" d="M5.275 14.128A7.067 7.067 0 014.922 12c0-.735.13-1.444.353-2.115L1.24 6.65C.448 8.243 0 10.05 0 12c0 1.95.448 3.757 1.24 5.35l4.035-3.222z" />
                       </svg>
                       <div>
                         <p className="text-sm font-medium text-fit-text">Liên kết Google</p>
@@ -330,11 +377,11 @@ export default function MemberProfilePage() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Right: Thông báo */}
               <div>
-                <div className="hidden h-7 md:block mb-6"></div> 
-                
+                <div className="hidden h-7 md:block mb-6"></div>
+
                 <div className="space-y-6 pt-1">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -361,9 +408,9 @@ export default function MemberProfilePage() {
           </Card>
 
           <div className="flex justify-end">
-            <Button 
-              className="w-full sm:w-auto min-w-[140px]" 
-              onClick={handleSave} 
+            <Button
+              className="w-full sm:w-auto min-w-[140px]"
+              onClick={handleSave}
               disabled={saving}
             >
               {saving ? "Đang lưu..." : "Lưu thay đổi"}
@@ -371,6 +418,51 @@ export default function MemberProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Change Password Modal (USER-09) */}
+      <Modal
+        title="Đổi mật khẩu tài khoản"
+        open={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+      >
+        <form onSubmit={handlePasswordChange} className="space-y-4">
+          <Input
+            label="Mật khẩu hiện tại *"
+            name="oldPassword"
+            type="password"
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            placeholder="Nhập mật khẩu hiện tại"
+            required
+          />
+          <Input
+            label="Mật khẩu mới *"
+            name="newPassword"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+            required
+          />
+          <Input
+            label="Xác nhận mật khẩu mới *"
+            name="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Nhập lại mật khẩu mới"
+            required
+          />
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
+            <Button type="button" variant="outline" onClick={() => setPasswordModalOpen(false)}>
+              Hủy
+            </Button>
+            <Button type="submit" isLoading={passwordSaving} className="bg-fit-primary hover:bg-fit-primaryHover text-white">
+              Đổi mật khẩu
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

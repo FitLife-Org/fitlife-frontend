@@ -1,17 +1,21 @@
 export interface ProfileResponse {
   id: number;
+  userId?: number;
+  memberCode?: string;
   fullName: string;
   email: string;
   phone: string;
   gender: string;
   dateOfBirth: string;
-  address: string;
   avatarUrl: string;
   height: number;
   weight: number;
-  target: string;
-  activityLevel: string;
-  memberSince: string;
+  bmi?: number;
+  fitnessGoal: string;
+  status?: string;
+  activityLevel?: string;
+  address?: string;
+  memberSince?: string;
 }
 
 export interface UpdateProfileRequest {
@@ -19,11 +23,12 @@ export interface UpdateProfileRequest {
   phone?: string;
   gender?: string;
   dateOfBirth?: string;
-  address?: string;
+  avatarUrl?: string;
   height?: number;
   weight?: number;
-  target?: string;
+  fitnessGoal?: string;
   activityLevel?: string;
+  address?: string;
 }
 
 export interface MembershipResponse {

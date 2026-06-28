@@ -49,6 +49,7 @@ const menuItems: MenuItemType[] = [
 
     // ADMIN
     {label: "Tổng quan", path: ROUTES.ADMIN_DASHBOARD, icon: Gauge, roles: ["ROLE_ADMIN"]},
+    {label: "Tài khoản", path: ROUTES.ADMIN_USERS, icon: ShieldCheck, roles: ["ROLE_ADMIN"]},
     {label: "Hội viên", path: ROUTES.ADMIN_MEMBERS, icon: Users, roles: ["ROLE_ADMIN"]},
     {label: "Gói tập", path: ROUTES.ADMIN_PACKAGES, icon: Package, roles: ["ROLE_ADMIN"]},
     {label: "Huấn luyện viên", path: ROUTES.ADMIN_TRAINERS, icon: UserRound, roles: ["ROLE_ADMIN"]},
