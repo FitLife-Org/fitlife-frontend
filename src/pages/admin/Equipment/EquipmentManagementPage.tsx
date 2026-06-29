@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, Filter, Eye, Edit2, MoreVertical, Layers, CheckCircle2, Wrench, XCircle, CalendarClock } from "lucide-react";
-import PageHeader from "../../components/common/PageHeader";
-import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
-import Input from "../../components/common/Input";
-import type { Equipment, EquipmentSummary } from "../../types/equipment.type";
-
+import { Link } from "react-router-dom";
+import Button from "../../../components/common/Button";
+import Card from "../../../components/common/Card";
+import { EquipmentService } from "../../../services/equipmentService";
+import type { Equipment, EquipmentSummary } from "../../../types/equipment.type";
 const MOCK_SUMMARY: EquipmentSummary = {
   total: 128,
   active: { count: 102, percentage: 79.7 },
@@ -85,6 +84,28 @@ const MOCK_EQUIPMENTS: Equipment[] = [
 
 export default function EquipmentManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [equipments, setEquipments] = useState<Equipment[]>(MOCK_EQUIPMENTS);
+  const [summary, setSummary] = useState<EquipmentSummary>(MOCK_SUMMARY);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchEquipments();
+  }, []);
+
+  const fetchEquipments = async () => {
+    setLoading(true);
+    try {
+      const response = await EquipmentService.getAll();
+      const data = response.data?.data || response.data || [];
+      if (Array.isArray(data)) {
+        setEquipments(data.length > 0 ? data : MOCK_EQUIPMENTS); // Fallback to mock for UI if no data
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải thiết bị:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderStatusBadge = (status: Equipment["status"]) => {
     switch (status) {
@@ -108,9 +129,9 @@ export default function EquipmentManagementPage() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm nhanh..." 
+            <input
+              type="text"
+              placeholder="Tìm kiếm nhanh..."
               className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary w-64 shadow-sm"
             />
           </div>
@@ -118,9 +139,11 @@ export default function EquipmentManagementPage() {
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">3</div>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
           </button>
-          <Button className="bg-fit-primary hover:bg-fit-primaryHover text-white shadow-sm flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm">
-            <Plus className="w-4 h-4" /> Thêm thiết bị
-          </Button>
+          <Link to="/admin/equipment/add">
+            <Button className="bg-fit-primary hover:bg-fit-primaryHover text-white shadow-sm flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm">
+              <Plus className="w-4 h-4" /> Thêm thiết bị
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -134,7 +157,7 @@ export default function EquipmentManagementPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tổng số thiết bị</p>
-              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{MOCK_SUMMARY.total}</h3>
+              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{summary.total}</h3>
               <p className="text-xs text-slate-500 mt-1">Thiết bị</p>
             </div>
           </div>
@@ -148,8 +171,8 @@ export default function EquipmentManagementPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Đang hoạt động</p>
-              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{MOCK_SUMMARY.active.count}</h3>
-              <p className="text-xs text-slate-500 mt-1">{MOCK_SUMMARY.active.percentage}%</p>
+              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{summary.active.count}</h3>
+              <p className="text-xs text-slate-500 mt-1">{summary.active.percentage}%</p>
             </div>
           </div>
         </Card>
@@ -162,8 +185,8 @@ export default function EquipmentManagementPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bảo trì</p>
-              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{MOCK_SUMMARY.maintenance.count}</h3>
-              <p className="text-xs text-slate-500 mt-1">{MOCK_SUMMARY.maintenance.percentage}%</p>
+              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{summary.maintenance.count}</h3>
+              <p className="text-xs text-slate-500 mt-1">{summary.maintenance.percentage}%</p>
             </div>
           </div>
         </Card>
@@ -176,8 +199,8 @@ export default function EquipmentManagementPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ngừng hoạt động</p>
-              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{MOCK_SUMMARY.inactive.count}</h3>
-              <p className="text-xs text-slate-500 mt-1">{MOCK_SUMMARY.inactive.percentage}%</p>
+              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{summary.inactive.count}</h3>
+              <p className="text-xs text-slate-500 mt-1">{summary.inactive.percentage}%</p>
             </div>
           </div>
         </Card>
@@ -190,8 +213,8 @@ export default function EquipmentManagementPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sắp bảo trì</p>
-              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{MOCK_SUMMARY.upcomingMaintenance.count}</h3>
-              <p className="text-xs text-slate-500 mt-1">{MOCK_SUMMARY.upcomingMaintenance.timeFrame}</p>
+              <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{summary.upcomingMaintenance.count}</h3>
+              <p className="text-xs text-slate-500 mt-1">{summary.upcomingMaintenance.timeFrame}</p>
             </div>
           </div>
         </Card>
@@ -203,15 +226,15 @@ export default function EquipmentManagementPage() {
         <div className="p-5 border-b border-slate-100 flex flex-wrap lg:flex-nowrap items-center justify-between gap-4">
           <div className="w-full lg:w-80 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm thiết bị, mã thiết bị..." 
+            <input
+              type="text"
+              placeholder="Tìm kiếm thiết bị, mã thiết bị..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary transition-colors"
             />
           </div>
-          
+
           <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
             <div className="flex flex-col gap-1 min-w-[140px]">
               <label className="text-[11px] font-medium text-slate-500 uppercase pl-1">Danh mục</label>
@@ -263,7 +286,13 @@ export default function EquipmentManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {MOCK_EQUIPMENTS.map((eq) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="px-5 py-8 text-center text-slate-500">
+                    Đang tải dữ liệu...
+                  </td>
+                </tr>
+              ) : equipments.map((eq) => (
                 <tr key={eq.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-5 py-4"><input type="checkbox" className="rounded border-slate-300 text-fit-primary focus:ring-fit-primary cursor-pointer" /></td>
                   <td className="px-5 py-4">
@@ -285,7 +314,7 @@ export default function EquipmentManagementPage() {
                     {eq.nextMaintenance ? (
                       <div className="flex flex-col">
                         <span className="text-[13px] text-slate-900 font-medium">{eq.nextMaintenance}</span>
-                        {eq.daysToNextMaintenance !== null && (
+                        {typeof eq.daysToNextMaintenance === "number" && (
                           <span className={`text-[11px] mt-0.5 ${eq.daysToNextMaintenance <= 7 ? 'text-fit-trainer font-medium' : 'text-fit-primary'}`}>
                             Còn {eq.daysToNextMaintenance} ngày
                           </span>
@@ -325,10 +354,10 @@ export default function EquipmentManagementPage() {
             </select>
             <span>1 - 10 của {MOCK_SUMMARY.total} thiết bị</span>
           </div>
-          
+
           <div className="flex items-center gap-1">
             <button className="p-1.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors" disabled>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
             </button>
             <button className="w-8 h-8 rounded bg-fit-primary text-white font-medium flex items-center justify-center text-sm shadow-sm hover:bg-fit-primaryHover transition-colors">1</button>
             <button className="w-8 h-8 rounded text-slate-600 hover:bg-slate-100 font-medium flex items-center justify-center text-sm transition-colors">2</button>
@@ -336,7 +365,7 @@ export default function EquipmentManagementPage() {
             <span className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">...</span>
             <button className="w-8 h-8 rounded text-slate-600 hover:bg-slate-100 font-medium flex items-center justify-center text-sm transition-colors">13</button>
             <button className="p-1.5 rounded text-slate-600 hover:bg-slate-100 transition-colors">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
             </button>
           </div>
         </div>
