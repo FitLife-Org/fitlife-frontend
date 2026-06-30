@@ -258,7 +258,7 @@ export default function PackageManagementPage() {
         title="Xóa gói tập"
         message="Bạn có chắc chắn muốn xóa gói tập này không? Nếu đã có người đăng ký, gói này chỉ bị khóa lại chứ không bị xóa."
         confirmText="Xóa"
-        type="danger"
+
       />
     </>
   );

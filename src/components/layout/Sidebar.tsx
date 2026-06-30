@@ -67,16 +67,16 @@ const menuItems: MenuItemType[] = [
     },
 
     // PT
-    {label: "Lịch PT", path: ROUTES.TRAINER_SCHEDULE, icon: CalendarDays, roles: ["ROLE_PT", "ROLE_ADMIN"]},
-    {label: "Hội viên của tôi", path: ROUTES.TRAINER_MEMBERS, icon: Users, roles: ["ROLE_PT", "ROLE_ADMIN"]},
-    {label: "Theo dõi bài tập", path: ROUTES.TRAINER_WORKOUT_TRACKING, icon: Flame, roles: ["ROLE_PT", "ROLE_ADMIN"]},
+    {label: "Lịch PT", path: ROUTES.TRAINER_SCHEDULE, icon: CalendarDays, roles: ["ROLE_TRAINER", "ROLE_ADMIN"]},
+    {label: "Hội viên của tôi", path: ROUTES.TRAINER_MEMBERS, icon: Users, roles: ["ROLE_TRAINER", "ROLE_ADMIN"]},
+    {label: "Theo dõi bài tập", path: ROUTES.TRAINER_WORKOUT_TRACKING, icon: Flame, roles: ["ROLE_TRAINER", "ROLE_ADMIN"]},
 
     // COMMON
     {
         label: "Cài đặt",
         path: ROUTES.COMMON_SETTINGS,
         icon: Settings,
-        roles: ["ROLE_MEMBER", "ROLE_ADMIN", "ROLE_STAFF", "ROLE_PT"],
+        roles: ["ROLE_MEMBER", "ROLE_ADMIN", "ROLE_STAFF", "ROLE_TRAINER"],
     },
 ];
 

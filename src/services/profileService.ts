@@ -19,11 +19,11 @@ export const profileService = {
     const response = await apiClient.patch<ApiResponse<ProfileResponse>>("/profile/avatar", formData, {
       headers: { "Content-Type": "multipart/form-data" }
     });
-    return response.data.data;
+    return response.data.data as any;
   },
 
   async getMyMembership(): Promise<MembershipResponse> {
     const response = await apiClient.get<ApiResponse<MembershipResponse>>("/profile/membership");
-    return response.data.data;
+    return response.data.data as any;
   }
 };
