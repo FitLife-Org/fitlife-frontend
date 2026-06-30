@@ -1,19 +1,256 @@
+import { useEffect, useState } from "react";
+import { Plus, Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
+import Table from "../../components/common/Table";
+import Button from "../../components/common/Button";
+import Badge from "../../components/common/Badge";
+import Modal from "../../components/common/Modal";
+import Input from "../../components/common/Input";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { showAlert } from "../../utils/alert";
+import { packageService } from "../../services/packageService";
+import type { GymPackage } from "../../types/package.type";
 
 export default function PackageManagementPage() {
+  const [packages, setPackages] = useState<GymPackage[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<GymPackage | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    durationDays: "",
+    description: "",
+  });
+
+  // Delete states
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    try {
+      setLoading(true);
+      const data = await packageService.getAdminPackages();
+      setPackages(data);
+    } catch (error) {
+      // Ignore initial dummy error if no api
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenModal = (pkg?: GymPackage) => {
+    if (pkg) {
+      setEditingPackage(pkg);
+      setFormData({
+        name: pkg.name,
+        price: pkg.price.toString(),
+        durationDays: pkg.durationDays.toString(),
+        description: pkg.description || "",
+      });
+    } else {
+      setEditingPackage(null);
+      setFormData({ name: "", price: "", durationDays: "", description: "" });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        name: formData.name,
+        price: Number(formData.price),
+        durationDays: Number(formData.durationDays),
+        description: formData.description,
+      };
+
+      if (editingPackage) {
+        await packageService.updatePackage(editingPackage.id, payload);
+        showAlert.success("Thành công", "Đã cập nhật gói tập");
+      } else {
+        await packageService.createPackage(payload);
+        showAlert.success("Thành công", "Đã tạo gói tập mới");
+      }
+      setIsModalOpen(false);
+      fetchPackages();
+    } catch (error) {
+      showAlert.error("Lỗi", "Không thể lưu thông tin gói tập");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await packageService.deletePackage(deleteId);
+      showAlert.success("Thành công", "Đã xóa gói tập");
+      fetchPackages();
+    } catch (error) {
+      showAlert.error("Lỗi", "Không thể xóa gói tập");
+    } finally {
+      setDeleteId(null);
+    }
+  };
+
+  const handleToggleStatus = async (pkg: GymPackage) => {
+    try {
+      const newStatus = pkg.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      await packageService.updatePackageStatus(pkg.id, newStatus);
+      showAlert.success("Thành công", `Đã ${newStatus === 'ACTIVE' ? 'kích hoạt' : 'khóa'} gói tập`);
+      fetchPackages();
+    } catch (error) {
+      showAlert.error("Lỗi", "Không thể thay đổi trạng thái");
+    }
+  };
+
+  const columns = [
+    {
+      header: "Mã / Ảnh",
+      accessor: (row: GymPackage) => (
+        <div className="flex items-center gap-3">
+          {row.thumbnailUrl ? (
+            <img src={row.thumbnailUrl} alt={row.name} className="w-12 h-12 rounded object-cover" />
+          ) : (
+            <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">No img</div>
+          )}
+          <span className="font-mono text-sm">{row.code || "-"}</span>
+        </div>
+      ),
+    },
+    {
+      header: "Gói tập",
+      accessor: (row: GymPackage) => (
+        <div>
+          <p className="font-bold">{row.name}</p>
+          <Badge variant={row.packageType === "VIP" ? "purple" : "default"}>{row.packageType || "BASIC"}</Badge>
+        </div>
+      ),
+    },
+    {
+      header: "Giá & Thời hạn",
+      accessor: (row: GymPackage) => (
+        <div>
+          <p className="font-bold text-fit-primary">{formatCurrency(row.price)}</p>
+          <p className="text-sm text-fit-muted">{row.durationDays} ngày</p>
+        </div>
+      ),
+    },
+    {
+      header: "Mô tả",
+      accessor: (row: GymPackage) => (
+        <p className="text-sm text-fit-muted max-w-[200px] truncate" title={row.description}>{row.description || "Không có mô tả"}</p>
+      ),
+    },
+    {
+      header: "Trạng thái",
+      accessor: (row: GymPackage) => (
+        <Badge variant={row.status === "ACTIVE" ? "success" : "danger"}>
+          {row.status}
+        </Badge>
+      ),
+    },
+    {
+      header: "Thao tác",
+      accessor: (row: GymPackage) => (
+        <div className="flex items-center gap-2">
+          <button onClick={() => handleToggleStatus(row)} className={`p-2 rounded-lg transition-colors ${row.status === 'ACTIVE' ? 'text-red-500 hover:bg-red-50' : 'text-emerald-500 hover:bg-emerald-50'}`} title={row.status === 'ACTIVE' ? 'Khóa' : 'Kích hoạt'}>
+            {row.status === 'ACTIVE' ? <XCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+          </button>
+          <button onClick={() => handleOpenModal(row)} className="p-2 text-fit-blue hover:bg-fit-blueSoft rounded-lg transition-colors" title="Chỉnh sửa">
+            <Edit className="w-5 h-5" />
+          </button>
+          <button onClick={() => setDeleteId(row.id)} className="p-2 text-fit-danger hover:bg-fit-dangerSoft rounded-lg transition-colors" title="Xóa">
+            <Trash2 className="w-5 h-5" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <>
-      <PageHeader title="Quản lý gói tập" description="Cấu hình giá, thời hạn và quyền lợi từng gói" />
-      <div className="grid gap-6 md:grid-cols-4">
-        {[
-          ["Basic", 199000],
-          ["Standard", 349000],
-          ["Premium", 599000],
-          ["PT Pro", 999000],
-        ].map(([name, price]) => <Card className="p-6" key={name}><h2 className="text-2xl font-black text-fit-text">{name}</h2><p className="mt-4 text-3xl font-black text-fit-primary">{formatCurrency(Number(price))}</p></Card>)}
+      <div className="flex items-center justify-between mb-6">
+        <PageHeader title="Quản lý gói tập" description="Cấu hình thông tin, giá cả và thời hạn các gói tập" />
+        <Button onClick={() => handleOpenModal()}>
+          <Plus className="w-5 h-5 mr-2" />
+          Tạo gói mới
+        </Button>
       </div>
+
+      <Card className="overflow-hidden">
+        <Table columns={columns} data={packages} isLoading={loading} />
+      </Card>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingPackage ? "Cập nhật gói tập" : "Tạo gói tập mới"}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Tên gói tập"
+            placeholder="VD: Premium 30 Days"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Giá tiền (VNĐ)"
+              type="number"
+              min="0"
+              placeholder="VD: 1200000"
+              required
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            />
+            <Input
+              label="Thời hạn (ngày)"
+              type="number"
+              min="1"
+              placeholder="VD: 30"
+              required
+              value={formData.durationDays}
+              onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-fit-text">Mô tả gói tập</label>
+            <textarea
+              className="w-full rounded-xl border border-fit-border bg-white px-4 py-2 text-sm text-fit-text transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary"
+              rows={4}
+              placeholder="VD: Không giới hạn số lần sử dụng..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+              Hủy
+            </Button>
+            <Button type="submit">
+              {editingPackage ? "Lưu thay đổi" : "Tạo mới"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Xóa gói tập"
+        message="Bạn có chắc chắn muốn xóa gói tập này không? Nếu đã có người đăng ký, gói này chỉ bị khóa lại chứ không bị xóa."
+        confirmText="Xóa"
+        type="danger"
+      />
     </>
   );
 }

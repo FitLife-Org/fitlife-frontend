@@ -2,9 +2,12 @@ import type { Status } from "./common.type";
 
 export interface GymPackage {
   id: number;
+  code: string;
   name: string;
-  description?: string;
-  durationDays: number;
+  packageType: string;
   price: number;
+  durationDays: number;
+  description?: string;
   status: Status;
+  thumbnailUrl?: string;
 }
