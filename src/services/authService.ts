@@ -22,6 +22,10 @@ const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
     throw new Error("Không nhận được token từ máy chủ.");
   }
 
+  const roles: Role[] =
+      payload.roles && payload.roles.length > 0
+          ? payload.roles
+          : ["ROLE_MEMBER"];
 
   return {
     token,
@@ -29,7 +33,7 @@ const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
       userId: payload.userId ?? 0,
       email: payload.email ?? "unknown@email.com",
       fullName: payload.fullName ?? "User",
-      roles: payload.roles ?? (["ROLE_MEMBER"] as Role[]),
+      roles,
     },
   };
 };
@@ -38,12 +42,17 @@ const extractErrorMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null && "response" in error) {
     const axiosError = error as {
       response?: {
+        status?: number;
         data?: {
           message?: string;
           error?: string;
         };
       };
     };
+
+    if (axiosError.response?.status === 401) {
+      return "Email, tên đăng nhập hoặc mật khẩu không chính xác.";
+    }
 
     return (
         axiosError.response?.data?.message ||
@@ -58,7 +67,6 @@ const extractErrorMessage = (error: unknown): string => {
 
   return "Có lỗi xảy ra. Vui lòng thử lại.";
 };
-
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<AuthSession> {
@@ -134,6 +142,7 @@ export const authService = {
       throw new Error(extractErrorMessage(error));
     }
   },
+
   logout(): void {
     tokenStorage.clear();
   },
