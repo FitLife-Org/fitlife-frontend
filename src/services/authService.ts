@@ -3,8 +3,10 @@ import type { ApiResponse } from "../types/common.type";
 import type {
   AuthResponsePayload,
   AuthSession,
+  ForgotPasswordRequest,
   LoginRequest,
   RegisterRequest,
+  ResetPasswordRequest,
 } from "../types/auth.type";
 import { tokenStorage } from "../utils/token";
 import type { Role } from "../types/common.type";
@@ -20,13 +22,18 @@ const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
     throw new Error("Không nhận được token từ máy chủ.");
   }
 
+  const roles: Role[] =
+      payload.roles && payload.roles.length > 0
+          ? payload.roles
+          : ["ROLE_MEMBER"];
+
   return {
     token,
     user: {
       userId: payload.userId ?? 0,
       email: payload.email ?? "unknown@email.com",
       fullName: payload.fullName ?? "User",
-      roles: payload.roles ?? (["ROLE_MEMBER"] as Role[]),
+      roles,
     },
   };
 };
@@ -35,12 +42,17 @@ const extractErrorMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null && "response" in error) {
     const axiosError = error as {
       response?: {
+        status?: number;
         data?: {
           message?: string;
           error?: string;
         };
       };
     };
+
+    if (axiosError.response?.status === 401) {
+      return "Email, tên đăng nhập hoặc mật khẩu không chính xác.";
+    }
 
     return (
         axiosError.response?.data?.message ||
@@ -93,15 +105,39 @@ export const authService = {
     try {
       const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
           "/auth/google-login",
-          {
-            idToken,
-          }
+          { idToken }
       );
 
       const session = normalizeSession(response.data.data);
       tokenStorage.set(session.token);
 
       return session;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  async forgotPassword(data: ForgotPasswordRequest): Promise<string> {
+    try {
+      const response = await apiClient.post<ApiResponse<void>>(
+          "/auth/forgot-password",
+          data
+      );
+
+      return response.data.message || "OTP đã được gửi đến email của bạn.";
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  async resetPassword(data: ResetPasswordRequest): Promise<string> {
+    try {
+      const response = await apiClient.post<ApiResponse<void>>(
+          "/auth/reset-password",
+          data
+      );
+
+      return response.data.message || "Đặt lại mật khẩu thành công.";
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }

@@ -13,12 +13,15 @@ import {useAuthStore} from "../../store/authStore";
 import {validateLogin} from "../../utils/validators/loginValidator";
 import {getRedirectPathByRoles} from "../../utils/authRedirect";
 
+const REMEMBERED_IDENTIFIER_KEY = "fitlife_remembered_identifier";
+
 export default function LoginPage() {
     const navigate = useNavigate();
     const setSession = useAuthStore((state) => state.setSession);
 
     // Gộp state form để dễ quản lý và mở rộng
     const [formData, setFormData] = useState({identifier: "", password: ""});
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState("");
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
@@ -73,6 +76,7 @@ export default function LoginPage() {
         setFieldErrors({});
 
         const validationErrors = validateLogin(formData);
+
         if (Object.keys(validationErrors).length > 0) {
             setFieldErrors(validationErrors);
             return;
@@ -80,21 +84,34 @@ export default function LoginPage() {
 
         setLoading(true);
 
-        const session = await authService.login({
-            identifier: formData.identifier.trim(),
-            password: formData.password,
-        });
+        try {
+            const session = await authService.login({
+                identifier: formData.identifier.trim(),
+                password: formData.password,
+            });
 
-        console.log("Login session:", session);
-        console.log("Login roles:", session.user.roles);
+            if (rememberMe) {
+                localStorage.setItem(
+                    REMEMBERED_IDENTIFIER_KEY,
+                    formData.identifier.trim()
+                );
+            } else {
+                localStorage.removeItem(REMEMBERED_IDENTIFIER_KEY);
+            }
 
-        setSession(session);
+            setSession(session);
 
-        const redirectPath = getRedirectPathByRoles(session.user.roles);
-
-        console.log("Redirect path:", redirectPath);
-
-        navigate(redirectPath, {replace: true});
+            const redirectPath = getRedirectPathByRoles(session.user.roles);
+            navigate(redirectPath, { replace: true });
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Email, tên đăng nhập hoặc mật khẩu không chính xác."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Hiệu ứng GSAP
@@ -127,6 +144,17 @@ export default function LoginPage() {
     }, {scope: containerRef});
 
     useEffect(() => {
+        const rememberedIdentifier = localStorage.getItem(REMEMBERED_IDENTIFIER_KEY);
+
+        if (rememberedIdentifier) {
+            setFormData((prev) => ({
+                ...prev,
+                identifier: rememberedIdentifier,
+            }));
+
+            setRememberMe(true);
+        }
+
         const interval = setInterval(() => {
             setActiveStep((prev) => (prev + 1) % 4);
         }, 1200);
@@ -172,6 +200,9 @@ export default function LoginPage() {
                             nhanh, không độ trễ. Vận hành trơn tru, tập trung build cơ – không build stress.
                         </p>
 
+              <p className="text-lg leading-relaxed text-slate-700 border-l-4 border-sky-500 pl-6 bg-white/50 backdrop-blur-sm py-3 pr-4 rounded-r-xl shadow-sm border-white/60 border-y border-r">
+                Quản lý hội viên, gói tập, check-in, lịch PT và thanh toán — tất cả trong một hệ thống mượt, nhanh, không độ trễ. Vận hành trơn tru, tập trung build cơ – không build stress.
+              </p>
 
                         <div
                             className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-sky-500/40 pl-6">
@@ -262,13 +293,15 @@ export default function LoginPage() {
                                         <input
                                             type="checkbox"
                                             id="remember-me"
+                                            checked={rememberMe}
+                                            onChange={(event) => setRememberMe(event.target.checked)}
                                             className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer"
                                         />
                                         <label
                                             htmlFor="remember-me"
                                             className="text-sm text-gray-700 cursor-pointer select-none"
                                         >
-                                            Remember me?
+                                            Ghi nhớ tài khoản
                                         </label>
                                     </div>
 

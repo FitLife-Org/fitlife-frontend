@@ -15,7 +15,7 @@ export interface PageResult<T> {
 export type Role =
     | "ROLE_ADMIN"
     | "ROLE_STAFF"
-    | "ROLE_PT"
+    | "ROLE_TRAINER"
     | "ROLE_MEMBER";
 
 export type Status =

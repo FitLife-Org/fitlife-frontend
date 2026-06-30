@@ -14,11 +14,9 @@ if (!rootElement) {
 const app = <App />;
 
 ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    {googleClientId ? (
+    googleClientId ? (
       <GoogleOAuthProvider clientId={googleClientId}>{app}</GoogleOAuthProvider>
     ) : (
       app
-    )}
-  </React.StrictMode>,
+    )
 );
