@@ -2,6 +2,8 @@ import type { Status } from "./common.type";
 
 export interface MemberProfile {
   id: number;
+  userId?: number;
+  username?: string;
   fullName: string;
   email: string;
   phone: string;
@@ -9,13 +11,21 @@ export interface MemberProfile {
   dateOfBirth?: string;
   height?: number;
   weight?: number;
+  bmi?: number;
   status: Status;
   avatarUrl?: string;
   address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  healthNote?: string;
   fitnessGoal?: string;
   activityLevel?: string;
   memberCode?: string;
   memberSince?: string;
+  joinDate?: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BodyMetric {

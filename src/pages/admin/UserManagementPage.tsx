@@ -160,6 +160,7 @@ export default function UserManagementPage() {
   // Form states
   const [isEditMode, setIsEditMode] = useState(false);
   const [formValues, setFormValues] = useState<Partial<MemberProfile>>({
+    userId: undefined,
     fullName: "",
     email: "",
     phone: "",
@@ -240,6 +241,7 @@ export default function UserManagementPage() {
   const handleOpenCreate = () => {
     setIsEditMode(false);
     setFormValues({
+      userId: undefined,
       fullName: "",
       email: "",
       phone: "",
@@ -387,15 +389,18 @@ export default function UserManagementPage() {
   });
 
   // Calculate BMI
-  const getBmiInfo = (h?: number, w?: number) => {
-    if (!h || !w) return { value: "-", label: "Chưa có chỉ số", color: "text-slate-400" };
-    const heightInMeters = h / 100;
-    const bmi = Number((w / (heightInMeters * heightInMeters)).toFixed(1));
+  const getBmiInfo = (h?: number, w?: number, providedBmi?: number) => {
+    let bmiValue = providedBmi;
+    if (!bmiValue) {
+      if (!h || !w) return { value: "-", label: "Chưa có chỉ số", color: "text-slate-400" };
+      const heightInMeters = h / 100;
+      bmiValue = Number((w / (heightInMeters * heightInMeters)).toFixed(1));
+    }
     
-    if (bmi < 18.5) return { value: bmi, label: "Gầy", color: "text-blue-500 bg-blue-50" };
-    if (bmi < 24.9) return { value: bmi, label: "Bình thường", color: "text-emerald-500 bg-emerald-50" };
-    if (bmi < 29.9) return { value: bmi, label: "Tiền béo phì", color: "text-amber-500 bg-amber-50" };
-    return { value: bmi, label: "Béo phì", color: "text-rose-500 bg-rose-50" };
+    if (bmiValue < 18.5) return { value: bmiValue, label: "Gầy", color: "text-blue-500 bg-blue-50" };
+    if (bmiValue < 24.9) return { value: bmiValue, label: "Bình thường", color: "text-emerald-500 bg-emerald-50" };
+    if (bmiValue < 29.9) return { value: bmiValue, label: "Tiền béo phì", color: "text-amber-500 bg-amber-50" };
+    return { value: bmiValue, label: "Béo phì", color: "text-rose-500 bg-rose-50" };
   };
 
   return (
@@ -539,7 +544,7 @@ export default function UserManagementPage() {
                           </div>
                           <div>
                             <div className="font-bold text-slate-900 text-[13px]">{member.fullName}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">ID: {member.id}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">ID: {member.id} {member.userId ? ` | User: ${member.userId}` : ""}</div>
                           </div>
                         </div>
                       </td>
@@ -694,7 +699,7 @@ export default function UserManagementPage() {
                       <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100 flex flex-col items-center">
                         <span className="text-[10px] text-slate-400 font-bold uppercase">Chỉ số BMI</span>
                         {(() => {
-                          const bmi = getBmiInfo(selectedMember.height, selectedMember.weight);
+                          const bmi = getBmiInfo(selectedMember.height, selectedMember.weight, selectedMember.bmi);
                           return (
                             <>
                               <span className="text-base font-black text-slate-800 mt-1">{bmi.value}</span>
@@ -815,6 +820,18 @@ export default function UserManagementPage() {
       >
         <form onSubmit={handleFormSubmit} className="space-y-4 max-h-[85vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4">
+            {!isEditMode && (
+              <div className="col-span-2">
+                <Input 
+                  label="ID Tài khoản liên kết (User ID)" 
+                  name="userId"
+                  type="number"
+                  value={formValues.userId || ""} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, userId: e.target.value ? Number(e.target.value) : undefined }))}
+                  placeholder="Nhập ID tài khoản người dùng"
+                />
+              </div>
+            )}
             <div className="col-span-2">
               <Input 
                 label="Họ và tên *" 

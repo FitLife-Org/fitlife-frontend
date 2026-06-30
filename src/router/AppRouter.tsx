@@ -23,7 +23,6 @@ import CreateMaintenancePage from "../pages/admin/Equipment/CreateMaintenancePag
 
 // --- AUTH PAGES ---
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
-import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
@@ -83,7 +82,6 @@ export default function AppRouter() {
                 <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
                 <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
                 <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
-                <Route path={ROUTES.GOOGLE_CALLBACK} element={<GoogleCallbackPage />} />
                 <Route path={ROUTES.FORBIDDEN} element={<ForbiddenPage />} />
 
                 {/* --- PROTECTED ROUTES --- */}

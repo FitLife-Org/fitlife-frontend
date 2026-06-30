@@ -1,137 +1,27 @@
-import {useState, useRef, useEffect, type ChangeEvent, type FormEvent} from "react";
-import {Link, useNavigate} from "react-router-dom";
-import {GoogleLogin, type CredentialResponse} from "@react-oauth/google";
-import {Loader2, ArrowRight} from "lucide-react";
-import gsap from "gsap";
-import {useGSAP} from "@gsap/react";
+import { Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import { Loader2, ArrowRight } from "lucide-react";
 
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
-import {ROUTES} from "../../config/routes";
-import {authService} from "../../services/authService";
-import {useAuthStore} from "../../store/authStore";
-import {validateLogin} from "../../utils/validators/loginValidator";
-import {getRedirectPathByRoles} from "../../utils/authRedirect";
+import { ROUTES } from "../../config/routes";
+import { useLoginLogic } from "../../utils/validators/useLoginLogic";
 
-export default function LoginPage() {
-    const navigate = useNavigate();
-    const setSession = useAuthStore((state) => state.setSession);
-
-    // Gộp state form để dễ quản lý và mở rộng
-    const [formData, setFormData] = useState({identifier: "", password: ""});
-    const [error, setError] = useState("");
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [loading, setLoading] = useState(false);
-    const [activeStep, setActiveStep] = useState(0);
-
-    // Khai báo kiểu dữ liệu useRef chuẩn cho TypeScript
-    const containerRef = useRef<HTMLElement>(null);
-    const introRef = useRef<HTMLElement>(null);
-    const formRef = useRef<HTMLDivElement>(null);
-
-    // Xử lý thay đổi input
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const {name, value} = e.target;
-        setFormData((prev) => ({...prev, [name]: value}));
-        if (fieldErrors[name]) {
-            setFieldErrors((prev) => ({...prev, [name]: ""}));
-        }
-    };
-
-    const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-        try {
-            setLoading(true);
-            setError("");
-
-            const idToken = credentialResponse.credential;
-
-            if (!idToken) {
-                throw new Error("Không nhận được ID token từ Google.");
-            }
-
-            const session = await authService.googleLogin(idToken);
-
-            setSession(session);
-
-            const redirectPath = getRedirectPathByRoles(session.user.roles);
-            navigate(redirectPath, {replace: true});
-        } catch (error) {
-            setError(
-                error instanceof Error
-                    ? error.message
-                    : "Đăng nhập Google thất bại. Vui lòng thử lại."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Xử lý Đăng nhập truyền thống
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setError("");
-        setFieldErrors({});
-
-        const validationErrors = validateLogin(formData);
-        if (Object.keys(validationErrors).length > 0) {
-            setFieldErrors(validationErrors);
-            return;
-        }
-
-        setLoading(true);
-
-        const session = await authService.login({
-            identifier: formData.identifier.trim(),
-            password: formData.password,
-        });
-
-        console.log("Login session:", session);
-        console.log("Login roles:", session.user.roles);
-
-        setSession(session);
-
-        const redirectPath = getRedirectPathByRoles(session.user.roles);
-
-        console.log("Redirect path:", redirectPath);
-
-        navigate(redirectPath, {replace: true});
-    };
-
-    // Hiệu ứng GSAP
-    useGSAP(() => {
-        const tl = gsap.timeline();
-
-        if (introRef.current) {
-            tl.fromTo(
-                introRef.current.children,
-                {opacity: 0, x: -50},
-                {opacity: 1, x: 0, duration: 0.8, stagger: 0.2, ease: "power3.out"}
-            );
-        }
-
-        if (formRef.current) {
-            tl.fromTo(
-                formRef.current,
-                {opacity: 0, y: 30, scale: 0.95},
-                {opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out"},
-                "-=0.4"
-            );
-
-            tl.fromTo(
-                formRef.current.querySelectorAll(".gsap-form-element"),
-                {opacity: 0, y: 15},
-                {opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out"},
-                "-=0.4"
-            );
-        }
-    }, {scope: containerRef});
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setActiveStep((prev) => (prev + 1) % 4);
-        }, 1200);
-        return () => clearInterval(interval);
-    }, []);
+export default
+    function LoginPage() {
+    const {
+        formData,
+        error,
+        fieldErrors,
+        loading,
+        activeStep,
+        containerRef,
+        introRef,
+        formRef,
+        handleInputChange,
+        handleGoogleSuccess,
+        handleSubmit,
+    } = useLoginLogic();
 
     return (
         <main

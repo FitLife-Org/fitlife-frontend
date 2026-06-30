@@ -11,11 +11,10 @@ import Modal from "../../components/common/Modal";
 import PageHeader from "../../components/common/PageHeader";
 import { profileService } from "../../services/profileService";
 import { userService } from "../../services/userService";
-import type { ProfileResponse, MembershipResponse, UpdateProfileRequest } from "../../types/profile.type";
+import type { ProfileResponse, UpdateProfileRequest } from "../../types/profile.type";
 
 export default function MemberProfilePage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
-  const [membership, setMembership] = useState<MembershipResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateProfileRequest>({});
@@ -42,19 +41,11 @@ export default function MemberProfilePage() {
         gender: profileData.gender,
         dateOfBirth: profileData.dateOfBirth,
         address: profileData.address,
-        height: profileData.height,
-        weight: profileData.weight,
-        fitnessGoal: profileData.fitnessGoal,
-        activityLevel: profileData.activityLevel
+        emergencyContactName: profileData.emergencyContactName,
+        emergencyContactPhone: profileData.emergencyContactPhone,
+        healthNote: profileData.healthNote,
+        fitnessGoal: profileData.fitnessGoal
       });
-
-      // Bắt try catch riêng cho membership vì có thể chưa có gói
-      try {
-        const membershipData = await profileService.getMyMembership();
-        setMembership(membershipData);
-      } catch {
-        setMembership(null);
-      }
     } catch (error) {
       console.error("Failed to fetch profile", error);
     } finally {
@@ -63,8 +54,11 @@ export default function MemberProfilePage() {
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target as HTMLInputElement;
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: type === "number" ? (value === "" ? undefined : Number(value)) : value 
+    }));
   };
 
   const handleSave = async () => {
@@ -150,19 +144,11 @@ export default function MemberProfilePage() {
           <div className="mt-4 text-center">
             <h2 className="text-2xl font-bold text-slate-900">{profile.fullName}</h2>
             <div className="mt-2 flex justify-center">
-              {membership ? (
-                <Badge variant="success">
-                  <span className="flex items-center gap-1">
-                    <Crown className="h-3.5 w-3.5" /> Gói {membership.packageName}
-                  </span>
-                </Badge>
-              ) : (
-                <Badge variant="warning">
-                  <span className="flex items-center gap-1">
-                    Chưa đăng ký gói
-                  </span>
-                </Badge>
-              )}
+              <Badge variant="success">
+                <span className="flex items-center gap-1">
+                  <Crown className="h-3.5 w-3.5" /> Thành viên FitLife
+                </span>
+              </Badge>
             </div>
           </div>
 
@@ -175,21 +161,9 @@ export default function MemberProfilePage() {
             </div>
             <div className="flex items-center justify-between pb-2">
               <span className="flex items-center gap-2 text-fit-muted">
-                <Ruler className="h-4 w-4" /> Chiều cao
+                <Calendar className="h-4 w-4" /> Ngày tham gia
               </span>
-              <span className="font-medium text-slate-900">{profile.height || 0} cm</span>
-            </div>
-            <div className="flex items-center justify-between pb-2">
-              <span className="flex items-center gap-2 text-fit-muted">
-                <Weight className="h-4 w-4" /> Cân nặng
-              </span>
-              <span className="font-medium text-slate-900">{profile.weight || 0} kg</span>
-            </div>
-            <div className="flex items-center justify-between pb-2">
-              <span className="flex items-center gap-2 text-fit-muted">
-                <Calendar className="h-4 w-4" /> Thành viên từ
-              </span>
-              <span className="font-medium text-slate-900">{profile.memberSince || "Gần đây"}</span>
+              <span className="font-medium text-slate-900">{profile.joinDate || profile.createdAt?.substring(0, 10) || "Gần đây"}</span>
             </div>
           </div>
 
@@ -268,37 +242,27 @@ export default function MemberProfilePage() {
               <h2 className="text-lg font-bold text-fit-text">Thông tin sức khỏe</h2>
             </div>
 
-            <div className="mb-6 grid gap-6 md:grid-cols-3">
-              <label className="block">
-                <span className="text-sm font-medium text-slate-700">Chiều cao</span>
-                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <input
-                    name="height"
-                    type="number"
-                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
-                    value={formData.height || ""}
-                    onChange={handleInputChange}
-                  />
-                  <span className="text-sm text-slate-500">cm</span>
-                </div>
-              </label>
+            <div className="mb-6 grid gap-6 md:grid-cols-2">
+              <Input
+                name="emergencyContactName"
+                label="Người liên hệ khẩn cấp"
+                value={formData.emergencyContactName || ""}
+                onChange={handleInputChange}
+                placeholder="Tên người liên hệ"
+              />
 
-              <label className="block">
-                <span className="text-sm font-medium text-slate-700">Cân nặng</span>
-                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <input
-                    name="weight"
-                    type="number"
-                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
-                    value={formData.weight || ""}
-                    onChange={handleInputChange}
-                  />
-                  <span className="text-sm text-slate-500">kg</span>
-                </div>
-              </label>
+              <Input
+                name="emergencyContactPhone"
+                label="SĐT khẩn cấp"
+                value={formData.emergencyContactPhone || ""}
+                onChange={handleInputChange}
+                placeholder="Số điện thoại"
+              />
+            </div>
 
+            <div className="mb-6 grid gap-6 md:grid-cols-2">
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">Mục tiêu</span>
+                <span className="text-sm font-medium text-slate-700">Mục tiêu tập luyện</span>
                 <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
                   <select
                     name="fitnessGoal"
@@ -313,26 +277,21 @@ export default function MemberProfilePage() {
                   </select>
                 </div>
               </label>
-            </div>
 
-            <label className="block">
-              <span className="text-sm font-medium text-fit-text">
-                Mức độ vận động <InfoIcon className="inline h-3 w-3 text-fit-muted" />
-              </span>
-              <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                <select
-                  name="activityLevel"
-                  value={formData.activityLevel || ""}
-                  onChange={handleInputChange}
-                  className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
-                >
-                  <option value="">Chọn mức độ</option>
-                  <option value="SEDENTARY">Ít vận động</option>
-                  <option value="MODERATE">Vận động vừa phải (3-5 buổi/tuần)</option>
-                  <option value="ACTIVE">Vận động nhiều (6-7 buổi/tuần)</option>
-                </select>
-              </div>
-            </label>
+              <label className="block">
+                <span className="text-sm font-medium text-slate-700">Ghi chú sức khỏe</span>
+                <div className="mt-2 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
+                  <input
+                    name="healthNote"
+                    type="text"
+                    className="w-full bg-transparent py-3 text-sm text-slate-900 outline-none"
+                    value={formData.healthNote || ""}
+                    onChange={handleInputChange}
+                    placeholder="Các vấn đề sức khỏe cần lưu ý..."
+                  />
+                </div>
+              </label>
+            </div>
           </Card>
 
           {/* Bảo mật tài khoản & Thông báo */}

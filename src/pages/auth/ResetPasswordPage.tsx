@@ -1,94 +1,21 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowLeft, KeyRound } from "lucide-react";
 
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { ROUTES } from "../../config/routes";
-import { authService } from "../../services/authService";
-import { validateResetPassword } from "../../utils/validators/resetPasswordValidator";
-
-type ResetPasswordLocationState = {
-    email?: string;
-};
+import { useResetPasswordLogic } from "../../utils/validators/resetPasswordValidator"; // <-- Import Hook vào đây
 
 export default function ResetPasswordPage() {
-    const navigate = useNavigate();
-    const location = useLocation();
-
-    const locationState = location.state as ResetPasswordLocationState | null;
-
-    const [form, setForm] = useState({
-        email: locationState?.email || "",
-        otp: "",
-        newPassword: "",
-        confirmPassword: "",
-    });
-
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [error, setError] = useState("");
-    const [successMessage, setSuccessMessage] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const updateField = (event: ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = event.target;
-
-        const nextValue =
-            name === "otp" ? value.replace(/\D/g, "").slice(0, 6) : value;
-
-        setForm((prev) => ({
-            ...prev,
-            [name]: nextValue,
-        }));
-
-        if (fieldErrors[name]) {
-            setFieldErrors((prev) => ({
-                ...prev,
-                [name]: "",
-            }));
-        }
-    };
-
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setError("");
-        setSuccessMessage("");
-        setFieldErrors({});
-
-        const validationErrors = validateResetPassword(form);
-
-        if (Object.keys(validationErrors).length > 0) {
-            setFieldErrors(validationErrors);
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            const message = await authService.resetPassword({
-                email: form.email.trim(),
-                otp: form.otp.trim(),
-                newPassword: form.newPassword,
-                confirmPassword: form.confirmPassword,
-            });
-
-            setSuccessMessage(message);
-
-            setTimeout(() => {
-                navigate(ROUTES.LOGIN, {
-                    replace: true,
-                });
-            }, 1000);
-        } catch (err) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Không thể đặt lại mật khẩu. Vui lòng thử lại."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+    const {
+        form,
+        fieldErrors,
+        error,
+        successMessage,
+        loading,
+        updateField,
+        handleSubmit,
+    } = useResetPasswordLogic();
 
     return (
         <main className="relative min-h-screen w-full overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center">
@@ -106,8 +33,8 @@ export default function ResetPasswordPage() {
                         </div>
 
                         <span className="bg-gradient-to-r from-green-500 to-cyan-500 bg-clip-text text-5xl tracking-tight text-transparent">
-              FitLife
-            </span>
+                            FitLife
+                        </span>
                     </div>
 
                     <div className="max-w-xl">
@@ -115,8 +42,8 @@ export default function ResetPasswordPage() {
                             Tạo mật khẩu mới
                             <br />
                             <span className="bg-gradient-to-r from-sky-600 to-cyan-500 bg-clip-text text-transparent">
-                bảo mật – dễ nhớ
-              </span>
+                                bảo mật – dễ nhớ
+                            </span>
                         </h1>
 
                         <p className="rounded-r-xl border-y border-r border-white/60 border-l-4 border-sky-500 bg-white/50 py-3 pl-6 pr-4 text-lg leading-relaxed text-slate-700 shadow-sm backdrop-blur-sm">
@@ -142,8 +69,7 @@ export default function ResetPasswordPage() {
                                 </h2>
 
                                 <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-                                    Nhập email, mã OTP và mật khẩu mới để hoàn tất khôi phục tài
-                                    khoản.
+                                    Nhập email, mã OTP và mật khẩu mới để hoàn tất khôi phục tài khoản.
                                 </p>
                             </header>
 

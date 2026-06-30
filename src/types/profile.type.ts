@@ -8,14 +8,16 @@ export interface ProfileResponse {
   gender: string;
   dateOfBirth: string;
   avatarUrl: string;
-  height: number;
-  weight: number;
-  bmi?: number;
-  fitnessGoal: string;
-  status?: string;
-  activityLevel?: string;
   address?: string;
-  memberSince?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  joinDate?: string;
+  fitnessGoal: string;
+  healthNote?: string;
+  status?: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UpdateProfileRequest {
@@ -24,11 +26,11 @@ export interface UpdateProfileRequest {
   gender?: string;
   dateOfBirth?: string;
   avatarUrl?: string;
-  height?: number;
-  weight?: number;
-  fitnessGoal?: string;
-  activityLevel?: string;
   address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  fitnessGoal?: string;
+  healthNote?: string;
 }
 
 export interface MembershipResponse {
