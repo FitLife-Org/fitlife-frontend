@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
+import { useState, useRef, useEffect, useCallback, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { type CredentialResponse } from "@react-oauth/google";
 import gsap from "gsap";
@@ -62,7 +62,7 @@ export function useLoginLogic() {
 
 
   // Google handler
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+  const handleGoogleSuccess = useCallback(async (credentialResponse: CredentialResponse) => {
     try {
       setLoading(true);
       setError("");
@@ -87,7 +87,7 @@ export function useLoginLogic() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, setSession]);
 
   // Traditional login handler
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

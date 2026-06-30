@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { Loader2, ArrowRight } from "lucide-react";
@@ -21,6 +22,7 @@ export default
         handleInputChange,
         handleGoogleSuccess,
         handleSubmit,
+        setError,
     } = useLoginLogic();
 
     return (
@@ -198,16 +200,18 @@ export default
                                             Đang xử lý...
                                         </div>
                                     ) : (
-                                        <GoogleLogin
-                                            onSuccess={handleGoogleSuccess}
-                                            onError={() => {
-                                                setError("Đăng nhập Google thất bại. Vui lòng thử lại.");
-                                            }}
-                                            useOneTap={false}
-                                            text="signin_with"
-                                            shape="pill"
-                                            width="360"
-                                        />
+                                        useMemo(() => (
+                                            <GoogleLogin
+                                                onSuccess={handleGoogleSuccess}
+                                                onError={() => {
+                                                    setError("Đăng nhập Google thất bại. Vui lòng thử lại.");
+                                                }}
+                                                useOneTap={false}
+                                                text="signin_with"
+                                                shape="pill"
+                                                width="360"
+                                            />
+                                        ), [handleGoogleSuccess, setError])
                                     )}
                                 </div>
 
