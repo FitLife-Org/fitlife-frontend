@@ -130,19 +130,21 @@ export default function MemberProfilePage() {
 
       <div className="grid gap-6 xl:grid-cols-[320px_1fr] items-start">
         {/* Left Column: Profile Card */}
-        <Card className="p-6">
-          <div className="relative mx-auto h-32 w-32">
-            <div className="h-full w-full overflow-hidden rounded-full border-4 border-white bg-fit-bg">
-              <img
-                src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)}
-                alt="Avatar"
-                className="h-full w-full object-cover"
-              />
+        <Card className="p-0 overflow-hidden border-none shadow-xl bg-white relative">
+          <div className="h-32 w-full bg-gradient-to-r from-sky-400 to-emerald-500 opacity-90"></div>
+          <div className="p-6 relative">
+            <div className="relative mx-auto h-32 w-32 -mt-20 mb-4">
+              <div className="h-full w-full overflow-hidden rounded-full border-4 border-white bg-fit-bg shadow-lg">
+                <img
+                  src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)}
+                  alt="Avatar"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <button className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-white shadow-sm transition-transform hover:scale-110">
+                <Camera className="h-4 w-4" />
+              </button>
             </div>
-            <button className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border border-fit-border bg-white text-fit-muted shadow-sm transition-colors hover:bg-fit-bg">
-              <Camera className="h-4 w-4" />
-            </button>
-          </div>
 
           <div className="mt-4 text-center">
             <h2 className="text-2xl font-bold text-slate-900">{profile.fullName}</h2>
@@ -170,13 +172,14 @@ export default function MemberProfilePage() {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-3">
-            <Button variant="outline" className="w-full justify-center text-fit-text border-fit-border hover:bg-fit-bg">
-              <ImageIcon className="h-4 w-4 mr-1" /> Đổi ảnh
-            </Button>
-            <Button className="w-full justify-center bg-fit-primarySoft text-fit-primary hover:bg-fit-primary hover:text-white focus:ring-fit-primary">
-              <Edit3 className="h-4 w-4 mr-1" /> Chỉnh sửa hồ sơ
-            </Button>
+            <div className="mt-8 flex flex-col gap-3">
+              <Button variant="outline" className="w-full justify-center text-fit-text border-fit-border hover:bg-gray-50 rounded-xl transition-all hover:shadow-sm">
+                <ImageIcon className="h-4 w-4 mr-2" /> Đổi ảnh bìa
+              </Button>
+              <Button className="w-full justify-center bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                <Edit3 className="h-4 w-4 mr-2" /> Cập nhật nhanh
+              </Button>
+            </div>
           </div>
         </Card>
 
