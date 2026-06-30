@@ -5,13 +5,13 @@ import RoleRoute from "../components/guards/RoleRoute";
 import {ROUTES} from "../config/routes";
 import HomePage from "../pages/HomePage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
-import EquipmentManagementPage from "../pages/admin/EquipmentManagementPage";
+import EquipmentManagementPage from "../pages/admin/Equipment/EquipmentManagementPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import ReportPage from "../pages/admin/ReportPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
-import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage";
+
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
@@ -62,7 +62,7 @@ export default function AppRouter() {
                 <Route path={ROUTES.REGISTER} element={<RegisterPage/>}/>
                 <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage/>}/>
                 <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage/>}/>
-                <Route path={ROUTES.GOOGLE_CALLBACK} element={<GoogleCallbackPage/>}/>
+                
                 <Route path={ROUTES.FORBIDDEN} element={<ForbiddenPage/>}/>
 
 

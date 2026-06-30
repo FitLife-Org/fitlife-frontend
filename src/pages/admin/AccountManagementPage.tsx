@@ -169,7 +169,7 @@ export default function AccountManagementPage() {
       }
       setFormModalOpen(false);
       fetchUsers();
-    } catch (_error) {
+    } catch (error: any) {
       console.error("Failed to submit form:", error);
       const errorMsg = error?.response?.data?.message || "Có lỗi xảy ra trong quá trình lưu dữ liệu.";
       showAlert.error("Thao tác thất bại", errorMsg);
@@ -196,7 +196,7 @@ export default function AccountManagementPage() {
         // Update local state directly to be fast
         setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus as Status } : u));
         showAlert.success("Thành công", `Đã ${actionText.toLowerCase()} tài khoản.`);
-      } catch (_error) {
+      } catch (error: any) {
         console.error("Failed to update status:", error);
         showAlert.error("Thất bại", "Không thể cập nhật trạng thái tài khoản.");
       }
@@ -214,7 +214,7 @@ export default function AccountManagementPage() {
       showAlert.success("Thành công", "Đã cập nhật vai trò của người dùng.");
       setRoleModalOpen(false);
       fetchUsers();
-    } catch (_error) {
+    } catch (error: any) {
       console.error("Failed to update roles:", error);
       showAlert.error("Thất bại", "Không thể cập nhật vai trò tài khoản.");
     } finally {
@@ -229,7 +229,7 @@ export default function AccountManagementPage() {
         return <Badge variant="danger">Quản trị viên</Badge>;
       case "ROLE_STAFF":
         return <Badge variant="success">Nhân viên</Badge>;
-      case "ROLE_PT":
+      case "ROLE_TRAINER":
         return <Badge variant="warning">Huấn luyện viên</Badge>;
       case "ROLE_MEMBER":
         return <Badge variant="default">Hội viên</Badge>;
@@ -299,7 +299,7 @@ export default function AccountManagementPage() {
                 <option value="ALL">Tất cả vai trò</option>
                 <option value="ROLE_ADMIN">Quản trị viên</option>
                 <option value="ROLE_STAFF">Nhân viên</option>
-                <option value="ROLE_PT">Huấn luyện viên</option>
+                <option value="ROLE_TRAINER">Huấn luyện viên</option>
                 <option value="ROLE_MEMBER">Hội viên</option>
               </select>
             </div>
@@ -568,7 +568,7 @@ export default function AccountManagementPage() {
                   className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
                 >
                   <option value="ROLE_STAFF">Nhân viên (Staff)</option>
-                  <option value="ROLE_PT">Huấn luyện viên (PT)</option>
+                  <option value="ROLE_TRAINER">Huấn luyện viên (PT)</option>
                   <option value="ROLE_ADMIN">Quản trị viên (Admin)</option>
                 </select>
               </div>
@@ -621,7 +621,7 @@ export default function AccountManagementPage() {
                 >
                   <option value="ROLE_MEMBER">Hội viên (Member)</option>
                   <option value="ROLE_STAFF">Nhân viên (Staff)</option>
-                  <option value="ROLE_PT">Huấn luyện viên (PT)</option>
+                  <option value="ROLE_TRAINER">Huấn luyện viên (PT)</option>
                   <option value="ROLE_ADMIN">Quản trị viên (Admin)</option>
                 </select>
               </div>
