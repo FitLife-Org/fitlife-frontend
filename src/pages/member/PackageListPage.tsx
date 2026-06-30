@@ -23,7 +23,7 @@ export default function PackageListPage() {
       try {
         setLoading(true);
         const [pkgs, sub] = await Promise.all([
-          packageService.getPackages(),
+          packageService.getPublicPackages(),
           subscriptionService.getMySubscription()
         ]);
         setPackages(pkgs.filter(p => p.status === "ACTIVE"));
