@@ -1,11 +1,13 @@
-import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
+import { useState, useRef, useCallback, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { type CredentialResponse } from "@react-oauth/google";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
 import { useAuthStore } from "../../store/authStore";
-import { z } from "zod"; // 1. Import Zod
+import { getRedirectPathByRoles } from "../authRedirect";
+import { z } from "zod";
 
 
 const registerSchema = z.object({
@@ -56,8 +58,6 @@ export function useRegisterLogic() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
 
   const containerRef = useRef<HTMLElement>(null);
   const introRef = useRef<HTMLElement>(null);
@@ -118,16 +118,32 @@ export function useRegisterLogic() {
     }
   };
 
-  const handleGoogleRegister = async () => {
-    setGoogleLoading(true);
+  const handleGoogleSuccess = useCallback(async (credentialResponse: CredentialResponse) => {
     try {
-      await authService.loginWithGoogle?.();
+      setLoading(true);
+      setError("");
+
+      const idToken = credentialResponse.credential;
+
+      if (!idToken) {
+        throw new Error("Không nhận được ID token từ Google.");
+      }
+
+      const session = await authService.googleLogin(idToken);
+      setSession(session);
+
+      const redirectPath = getRedirectPathByRoles(session.user.roles);
+      navigate(redirectPath, { replace: true });
     } catch (err) {
-      setError("Đăng ký bằng Google thất bại. Vui lòng thử lại.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Đăng ký bằng Google thất bại. Vui lòng thử lại."
+      );
     } finally {
-      setGoogleLoading(false);
+      setLoading(false);
     }
-  };
+  }, [navigate, setSession]);
 
   // Các hiệu ứng GSAP giữ nguyên
   useGSAP(() => {
@@ -157,25 +173,17 @@ export function useRegisterLogic() {
     }
   }, { scope: containerRef });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % 4);
-    }, 1200);
-    return () => clearInterval(interval);
-  }, []);
-
   return {
     form,
     error,
     fieldErrors,
     loading,
-    googleLoading,
-    activeStep,
     containerRef,
     introRef,
     formRef,
     updateField,
     handleSubmit,
-    handleGoogleRegister,
+    handleGoogleSuccess,
+    setError,
   };
 }

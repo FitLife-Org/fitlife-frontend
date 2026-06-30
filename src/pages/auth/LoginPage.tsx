@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { Loader2, ArrowRight } from "lucide-react";
@@ -8,6 +8,37 @@ import Input from "../../components/common/Input";
 import { ROUTES } from "../../config/routes";
 import { useLoginLogic } from "../../utils/validators/useLoginLogic";
 
+function AnimatedText() {
+    const [activeStep, setActiveStep] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveStep((prev) => (prev + 1) % 4);
+        }, 1200);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-sky-500/40 pl-6">
+            {["EAT", "SLEEP", "GYM", "REPEAT"].map((text, idx) => {
+                const isActive = activeStep === idx;
+                return (
+                    <div key={text} className="flex items-center gap-2 sm:gap-4">
+                        <span
+                            className={`font-black tracking-widest transition-all duration-500 ${isActive ? "scale-110 bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(56,189,248,0.6)]" : "scale-100 text-slate-600"}`}
+                            style={{ fontSize: "1.5rem" }}
+                        >
+                            {text}
+                        </span>
+                        {idx < 3 && <ArrowRight
+                            className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-500 ${isActive ? "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]" : "text-slate-800"}`} />}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
 export default
     function LoginPage() {
     const {
@@ -15,12 +46,12 @@ export default
         error,
         fieldErrors,
         loading,
-        activeStep,
         containerRef,
         introRef,
         formRef,
         handleInputChange,
         handleGoogleSuccess,
+        handleGoogleError,
         handleSubmit,
         setError,
     } = useLoginLogic();
@@ -65,24 +96,7 @@ export default
 
            
 
-                        <div
-                            className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-sky-500/40 pl-6">
-                            {["EAT", "SLEEP", "GYM", "REPEAT"].map((text, idx) => {
-                                const isActive = activeStep === idx;
-                                return (
-                                    <div key={text} className="flex items-center gap-2 sm:gap-4">
-                            <span
-                                className={`font-black tracking-widest transition-all duration-500 ${isActive ? "scale-110 bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(56,189,248,0.6)]" : "scale-100 text-slate-600"}`}
-                                style={{fontSize: "1.5rem"}}
-                            >
-                                {text}
-                            </span>
-                                        {idx < 3 && <ArrowRight
-                                            className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-500 ${isActive ? "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]" : "text-slate-800"}`}/>}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        <AnimatedText />
                     </div>
                 </section>
 
@@ -200,18 +214,14 @@ export default
                                             Đang xử lý...
                                         </div>
                                     ) : (
-                                        useMemo(() => (
-                                            <GoogleLogin
-                                                onSuccess={handleGoogleSuccess}
-                                                onError={() => {
-                                                    setError("Đăng nhập Google thất bại. Vui lòng thử lại.");
-                                                }}
-                                                useOneTap={false}
-                                                text="signin_with"
-                                                shape="pill"
-                                                width="360"
-                                            />
-                                        ), [handleGoogleSuccess, setError])
+                                        <GoogleLogin
+                                            onSuccess={handleGoogleSuccess}
+                                            onError={handleGoogleError}
+                                            useOneTap={false}
+                                            text="signin_with"
+                                            shape="pill"
+                                            width="360"
+                                        />
                                     )}
                                 </div>
 

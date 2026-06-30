@@ -15,6 +15,6 @@ export const uploadService = {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    return response.data.data;
+    return response.data.data as UploadResult;
   },
 };

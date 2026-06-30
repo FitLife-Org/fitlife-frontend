@@ -90,14 +90,14 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
   1: [
     {
       id: 101,
-      package: { id: 1, name: "Gói Standard 3 Tháng", durationDays: 90, price: 599000, status: "ACTIVE" },
+      package: { id: 1, code: "PKG01", packageType: "BASIC", name: "Gói Standard 3 Tháng", durationDays: 90, price: 599000, status: "ACTIVE" },
       startDate: "2026-01-15",
       endDate: "2026-04-15",
       status: "EXPIRED"
     },
     {
       id: 102,
-      package: { id: 2, name: "Gói VIP Pro 6 Tháng", durationDays: 180, price: 999000, status: "ACTIVE" },
+      package: { id: 2, code: "PKG02", packageType: "VIP", name: "Gói VIP Pro 6 Tháng", durationDays: 180, price: 999000, status: "ACTIVE" },
       startDate: "2026-04-16",
       endDate: "2026-10-16",
       status: "ACTIVE"
@@ -106,7 +106,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
   2: [
     {
       id: 201,
-      package: { id: 3, name: "Gói Basic 6 Tháng", durationDays: 180, price: 599000, status: "ACTIVE" },
+      package: { id: 3, code: "PKG03", packageType: "BASIC", name: "Gói Basic 6 Tháng", durationDays: 180, price: 599000, status: "ACTIVE" },
       startDate: "2026-02-10",
       endDate: "2026-08-10",
       status: "ACTIVE"
@@ -116,7 +116,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
   4: [
     {
       id: 401,
-      package: { id: 4, name: "Gói Basic 1 Tháng", durationDays: 30, price: 199000, status: "ACTIVE" },
+      package: { id: 4, code: "PKG04", packageType: "BASIC", name: "Gói Basic 1 Tháng", durationDays: 30, price: 199000, status: "ACTIVE" },
       startDate: "2026-05-01",
       endDate: "2026-06-01",
       status: "LOCKED"

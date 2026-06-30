@@ -30,3 +30,10 @@ export interface AiWorkoutPlan {
   days: AiWorkoutDay[];
   notes?: string[];
 }
+
+export interface ChatMessage {
+  id: string;
+  sender: "user" | "ai";
+  text: string;
+  timestamp: string;
+}

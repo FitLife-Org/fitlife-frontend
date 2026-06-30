@@ -5,6 +5,6 @@ import type { Booking } from "../types/booking.type";
 export const bookingService = {
   async getMyBookings(): Promise<Booking[]> {
     const response = await apiClient.get<ApiResponse<Booking[]>>("/bookings/me");
-    return response.data.data;
+    return response.data.data as Booking[];
   },
 };

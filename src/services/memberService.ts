@@ -14,13 +14,13 @@ interface PageResponse<T> {
 
 export const memberService = {
   async getMyProfile(): Promise<MemberProfile> {
-    const response = await apiClient.get<MemberProfile>("/members/me");
-    return response.data;
+    const response = await apiClient.get<ApiResponse<MemberProfile>>("/members/me");
+    return response.data.data as MemberProfile;
   },
 
   async updateMyProfile(data: Partial<MemberProfile>): Promise<MemberProfile> {
-    const response = await apiClient.put<MemberProfile>("/members/me", data);
-    return response.data;
+    const response = await apiClient.put<ApiResponse<MemberProfile>>("/members/me", data);
+    return response.data.data as MemberProfile;
   },
 
   async getBodyMetrics(): Promise<BodyMetric[]> {
@@ -35,29 +35,28 @@ export const memberService = {
   },
 
   async getMemberById(id: number): Promise<MemberProfile> {
-
-    const response = await apiClient.get<MemberProfile>(`/admin/members/${id}`);
-    return response.data;
+    const response = await apiClient.get<ApiResponse<MemberProfile>>(`/admin/members/${id}`);
+    return response.data.data as MemberProfile;
   },
 
   async getMemberByCode(memberCode: string): Promise<MemberProfile> {
-    const response = await apiClient.get<MemberProfile>(`/admin/members/code/${memberCode}`);
-    return response.data;
+    const response = await apiClient.get<ApiResponse<MemberProfile>>(`/admin/members/code/${memberCode}`);
+    return response.data.data as MemberProfile;
   },
 
   async createMember(data: Omit<MemberProfile, "id">): Promise<MemberProfile> {
-    const response = await apiClient.post<MemberProfile>("/admin/members", data);
-    return response.data;
+    const response = await apiClient.post<ApiResponse<MemberProfile>>("/admin/members", data);
+    return response.data.data as MemberProfile;
   },
 
   async updateMember(id: number, data: Partial<MemberProfile>): Promise<MemberProfile> {
-    const response = await apiClient.put<MemberProfile>(`/admin/members/${id}`, data);
-    return response.data;
+    const response = await apiClient.put<ApiResponse<MemberProfile>>(`/admin/members/${id}`, data);
+    return response.data.data as MemberProfile;
   },
 
   async updateMemberStatus(id: number, status: Status): Promise<MemberProfile> {
-    const response = await apiClient.patch<MemberProfile>(`/admin/members/${id}/status`, { status });
-    return response.data;
+    const response = await apiClient.patch<ApiResponse<MemberProfile>>(`/admin/members/${id}/status`, { status });
+    return response.data.data as MemberProfile;
   },
 
   async deleteMember(id: number): Promise<void> {

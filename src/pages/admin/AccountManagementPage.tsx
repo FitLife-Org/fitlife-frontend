@@ -55,7 +55,7 @@ export default function AccountManagementPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: Record<string, string | number> = {
         page: currentPage,
         size: pageSize,
       };
@@ -169,7 +169,7 @@ export default function AccountManagementPage() {
       }
       setFormModalOpen(false);
       fetchUsers();
-    } catch (error: any) {
+    } catch (_error) {
       console.error("Failed to submit form:", error);
       const errorMsg = error?.response?.data?.message || "Có lỗi xảy ra trong quá trình lưu dữ liệu.";
       showAlert.error("Thao tác thất bại", errorMsg);
@@ -196,7 +196,7 @@ export default function AccountManagementPage() {
         // Update local state directly to be fast
         setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus as Status } : u));
         showAlert.success("Thành công", `Đã ${actionText.toLowerCase()} tài khoản.`);
-      } catch (error: any) {
+      } catch (_error) {
         console.error("Failed to update status:", error);
         showAlert.error("Thất bại", "Không thể cập nhật trạng thái tài khoản.");
       }
@@ -214,7 +214,7 @@ export default function AccountManagementPage() {
       showAlert.success("Thành công", "Đã cập nhật vai trò của người dùng.");
       setRoleModalOpen(false);
       fetchUsers();
-    } catch (error: any) {
+    } catch (_error) {
       console.error("Failed to update roles:", error);
       showAlert.error("Thất bại", "Không thể cập nhật vai trò tài khoản.");
     } finally {
@@ -424,8 +424,7 @@ export default function AccountManagementPage() {
             </div>
             <div className="flex items-center gap-2">
               <Button 
-                variant="outline" 
-                size="sm" 
+                variant="outline"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className="px-3 py-1 text-xs"
@@ -434,8 +433,7 @@ export default function AccountManagementPage() {
               </Button>
               <span className="text-xs font-bold text-slate-700 px-2">Trang {currentPage} / {totalPages}</span>
               <Button 
-                variant="outline" 
-                size="sm" 
+                variant="outline"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 className="px-3 py-1 text-xs"

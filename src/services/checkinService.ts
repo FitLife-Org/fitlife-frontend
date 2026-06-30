@@ -5,6 +5,6 @@ import type { CheckinRecord } from "../types/checkin.type";
 export const checkinService = {
   async getMyCheckins(): Promise<CheckinRecord[]> {
     const response = await apiClient.get<ApiResponse<CheckinRecord[]>>("/checkins/me");
-    return response.data.data;
+    return response.data.data as CheckinRecord[];
   },
 };

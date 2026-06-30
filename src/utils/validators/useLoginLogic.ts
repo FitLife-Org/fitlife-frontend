@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type ChangeEvent, type FormEvent } from "react";
+import { useState, useRef, useCallback, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { type CredentialResponse } from "@react-oauth/google";
 import gsap from "gsap";
@@ -43,7 +43,6 @@ export function useLoginLogic() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
 
 //animation
   const containerRef = useRef<HTMLElement>(null);
@@ -88,6 +87,10 @@ export function useLoginLogic() {
       setLoading(false);
     }
   }, [navigate, setSession]);
+
+  const handleGoogleError = useCallback(() => {
+    setError("Đăng nhập Google thất bại. Vui lòng thử lại.");
+  }, []);
 
   // Traditional login handler
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -158,24 +161,17 @@ export function useLoginLogic() {
     }
   }, { scope: containerRef });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % 4);
-    }, 1200);
-    return () => clearInterval(interval);
-  }, []);
-
   return {
     formData,
     error,
     fieldErrors,
     loading,
-    activeStep,
     containerRef,
     introRef,
     formRef,
     handleInputChange,
     handleGoogleSuccess,
+    handleGoogleError,
     handleSubmit,
     setError,
   };

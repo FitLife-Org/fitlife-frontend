@@ -39,7 +39,7 @@ export default function PackageManagementPage() {
       setLoading(true);
       const data = await packageService.getAdminPackages();
       setPackages(data);
-    } catch (error) {
+    } catch (_error) {
       // Ignore initial dummy error if no api
     } finally {
       setLoading(false);
@@ -70,6 +70,9 @@ export default function PackageManagementPage() {
         price: Number(formData.price),
         durationDays: Number(formData.durationDays),
         description: formData.description,
+        status: "ACTIVE" as const,
+        code: `PKG${Date.now()}`,
+        packageType: "BASIC" as const,
       };
 
       if (editingPackage) {
@@ -81,7 +84,7 @@ export default function PackageManagementPage() {
       }
       setIsModalOpen(false);
       fetchPackages();
-    } catch (error) {
+    } catch (_error) {
       showAlert.error("Lỗi", "Không thể lưu thông tin gói tập");
     }
   };
@@ -92,7 +95,7 @@ export default function PackageManagementPage() {
       await packageService.deletePackage(deleteId);
       showAlert.success("Thành công", "Đã xóa gói tập");
       fetchPackages();
-    } catch (error) {
+    } catch (_error) {
       showAlert.error("Lỗi", "Không thể xóa gói tập");
     } finally {
       setDeleteId(null);
@@ -105,15 +108,16 @@ export default function PackageManagementPage() {
       await packageService.updatePackageStatus(pkg.id, newStatus);
       showAlert.success("Thành công", `Đã ${newStatus === 'ACTIVE' ? 'kích hoạt' : 'khóa'} gói tập`);
       fetchPackages();
-    } catch (error) {
+    } catch (_error) {
       showAlert.error("Lỗi", "Không thể thay đổi trạng thái");
     }
   };
 
   const columns = [
     {
+      key: "code",
       header: "Mã / Ảnh",
-      accessor: (row: GymPackage) => (
+      render: (row: GymPackage) => (
         <div className="flex items-center gap-3">
           {row.thumbnailUrl ? (
             <img src={row.thumbnailUrl} alt={row.name} className="w-12 h-12 rounded object-cover" />
@@ -125,8 +129,9 @@ export default function PackageManagementPage() {
       ),
     },
     {
+      key: "name",
       header: "Gói tập",
-      accessor: (row: GymPackage) => (
+      render: (row: GymPackage) => (
         <div>
           <p className="font-bold">{row.name}</p>
           <Badge variant={row.packageType === "VIP" ? "purple" : "default"}>{row.packageType || "BASIC"}</Badge>
@@ -134,8 +139,9 @@ export default function PackageManagementPage() {
       ),
     },
     {
+      key: "price",
       header: "Giá & Thời hạn",
-      accessor: (row: GymPackage) => (
+      render: (row: GymPackage) => (
         <div>
           <p className="font-bold text-fit-primary">{formatCurrency(row.price)}</p>
           <p className="text-sm text-fit-muted">{row.durationDays} ngày</p>
@@ -143,22 +149,25 @@ export default function PackageManagementPage() {
       ),
     },
     {
+      key: "description",
       header: "Mô tả",
-      accessor: (row: GymPackage) => (
+      render: (row: GymPackage) => (
         <p className="text-sm text-fit-muted max-w-[200px] truncate" title={row.description}>{row.description || "Không có mô tả"}</p>
       ),
     },
     {
+      key: "status",
       header: "Trạng thái",
-      accessor: (row: GymPackage) => (
+      render: (row: GymPackage) => (
         <Badge variant={row.status === "ACTIVE" ? "success" : "danger"}>
           {row.status}
         </Badge>
       ),
     },
     {
+      key: "actions",
       header: "Thao tác",
-      accessor: (row: GymPackage) => (
+      render: (row: GymPackage) => (
         <div className="flex items-center gap-2">
           <button onClick={() => handleToggleStatus(row)} className={`p-2 rounded-lg transition-colors ${row.status === 'ACTIVE' ? 'text-red-500 hover:bg-red-50' : 'text-emerald-500 hover:bg-emerald-50'}`} title={row.status === 'ACTIVE' ? 'Khóa' : 'Kích hoạt'}>
             {row.status === 'ACTIVE' ? <XCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
@@ -185,11 +194,11 @@ export default function PackageManagementPage() {
       </div>
 
       <Card className="overflow-hidden">
-        <Table columns={columns} data={packages} isLoading={loading} />
+        {loading ? <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div> : <Table columns={columns} data={packages} />}
       </Card>
 
       <Modal
-        isOpen={isModalOpen}
+        open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingPackage ? "Cập nhật gói tập" : "Tạo gói tập mới"}
       >
@@ -243,8 +252,8 @@ export default function PackageManagementPage() {
       </Modal>
 
       <ConfirmDialog
-        isOpen={!!deleteId}
-        onClose={() => setDeleteId(null)}
+        open={!!deleteId}
+        onCancel={() => setDeleteId(null)}
         onConfirm={handleDelete}
         title="Xóa gói tập"
         message="Bạn có chắc chắn muốn xóa gói tập này không? Nếu đã có người đăng ký, gói này chỉ bị khóa lại chứ không bị xóa."

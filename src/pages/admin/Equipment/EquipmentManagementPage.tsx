@@ -85,7 +85,7 @@ const MOCK_EQUIPMENTS: Equipment[] = [
 export default function EquipmentManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [equipments, setEquipments] = useState<Equipment[]>(MOCK_EQUIPMENTS);
-  const [summary, setSummary] = useState<EquipmentSummary>(MOCK_SUMMARY);
+  const [summary] = useState<EquipmentSummary>(MOCK_SUMMARY);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

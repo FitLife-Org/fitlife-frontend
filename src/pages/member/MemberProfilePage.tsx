@@ -34,10 +34,13 @@ export default function MemberProfilePage() {
     try {
       setLoading(true);
       const profileData = await profileService.getProfile();
+      if (!profileData) {
+        throw new Error("Dữ liệu hồ sơ trống.");
+      }
       setProfile(profileData);
       setFormData({
-        fullName: profileData.fullName,
-        phone: profileData.phone,
+        fullName: profileData.fullName || "",
+        phone: profileData.phone || "",
         gender: profileData.gender,
         dateOfBirth: profileData.dateOfBirth,
         address: profileData.address,

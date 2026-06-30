@@ -131,11 +131,10 @@ export const userService = {
     };
   },
 
-  // USER-08: Người dùng cập nhật hồ sơ cá nhân (trỏ về members/me/profile hoặc users/me)
+  // USER-08: Người dùng cập nhật hồ sơ cá nhân
   async updateCurrentUser(data: any): Promise<User> {
-    // In our backend, updating profile is done via PUT /members/me/profile for members
-    const response = await apiClient.put<any>("/members/me/profile", data);
-    const u = response.data; // MemberProfileResponse is directly returned by the backend
+    const response = await apiClient.put<ApiResponse<any>>("/users/me", data);
+    const u = response.data.data;
     return {
       id: u.id,
       username: u.memberCode || "",
@@ -149,7 +148,7 @@ export const userService = {
 
   // USER-09: Đổi mật khẩu
   async changePassword(data: any): Promise<void> {
-    await apiClient.put<ApiResponse<void>>("/me/change-password", data);
+    await apiClient.put<ApiResponse<void>>("/users/me/change-password", data);
   },
 };
 

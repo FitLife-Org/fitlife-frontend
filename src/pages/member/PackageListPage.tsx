@@ -27,7 +27,7 @@ export default function PackageListPage() {
         ]);
         setPackages(pkgs.filter(p => p.status === "ACTIVE"));
         setMySubscription(sub);
-      } catch (error) {
+      } catch (_error) {
         showAlert.error("Lỗi", "Không thể tải danh sách gói tập");
       } finally {
         setLoading(false);
@@ -51,7 +51,7 @@ export default function PackageListPage() {
         const sub = await subscriptionService.getMySubscription();
         setMySubscription(sub);
       }
-    } catch (error) {
+    } catch (_error) {
       showAlert.error("Lỗi", "Lỗi khi xử lý thanh toán");
     } finally {
       setProcessingId(null);
@@ -108,7 +108,7 @@ export default function PackageListPage() {
             const isPremium = item.name.toLowerCase().includes("vip") || item.name.toLowerCase().includes("premium") || item.price > 500000;
 
             let cardStyle = "border-fit-border hover:border-fit-primary/50 hover:shadow-xl";
-            let headerStyle = "text-fit-text";
+            const headerStyle = "text-fit-text";
             let priceStyle = "text-fit-primary";
             let buttonClass = "";
             let buttonVariant: "primary" | "outline" | "ghost" | "danger" = "outline";

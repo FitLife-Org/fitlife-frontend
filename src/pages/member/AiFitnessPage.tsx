@@ -108,7 +108,7 @@ export default function AiFitnessPage() {
     <div ref={containerRef} className="space-y-6 h-[calc(100vh-80px)] flex flex-col pb-6">
       <div className="flex-none">
         <PageHeader 
-          title={<span className="bg-gradient-to-r from-blue-600 to-emerald-500 bg-clip-text text-transparent flex items-center gap-2"><Sparkles className="w-6 h-6 text-emerald-500"/> AI Fitness Assistant</span>} 
+          title="AI Fitness Assistant"
           description="Trợ lý cá nhân ảo hỗ trợ lên lịch tập, thực đơn và giải đáp thắc mắc fitness 24/7." 
         />
       </div>
