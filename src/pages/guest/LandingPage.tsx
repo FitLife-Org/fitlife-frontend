@@ -4,7 +4,8 @@ import FeaturesGridSection from "./sections/FeaturesGridSection";
 import StoryAndValuesSection from "./sections/StoryAndValuesSection";
 import BMICalculatorSection from "./sections/BMICalculatorSection";
 import PricingSection from "./sections/PricingSection";
-import BottomCTASection from "./sections/BottomCTASection";
+import TrainersSection from "./sections/TrainersSection";
+import ContactSection from "./sections/ContactSection";
 
 export default function LandingPage() {
   return (
@@ -13,9 +14,10 @@ export default function LandingPage() {
       <StatsSection />
       <FeaturesGridSection />
       <StoryAndValuesSection />
+      <TrainersSection />
       <BMICalculatorSection />
       <PricingSection />
-      <BottomCTASection />
+      <ContactSection />
     </div>
   );
 }

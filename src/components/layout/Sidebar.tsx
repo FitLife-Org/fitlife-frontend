@@ -41,6 +41,7 @@ type MenuItemType = {
 const menuItems: MenuItemType[] = [
     // MEMBER
     {label: "Dashboard", path: ROUTES.MEMBER_HOME, icon: Home, roles: ["ROLE_MEMBER"]},
+    {label: "Giáo án", path: ROUTES.MEMBER_WORKOUTS, icon: Dumbbell, roles: ["ROLE_MEMBER"]},
     {label: "Gói tập", path: ROUTES.MEMBER_PACKAGES, icon: Package, roles: ["ROLE_MEMBER"]},
     {label: "Lịch tập", path: ROUTES.MEMBER_BOOKING, icon: CalendarDays, roles: ["ROLE_MEMBER"]},
     {label: "Chỉ số cơ thể", path: ROUTES.MEMBER_BODY_METRICS, icon: HeartPulse, roles: ["ROLE_MEMBER"]},

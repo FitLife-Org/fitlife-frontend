@@ -30,6 +30,7 @@ import MemberHomePage from "../pages/member/MemberHomePage";
 import MemberProfilePage from "../pages/member/MemberProfilePage";
 import MySubscriptionPage from "../pages/member/MySubscriptionPage";
 import NutritionPage from "../pages/member/NutritionPage";
+import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
 import PackageListPage from "../pages/member/PackageListPage";
 import PaymentPage from "../pages/member/PaymentPage";
 import SettingsPage from "../pages/settings/SettingsPage";
@@ -94,6 +95,8 @@ export default function AppRouter() {
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><CheckinHistoryPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_BOOKING}
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><BookingPage/></RoleGuard>}/>
+                        <Route path={ROUTES.MEMBER_WORKOUTS}
+                               element={<RoleGuard roles={["ROLE_MEMBER"]}><WorkoutPlansPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_AI}
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><AiFitnessPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_NUTRITION}
