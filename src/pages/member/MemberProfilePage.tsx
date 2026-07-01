@@ -67,7 +67,15 @@ export default function MemberProfilePage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const updatedProfile = await profileService.updateProfile(formData);
+      // Clean up empty strings to avoid backend validation errors and parsing errors
+      const cleanData: UpdateProfileRequest = { ...formData };
+      Object.keys(cleanData).forEach(key => {
+        if ((cleanData as any)[key] === "") {
+          (cleanData as any)[key] = undefined;
+        }
+      });
+      
+      const updatedProfile = await profileService.updateProfile(cleanData);
       setProfile(updatedProfile);
       alert("Cập nhật hồ sơ thành công!");
     } catch (error) {
@@ -131,10 +139,9 @@ export default function MemberProfilePage() {
       <div className="grid gap-6 xl:grid-cols-[320px_1fr] items-start">
         {/* Left Column: Profile Card */}
         <Card className="p-0 overflow-hidden border-none shadow-xl bg-white relative">
-          <div className="h-32 w-full bg-gradient-to-r from-sky-400 to-emerald-500 opacity-90"></div>
           <div className="p-6 relative">
-            <div className="relative mx-auto h-32 w-32 -mt-20 mb-4">
-              <div className="h-full w-full overflow-hidden rounded-full border-4 border-white bg-fit-bg shadow-lg">
+            <div className="relative mx-auto h-32 w-32 mt-4 mb-4">
+              <div className="h-full w-full overflow-hidden rounded-full border-4 border-slate-100 bg-fit-bg shadow-sm">
                 <img
                   src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)}
                   alt="Avatar"
@@ -158,7 +165,19 @@ export default function MemberProfilePage() {
           </div>
 
           <div className="mt-8 space-y-4 text-sm">
-            <div className="flex items-center justify-between pb-2">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span className="flex items-center gap-2 text-slate-500">
+                <InfoIcon className="h-4 w-4" /> Email
+              </span>
+              <span className="font-medium text-slate-900 truncate max-w-[150px]" title={profile.email}>{profile.email || "Chưa cập nhật"}</span>
+            </div>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span className="flex items-center gap-2 text-slate-500">
+                <InfoIcon className="h-4 w-4" /> Điện thoại
+              </span>
+              <span className="font-medium text-slate-900">{profile.phone || "Chưa cập nhật"}</span>
+            </div>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <span className="flex items-center gap-2 text-slate-500">
                 <Calendar className="h-4 w-4" /> Ngày sinh
               </span>
@@ -171,15 +190,6 @@ export default function MemberProfilePage() {
               <span className="font-medium text-slate-900">{profile.joinDate || profile.createdAt?.substring(0, 10) || "Gần đây"}</span>
             </div>
           </div>
-
-            <div className="mt-8 flex flex-col gap-3">
-              <Button variant="outline" className="w-full justify-center text-fit-text border-fit-border hover:bg-gray-50 rounded-xl transition-all hover:shadow-sm">
-                <ImageIcon className="h-4 w-4 mr-2" /> Đổi ảnh bìa
-              </Button>
-              <Button className="w-full justify-center bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
-                <Edit3 className="h-4 w-4 mr-2" /> Cập nhật nhanh
-              </Button>
-            </div>
           </div>
         </Card>
 
@@ -311,19 +321,21 @@ export default function MemberProfilePage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div 
-                    onClick={() => setPasswordModalOpen(true)}
-                    className="flex cursor-pointer items-center justify-between rounded-xl border border-fit-border bg-fit-bg p-4 transition-colors hover:border-fit-primary/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Lock className="h-5 w-5 text-fit-muted" />
-                      <div>
-                        <p className="text-sm font-medium text-fit-text">Đổi mật khẩu</p>
-                        <p className="text-xl leading-none tracking-[0.2em] text-fit-muted">••••••••</p>
+                  {profile.authProvider !== 'GOOGLE' && (
+                    <div 
+                      onClick={() => setPasswordModalOpen(true)}
+                      className="flex cursor-pointer items-center justify-between rounded-xl border border-fit-border bg-fit-bg p-4 transition-colors hover:border-fit-primary/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Lock className="h-5 w-5 text-fit-muted" />
+                        <div>
+                          <p className="text-sm font-medium text-fit-text">Đổi mật khẩu</p>
+                          <p className="text-xl leading-none tracking-[0.2em] text-fit-muted">••••••••</p>
+                        </div>
                       </div>
+                      <ChevronRight className="h-5 w-5 text-fit-muted" />
                     </div>
-                    <ChevronRight className="h-5 w-5 text-fit-muted" />
-                  </div>
+                  )}
 
                   <div className="flex cursor-pointer items-center justify-between rounded-xl border border-fit-border bg-fit-bg p-4 transition-colors hover:border-fit-primary/50">
                     <div className="flex items-center gap-3">
@@ -335,10 +347,10 @@ export default function MemberProfilePage() {
                       </svg>
                       <div>
                         <p className="text-sm font-medium text-fit-text">Liên kết Google</p>
-                        <p className="flex items-center gap-1 text-sm text-fit-primary">Đã liên kết</p>
+                        <p className="flex items-center gap-1 text-sm text-fit-primary">{profile.authProvider === 'GOOGLE' ? 'Đã liên kết' : 'Chưa liên kết'}</p>
                       </div>
                     </div>
-                    <CheckCircle2 className="h-5 w-5 text-fit-primary" />
+                    {profile.authProvider === 'GOOGLE' && <CheckCircle2 className="h-5 w-5 text-fit-primary" />}
                   </div>
                 </div>
               </div>

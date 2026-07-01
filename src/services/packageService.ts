@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 import type { ApiResponse, Status } from "../types/common.type";
-import type { GymPackage } from "../types/package.type";
+import type { GymPackage, PackageDuration } from "../types/package.type";
 
 export const packageService = {
   async getPublicPackages(params?: any): Promise<GymPackage[]> {
@@ -52,5 +52,16 @@ export const packageService = {
 
   async deletePackage(id: number): Promise<void> {
     await apiClient.delete(`/admin/gym-packages/${id}`);
-  }
+  },
+
+  async getPackageDurations(): Promise<PackageDuration[]> {
+    const response = await apiClient.get<ApiResponse<any>>("/package-durations");
+    const responseData = response.data.data;
+    if (responseData && Array.isArray(responseData.data)) {
+      return responseData.data;
+    } else if (Array.isArray(responseData)) {
+      return responseData;
+    }
+    return [];
+  },
 };

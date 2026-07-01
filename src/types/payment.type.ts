@@ -1,11 +1,15 @@
 export interface PaymentRequest {
-  packageId: number;
-  method: "VNPAY" | "MOMO" | "CASH";
+  invoiceId: number;
+  paymentMethod: "VNPAY" | "MOMO" | "CASH" | string;
 }
 
 export interface PaymentResult {
   id: number;
+  invoiceId: number;
   amount: number;
-  status: "PENDING" | "SUCCESS" | "FAILED";
+  paymentMethod: string;
+  status: "PENDING" | "SUCCESS" | "FAILED" | string;
   paymentUrl?: string;
+  transactionId?: string;
+  createdAt?: string;
 }

@@ -1,5 +1,7 @@
-import { Check, Dumbbell, Loader2, Star, Zap, Crown } from "lucide-react";
+import { Check, Dumbbell, Loader2, Star, Zap, Crown, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, type Variants } from "framer-motion";
 import { showAlert } from "../../utils/alert";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
@@ -36,25 +38,46 @@ export default function PackageListPage() {
     fetchData();
   }, []);
 
+  const navigate = useNavigate();
+
   const handlePurchase = async (pkgId: number) => {
     try {
       setProcessingId(pkgId);
-      const result = await paymentService.createPayment({
-        packageId: pkgId,
-        method: "VNPAY"
+      // Giả sử durationId = 1 (1 tháng) cho code mẫu
+      const sub = await subscriptionService.createSubscription({
+        gymPackageId: pkgId,
+        durationId: 1, 
+        autoRenew: false
       });
       
-      if (result.paymentUrl) {
-        window.location.href = result.paymentUrl;
+      if (sub && sub.invoiceId) {
+        navigate(`/member/payment/${sub.invoiceId}`);
       } else {
         showAlert.success("Thành công", "Đăng ký thành công!");
-        const sub = await subscriptionService.getMySubscription();
-        setMySubscription(sub);
+        const activeSub = await subscriptionService.getMySubscription();
+        setMySubscription(activeSub);
       }
     } catch (_error) {
-      showAlert.error("Lỗi", "Lỗi khi xử lý thanh toán");
+      showAlert.error("Lỗi", "Lỗi khi xử lý đăng ký");
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 }
+    }
+  };
+
+  const itemVariants: Variants = {
+    hidden: { y: 30, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100, damping: 15 }
     }
   };
 
@@ -85,11 +108,16 @@ export default function PackageListPage() {
         </p>
       </div>
 
-      <div className="flex justify-center mb-12">
-        <div className="inline-flex rounded-full border border-fit-border bg-white p-1 shadow-sm">
+      <div className="flex justify-center mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="inline-flex rounded-full border border-fit-border bg-white p-1.5 shadow-sm"
+        >
           {["Theo tháng", "Theo quý (-10%)", "Theo năm (-20%)"].map((item, index) => (
             <button 
-              className={`rounded-full px-6 py-2.5 text-sm font-bold transition-all duration-300 ${billingCycle === index ? "bg-fit-text text-white shadow-md" : "text-fit-muted hover:text-fit-text hover:bg-gray-50"}`} 
+              className={`rounded-full px-8 py-2.5 text-sm font-bold transition-all duration-300 ${billingCycle === index ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"}`} 
               key={item} 
               type="button"
               onClick={() => setBillingCycle(index)}
@@ -97,11 +125,16 @@ export default function PackageListPage() {
               {item}
             </button>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       <div className="grid gap-8 xl:grid-cols-[1fr_340px] items-start">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+        >
           {packages.map((item, index) => {
             const isCurrent = mySubscription?.package.id === item.id && mySubscription?.status === "ACTIVE";
             const isPopular = item.name.toLowerCase().includes("standard") || item.name.toLowerCase().includes("phổ biến") || index === 1; // Fallback highlight
@@ -114,24 +147,25 @@ export default function PackageListPage() {
             let buttonVariant: "primary" | "outline" | "ghost" | "danger" = "outline";
             
             if (isPopular) {
-              cardStyle = "border-fit-primary ring-2 ring-fit-primary shadow-[0_8px_30px_rgb(5,150,105,0.15)] transform md:-translate-y-4 hover:shadow-[0_8px_40px_rgb(5,150,105,0.25)]";
-              buttonClass = "bg-gradient-to-r from-fit-primary to-fit-blue border-0 text-white hover:from-fit-primaryHover hover:to-blue-700 shadow-md";
+              cardStyle = "border-fit-primary ring-2 ring-fit-primary shadow-2xl shadow-emerald-500/20 transform md:-translate-y-4";
+              buttonClass = "bg-gradient-to-r from-emerald-400 to-emerald-600 border-0 text-white hover:shadow-lg shadow-md hover:-translate-y-0.5";
               buttonVariant = "primary";
             } else if (isPremium) {
-              cardStyle = "border-fit-purple ring-1 ring-fit-purple shadow-[0_8px_30px_rgb(124,58,237,0.1)] hover:shadow-[0_8px_40px_rgb(124,58,237,0.2)]";
+              cardStyle = "border-fit-purple ring-1 ring-fit-purple shadow-2xl shadow-purple-500/20";
               priceStyle = "text-fit-purple";
-              buttonClass = "bg-fit-purple hover:bg-purple-700 text-white shadow-md focus:ring-fit-purple border-fit-purple";
+              buttonClass = "bg-gradient-to-r from-purple-500 to-indigo-600 border-0 text-white shadow-md hover:-translate-y-0.5";
               buttonVariant = "primary";
             }
             if (isCurrent) {
-              cardStyle = "border-fit-blue bg-fit-blueSoft/30 ring-2 ring-fit-blue";
-              priceStyle = "text-fit-blue";
-              buttonClass = "bg-white text-fit-blue border-2 border-fit-blue hover:bg-fit-blueSoft shadow-sm";
+              cardStyle = "border-sky-500 bg-sky-50/50 ring-2 ring-sky-500";
+              priceStyle = "text-sky-600";
+              buttonClass = "bg-white text-sky-600 border-2 border-sky-500 hover:bg-sky-50 shadow-sm";
               buttonVariant = "outline";
             }
 
             return (
-              <Card className={`relative flex flex-col transition-all duration-500 group bg-white overflow-hidden ${cardStyle}`} key={item.id}>
+              <motion.div variants={itemVariants} key={item.id} className="h-full">
+                <Card className={`h-full relative flex flex-col transition-all duration-500 group bg-white/80 backdrop-blur-md overflow-hidden ${cardStyle}`}>
                 {item.thumbnailUrl && (
                   <div className="h-48 w-full overflow-hidden relative">
                     <img 
@@ -210,6 +244,7 @@ export default function PackageListPage() {
                   </Button>
                 </div>
               </Card>
+              </motion.div>
             );
           })}
           
@@ -220,9 +255,14 @@ export default function PackageListPage() {
               <p className="text-sm mt-2">Vui lòng quay lại sau.</p>
             </div>
           )}
-        </div>
+        </motion.div>
         
-        <aside className="space-y-6 md:sticky md:top-24">
+        <motion.aside 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="space-y-6 md:sticky md:top-24"
+        >
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 p-8 text-white shadow-xl group">
             <div className="absolute top-0 right-0 p-4 opacity-20 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform duration-700">
               <Zap className="w-32 h-32 text-yellow-400" />
@@ -264,11 +304,11 @@ export default function PackageListPage() {
                 <p className="mt-1 text-sm text-fit-muted leading-relaxed">Để lại thông tin, HLV của chúng tôi sẽ liên hệ bạn.</p>
               </div>
             </div>
-            <Button className="mt-5 w-full bg-white text-fit-text border border-fit-border hover:bg-gray-50 shadow-sm" variant="outline">
+            <Button className="mt-5 w-full bg-white text-slate-800 border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm" variant="outline">
               Chat với Tư vấn viên
             </Button>
           </Card>
-        </aside>
+        </motion.aside>
       </div>
 
       {packages.length > 0 && (

@@ -3,8 +3,30 @@ import type { Status } from "./common.type";
 
 export interface Subscription {
   id: number;
-  package: GymPackage;
+  memberId?: number;
+  gymPackageId: number;
+  gymPackageName?: string;
   startDate: string;
   endDate: string;
-  status: Status;
+  status: string;
+  invoiceId?: number;
+  package?: GymPackage; // For legacy UI compatibility
+}
+
+export interface PreviewPriceRequest {
+  gymPackageId: number;
+  durationId: number;
+}
+
+export interface PreviewPriceResponse {
+  basePrice: number;
+  discountAmount: number;
+  finalPrice: number;
+}
+
+export interface CreateSubscriptionRequest {
+  gymPackageId: number;
+  durationId: number;
+  startDate?: string;
+  autoRenew?: boolean;
 }
