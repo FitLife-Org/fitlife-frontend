@@ -1,6 +1,7 @@
 export interface PaymentRequest {
   invoiceId: number;
   paymentMethod: "VNPAY" | "MOMO" | "CASH" | string;
+  note?: string;
 }
 
 export interface PaymentResult {
@@ -12,4 +13,5 @@ export interface PaymentResult {
   paymentUrl?: string;
   transactionId?: string;
   createdAt?: string;
+  note?: string;
 }

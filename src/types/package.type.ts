@@ -19,3 +19,26 @@ export interface PackageDuration {
   discountPercentage: number;
   status: Status;
 }
+
+export interface AdminPackageCreateRequest {
+  code: string;
+  name: string;
+  packageType: string;
+  price: number;
+  durationDays: number;
+  description?: string;
+  benefits?: string;
+  thumbnailUrl?: string;
+  status?: string;
+}
+
+export interface AdminPackageUpdateRequest {
+  name: string;
+  packageType: string;
+  price: number;
+  durationDays: number;
+  description?: string;
+  benefits?: string;
+  thumbnailUrl?: string;
+  status?: string;
+}

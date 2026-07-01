@@ -14,6 +14,7 @@ import {
     Settings,
     BarChart,
     Flame,
+    Receipt,
     Bell,
     ChevronDown,
     ChevronUp,
@@ -54,6 +55,7 @@ const menuItems: MenuItemType[] = [
     {label: "Gói tập", path: ROUTES.ADMIN_PACKAGES, icon: Package, roles: ["ROLE_ADMIN"]},
     {label: "Huấn luyện viên", path: ROUTES.ADMIN_TRAINERS, icon: UserRound, roles: ["ROLE_ADMIN"]},
     {label: "Trang thiết bị", path: ROUTES.ADMIN_EQUIPMENT, icon: Dumbbell, roles: ["ROLE_ADMIN", "ROLE_STAFF"]},
+    {label: "Hóa đơn", path: ROUTES.ADMIN_INVOICES, icon: Receipt, roles: ["ROLE_ADMIN"]},
     {label: "Báo cáo", path: ROUTES.ADMIN_REPORTS, icon: BarChart, roles: ["ROLE_ADMIN"]},
 
     // STAFF

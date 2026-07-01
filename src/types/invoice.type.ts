@@ -8,4 +8,10 @@ export interface Invoice {
   status: string; // UNPAID, PAID, CANCELLED, REFUNDED
   createdAt: string;
   updatedAt: string;
+  note?: string;
+}
+
+export interface InvoiceGenerateRequest {
+  subscriptionId: number;
+  note?: string;
 }
