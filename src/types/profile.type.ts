@@ -18,6 +18,7 @@ export interface ProfileResponse {
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  authProvider?: string;
 }
 
 export interface UpdateProfileRequest {

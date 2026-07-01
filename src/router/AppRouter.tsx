@@ -83,6 +83,7 @@ export default function AppRouter() {
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><PackageListPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_SUBSCRIPTION}
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><MySubscriptionPage/></RoleGuard>}/>
+                        <Route path={ROUTES.MEMBER_PAYMENT_DETAIL} element={<RoleGuard roles={["ROLE_MEMBER"]}><PaymentPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_PAYMENT}
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><PaymentPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_CHECKINS}

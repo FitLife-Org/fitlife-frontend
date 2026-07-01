@@ -11,3 +11,11 @@ export interface GymPackage {
   status: Status;
   thumbnailUrl?: string;
 }
+
+export interface PackageDuration {
+  id: number;
+  durationMonths: number;
+  durationDays: number;
+  discountPercentage: number;
+  status: Status;
+}
