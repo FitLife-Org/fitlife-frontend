@@ -65,6 +65,8 @@ export default function MemberProfilePage() {
   };
 
   const handleSave = async () => {
+    if (!validateProfileForm(formData)) return;
+    
     try {
       setSaving(true);
       // Clean up empty strings to avoid backend validation errors and parsing errors
@@ -77,10 +79,10 @@ export default function MemberProfilePage() {
       
       const updatedProfile = await profileService.updateProfile(cleanData);
       setProfile(updatedProfile);
-      alert("Cập nhật hồ sơ thành công!");
+      showAlert.success("Thành công", "Cập nhật hồ sơ thành công!");
     } catch (error) {
       console.error("Failed to update profile", error);
-      alert("Cập nhật thất bại. Vui lòng thử lại.");
+      showAlert.error("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
     } finally {
       setSaving(false);
     }
