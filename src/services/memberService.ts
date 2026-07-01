@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
-import type { ApiResponse, Status } from "../types/common.type";
-import type { BodyMetric, MemberProfile } from "../types/member.type";
+import type { ApiResponse, Status, PageResult } from "../types/common.type";
+import type { BodyMetric, MemberProfile, AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../types/member.type";
 import type { Subscription } from "../types/subscription.type";
 import type { CheckinRecord } from "../types/checkin.type";
 
@@ -29,9 +29,24 @@ export const memberService = {
   },
 
   // Admin APIs
-  async getMembers(page: number = 0, size: number = 20): Promise<MemberProfile[]> {
-    const response = await apiClient.get<PageResponse<MemberProfile>>(`/admin/members?page=${page}&size=${size}`);
-    return response.data.data || [];
+  async getMembers(page: number = 1, size: number = 20, keyword?: string, status?: string): Promise<PageResult<MemberProfile>> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('size', size.toString());
+    if (keyword) params.append('keyword', keyword);
+    if (status && status !== 'ALL') params.append('status', status);
+
+    const response = await apiClient.get<any>(`/admin/members?${params.toString()}`);
+    // Backend returns PageResponse directly (not wrapped in ApiResponse)
+    const pageData = response.data;
+    
+    return {
+      items: pageData.content || [],
+      totalItems: pageData.totalElements || 0,
+      totalPages: pageData.totalPages || 0,
+      page: pageData.page || page,
+      size: pageData.size || size
+    };
   },
 
   async getMemberById(id: number): Promise<MemberProfile> {
@@ -44,12 +59,12 @@ export const memberService = {
     return response.data.data as MemberProfile;
   },
 
-  async createMember(data: Omit<MemberProfile, "id">): Promise<MemberProfile> {
+  async createMember(data: AdminMemberCreateRequest): Promise<MemberProfile> {
     const response = await apiClient.post<ApiResponse<MemberProfile>>("/admin/members", data);
     return response.data.data as MemberProfile;
   },
 
-  async updateMember(id: number, data: Partial<MemberProfile>): Promise<MemberProfile> {
+  async updateMember(id: number, data: AdminMemberUpdateRequest): Promise<MemberProfile> {
     const response = await apiClient.put<ApiResponse<MemberProfile>>(`/admin/members/${id}`, data);
     return response.data.data as MemberProfile;
   },

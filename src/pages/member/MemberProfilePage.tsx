@@ -9,6 +9,8 @@ import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import PageHeader from "../../components/common/PageHeader";
+import { showAlert } from "../../utils/alert";
+import { validateProfileForm, validateChangePassword } from "../../utils/validators/profileValidator";
 import { profileService } from "../../services/profileService";
 import { userService } from "../../services/userService";
 import type { ProfileResponse, UpdateProfileRequest } from "../../types/profile.type";
@@ -90,16 +92,7 @@ export default function MemberProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      alert("Vui lòng điền đầy đủ các thông tin mật khẩu!");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      alert("Mật khẩu mới và xác nhận mật khẩu không trùng khớp!");
-      return;
-    }
-    if (newPassword.length < 6) {
-      alert("Mật khẩu mới phải có tối thiểu 6 ký tự!");
+    if (!validateChangePassword(oldPassword, newPassword, confirmPassword)) {
       return;
     }
 
@@ -109,7 +102,7 @@ export default function MemberProfilePage() {
         oldPassword,
         newPassword
       });
-      alert("Đổi mật khẩu thành công!");
+      showAlert.success("Thành công", "Đổi mật khẩu thành công!");
       setPasswordModalOpen(false);
       setOldPassword("");
       setNewPassword("");
@@ -117,7 +110,7 @@ export default function MemberProfilePage() {
     } catch (error: any) {
       console.error("Failed to change password:", error);
       const errorMsg = error?.response?.data?.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.";
-      alert(errorMsg);
+      showAlert.error("Lỗi", errorMsg);
     } finally {
       setPasswordSaving(false);
     }

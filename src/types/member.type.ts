@@ -36,3 +36,32 @@ export interface BodyMetric {
   bmi?: number;
   bodyFat?: number;
 }
+
+export interface AdminMemberCreateRequest {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  phone?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  fitnessGoal?: string;
+  healthNote?: string;
+}
+
+export interface AdminMemberUpdateRequest {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  fitnessGoal?: string;
+  healthNote?: string;
+  status?: string;
+}

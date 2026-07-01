@@ -4,6 +4,7 @@ import { CheckCircle2, CreditCard, ChevronRight, AlertCircle, ArrowLeft } from "
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Badge from "../../components/common/Badge";
+import { showAlert } from "../../utils/alert";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { invoiceService } from "../../services/invoiceService";
 import { paymentService } from "../../services/paymentService";
@@ -53,12 +54,12 @@ export default function PaymentPage() {
         window.location.href = result.paymentUrl;
       } else {
         // Fallback for mock backend
-        alert("Thanh toán giả lập thành công!");
+        showAlert.success("Thành công", "Thanh toán giả lập thành công!");
         navigate("/member/subscriptions");
       }
     } catch (error) {
       console.error("Payment failed:", error);
-      alert("Có lỗi xảy ra khi thanh toán.");
+      showAlert.error("Lỗi", "Có lỗi xảy ra khi thanh toán.");
     } finally {
       setProcessing(false);
     }
