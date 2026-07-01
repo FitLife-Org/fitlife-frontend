@@ -19,3 +19,26 @@ export interface EquipmentSummary {
   inactive: { count: number; percentage: number };
   upcomingMaintenance: { count: number; timeFrame: string };
 }
+
+export interface AdminEquipmentCreateRequest {
+  equipmentCode: string;
+  name: string;
+  category?: string;
+  area?: string;
+  purchaseDate?: string;
+  warrantyExpiry?: string;
+  status?: string;
+  description?: string;
+  image?: string;
+}
+
+export interface AdminEquipmentUpdateRequest {
+  name: string;
+  category?: string;
+  area?: string;
+  purchaseDate?: string;
+  warrantyExpiry?: string;
+  status?: string;
+  description?: string;
+  image?: string;
+}

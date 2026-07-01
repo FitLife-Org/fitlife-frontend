@@ -6,6 +6,8 @@ import {ROUTES} from "../config/routes";
 import HomePage from "../pages/HomePage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import EquipmentManagementPage from "../pages/admin/Equipment/EquipmentManagementPage";
+import AddEquipmentPage from "../pages/admin/Equipment/AddEquipmentPage";
+import EditEquipmentPage from "../pages/admin/Equipment/EditEquipmentPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import ReportPage from "../pages/admin/ReportPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
@@ -133,6 +135,22 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
                                     <EquipmentManagementPage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/add`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <AddEquipmentPage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/edit/:id`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <EditEquipmentPage/>
                                 </RoleGuard>
                             }
                         />
