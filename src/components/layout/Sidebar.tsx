@@ -20,7 +20,7 @@ import {
     ChevronUp,
     type LucideIcon,
 } from "lucide-react";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {NavLink, useLocation} from "react-router-dom";
 import {ROUTES} from "../../config/routes";
 import {useAuthStore} from "../../store/authStore";
@@ -91,7 +91,14 @@ export default function Sidebar() {
     const userRoles = user?.roles ?? [];
 
     const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
     const location = useLocation();
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     const toggleMenu = (label: string) => {
         setExpandedMenus((prev) => ({...prev, [label]: !prev[label]}));
@@ -100,6 +107,7 @@ export default function Sidebar() {
 
     return (
         <aside
+            inert={isMobile && !sidebarOpen ? "" : undefined}
             className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-40 w-[280px] bg-slate-950 border-r border-slate-900 transition-transform duration-500 ease-out lg:static lg:translate-x-0 flex flex-col shadow-2xl lg:shadow-none`}>
             <div className="flex h-28 shrink-0 items-center gap-4 px-8">
                 <div className="flex">

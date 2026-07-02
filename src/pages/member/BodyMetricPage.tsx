@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Plus, TrendingDown, TrendingUp, Scale, Ruler, HeartPulse, Dumbbell } from "lucide-react";
 import toast from "react-hot-toast";
 import { bodyMetricService } from "../../services/bodyMetricService";

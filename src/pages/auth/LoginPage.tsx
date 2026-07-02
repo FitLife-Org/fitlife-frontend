@@ -214,7 +214,7 @@ export default
                                             useOneTap={false}
                                             text="signin_with"
                                             shape="pill"
-                                            width="100%"
+                                            width="360"
                                             theme="filled_black"
                                         />
                                     </div>
