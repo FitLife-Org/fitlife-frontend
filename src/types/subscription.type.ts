@@ -15,7 +15,7 @@ export interface Subscription {
 
 export interface PreviewPriceRequest {
   gymPackageId: number;
-  durationId: number;
+  packageDurationId: number;
 }
 
 export interface PreviewPriceResponse {
@@ -26,7 +26,7 @@ export interface PreviewPriceResponse {
 
 export interface CreateSubscriptionRequest {
   gymPackageId: number;
-  durationId: number;
+  packageDurationId: number;
   startDate?: string;
   autoRenew?: boolean;
 }

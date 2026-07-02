@@ -5,9 +5,12 @@ export interface GymPackage {
   code: string;
   name: string;
   packageType: string;
-  price: number;
-  durationDays: number;
+  basePrice: number;
+  hasAiWorkoutPlan: boolean;
+  hasNutritionPlan: boolean;
+  ptSessionsPerMonth: number;
   description?: string;
+  benefits?: string;
   status: Status;
   thumbnailUrl?: string;
 }
@@ -24,8 +27,10 @@ export interface AdminPackageCreateRequest {
   code: string;
   name: string;
   packageType: string;
-  price: number;
-  durationDays: number;
+  basePrice: number;
+  hasAiWorkoutPlan: boolean;
+  hasNutritionPlan: boolean;
+  ptSessionsPerMonth: number;
   description?: string;
   benefits?: string;
   thumbnailUrl?: string;
@@ -35,8 +40,10 @@ export interface AdminPackageCreateRequest {
 export interface AdminPackageUpdateRequest {
   name: string;
   packageType: string;
-  price: number;
-  durationDays: number;
+  basePrice: number;
+  hasAiWorkoutPlan: boolean;
+  hasNutritionPlan: boolean;
+  ptSessionsPerMonth: number;
   description?: string;
   benefits?: string;
   thumbnailUrl?: string;

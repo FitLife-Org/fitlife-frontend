@@ -66,13 +66,31 @@ export default function PricingSection() {
               </div>
 
               <div className="mb-8">
-                <span className="text-4xl font-black">{pkg.price.toLocaleString("vi-VN")}đ</span>
+                <span className="text-4xl font-black">{pkg.basePrice.toLocaleString("vi-VN")}đ</span>
                 <span className={`text-sm font-medium ml-1 ${pkg.isPopular ? "text-slate-400" : "text-slate-500"}`}>
-                  /{pkg.durationMonths} tháng
+                  / Giá cơ bản
                 </span>
               </div>
 
               <ul className="space-y-4 mb-8">
+                {pkg.hasAiWorkoutPlan && (
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${pkg.isPopular ? "text-emerald-400" : "text-emerald-500"}`} />
+                    <span className="text-sm font-semibold">Tích hợp AI tạo Lịch tập</span>
+                  </li>
+                )}
+                {pkg.hasNutritionPlan && (
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${pkg.isPopular ? "text-emerald-400" : "text-emerald-500"}`} />
+                    <span className="text-sm font-semibold">Tích hợp Gợi ý Dinh dưỡng</span>
+                  </li>
+                )}
+                {pkg.ptSessionsPerMonth > 0 && (
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${pkg.isPopular ? "text-emerald-400" : "text-emerald-500"}`} />
+                    <span className="text-sm font-semibold">Tặng {pkg.ptSessionsPerMonth} buổi PT/tháng</span>
+                  </li>
+                )}
                 {pkg.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-3">
                     <CheckCircle2 className={`w-5 h-5 shrink-0 ${pkg.isPopular ? "text-emerald-400" : "text-emerald-500"}`} />

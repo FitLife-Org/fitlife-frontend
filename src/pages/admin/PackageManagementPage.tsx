@@ -25,8 +25,10 @@ export default function PackageManagementPage() {
     code: "",
     name: "",
     packageType: "BASIC",
-    price: "",
-    durationDays: "",
+    basePrice: "",
+    ptSessionsPerMonth: "0",
+    hasAiWorkoutPlan: false,
+    hasNutritionPlan: false,
     description: "",
     benefits: "",
     thumbnailUrl: ""
@@ -58,10 +60,12 @@ export default function PackageManagementPage() {
         code: pkg.code,
         name: pkg.name,
         packageType: pkg.packageType || "BASIC",
-        price: pkg.price.toString(),
-        durationDays: pkg.durationDays.toString(),
+        basePrice: pkg.basePrice.toString(),
+        ptSessionsPerMonth: pkg.ptSessionsPerMonth.toString(),
+        hasAiWorkoutPlan: pkg.hasAiWorkoutPlan || false,
+        hasNutritionPlan: pkg.hasNutritionPlan || false,
         description: pkg.description || "",
-        benefits: "",
+        benefits: pkg.benefits || "",
         thumbnailUrl: pkg.thumbnailUrl || ""
       });
     } else {
@@ -70,8 +74,10 @@ export default function PackageManagementPage() {
         code: "", 
         name: "", 
         packageType: "BASIC", 
-        price: "", 
-        durationDays: "", 
+        basePrice: "", 
+        ptSessionsPerMonth: "0",
+        hasAiWorkoutPlan: false,
+        hasNutritionPlan: false,
         description: "",
         benefits: "",
         thumbnailUrl: "" 
@@ -87,8 +93,10 @@ export default function PackageManagementPage() {
         code: formData.code,
         name: formData.name,
         packageType: formData.packageType,
-        price: Number(formData.price),
-        durationDays: Number(formData.durationDays),
+        basePrice: Number(formData.basePrice),
+        ptSessionsPerMonth: Number(formData.ptSessionsPerMonth),
+        hasAiWorkoutPlan: formData.hasAiWorkoutPlan,
+        hasNutritionPlan: formData.hasNutritionPlan,
         description: formData.description,
         benefits: formData.benefits,
         thumbnailUrl: formData.thumbnailUrl,
@@ -166,11 +174,15 @@ export default function PackageManagementPage() {
     },
     {
       key: "price",
-      header: "Giá & Thời hạn",
+      header: "Giá cơ bản & Quyền lợi",
       render: (row: GymPackage) => (
         <div>
-          <p className="font-bold text-fit-primary">{formatCurrency(row.price)}</p>
-          <p className="text-sm text-fit-muted">{row.durationDays} ngày</p>
+          <p className="font-bold text-fit-primary">{formatCurrency(row.basePrice)}</p>
+          <div className="flex flex-wrap gap-1 mt-1">
+             {row.hasAiWorkoutPlan && <Badge variant="purple"><span className="text-[10px]">AI Plan</span></Badge>}
+             {row.hasNutritionPlan && <Badge variant="success"><span className="text-[10px]">Nutrition</span></Badge>}
+             {row.ptSessionsPerMonth > 0 && <Badge variant="warning"><span className="text-[10px]">{row.ptSessionsPerMonth} PT/tháng</span></Badge>}
+          </div>
         </div>
       ),
     },
@@ -259,32 +271,62 @@ export default function PackageManagementPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Giá tiền (VNĐ)"
+              label="Giá cơ bản (VNĐ)"
               type="number"
               min="0"
               placeholder="VD: 1200000"
               required
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              value={formData.basePrice}
+              onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
             />
             <Input
-              label="Thời hạn (ngày)"
+              label="Số buổi PT / tháng"
               type="number"
-              min="1"
-              placeholder="VD: 30"
+              min="0"
+              placeholder="VD: 4"
               required
-              value={formData.durationDays}
-              onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
+              value={formData.ptSessionsPerMonth}
+              onChange={(e) => setFormData({ ...formData, ptSessionsPerMonth: e.target.value })}
             />
+          </div>
+          <div className="flex gap-6 mt-2 mb-4">
+            <label className="flex items-center gap-2 text-sm font-semibold text-fit-text cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-fit-border text-fit-primary focus:ring-fit-primary"
+                checked={formData.hasAiWorkoutPlan}
+                onChange={(e) => setFormData({ ...formData, hasAiWorkoutPlan: e.target.checked })}
+              />
+              Tích hợp AI tạo Lịch tập
+            </label>
+            <label className="flex items-center gap-2 text-sm font-semibold text-fit-text cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-fit-border text-fit-primary focus:ring-fit-primary"
+                checked={formData.hasNutritionPlan}
+                onChange={(e) => setFormData({ ...formData, hasNutritionPlan: e.target.checked })}
+              />
+              Tích hợp Gợi ý Dinh dưỡng
+            </label>
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-fit-text">Mô tả gói tập</label>
             <textarea
               className="w-full rounded-xl border border-fit-border bg-white px-4 py-2 text-sm text-fit-text transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary"
-              rows={4}
+              rows={3}
               placeholder="VD: Không giới hạn số lần sử dụng..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-fit-text">Quyền lợi</label>
+            <textarea
+              className="w-full rounded-xl border border-fit-border bg-white px-4 py-2 text-sm text-fit-text transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary"
+              rows={2}
+              placeholder="VD: Truy cập 24/7, 1 buổi PT miễn phí..."
+              value={formData.benefits}
+              onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
             />
           </div>
           <div className="flex justify-end gap-3 mt-6">

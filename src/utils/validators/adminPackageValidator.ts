@@ -37,13 +37,13 @@ export const validateAdminPackageForm = (
     return false;
   }
 
-  if (formData.price === undefined || formData.price === null || formData.price < 0) {
-    showAlert.error("Lỗi", "Giá tiền phải lớn hơn hoặc bằng 0");
+  if (formData.basePrice === undefined || formData.basePrice === null || formData.basePrice < 0) {
+    showAlert.error("Lỗi", "Giá tiền cơ bản phải lớn hơn hoặc bằng 0");
     return false;
   }
 
-  if (!formData.durationDays || formData.durationDays < 1) {
-    showAlert.error("Lỗi", "Thời gian tập phải tối thiểu là 1 ngày");
+  if (formData.ptSessionsPerMonth === undefined || formData.ptSessionsPerMonth === null || formData.ptSessionsPerMonth < 0) {
+    showAlert.error("Lỗi", "Số buổi PT mỗi tháng phải lớn hơn hoặc bằng 0");
     return false;
   }
 
