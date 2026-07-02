@@ -98,16 +98,18 @@ export default function RegisterPage() {
                       Đang xử lý...
                     </div>
                   ) : (
-                    <GoogleLogin
-                      onSuccess={handleGoogleSuccess}
-                      onError={() => {
-                        setError("Đăng ký Google thất bại. Vui lòng thử lại.");
-                      }}
-                      useOneTap={false}
-                      text="signup_with"
-                      shape="pill"
-                      width="360"
-                    />
+                    <div className="flex justify-center w-full">
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => {
+                          setError("Đăng ký Google thất bại. Vui lòng thử lại.");
+                        }}
+                        useOneTap={false}
+                        text="signup_with"
+                        shape="pill"
+                        width="400"
+                      />
+                    </div>
                   )}
                 </div>
 

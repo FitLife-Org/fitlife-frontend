@@ -207,14 +207,14 @@ export default
 
                                 {/* Đăng nhập Google */}
                                 <div className="gsap-form-element pt-2">
-                                    <div className={loading ? "hidden" : "block"}>
+                                    <div className={loading ? "hidden" : "flex justify-center w-full"}>
                                         <GoogleLogin
                                             onSuccess={handleGoogleSuccess}
                                             onError={handleGoogleError}
                                             useOneTap={false}
                                             text="signin_with"
                                             shape="pill"
-                                            width="360"
+                                            width="400"
                                             theme="filled_black"
                                         />
                                     </div>
