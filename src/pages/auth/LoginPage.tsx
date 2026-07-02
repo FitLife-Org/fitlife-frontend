@@ -206,23 +206,22 @@ export default
                                 </div>
 
                                 {/* Đăng nhập Google */}
-                                <div className="gsap-form-element mt-6 flex w-full justify-center">
-                                    {loading ? (
-                                        <div
-                                            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-slate-500 font-bold">
-                                            <Loader2 className="h-5 w-5 animate-spin"/>
-                                            Đang xử lý...
-                                        </div>
-                                    ) : (
+                                <div className="gsap-form-element pt-2">
+                                    <div className={loading ? "hidden" : "block"}>
                                         <GoogleLogin
                                             onSuccess={handleGoogleSuccess}
                                             onError={handleGoogleError}
                                             useOneTap={false}
                                             text="signin_with"
                                             shape="pill"
-                                            width="360"
+                                            width="100%"
+                                            theme="filled_black"
                                         />
-                                    )}
+                                    </div>
+                                    <div className={loading ? "flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-slate-500 font-bold" : "hidden"}>
+                                        <Loader2 className="h-5 w-5 animate-spin"/>
+                                        Đang xử lý...
+                                    </div>
                                 </div>
 
                                 <div className="gsap-form-element mt-8 text-center font-medium text-slate-500">

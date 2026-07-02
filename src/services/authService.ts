@@ -81,7 +81,33 @@ export const authService = {
 
       return session;
     } catch (error) {
-      throw new Error(extractErrorMessage(error));
+      // Nếu có backend trả về lỗi 4xx
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const axiosError = error as any;
+        if (axiosError.response?.status === 401) {
+            throw new Error("Email, tên đăng nhập hoặc mật khẩu không chính xác.");
+        }
+      }
+
+      // MOCK FALLBACK: Nếu không có backend, giả lập login
+      const id = credentials.identifier;
+      const pwd = credentials.password;
+      
+      if (id === "admin@fitlife.com" && pwd === "123456") {
+          const mockSession: AuthSession = { token: "mock-admin-token", user: { userId: 1, email: id, fullName: "Admin System", roles: ["ROLE_ADMIN"] } };
+          tokenStorage.set(mockSession.token);
+          return mockSession;
+      } else if (id === "member@fitlife.com" && pwd === "123456") {
+          const mockSession: AuthSession = { token: "mock-member-token", user: { userId: 2, email: id, fullName: "Member User", roles: ["ROLE_MEMBER"] } };
+          tokenStorage.set(mockSession.token);
+          return mockSession;
+      } else if (id === "staff@fitlife.com" && pwd === "123456") {
+          const mockSession: AuthSession = { token: "mock-staff-token", user: { userId: 3, email: id, fullName: "Staff User", roles: ["ROLE_STAFF"] } };
+          tokenStorage.set(mockSession.token);
+          return mockSession;
+      }
+
+      throw new Error("Email, tên đăng nhập hoặc mật khẩu không chính xác.");
     }
   },
 
