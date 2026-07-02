@@ -42,17 +42,17 @@ export const packageService = {
 
   async createPackage(data: AdminPackageCreateRequest): Promise<GymPackage> {
     const response = await apiClient.post<ApiResponse<GymPackage>>("/admin/gym-packages", data);
-    return response.data.data || response.data;
+    return response.data.data;
   },
 
   async updatePackage(id: number, data: AdminPackageUpdateRequest): Promise<GymPackage> {
     const response = await apiClient.put<ApiResponse<GymPackage>>(`/admin/gym-packages/${id}`, data);
-    return response.data.data || response.data;
+    return response.data.data;
   },
 
   async updatePackageStatus(id: number, status: Status): Promise<GymPackage> {
     const response = await apiClient.patch<ApiResponse<GymPackage>>(`/admin/gym-packages/${id}/status`, { status });
-    return response.data.data || response.data;
+    return response.data.data;
   },
 
   async deletePackage(id: number): Promise<void> {

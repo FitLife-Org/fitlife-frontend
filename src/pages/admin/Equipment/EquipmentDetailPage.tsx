@@ -18,8 +18,7 @@ export default function EquipmentDetailPage() {
         const fetchDetail = async () => {
             setLoading(true);
             try {
-                const response = await EquipmentService.getById(id);
-                const data = response.data?.data || response.data;
+                const data = await EquipmentService.getById(id);
                 if (data) setEquipment(data);
             } catch (error) {
                 console.error("Lỗi khi tải chi tiết thiết bị:", error);

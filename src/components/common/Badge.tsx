@@ -11,6 +11,6 @@ const variants: Record<BadgeVariant, string> = {
   default: "bg-slate-100 text-slate-700",
 };
 
-export default function Badge({ children, variant = "default" }: { children: ReactNode; variant?: BadgeVariant }) {
-  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${variants[variant]}`}>{children}</span>;
+export default function Badge({ children, variant = "default", className = "" }: { children: ReactNode; variant?: BadgeVariant; className?: string }) {
+  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${variants[variant]} ${className}`}>{children}</span>;
 }

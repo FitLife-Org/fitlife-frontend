@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { QrCode, Search, UserCheck, History, Keyboard } from "lucide-react";
+import { QrCode, Search, UserCheck, History, Keyboard, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import { checkinService } from "../../services/checkinService";
 import type { CheckinRecord } from "../../types/checkin.type";

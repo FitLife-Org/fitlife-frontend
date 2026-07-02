@@ -136,7 +136,7 @@ export default function PackageListPage() {
           className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
         >
           {packages.map((item, index) => {
-            const isCurrent = mySubscription?.package.id === item.id && mySubscription?.status === "ACTIVE";
+            const isCurrent = mySubscription?.package?.id === item.id && mySubscription?.status === "ACTIVE";
             const isPopular = item.name.toLowerCase().includes("standard") || item.name.toLowerCase().includes("phổ biến") || index === 1; // Fallback highlight
             const isPremium = item.name.toLowerCase().includes("vip") || item.name.toLowerCase().includes("premium") || item.price > 500000;
 

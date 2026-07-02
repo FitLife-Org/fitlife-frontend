@@ -1,4 +1,5 @@
 import { useState, useEffect, ChangeEvent } from "react";
+import toast from "react-hot-toast";
 import {
   Camera, User, Calendar, Activity, Lock, ChevronRight, CheckCircle2,
   Image as ImageIcon, Edit3, ShieldCheck, Info as InfoIcon, Crown, Ruler, Weight

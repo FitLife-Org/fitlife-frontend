@@ -91,6 +91,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
   1: [
     {
       id: 101,
+      gymPackageId: 1,
       package: { id: 1, code: "PKG01", packageType: "BASIC", name: "Gói Standard 3 Tháng", durationDays: 90, price: 599000, status: "ACTIVE" },
       startDate: "2026-01-15",
       endDate: "2026-04-15",
@@ -98,6 +99,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
     },
     {
       id: 102,
+      gymPackageId: 2,
       package: { id: 2, code: "PKG02", packageType: "VIP", name: "Gói VIP Pro 6 Tháng", durationDays: 180, price: 999000, status: "ACTIVE" },
       startDate: "2026-04-16",
       endDate: "2026-10-16",
@@ -107,6 +109,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
   2: [
     {
       id: 201,
+      gymPackageId: 3,
       package: { id: 3, code: "PKG03", packageType: "BASIC", name: "Gói Basic 6 Tháng", durationDays: 180, price: 599000, status: "ACTIVE" },
       startDate: "2026-02-10",
       endDate: "2026-08-10",
@@ -117,27 +120,28 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
   4: [
     {
       id: 401,
+      gymPackageId: 4,
       package: { id: 4, code: "PKG04", packageType: "BASIC", name: "Gói Basic 1 Tháng", durationDays: 30, price: 199000, status: "ACTIVE" },
       startDate: "2026-05-01",
       endDate: "2026-06-01",
-      status: "LOCKED"
+      status: "EXPIRED" // Changed to EXPIRED, Subscription type usually has ACTIVE/EXPIRED/PENDING/CANCELED
     }
   ]
 };
 
 const MOCK_CHECKINS: Record<number, CheckinRecord[]> = {
   1: [
-    { id: 1001, memberId: 1, checkedInAt: "2026-06-28T08:30:00Z", note: "Thẻ hợp lệ - Đã check-in" },
-    { id: 1002, memberId: 1, checkedInAt: "2026-06-26T17:15:00Z", note: "Thẻ hợp lệ - Đã check-in" },
-    { id: 1003, memberId: 1, checkedInAt: "2026-06-25T08:00:00Z", note: "Thẻ hợp lệ - Đã check-in" }
+    { id: 1001, memberId: 1, checkedInAt: "2026-06-28T08:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
+    { id: 1002, memberId: 1, checkedInAt: "2026-06-26T17:15:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
+    { id: 1003, memberId: 1, checkedInAt: "2026-06-25T08:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
   ],
   2: [
-    { id: 2001, memberId: 2, checkedInAt: "2026-06-28T09:00:00Z", note: "Thẻ hợp lệ - Đã check-in" },
-    { id: 2002, memberId: 2, checkedInAt: "2026-06-27T18:30:00Z", note: "Thẻ hợp lệ - Đã check-in" }
+    { id: 2001, memberId: 2, checkedInAt: "2026-06-28T09:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
+    { id: 2002, memberId: 2, checkedInAt: "2026-06-27T18:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
   ],
   3: [],
   4: [
-    { id: 4001, memberId: 4, checkedInAt: "2026-05-25T19:00:00Z", note: "Tài khoản bị khóa - Check-in thất bại" }
+    { id: 4001, memberId: 4, checkedInAt: "2026-05-25T19:00:00Z", note: "Tài khoản bị khóa - Check-in thất bại", status: "FAILED" }
   ]
 };
 
@@ -734,7 +738,7 @@ export default function UserManagementPage() {
                         {memberSubscriptions.map((sub) => (
                           <div key={sub.id} className="p-4 border border-slate-100 hover:border-slate-200 bg-white rounded-xl flex items-center justify-between transition-colors shadow-sm">
                             <div className="space-y-1">
-                              <div className="font-bold text-slate-800 text-sm">{sub.package.name}</div>
+                              <div className="font-bold text-slate-800 text-sm">{sub.package?.name}</div>
                               <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
                                 <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {sub.startDate}</span>
                                 <span>đến</span>
@@ -743,7 +747,7 @@ export default function UserManagementPage() {
                             </div>
                             <div className="flex flex-col items-end gap-1.5">
                               <span className="text-xs font-extrabold text-fit-primary">
-                                {sub.package.price.toLocaleString("vi-VN")} đ
+                                {sub.package?.price?.toLocaleString("vi-VN")} đ
                               </span>
                               {sub.status === "ACTIVE" ? (
                                 <Badge variant="success">Hoạt động</Badge>
