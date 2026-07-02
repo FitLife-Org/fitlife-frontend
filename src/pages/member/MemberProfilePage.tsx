@@ -9,6 +9,8 @@ import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import PageHeader from "../../components/common/PageHeader";
+import { showAlert } from "../../utils/alert";
+import { validateProfileForm, validateChangePassword } from "../../utils/validators/profileValidator";
 import { profileService } from "../../services/profileService";
 import { userService } from "../../services/userService";
 import type { ProfileResponse, UpdateProfileRequest } from "../../types/profile.type";
@@ -16,6 +18,7 @@ import type { ProfileResponse, UpdateProfileRequest } from "../../types/profile.
 export default function MemberProfilePage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateProfileRequest>({});
 
@@ -65,6 +68,8 @@ export default function MemberProfilePage() {
   };
 
   const handleSave = async () => {
+    if (!validateProfileForm(formData)) return;
+    
     try {
       setSaving(true);
       // Clean up empty strings to avoid backend validation errors and parsing errors
@@ -77,10 +82,10 @@ export default function MemberProfilePage() {
       
       const updatedProfile = await profileService.updateProfile(cleanData);
       setProfile(updatedProfile);
-      alert("Cập nhật hồ sơ thành công!");
+      showAlert.success("Thành công", "Cập nhật hồ sơ thành công!");
     } catch (error) {
       console.error("Failed to update profile", error);
-      alert("Cập nhật thất bại. Vui lòng thử lại.");
+      showAlert.error("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
     } finally {
       setSaving(false);
     }
@@ -88,16 +93,7 @@ export default function MemberProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      alert("Vui lòng điền đầy đủ các thông tin mật khẩu!");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      alert("Mật khẩu mới và xác nhận mật khẩu không trùng khớp!");
-      return;
-    }
-    if (newPassword.length < 6) {
-      alert("Mật khẩu mới phải có tối thiểu 6 ký tự!");
+    if (!validateChangePassword(oldPassword, newPassword, confirmPassword)) {
       return;
     }
 
@@ -107,7 +103,7 @@ export default function MemberProfilePage() {
         oldPassword,
         newPassword
       });
-      alert("Đổi mật khẩu thành công!");
+      showAlert.success("Thành công", "Đổi mật khẩu thành công!");
       setPasswordModalOpen(false);
       setOldPassword("");
       setNewPassword("");
@@ -115,9 +111,30 @@ export default function MemberProfilePage() {
     } catch (error: any) {
       console.error("Failed to change password:", error);
       const errorMsg = error?.response?.data?.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.";
-      alert(errorMsg);
+      showAlert.error("Lỗi", errorMsg);
     } finally {
       setPasswordSaving(false);
+    }
+  };
+
+  const handleAvatarChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file hình ảnh hợp lệ.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const response = await profileService.updateAvatar(file);
+      setProfile(prev => prev ? { ...prev, avatarUrl: response.avatarUrl } : null);
+      toast.success("Cập nhật ảnh đại diện thành công!");
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi cập nhật ảnh đại diện.");
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -139,19 +156,25 @@ export default function MemberProfilePage() {
       <div className="grid gap-6 xl:grid-cols-[320px_1fr] items-start">
         {/* Left Column: Profile Card */}
         <Card className="p-0 overflow-hidden border-none shadow-xl bg-white relative">
-          <div className="p-6 relative">
-            <div className="relative mx-auto h-32 w-32 mt-4 mb-4">
-              <div className="h-full w-full overflow-hidden rounded-full border-4 border-slate-100 bg-fit-bg shadow-sm">
-                <img
-                  src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)}
-                  alt="Avatar"
-                  className="h-full w-full object-cover"
-                />
+            <div className="flex flex-col items-center pb-8 border-b border-slate-100">
+              <div className="relative mx-auto h-32 w-32 mt-4 mb-4">
+                <div className="h-full w-full overflow-hidden rounded-full border-4 border-slate-100 bg-slate-50 shadow-sm relative group">
+                  {uploadingAvatar ? (
+                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                      <div className="w-8 h-8 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
+                    </div>
+                  ) : null}
+                  <img
+                    src={profile.avatarUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile.fullName)}
+                    alt="Avatar"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <label className="absolute bottom-1 right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-slate-900 text-white shadow-sm transition-transform hover:scale-110">
+                  <Camera className="h-4 w-4" />
+                  <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
+                </label>
               </div>
-              <button className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-white shadow-sm transition-transform hover:scale-110">
-                <Camera className="h-4 w-4" />
-              </button>
-            </div>
 
           <div className="mt-4 text-center">
             <h2 className="text-2xl font-bold text-slate-900">{profile.fullName}</h2>

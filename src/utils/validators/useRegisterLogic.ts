@@ -6,6 +6,7 @@ import { useGSAP } from "@gsap/react";
 import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
 import { useAuthStore } from "../../store/authStore";
+import { showAlert } from "../alert";
 import { getRedirectPathByRoles } from "../authRedirect";
 import { z } from "zod";
 
@@ -109,7 +110,7 @@ export function useRegisterLogic() {
 
       const authSession = await authService.register(registerData);
       setSession(authSession);
-      alert("Đăng ký thành công!");
+      showAlert.success("Thành công", "Đăng ký thành công!");
       navigate(ROUTES.MEMBER_HOME, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đăng ký thất bại.");

@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 import type { ApiResponse, PageResult } from "../types/common.type";
-import type { User } from "../types/user.type";
+import type { User, AdminUserCreateRequest, AdminUserUpdateRequest } from "../types/user.type";
 
 export const userService = {
   // USER-01: Admin xem danh sách tài khoản
@@ -57,7 +57,7 @@ export const userService = {
   },
 
   // USER-03: Admin tạo tài khoản nội bộ
-  async createUser(data: any): Promise<User> {
+  async createUser(data: AdminUserCreateRequest): Promise<User> {
     const response = await apiClient.post<ApiResponse<any>>("/admin/users", data);
     const u = response.data.data;
     return {
@@ -72,7 +72,7 @@ export const userService = {
   },
 
   // USER-04: Cập nhật thông tin tài khoản
-  async updateUser(id: number, data: any): Promise<User> {
+  async updateUser(id: number, data: AdminUserUpdateRequest): Promise<User> {
     const response = await apiClient.put<ApiResponse<any>>(`/admin/users/${id}`, data);
     const u = response.data.data;
     return {

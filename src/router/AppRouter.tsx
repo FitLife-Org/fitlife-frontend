@@ -6,10 +6,14 @@ import {ROUTES} from "../config/routes";
 import HomePage from "../pages/HomePage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import EquipmentManagementPage from "../pages/admin/Equipment/EquipmentManagementPage";
+import AddEquipmentPage from "../pages/admin/Equipment/AddEquipmentPage";
+import EditEquipmentPage from "../pages/admin/Equipment/EditEquipmentPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import ReportPage from "../pages/admin/ReportPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
+import AccountManagementPage from "../pages/admin/AccountManagementPage";
+import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 
 import LoginPage from "../pages/auth/LoginPage";
@@ -26,6 +30,7 @@ import MemberHomePage from "../pages/member/MemberHomePage";
 import MemberProfilePage from "../pages/member/MemberProfilePage";
 import MySubscriptionPage from "../pages/member/MySubscriptionPage";
 import NutritionPage from "../pages/member/NutritionPage";
+import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
 import PackageListPage from "../pages/member/PackageListPage";
 import PaymentPage from "../pages/member/PaymentPage";
 import SettingsPage from "../pages/settings/SettingsPage";
@@ -90,6 +95,8 @@ export default function AppRouter() {
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><CheckinHistoryPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_BOOKING}
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><BookingPage/></RoleGuard>}/>
+                        <Route path={ROUTES.MEMBER_WORKOUTS}
+                               element={<RoleGuard roles={["ROLE_MEMBER"]}><WorkoutPlansPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_AI}
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><AiFitnessPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_NUTRITION}
@@ -107,7 +114,11 @@ export default function AppRouter() {
 
                         <Route
                             path={ROUTES.ADMIN_USERS}
-                            element={<Navigate to={ROUTES.ADMIN_MEMBERS} replace/>}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <AccountManagementPage/>
+                                </RoleGuard>
+                            }
                         />
 
                         <Route
@@ -136,6 +147,22 @@ export default function AppRouter() {
                                 </RoleGuard>
                             }
                         />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/add`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <AddEquipmentPage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/edit/:id`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <EditEquipmentPage/>
+                                </RoleGuard>
+                            }
+                        />
 
                         <Route
                             path={ROUTES.ADMIN_TRAINERS}
@@ -151,6 +178,14 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
                                     <ReportPage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={ROUTES.ADMIN_INVOICES}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <InvoiceManagementPage/>
                                 </RoleGuard>
                             }
                         />

@@ -13,92 +13,38 @@ const MOCK_SUMMARY: EquipmentSummary = {
   upcomingMaintenance: { count: 8, timeFrame: "Trong 7 ngày tới" }
 };
 
-const MOCK_EQUIPMENTS: Equipment[] = [
-  {
-    id: "TB0001",
-    name: "Máy chạy bộ TechnoGym T20",
-    image: "https://images.unsplash.com/photo-1596357395217-80de13130e92?w=100&h=100&fit=crop",
-    category: "Cardio",
-    area: "Khu Cardio – Tầng 1",
-    status: "ACTIVE",
-    lastMaintenance: "15/05/2024",
-    nextMaintenance: "15/06/2024",
-    daysToNextMaintenance: 12
-  },
-  {
-    id: "TB0002",
-    name: "Xe đạp tập Life Fitness IC7",
-    image: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=100&h=100&fit=crop",
-    category: "Cardio",
-    area: "Khu Cardio – Tầng 1",
-    status: "ACTIVE",
-    lastMaintenance: "20/05/2024",
-    nextMaintenance: "20/06/2024",
-    daysToNextMaintenance: 17
-  },
-  {
-    id: "TB0003",
-    name: "Ghế đẩy ngực Hammer Strength",
-    image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=100&h=100&fit=crop",
-    category: "Máy tập ngực",
-    area: "Khu Sức mạnh – Tầng 2",
-    status: "MAINTENANCE",
-    lastMaintenance: "01/06/2024",
-    nextMaintenance: "15/06/2024",
-    daysToNextMaintenance: 12
-  },
-  {
-    id: "TB0004",
-    name: "Máy đạp chân Matrix Leg Press",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=100&h=100&fit=crop",
-    category: "Máy tập chân",
-    area: "Khu Sức mạnh – Tầng 2",
-    status: "ACTIVE",
-    lastMaintenance: "10/05/2024",
-    nextMaintenance: "10/06/2024",
-    daysToNextMaintenance: 7
-  },
-  {
-    id: "TB0005",
-    name: "Giàn kéo cáp đa năng Hoist",
-    image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=100&h=100&fit=crop",
-    category: "Máy tập lưng",
-    area: "Khu Sức mạnh – Tầng 2",
-    status: "INACTIVE",
-    lastMaintenance: "25/04/2024",
-    nextMaintenance: null,
-    daysToNextMaintenance: null
-  },
-  {
-    id: "TB0006",
-    name: "Máy trượt tuyết Precor EFX",
-    image: "https://images.unsplash.com/photo-1576678927484-cc907957088c?w=100&h=100&fit=crop",
-    category: "Cardio",
-    area: "Khu Cardio – Tầng 1",
-    status: "ACTIVE",
-    lastMaintenance: "18/05/2024",
-    nextMaintenance: "18/06/2024",
-    daysToNextMaintenance: 15
-  }
-];
+const INITIAL_SUMMARY: EquipmentSummary = {
+  total: 0,
+  active: { count: 0, percentage: 0 },
+  maintenance: { count: 0, percentage: 0 },
+  inactive: { count: 0, percentage: 0 },
+  upcomingMaintenance: { count: 0, timeFrame: "Trong 7 ngày tới" }
+};
 
 export default function EquipmentManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [equipments, setEquipments] = useState<Equipment[]>(MOCK_EQUIPMENTS);
+  const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [summary] = useState<EquipmentSummary>(MOCK_SUMMARY);
   const [loading, setLoading] = useState(false);
+  
+  // Pagination States
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const pageSize = 10;
 
   useEffect(() => {
     fetchEquipments();
-  }, []);
+  }, [currentPage, statusFilter]);
 
   const fetchEquipments = async () => {
     setLoading(true);
     try {
-      const response = await EquipmentService.getAll();
-      const data = response.data?.data || response.data || [];
-      if (Array.isArray(data)) {
-        setEquipments(data.length > 0 ? data : MOCK_EQUIPMENTS); // Fallback to mock for UI if no data
+      const data = await EquipmentService.getAll(currentPage, pageSize, searchTerm, statusFilter);
+      if (data && data.items) {
+        setEquipments(data.items);
+        setTotalItems(data.totalItems);
+        setCurrentPage(data.page);
       }
     } catch (error) {
       console.error("Lỗi khi tải thiết bị:", error);
@@ -132,6 +78,9 @@ export default function EquipmentManagementPage() {
             <input
               type="text"
               placeholder="Tìm kiếm nhanh..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => { if(e.key === 'Enter') fetchEquipments(); }}
               className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary w-64 shadow-sm"
             />
           </div>
@@ -246,10 +195,13 @@ export default function EquipmentManagementPage() {
             </div>
             <div className="flex flex-col gap-1 min-w-[140px]">
               <label className="text-[11px] font-medium text-slate-500 uppercase pl-1">Trạng thái</label>
-              <select className="px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm text-slate-700 focus:outline-none focus:border-emerald-500 shadow-sm appearance-none cursor-pointer w-full" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.5rem center", backgroundSize: "1.2em 1.2em", paddingRight: "2rem" }}>
-                <option>Tất cả</option>
-                <option>Hoạt động</option>
-                <option>Bảo trì</option>
+              <select 
+                value={statusFilter}
+                onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                className="px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm text-slate-700 focus:outline-none focus:border-emerald-500 shadow-sm appearance-none cursor-pointer w-full" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.5rem center", backgroundSize: "1.2em 1.2em", paddingRight: "2rem" }}>
+                <option value="ALL">Tất cả</option>
+                <option value="ACTIVE">Hoạt động</option>
+                <option value="MAINTENANCE">Bảo trì</option>
               </select>
             </div>
             <div className="flex flex-col gap-1 min-w-[140px]">
@@ -329,9 +281,11 @@ export default function EquipmentManagementPage() {
                       <button className="p-1.5 text-slate-400 hover:text-fit-primary hover:bg-fit-primarySoft rounded-md transition-colors" title="Xem chi tiết">
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-1.5 text-slate-400 hover:text-fit-admin hover:bg-fit-adminSoft rounded-md transition-colors" title="Chỉnh sửa">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
+                      <Link to={`/admin/equipment/edit/${eq.id}`}>
+                        <button className="p-1.5 text-slate-400 hover:text-fit-admin hover:bg-fit-adminSoft rounded-md transition-colors" title="Chỉnh sửa">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </Link>
                       <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors" title="Thêm thao tác">
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -352,11 +306,15 @@ export default function EquipmentManagementPage() {
               <option>20</option>
               <option>50</option>
             </select>
-            <span>1 - 10 của {MOCK_SUMMARY.total} thiết bị</span>
+            <span>1 - {equipments.length} của {totalItems} thiết bị</span>
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="p-1.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors" disabled>
+            <button 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
             </button>
             <button className="w-8 h-8 rounded bg-fit-primary text-white font-medium flex items-center justify-center text-sm shadow-sm hover:bg-fit-primaryHover transition-colors">1</button>
@@ -364,7 +322,11 @@ export default function EquipmentManagementPage() {
             <button className="w-8 h-8 rounded text-slate-600 hover:bg-slate-100 font-medium flex items-center justify-center text-sm transition-colors">3</button>
             <span className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">...</span>
             <button className="w-8 h-8 rounded text-slate-600 hover:bg-slate-100 font-medium flex items-center justify-center text-sm transition-colors">13</button>
-            <button className="p-1.5 rounded text-slate-600 hover:bg-slate-100 transition-colors">
+            <button 
+              onClick={() => setCurrentPage(p => p + 1)}
+              disabled={equipments.length < pageSize}
+              className="p-1.5 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
             </button>
           </div>

@@ -35,4 +35,43 @@ export interface BodyMetric {
   weight: number;
   bmi?: number;
   bodyFat?: number;
+  muscleMass?: number;
+  notes?: string;
+}
+
+export interface BodyMetricProgress {
+  metric: "weight" | "bmi" | "bodyFat" | "muscleMass";
+  startValue: number;
+  currentValue: number;
+  change: number;
+  trend: "up" | "down" | "stable";
+}
+
+export interface AdminMemberCreateRequest {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  phone?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  fitnessGoal?: string;
+  healthNote?: string;
+}
+
+export interface AdminMemberUpdateRequest {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  fitnessGoal?: string;
+  healthNote?: string;
+  status?: string;
 }

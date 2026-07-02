@@ -1,14 +1,14 @@
 import { Navigate } from "react-router-dom";
-import { ROUTES } from "../config/routes";
 import { useAuthStore } from "../store/authStore";
 import GuestLayout from "../components/layout/GuestLayout";
 import LandingPage from "./guest/LandingPage";
+import { getRedirectPathByRoles } from "../utils/authRedirect";
 
 export default function HomePage() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated, user } = useAuthStore();
   
-  if (isAuthenticated) {
-     return <Navigate to={ROUTES.MEMBER_HOME} replace />;
+  if (isAuthenticated && user) {
+     return <Navigate to={getRedirectPathByRoles(user.roles)} replace />;
   }
   
   return (

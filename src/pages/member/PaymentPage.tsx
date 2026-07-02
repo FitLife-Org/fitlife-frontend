@@ -4,11 +4,13 @@ import { CheckCircle2, CreditCard, ChevronRight, AlertCircle, ArrowLeft } from "
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Badge from "../../components/common/Badge";
+import { showAlert } from "../../utils/alert";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { invoiceService } from "../../services/invoiceService";
 import { paymentService } from "../../services/paymentService";
 import type { Invoice } from "../../types/invoice.type";
 import type { PaymentResult } from "../../types/payment.type";
+import { validatePaymentForm } from "../../utils/validators/paymentValidator";
 
 export default function PaymentPage() {
   const { id } = useParams();
@@ -18,6 +20,7 @@ export default function PaymentPage() {
   const [payments, setPayments] = useState<PaymentResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("VNPAY");
+  const [note, setNote] = useState("");
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
@@ -42,23 +45,31 @@ export default function PaymentPage() {
 
   const handlePayment = async () => {
     if (!invoice) return;
+    
+    const payload = {
+      invoiceId: invoice.id,
+      paymentMethod: paymentMethod,
+      note: note.trim() || undefined
+    };
+
+    if (!validatePaymentForm(payload)) {
+      return;
+    }
+
     try {
       setProcessing(true);
-      const result = await paymentService.createPayment({
-        invoiceId: invoice.id,
-        paymentMethod: paymentMethod
-      });
+      const result = await paymentService.createPayment(payload);
       
       if (result.paymentUrl) {
         window.location.href = result.paymentUrl;
       } else {
         // Fallback for mock backend
-        alert("Thanh toán giả lập thành công!");
+        showAlert.success("Thành công", "Thanh toán giả lập thành công!");
         navigate("/member/subscriptions");
       }
     } catch (error) {
       console.error("Payment failed:", error);
-      alert("Có lỗi xảy ra khi thanh toán.");
+      showAlert.error("Lỗi", "Có lỗi xảy ra khi thanh toán.");
     } finally {
       setProcessing(false);
     }
@@ -127,6 +138,16 @@ export default function PaymentPage() {
                   </div>
                   <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" className="h-6 object-contain" />
                 </label>
+              </div>
+              <div className="pt-6 flex flex-col gap-3">
+                <label className="text-sm font-semibold text-slate-700">Ghi chú thanh toán (Tùy chọn)</label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary resize-none"
+                  rows={2}
+                  placeholder="Nhập ghi chú cho quản trị viên (nếu có)..."
+                />
               </div>
             </Card>
           </div>

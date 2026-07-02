@@ -13,7 +13,8 @@ import Modal from "../../components/common/Modal";
 import Loading from "../../components/common/Loading";
 import { memberService } from "../../services/memberService";
 import { showAlert } from "../../utils/alert";
-import type { MemberProfile } from "../../types/member.type";
+import { validateAdminMemberForm } from "../../utils/validators/adminMemberValidator";
+import type { MemberProfile, AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../../types/member.type";
 import type { Status } from "../../types/common.type";
 import type { Subscription } from "../../types/subscription.type";
 import type { CheckinRecord } from "../../types/checkin.type";
@@ -142,6 +143,8 @@ const MOCK_CHECKINS: Record<number, CheckinRecord[]> = {
 
 export default function UserManagementPage() {
   const [members, setMembers] = useState<MemberProfile[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -176,12 +179,14 @@ export default function UserManagementPage() {
   const [formLoading, setFormLoading] = useState(false);
 
   // Fetch Member List
-  const fetchMembers = async () => {
+  const fetchMembers = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const data = await memberService.getMembers();
-      if (data && data.length > 0) {
-        setMembers(data);
+      const data = await memberService.getMembers(page, 20, searchTerm, statusFilter);
+      if (data && data.items && data.items.length > 0) {
+        setMembers(data.items);
+        setTotalItems(data.totalItems);
+        setCurrentPage(data.page);
       } else {
         // Fallback sang dữ liệu mẫu
         setMembers(MOCK_MEMBERS);
@@ -237,23 +242,21 @@ export default function UserManagementPage() {
     }
   };
 
-  // Open Form modal
   const handleOpenCreate = () => {
     setIsEditMode(false);
     setFormValues({
-      userId: undefined,
+      username: "",
+      password: "",
       fullName: "",
       email: "",
       phone: "",
       gender: "MALE",
       dateOfBirth: "",
-      height: undefined,
-      weight: undefined,
       status: "ACTIVE",
       address: "",
       fitnessGoal: "",
       activityLevel: ""
-    });
+    } as any);
     setFormModalOpen(true);
   };
 
@@ -279,8 +282,7 @@ export default function UserManagementPage() {
   // Form Submit
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formValues.fullName || !formValues.email || !formValues.phone) {
-      showAlert.error("Lỗi nhập liệu", "Vui lòng điền đầy đủ các trường thông tin bắt buộc!");
+    if (!validateAdminMemberForm(formValues as any, !isEditMode)) {
       return;
     }
 
@@ -288,28 +290,22 @@ export default function UserManagementPage() {
       setFormLoading(true);
       if (isEditMode && selectedMember) {
         // MEM-04
-        await memberService.updateMember(selectedMember.id, formValues);
+        await memberService.updateMember(selectedMember.id, formValues as AdminMemberUpdateRequest);
         showAlert.success("Cập nhật thành công", `Hồ sơ hội viên ${formValues.fullName} đã được cập nhật.`);
         
         // Update local state
         setMembers(prev => prev.map(m => m.id === selectedMember.id ? { ...m, ...formValues } as MemberProfile : m));
       } else {
         // MEM-03
-        const generatedCode = "MEM" + String(members.length + 1).padStart(4, "0");
-        const newMemberData = {
-          ...formValues,
-          memberCode: generatedCode,
-          memberSince: new Date().toISOString().split("T")[0]
-        } as Omit<MemberProfile, "id">;
-
         try {
-          const created = await memberService.createMember(newMemberData);
+          const created = await memberService.createMember(formValues as AdminMemberCreateRequest);
           setMembers(prev => [created, ...prev]);
         } catch {
           // Fallback local update
           const fallbackCreated: MemberProfile = {
             id: Date.now(),
-            ...newMemberData
+            ...formValues,
+            memberCode: "MEM9999"
           } as MemberProfile;
           setMembers(prev => [fallbackCreated, ...prev]);
         }
@@ -821,16 +817,29 @@ export default function UserManagementPage() {
         <form onSubmit={handleFormSubmit} className="space-y-4 max-h-[85vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4">
             {!isEditMode && (
-              <div className="col-span-2">
-                <Input 
-                  label="ID Tài khoản liên kết (User ID)" 
-                  name="userId"
-                  type="number"
-                  value={formValues.userId || ""} 
-                  onChange={(e) => setFormValues(prev => ({ ...prev, userId: e.target.value ? Number(e.target.value) : undefined }))}
-                  placeholder="Nhập ID tài khoản người dùng"
-                />
-              </div>
+              <>
+                <div className="col-span-1">
+                  <Input 
+                    label="Tên đăng nhập *" 
+                    name="username"
+                    value={(formValues as any).username || ""} 
+                    onChange={(e) => setFormValues(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="Tên đăng nhập (từ 4 ký tự)"
+                    required
+                  />
+                </div>
+                <div className="col-span-1">
+                  <Input 
+                    label="Mật khẩu *" 
+                    name="password"
+                    type="password"
+                    value={(formValues as any).password || ""} 
+                    onChange={(e) => setFormValues(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="Mật khẩu (từ 6 ký tự)"
+                    required
+                  />
+                </div>
+              </>
             )}
             <div className="col-span-2">
               <Input 

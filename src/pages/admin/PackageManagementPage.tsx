@@ -12,6 +12,7 @@ import { formatCurrency } from "../../utils/formatCurrency";
 import { showAlert } from "../../utils/alert";
 import { packageService } from "../../services/packageService";
 import type { GymPackage } from "../../types/package.type";
+import { validateAdminPackageForm } from "../../utils/validators/adminPackageValidator";
 
 export default function PackageManagementPage() {
   const [packages, setPackages] = useState<GymPackage[]>([]);
@@ -21,10 +22,14 @@ export default function PackageManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<GymPackage | null>(null);
   const [formData, setFormData] = useState({
+    code: "",
     name: "",
+    packageType: "BASIC",
     price: "",
     durationDays: "",
     description: "",
+    benefits: "",
+    thumbnailUrl: ""
   });
 
   // Delete states
@@ -50,14 +55,27 @@ export default function PackageManagementPage() {
     if (pkg) {
       setEditingPackage(pkg);
       setFormData({
+        code: pkg.code,
         name: pkg.name,
+        packageType: pkg.packageType || "BASIC",
         price: pkg.price.toString(),
         durationDays: pkg.durationDays.toString(),
         description: pkg.description || "",
+        benefits: "",
+        thumbnailUrl: pkg.thumbnailUrl || ""
       });
     } else {
       setEditingPackage(null);
-      setFormData({ name: "", price: "", durationDays: "", description: "" });
+      setFormData({ 
+        code: "", 
+        name: "", 
+        packageType: "BASIC", 
+        price: "", 
+        durationDays: "", 
+        description: "",
+        benefits: "",
+        thumbnailUrl: "" 
+      });
     }
     setIsModalOpen(true);
   };
@@ -66,20 +84,28 @@ export default function PackageManagementPage() {
     e.preventDefault();
     try {
       const payload = {
+        code: formData.code,
         name: formData.name,
+        packageType: formData.packageType,
         price: Number(formData.price),
         durationDays: Number(formData.durationDays),
         description: formData.description,
-        status: "ACTIVE" as const,
-        code: `PKG${Date.now()}`,
-        packageType: "BASIC" as const,
+        benefits: formData.benefits,
+        thumbnailUrl: formData.thumbnailUrl,
+        status: "ACTIVE"
       };
 
+      if (!validateAdminPackageForm(payload, !editingPackage)) {
+        return;
+      }
+
       if (editingPackage) {
-        await packageService.updatePackage(editingPackage.id, payload);
+        // Exclude code for update request
+        const { code, ...updatePayload } = payload;
+        await packageService.updatePackage(editingPackage.id, updatePayload as any);
         showAlert.success("Thành công", "Đã cập nhật gói tập");
       } else {
-        await packageService.createPackage(payload);
+        await packageService.createPackage(payload as any);
         showAlert.success("Thành công", "Đã tạo gói tập mới");
       }
       setIsModalOpen(false);
@@ -203,6 +229,15 @@ export default function PackageManagementPage() {
         title={editingPackage ? "Cập nhật gói tập" : "Tạo gói tập mới"}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!editingPackage && (
+            <Input
+              label="Mã gói tập"
+              placeholder="VD: PKG-01"
+              required
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+            />
+          )}
           <Input
             label="Tên gói tập"
             placeholder="VD: Premium 30 Days"
@@ -210,6 +245,18 @@ export default function PackageManagementPage() {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
+          <div>
+             <label className="mb-1 block text-sm font-semibold text-fit-text">Loại gói tập</label>
+             <select
+                className="w-full rounded-xl border border-fit-border bg-white px-4 py-2 text-sm text-fit-text transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary"
+                value={formData.packageType}
+                onChange={(e) => setFormData({ ...formData, packageType: e.target.value })}
+             >
+                <option value="BASIC">BASIC (Cơ bản)</option>
+                <option value="VIP">VIP (Cao cấp)</option>
+                <option value="PERSONAL">PERSONAL (Gói PT)</option>
+             </select>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Giá tiền (VNĐ)"

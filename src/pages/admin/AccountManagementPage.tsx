@@ -12,7 +12,8 @@ import Modal from "../../components/common/Modal";
 import Loading from "../../components/common/Loading";
 import { userService } from "../../services/userService";
 import { showAlert } from "../../utils/alert";
-import type { User } from "../../types/user.type";
+import { validateAdminAccountForm } from "../../utils/validators/adminAccountValidator";
+import type { User, AdminUserCreateRequest, AdminUserUpdateRequest } from "../../types/user.type";
 import type { Role, Status } from "../../types/common.type";
 
 export default function AccountManagementPage() {
@@ -140,32 +141,25 @@ export default function AccountManagementPage() {
   // Submit User form (Create / Update)
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formValues.username || !formValues.email || !formValues.fullName || !formValues.phone) {
-      showAlert.error("Lỗi nhập liệu", "Vui lòng điền đầy đủ các trường thông tin bắt buộc!");
-      return;
-    }
-    if (!isEditMode && !formValues.password) {
-      showAlert.error("Lỗi nhập liệu", "Vui lòng nhập mật khẩu cho tài khoản mới!");
+    if (!validateAdminAccountForm(formValues as any, !isEditMode)) {
       return;
     }
 
     try {
       setFormLoading(true);
       if (isEditMode && selectedUser) {
-        // Prepare update data (excludes password & role)
-        const updateData = {
-          username: formValues.username,
-          email: formValues.email,
+        // Update user
+        const updateData: AdminUserUpdateRequest = {
           fullName: formValues.fullName,
           phone: formValues.phone,
           status: formValues.status
         };
         await userService.updateUser(selectedUser.id, updateData);
-        showAlert.success("Thành công", `Đã cập nhật thông tin tài khoản ${formValues.fullName}.`);
+        showAlert.success("Thành công", `Đã cập nhật thông tin tài khoản ${formValues.username}.`);
       } else {
-        // Create internal user
-        await userService.createUser(formValues);
-        showAlert.success("Thành công", `Đã tạo tài khoản nội bộ cho ${formValues.fullName}.`);
+        // Create user
+        await userService.createUser(formValues as AdminUserCreateRequest);
+        showAlert.success("Thành công", `Đã tạo tài khoản ${formValues.username}.`);
       }
       setFormModalOpen(false);
       fetchUsers();

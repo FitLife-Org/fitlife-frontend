@@ -21,4 +21,18 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Nếu API trả về 401 (Unauthorized) hoặc 403 (Forbidden)
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      tokenStorage.clear();
+      localStorage.removeItem("authUser");
+      // Redirect về trang đăng nhập
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default apiClient;

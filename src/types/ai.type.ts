@@ -36,4 +36,14 @@ export interface ChatMessage {
   sender: "user" | "ai";
   text: string;
   timestamp: string;
+  planObject?: AiWorkoutPlan;
+}
+
+export interface AiHistoryItem {
+  id: string;
+  title: string;
+  type: "workout" | "meal" | "chat";
+  createdAt: string;
+  summary: string;
+  planObject?: AiWorkoutPlan;
 }

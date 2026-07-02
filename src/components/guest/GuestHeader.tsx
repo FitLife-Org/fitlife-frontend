@@ -3,9 +3,12 @@ import { ROUTES } from "../../config/routes";
 import Button from "../common/Button";
 import { HeartPulse, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuthStore } from "../../store/authStore";
+import { getRedirectPathByRoles } from "../../utils/authRedirect";
 
 export default function GuestHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const { isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,14 +75,24 @@ export default function GuestHeader() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to={ROUTES.LOGIN}>
-              <Button variant="outline" className="rounded-full px-6 font-semibold">
-                Đăng nhập
-              </Button>
-            </Link>
-            <Link to={ROUTES.REGISTER}>
-              <Button className="rounded-full px-6 font-semibold">Dùng thử miễn phí</Button>
-            </Link>
+            {isAuthenticated && user ? (
+              <Link to={getRedirectPathByRoles(user.roles)}>
+                <Button className="rounded-full px-6 font-semibold">
+                  Vào hệ thống
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to={ROUTES.LOGIN}>
+                  <Button variant="outline" className="rounded-full px-6 font-semibold">
+                    Đăng nhập
+                  </Button>
+                </Link>
+                <Link to={ROUTES.REGISTER}>
+                  <Button className="rounded-full px-6 font-semibold">Bắt đầu ngay hôm nay</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}

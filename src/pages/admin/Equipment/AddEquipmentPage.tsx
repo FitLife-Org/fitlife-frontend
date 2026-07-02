@@ -4,26 +4,41 @@ import { ArrowLeft, Save, Upload } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
+import { validateAdminEquipmentForm } from "../../../utils/validators/adminEquipmentValidator";
+import type { AdminEquipmentCreateRequest } from "../../../types/equipment.type";
+import { showAlert } from "../../../utils/alert";
+
 export default function AddEquipmentPage() {
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<AdminEquipmentCreateRequest>({
+        equipmentCode: "",
         name: "",
         category: "Cardio",
         area: "Khu Cardio – Tầng 1",
         status: "ACTIVE",
+        purchaseDate: "",
+        warrantyExpiry: "",
+        description: "",
+        image: ""
     });
 
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (!validateAdminEquipmentForm(formData, true)) {
+            return;
+        }
+
         setLoading(true);
         try {
             await EquipmentService.create(formData);
+            showAlert.success("Thành công", "Đã thêm thiết bị mới");
             navigate("/admin/equipment");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Lỗi khi thêm thiết bị:", error);
-            // Có thể thêm toast notification thông báo lỗi ở đây
+            showAlert.error("Lỗi", error?.response?.data?.message || "Không thể thêm thiết bị");
         } finally {
             setLoading(false);
         }
@@ -44,6 +59,18 @@ export default function AddEquipmentPage() {
             <Card className="p-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-slate-700">Mã thiết bị <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                required
+                                value={formData.equipmentCode}
+                                onChange={(e) => setFormData({ ...formData, equipmentCode: e.target.value })}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                                placeholder="VD: TB001"
+                            />
+                        </div>
+
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-slate-700">Tên thiết bị <span className="text-red-500">*</span></label>
                             <input
@@ -83,6 +110,26 @@ export default function AddEquipmentPage() {
                         </div>
 
                         <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-slate-700">Ngày mua</label>
+                            <input
+                                type="date"
+                                value={formData.purchaseDate}
+                                onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-slate-700">Hạn bảo hành</label>
+                            <input
+                                type="date"
+                                value={formData.warrantyExpiry}
+                                onChange={(e) => setFormData({ ...formData, warrantyExpiry: e.target.value })}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
                             <label className="text-sm font-medium text-slate-700">Trạng thái ban đầu</label>
                             <select
                                 value={formData.status}
@@ -94,21 +141,26 @@ export default function AddEquipmentPage() {
                             </select>
                         </div>
                     </div>
+                    
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-slate-700">Ghi chú / Mô tả</label>
+                        <textarea
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary h-24 resize-none"
+                            placeholder="Ghi chú về thiết bị..."
+                        />
+                    </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-slate-700">Hình ảnh thiết bị</label>
-                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-slate-300 px-6 py-10 hover:bg-slate-50 transition-colors cursor-pointer">
-                            <div className="text-center">
-                                <Upload className="mx-auto h-12 w-12 text-slate-300" aria-hidden="true" />
-                                <div className="mt-4 flex text-sm leading-6 text-slate-600 justify-center">
-                                    <span className="relative rounded-md font-semibold text-fit-primary hover:text-fit-primaryHover focus-within:outline-none">
-                                        Tải ảnh lên
-                                    </span>
-                                    <p className="pl-1">hoặc kéo thả vào đây</p>
-                                </div>
-                                <p className="text-xs leading-5 text-slate-500">PNG, JPG, GIF tối đa 5MB</p>
-                            </div>
-                        </div>
+                        <label className="text-sm font-medium text-slate-700">Đường dẫn hình ảnh (URL)</label>
+                        <input
+                            type="text"
+                            value={formData.image}
+                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                            placeholder="https://example.com/image.jpg"
+                        />
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">

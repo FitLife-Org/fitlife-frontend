@@ -4,57 +4,78 @@ import { ArrowLeft, Save } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
+import { validateAdminEquipmentForm } from "../../../utils/validators/adminEquipmentValidator";
+import type { AdminEquipmentUpdateRequest } from "../../../types/equipment.type";
+import { showAlert } from "../../../utils/alert";
+
 export default function EditEquipmentPage() {
     const navigate = useNavigate();
     const { id } = useParams();
-
-    const [formData, setFormData] = useState({
+    
+    const [formData, setFormData] = useState<AdminEquipmentUpdateRequest>({
         name: "",
-        category: "",
-        area: "",
-        status: "",
+        category: "Cardio",
+        area: "Khu Cardio – Tầng 1",
+        status: "ACTIVE",
+        purchaseDate: "",
+        warrantyExpiry: "",
+        description: "",
+        image: ""
     });
 
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
 
     useEffect(() => {
-        if (!id) return;
-        const fetchDetail = async () => {
-            setFetching(true);
-            try {
-                const response = await EquipmentService.getById(id);
-                const data = response.data?.data || response.data;
-                if (data) {
-                    setFormData({
-                        name: data.name || "",
-                        category: data.category || "Cardio",
-                        area: data.area || "Khu Cardio – Tầng 1",
-                        status: data.status || "ACTIVE",
-                    });
-                }
-            } catch (error) {
-                console.error("Lỗi khi tải chi tiết thiết bị:", error);
-            } finally {
-                setFetching(false);
-            }
-        };
-        fetchDetail();
+        if (id) {
+            fetchEquipmentDetails();
+        }
     }, [id]);
+
+    const fetchEquipmentDetails = async () => {
+        try {
+            const data = await EquipmentService.getById(id as string);
+            setFormData({
+                name: data.name || "",
+                category: data.category || "Cardio",
+                area: data.area || "Khu Cardio – Tầng 1",
+                status: data.status || "ACTIVE",
+                // Handle parsing if necessary, depending on API format. Assuming YYYY-MM-DD
+                purchaseDate: "", // Update later if data returns it
+                warrantyExpiry: "", // Update later if data returns it
+                description: "",
+                image: data.image || ""
+            });
+        } catch (error) {
+            console.error("Lỗi tải thông tin:", error);
+            showAlert.error("Lỗi", "Không thể tải thông tin thiết bị");
+            navigate("/admin/equipment");
+        } finally {
+            setFetching(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!id) return;
+        
+        if (!validateAdminEquipmentForm(formData, false)) {
+            return;
+        }
+
         setLoading(true);
         try {
-            await EquipmentService.update(id, formData);
+            await EquipmentService.update(id as string, formData);
+            showAlert.success("Thành công", "Đã cập nhật thiết bị");
             navigate("/admin/equipment");
-        } catch (error) {
-            console.error("Lỗi khi cập nhật thiết bị:", error);
+        } catch (error: any) {
+            console.error("Lỗi khi cập nhật:", error);
+            showAlert.error("Lỗi", error?.response?.data?.message || "Không thể cập nhật thiết bị");
         } finally {
             setLoading(false);
         }
     };
+
+    if (fetching) return <div className="p-10 text-center text-slate-500">Đang tải thông tin thiết bị...</div>;
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -63,25 +84,23 @@ export default function EditEquipmentPage() {
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Cập nhật thiết bị #{id}</h1>
-                    <p className="text-sm text-slate-500 mt-1">Chỉnh sửa thông tin thiết bị đang có</p>
+                    <h1 className="text-2xl font-bold text-slate-900">Chỉnh sửa thiết bị</h1>
+                    <p className="text-sm text-slate-500 mt-1">Mã thiết bị: {id}</p>
                 </div>
             </div>
 
             <Card className="p-6">
-                {fetching ? (
-                    <div className="py-8 text-center text-slate-500">Đang tải dữ liệu...</div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-slate-700">Tên thiết bị</label>
+                            <label className="text-sm font-medium text-slate-700">Tên thiết bị <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 required
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                                placeholder="VD: Máy chạy bộ TechnoGym"
                             />
                         </div>
 
@@ -112,29 +131,70 @@ export default function EditEquipmentPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-slate-700">Trạng thái ban đầu</label>
+                            <label className="text-sm font-medium text-slate-700">Ngày mua</label>
+                            <input
+                                type="date"
+                                value={formData.purchaseDate}
+                                onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-slate-700">Hạn bảo hành</label>
+                            <input
+                                type="date"
+                                value={formData.warrantyExpiry}
+                                onChange={(e) => setFormData({ ...formData, warrantyExpiry: e.target.value })}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-slate-700">Trạng thái</label>
                             <select
                                 value={formData.status}
                                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                 className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
                             >
                                 <option value="ACTIVE">Hoạt động</option>
+                                <option value="MAINTENANCE">Đang bảo trì</option>
                                 <option value="INACTIVE">Ngừng hoạt động</option>
                             </select>
                         </div>
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-slate-700">Ghi chú / Mô tả</label>
+                        <textarea
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary h-24 resize-none"
+                            placeholder="Ghi chú về thiết bị..."
+                        />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-slate-700">Đường dẫn hình ảnh (URL)</label>
+                        <input
+                            type="text"
+                            value={formData.image}
+                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                            placeholder="https://example.com/image.jpg"
+                        />
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
                         <Button type="button" onClick={() => navigate(-1)} className="px-6 py-2.5 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-lg font-medium text-sm transition-colors">
                             Hủy bỏ
                         </Button>
-                        <Button type="submit" disabled={loading || fetching} className="px-6 py-2.5 bg-fit-primary hover:bg-fit-primaryHover text-white rounded-lg font-medium text-sm shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50">
+                        <Button type="submit" disabled={loading} className="px-6 py-2.5 bg-fit-primary hover:bg-fit-primaryHover text-white rounded-lg font-medium text-sm shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50">
                             <Save className="w-4 h-4" />
                             {loading ? "Đang lưu..." : "Lưu thay đổi"}
                         </Button>
                     </div>
-                    </form>
-                )}
+                </form>
             </Card>
         </div>
     );
