@@ -107,7 +107,7 @@ export default function Sidebar() {
 
     return (
         <aside
-            inert={isMobile && !sidebarOpen ? "" : undefined}
+            inert={isMobile && !sidebarOpen ? true : undefined}
             className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-40 w-[280px] bg-slate-950 border-r border-slate-900 transition-transform duration-500 ease-out lg:static lg:translate-x-0 flex flex-col shadow-2xl lg:shadow-none`}>
             <div className="flex h-28 shrink-0 items-center gap-4 px-8">
                 <div className="flex">
