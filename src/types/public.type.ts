@@ -2,8 +2,10 @@ export interface PublicPackage {
   id: string;
   name: string;
   description: string;
-  price: number;
-  durationMonths: number;
+  basePrice: number;
+  hasAiWorkoutPlan: boolean;
+  hasNutritionPlan: boolean;
+  ptSessionsPerMonth: number;
   features: string[];
   isPopular?: boolean;
 }

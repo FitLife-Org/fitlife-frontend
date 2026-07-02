@@ -6,7 +6,9 @@ export const packageService = {
   async getPublicPackages(params?: any): Promise<GymPackage[]> {
     const response = await apiClient.get<ApiResponse<any>>("/gym-packages", { params });
     const responseData = response.data.data;
-    if (responseData && Array.isArray(responseData.data)) {
+    if (responseData && Array.isArray(responseData.content)) {
+      return responseData.content;
+    } else if (responseData && Array.isArray(responseData.data)) {
       return responseData.data;
     } else if (Array.isArray(responseData)) {
       return responseData;
@@ -22,7 +24,9 @@ export const packageService = {
   async getAdminPackages(params?: any): Promise<GymPackage[]> {
     const response = await apiClient.get<ApiResponse<any>>("/admin/gym-packages", { params });
     const responseData = response.data.data;
-    if (responseData && Array.isArray(responseData.data)) {
+    if (responseData && Array.isArray(responseData.content)) {
+      return responseData.content;
+    } else if (responseData && Array.isArray(responseData.data)) {
       return responseData.data;
     } else if (Array.isArray(responseData)) {
       return responseData;
@@ -62,7 +66,9 @@ export const packageService = {
   async getPackageDurations(): Promise<PackageDuration[]> {
     const response = await apiClient.get<ApiResponse<any>>("/package-durations");
     const responseData = response.data.data;
-    if (responseData && Array.isArray(responseData.data)) {
+    if (responseData && Array.isArray(responseData.content)) {
+      return responseData.content;
+    } else if (responseData && Array.isArray(responseData.data)) {
       return responseData.data;
     } else if (Array.isArray(responseData)) {
       return responseData;

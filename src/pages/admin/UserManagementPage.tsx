@@ -92,7 +92,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
     {
       id: 101,
       gymPackageId: 1,
-      package: { id: 1, code: "PKG01", packageType: "BASIC", name: "Gói Standard 3 Tháng", durationDays: 90, price: 599000, status: "ACTIVE" },
+      package: { id: 1, code: "PKG01", packageType: "BASIC", name: "Gói Standard 3 Tháng", basePrice: 599000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
       startDate: "2026-01-15",
       endDate: "2026-04-15",
       status: "EXPIRED"
@@ -100,7 +100,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
     {
       id: 102,
       gymPackageId: 2,
-      package: { id: 2, code: "PKG02", packageType: "VIP", name: "Gói VIP Pro 6 Tháng", durationDays: 180, price: 999000, status: "ACTIVE" },
+      package: { id: 2, code: "PKG02", packageType: "VIP", name: "Gói VIP Pro 6 Tháng", basePrice: 999000, hasAiWorkoutPlan: true, hasNutritionPlan: true, ptSessionsPerMonth: 4, status: "ACTIVE" },
       startDate: "2026-04-16",
       endDate: "2026-10-16",
       status: "ACTIVE"
@@ -110,7 +110,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
     {
       id: 201,
       gymPackageId: 3,
-      package: { id: 3, code: "PKG03", packageType: "BASIC", name: "Gói Basic 6 Tháng", durationDays: 180, price: 599000, status: "ACTIVE" },
+      package: { id: 3, code: "PKG03", packageType: "BASIC", name: "Gói Basic 6 Tháng", basePrice: 599000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
       startDate: "2026-02-10",
       endDate: "2026-08-10",
       status: "ACTIVE"
@@ -121,7 +121,7 @@ const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
     {
       id: 401,
       gymPackageId: 4,
-      package: { id: 4, code: "PKG04", packageType: "BASIC", name: "Gói Basic 1 Tháng", durationDays: 30, price: 199000, status: "ACTIVE" },
+      package: { id: 4, code: "PKG04", packageType: "BASIC", name: "Gói Basic 1 Tháng", basePrice: 199000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
       startDate: "2026-05-01",
       endDate: "2026-06-01",
       status: "EXPIRED" // Changed to EXPIRED, Subscription type usually has ACTIVE/EXPIRED/PENDING/CANCELED
@@ -746,8 +746,8 @@ export default function UserManagementPage() {
                               </div>
                             </div>
                             <div className="flex flex-col items-end gap-1.5">
-                              <span className="text-xs font-extrabold text-fit-primary">
-                                {sub.package?.price?.toLocaleString("vi-VN")} đ
+                              <span className="font-semibold text-fit-primary">
+                                {sub.package?.basePrice?.toLocaleString("vi-VN")} ₫
                               </span>
                               {sub.status === "ACTIVE" ? (
                                 <Badge variant="success">Hoạt động</Badge>
