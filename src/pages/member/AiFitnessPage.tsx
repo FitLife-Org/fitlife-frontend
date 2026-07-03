@@ -5,10 +5,22 @@ import { useGSAP } from "@gsap/react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import PageHeader from "../../components/common/PageHeader";
-import type { ChatMessage, AiWorkoutPlan, AiHistoryItem } from "../../types/ai.type";
+import type { 
+  AiSuggestionResponse, 
+  AiSuggestionDetailResponse, 
+  AiGeneratedPlan 
+} from "../../types/ai.type";
 import { aiService } from "../../services/aiService";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
+
+export interface ChatMessage {
+  id: string;
+  sender: "user" | "ai";
+  text: string;
+  timestamp: string;
+  planObject?: AiGeneratedPlan;
+}
 
 const INITIAL_MESSAGE: ChatMessage = {
   id: "msg-0",
@@ -24,7 +36,7 @@ const QUICK_ACTIONS = [
   { label: "Hỏi PT", icon: Bot, prompt: "Làm sao để tập Squat đúng kỹ thuật không bị đau lưng?" },
 ];
 
-function AiPlanViewer({ plan }: { plan: AiWorkoutPlan }) {
+function AiPlanViewer({ plan }: { plan: AiGeneratedPlan }) {
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
 
@@ -51,22 +63,22 @@ function AiPlanViewer({ plan }: { plan: AiWorkoutPlan }) {
             <Target className="w-4 h-4" /> {plan.goal}
           </span>
           <span className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full text-xs font-bold">
-            <User className="w-4 h-4" /> {plan.level}
+            <User className="w-4 h-4" /> {plan.fitnessLevel}
           </span>
         </div>
       </div>
       
       <div className="p-6 space-y-6">
-        {plan.days.map((day, idx) => (
+        {plan.workoutDays && plan.workoutDays.map((day, idx) => (
           <div key={idx} className="border border-slate-100 rounded-2xl p-4 bg-slate-50">
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
               <h4 className="font-bold text-slate-900 flex items-center gap-2">
                 <span className="bg-emerald-100 text-emerald-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">
-                  {day.day}
+                  {day.dayNumber}
                 </span>
                 {day.title}
               </h4>
-              <span className="text-xs font-bold text-slate-500 uppercase">{day.focus}</span>
+              <span className="text-xs font-bold text-slate-500 uppercase">{day.focusArea}</span>
             </div>
             
             <div className="space-y-3">
@@ -90,18 +102,27 @@ function AiPlanViewer({ plan }: { plan: AiWorkoutPlan }) {
             </div>
           </div>
         ))}
+
+        {plan.nutritionPlan && (
+           <div className="border border-slate-100 rounded-2xl p-4 bg-orange-50">
+           <div className="flex items-center justify-between mb-4 border-b border-orange-200 pb-3">
+             <h4 className="font-bold text-orange-900 flex items-center gap-2">
+               <Utensils className="w-5 h-5" />
+               {plan.nutritionPlan.title}
+             </h4>
+           </div>
+           
+           <div className="space-y-3">
+             {plan.nutritionPlan.meals.map((meal, mIdx) => (
+               <div key={mIdx} className="bg-white p-3 rounded-xl shadow-sm border border-orange-100">
+                 <p className="font-bold text-sm text-orange-900">{meal.mealName}</p>
+                 <p className="text-xs text-slate-600 mt-1">{meal.foods}</p>
+               </div>
+             ))}
+           </div>
+         </div>
+        )}
       </div>
-      
-      {plan.notes && (
-        <div className="bg-orange-50 p-6 border-t border-orange-100">
-          <h5 className="font-bold text-orange-800 mb-2 text-sm flex items-center gap-2">
-            <Sparkles className="w-4 h-4" /> Lời khuyên
-          </h5>
-          <ul className="list-disc list-inside text-xs text-orange-700 space-y-1">
-            {plan.notes.map((note, idx) => <li key={idx}>{note}</li>)}
-          </ul>
-        </div>
-      )}
 
       <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
         <Button 
@@ -130,14 +151,14 @@ export default function AiFitnessPage() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [historyItems, setHistoryItems] = useState<AiHistoryItem[]>([]);
+  const [historyItems, setHistoryItems] = useState<AiSuggestionResponse[]>([]);
   
   // AI-FE-01: Form Modal State
   const [showAdvancedForm, setShowAdvancedForm] = useState(false);
-  const [formData, setFormData] = useState({ goal: "Giảm mỡ", level: "Người mới", daysPerWeek: 4, durationMinutes: 60 });
+  const [formData, setFormData] = useState({ goal: "LOSE_WEIGHT", level: "BEGINNER", daysPerWeek: 4, durationMinutes: 60 });
   
   // AI-FE-04: History Detail Modal State
-  const [selectedHistoryItem, setSelectedHistoryItem] = useState<AiHistoryItem | null>(null);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<AiSuggestionDetailResponse | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -168,58 +189,17 @@ export default function AiFitnessPage() {
     });
   }, { scope: containerRef });
 
-  const generateAiResponse = (userText: string) => {
+  const generateAiResponse = async (userText: string) => {
     setIsTyping(true);
     
+    // Giả lập chat thông thường
     setTimeout(() => {
-      let aiText = "Mình đã ghi nhận yêu cầu của bạn. Hiện tại hệ thống Backend AI đang trong quá trình nâng cấp, mình sẽ phản hồi chi tiết sau nhé!";
-      let planObject: AiWorkoutPlan | undefined;
-      
-      const lowerText = userText.toLowerCase();
-      if (lowerText.includes("lịch tập") || lowerText.includes("giáo án")) {
-        aiText = "Đây là giáo án tập luyện mình thiết kế riêng cho bạn. Hãy xem qua chi tiết nhé:";
-        planObject = {
-          title: "Giáo án Tùy chỉnh AI",
-          goal: formData.goal,
-          level: formData.level,
-          summary: `Chương trình ${formData.daysPerWeek} ngày/tuần, mỗi buổi ${formData.durationMinutes} phút.`,
-          days: [
-            {
-              day: 1,
-              title: "Thân trên (Upper Body)",
-              focus: "Ngực, Lưng, Vai",
-              exercises: [
-                { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", note: "Đẩy tạ đơn ghế dốc lên" },
-                { name: "Lat Pulldown", sets: 3, reps: "12-15", note: "Kéo xô máy" },
-              ]
-            },
-            {
-              day: 2,
-              title: "Thân dưới (Lower Body)",
-              focus: "Đùi, Mông, Bụng",
-              exercises: [
-                { name: "Goblet Squat", sets: 4, reps: "12", note: "Squat ôm 1 cục tạ trước ngực" },
-                { name: "Leg Press", sets: 3, reps: "15", note: "Đạp đùi trên máy" },
-              ]
-            }
-          ],
-          notes: [
-            "Nghỉ 60-90 giây giữa các hiệp.",
-            "Khởi động kỹ các khớp trước khi tập."
-          ]
-        };
-      } else if (lowerText.includes("thực đơn") || lowerText.includes("meal plan")) {
-        aiText = "Với nhu cầu 2000 kcal giàu protein, bạn có thể tham khảo:\n- Sáng: 3 quả trứng luộc, 2 lát bánh mì đen, 1 ly sữa không đường.\n- Trưa: 200g ức gà áp chảo, 1 chén cơm gạo lứt, 1 đĩa salad trộn dầu giấm.\n- Chiều (Snack): 1 quả chuối, 1 muỗng whey protein.\n- Tối: 150g cá hồi nướng, khoai lang luộc, măng tây.\n\nNhớ uống đủ 2-3 lít nước mỗi ngày nhé!";
-      }
-
       const newMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         sender: "ai",
-        text: aiText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        planObject
+        text: "Mình đã ghi nhận yêu cầu của bạn. Tính năng chat tự do với AI đang được nâng cấp, bạn hãy dùng chức năng 'Tạo giáo án nâng cao' bằng cách bấm vào biểu tượng cây đũa phép nhé!",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      
       setMessages(prev => [...prev, newMsg]);
       setIsTyping(false);
     }, 1500);
@@ -247,9 +227,13 @@ export default function AiFitnessPage() {
     }
   };
 
-  const submitAdvancedForm = () => {
+  const submitAdvancedForm = async () => {
     setShowAdvancedForm(false);
-    const textPrompt = `Tạo giáo án nâng cao: Mục tiêu ${formData.goal}, Trình độ ${formData.level}, ${formData.daysPerWeek} buổi/tuần, ${formData.durationMinutes} phút/buổi.`;
+    
+    const goalMap: Record<string, string> = { LOSE_WEIGHT: "Giảm mỡ", GAIN_MUSCLE: "Tăng cơ", MAINTAIN_FITNESS: "Duy trì vóc dáng" };
+    const levelMap: Record<string, string> = { BEGINNER: "Người mới", INTERMEDIATE: "Trung bình", ADVANCED: "Nâng cao" };
+    
+    const textPrompt = `Tạo giáo án nâng cao: Mục tiêu ${goalMap[formData.goal] || formData.goal}, Trình độ ${levelMap[formData.level] || formData.level}, ${formData.daysPerWeek} buổi/tuần, ${formData.durationMinutes} phút/buổi.`;
     
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -257,18 +241,49 @@ export default function AiFitnessPage() {
       text: textPrompt,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-
     setMessages(prev => [...prev, newMsg]);
-    generateAiResponse(textPrompt);
+    setIsTyping(true);
+
+    try {
+      const result = await aiService.generateFullPlan({
+        goal: formData.goal,
+        fitnessLevel: formData.level,
+        trainingDaysPerWeek: formData.daysPerWeek,
+      });
+
+      // Lấy chi tiết để có được planObject
+      const detail = await aiService.getAiSuggestionDetail(result.id);
+      
+      const aiResponseMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        sender: "ai",
+        text: detail.summary || "Đã tạo xong giáo án cho bạn:",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        planObject: detail.planInfo
+      };
+      setMessages(prev => [...prev, aiResponseMsg]);
+    } catch (e) {
+      toast.error("Lỗi khi tạo giáo án từ Backend.");
+      const errorMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        sender: "ai",
+        text: "Xin lỗi, đã có lỗi kết nối đến Backend khi tạo giáo án.",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
-  const openHistoryDetail = (item: AiHistoryItem) => {
-    if (!item.planObject) {
-      toast("Phiên này chỉ có chat, không có giáo án chi tiết.", { icon: "ℹ️" });
-      return;
-    }
-    setSelectedHistoryItem(item);
+  const openHistoryDetail = async (item: AiSuggestionResponse) => {
     setSidebarOpen(false); // Đóng sidebar khi mở chi tiết
+    try {
+      const detail = await aiService.getAiSuggestionDetail(item.id);
+      setSelectedHistoryItem(detail);
+    } catch(e) {
+      toast.error("Không thể lấy chi tiết lịch sử.");
+    }
   };
 
   return (
@@ -321,8 +336,8 @@ export default function AiFitnessPage() {
                     className="p-4 rounded-2xl hover:bg-slate-50 cursor-pointer transition-colors border border-transparent hover:border-slate-100"
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      {item.type === "workout" ? <CalendarPlus className="w-4 h-4 text-emerald-500" /> : 
-                       item.type === "meal" ? <Utensils className="w-4 h-4 text-orange-500" /> : 
+                      {item.suggestionType === "FULL_PLAN" || item.suggestionType === "WORKOUT_PLAN" ? <CalendarPlus className="w-4 h-4 text-emerald-500" /> : 
+                       item.suggestionType === "NUTRITION_PLAN" ? <Utensils className="w-4 h-4 text-orange-500" /> : 
                        <Bot className="w-4 h-4 text-blue-500" />}
                       <h4 className="font-bold text-sm text-slate-900 line-clamp-1">{item.title}</h4>
                     </div>
@@ -338,7 +353,7 @@ export default function AiFitnessPage() {
 
       {/* Modal History Detail (AI-FE-04) */}
       <AnimatePresence>
-        {selectedHistoryItem && selectedHistoryItem.planObject && (
+        {selectedHistoryItem && (
           <>
             <motion.div 
               initial={{ opacity: 0 }}
@@ -363,7 +378,13 @@ export default function AiFitnessPage() {
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 sm:p-8">
-                <AiPlanViewer plan={selectedHistoryItem.planObject} />
+                {selectedHistoryItem.planInfo ? (
+                   <AiPlanViewer plan={selectedHistoryItem.planInfo} />
+                ) : (
+                  <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <p className="text-slate-700">{selectedHistoryItem.rawResponse}</p>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
@@ -402,9 +423,9 @@ export default function AiFitnessPage() {
                     value={formData.goal}
                     onChange={e => setFormData({...formData, goal: e.target.value})}
                   >
-                    <option>Giảm mỡ</option>
-                    <option>Tăng cơ</option>
-                    <option>Duy trì vóc dáng</option>
+                    <option value="LOSE_WEIGHT">Giảm mỡ</option>
+                    <option value="GAIN_MUSCLE">Tăng cơ</option>
+                    <option value="MAINTAIN_FITNESS">Duy trì vóc dáng</option>
                   </select>
                 </div>
                 <div>
@@ -414,9 +435,9 @@ export default function AiFitnessPage() {
                     value={formData.level}
                     onChange={e => setFormData({...formData, level: e.target.value})}
                   >
-                    <option>Người mới (Beginner)</option>
-                    <option>Trung bình (Intermediate)</option>
-                    <option>Nâng cao (Advanced)</option>
+                    <option value="BEGINNER">Người mới (Beginner)</option>
+                    <option value="INTERMEDIATE">Trung bình (Intermediate)</option>
+                    <option value="ADVANCED">Nâng cao (Advanced)</option>
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

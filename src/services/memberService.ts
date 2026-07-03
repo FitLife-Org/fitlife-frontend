@@ -34,44 +34,77 @@ export const memberService = {
     params.append('page', page.toString());
     params.append('size', size.toString());
     if (keyword) params.append('keyword', keyword);
-    if (status && status !== 'ALL') params.append('status', status);
-
-    const response = await apiClient.get<any>(`/admin/members?${params.toString()}`);
-    // Backend returns PageResponse directly (not wrapped in ApiResponse)
-    const pageData = response.data;
+    else params.append('keyword', '%');
     
-    return {
-      items: pageData.content || [],
-      totalItems: pageData.totalElements || 0,
-      totalPages: pageData.totalPages || 0,
-      page: pageData.page || page,
-      size: pageData.size || size
-    };
+      if (status && status !== 'ALL') {
+        let mappedStatus = status;
+        if (status === 'LOCKED') mappedStatus = 'SUSPENDED';
+        if (status === 'PENDING') mappedStatus = 'INACTIVE'; // Backend lacks PENDING
+        params.append('status', mappedStatus);
+      }
+
+      const response = await apiClient.get<any>(`/admin/members?${params.toString()}`);
+      // Backend returns PageResponse directly (not wrapped in ApiResponse)
+      const pageData = response.data;
+      
+      return {
+        items: (pageData.content || []).map((item: any) => ({
+          ...item,
+          status: item.status === 'SUSPENDED' ? 'LOCKED' : item.status
+        })),
+        totalItems: pageData.totalElements || 0,
+        totalPages: pageData.totalPages || 0,
+        page: pageData.page || page,
+        size: pageData.size || size
+      };
   },
 
   async getMemberById(id: number): Promise<MemberProfile> {
     const response = await apiClient.get<ApiResponse<MemberProfile>>(`/admin/members/${id}`);
-    return response.data.data as MemberProfile;
+    const member = response.data.data;
+    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    return member;
   },
 
   async getMemberByCode(memberCode: string): Promise<MemberProfile> {
     const response = await apiClient.get<ApiResponse<MemberProfile>>(`/admin/members/code/${memberCode}`);
-    return response.data.data as MemberProfile;
+    const member = response.data.data;
+    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    return member;
   },
 
   async createMember(data: AdminMemberCreateRequest): Promise<MemberProfile> {
-    const response = await apiClient.post<ApiResponse<MemberProfile>>("/admin/members", data);
-    return response.data.data as MemberProfile;
+    const payload = { ...data };
+    if (payload.status === 'LOCKED') payload.status = 'SUSPENDED' as any;
+    if (payload.status === 'PENDING') payload.status = 'INACTIVE' as any;
+    if ((payload as any).fitnessGoal === "") delete (payload as any).fitnessGoal;
+    
+    const response = await apiClient.post<ApiResponse<MemberProfile>>("/admin/members", payload);
+    const member = response.data.data;
+    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    return member;
   },
 
   async updateMember(id: number, data: AdminMemberUpdateRequest): Promise<MemberProfile> {
-    const response = await apiClient.put<ApiResponse<MemberProfile>>(`/admin/members/${id}`, data);
-    return response.data.data as MemberProfile;
+    const payload = { ...data };
+    if (payload.status === 'LOCKED') payload.status = 'SUSPENDED' as any;
+    if (payload.status === 'PENDING') payload.status = 'INACTIVE' as any;
+    if ((payload as any).fitnessGoal === "") delete (payload as any).fitnessGoal;
+    
+    const response = await apiClient.put<ApiResponse<MemberProfile>>(`/admin/members/${id}`, payload);
+    const member = response.data.data;
+    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    return member;
   },
 
   async updateMemberStatus(id: number, status: Status): Promise<MemberProfile> {
-    const response = await apiClient.patch<ApiResponse<MemberProfile>>(`/admin/members/${id}/status`, { status });
-    return response.data.data as MemberProfile;
+    let mappedStatus = status;
+    if (status === 'LOCKED') mappedStatus = 'SUSPENDED' as any;
+    if (status === 'PENDING') mappedStatus = 'INACTIVE' as any;
+    const response = await apiClient.patch<ApiResponse<MemberProfile>>(`/admin/members/${id}/status`, { status: mappedStatus });
+    const member = response.data.data;
+    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    return member;
   },
 
   async deleteMember(id: number): Promise<void> {

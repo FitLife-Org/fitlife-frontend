@@ -241,33 +241,35 @@ export default function PackageManagementPage() {
         title={editingPackage ? "Cập nhật gói tập" : "Tạo gói tập mới"}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!editingPackage && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {!editingPackage && (
+              <Input
+                label="Mã gói tập"
+                placeholder="VD: PKG-01"
+                required
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              />
+            )}
             <Input
-              label="Mã gói tập"
-              placeholder="VD: PKG-01"
+              label="Tên gói tập"
+              placeholder="VD: Premium 30 Days"
               required
-              value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
-          )}
-          <Input
-            label="Tên gói tập"
-            placeholder="VD: Premium 30 Days"
-            required
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-          <div>
-             <label className="mb-1 block text-sm font-semibold text-fit-text">Loại gói tập</label>
-             <select
-                className="w-full rounded-xl border border-fit-border bg-white px-4 py-2 text-sm text-fit-text transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary"
-                value={formData.packageType}
-                onChange={(e) => setFormData({ ...formData, packageType: e.target.value })}
-             >
-                <option value="BASIC">BASIC (Cơ bản)</option>
-                <option value="VIP">VIP (Cao cấp)</option>
-                <option value="PERSONAL">PERSONAL (Gói PT)</option>
-             </select>
+            <div className={!editingPackage ? "md:col-span-2" : "md:col-span-1"}>
+               <label className="mb-1 block text-sm font-semibold text-fit-text">Loại gói tập</label>
+               <select
+                  className="w-full rounded-xl border border-fit-border bg-white px-4 py-2 text-sm text-fit-text transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary"
+                  value={formData.packageType}
+                  onChange={(e) => setFormData({ ...formData, packageType: e.target.value })}
+               >
+                  <option value="BASIC">BASIC (Cơ bản)</option>
+                  <option value="VIP">VIP (Cao cấp)</option>
+                  <option value="PERSONAL">PERSONAL (Gói PT)</option>
+               </select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input

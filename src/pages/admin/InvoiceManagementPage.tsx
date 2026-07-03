@@ -63,10 +63,12 @@ export default function InvoiceManagementPage() {
     }
   };
 
-  const filteredInvoices = invoices.filter(inv => 
-    inv.invoiceCode?.toLowerCase().includes(keyword.toLowerCase()) ||
-    inv.memberName?.toLowerCase().includes(keyword.toLowerCase())
-  );
+  const filteredInvoices = invoices.filter(inv => {
+    if (!keyword) return true;
+    const lowerKeyword = keyword.toLowerCase();
+    return inv.invoiceCode?.toLowerCase().includes(lowerKeyword) ||
+           inv.memberName?.toLowerCase().includes(lowerKeyword);
+  });
 
   const columns = [
     {
@@ -111,29 +113,35 @@ export default function InvoiceManagementPage() {
     {
       key: "actions",
       header: "Thao tác",
-      render: (row: Invoice) => (
-          <div className="flex items-center gap-2">
-            {row.status === "UNPAID" && (
-                <button
-                    onClick={() => handleCancelInvoice(row.id)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Hủy hóa đơn"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
-            )}
+      render: (row: Invoice) => {
+          if (row.status === "CANCELLED") {
+              return <span className="text-sm text-slate-400">Không thao tác</span>;
+          }
 
-            {row.status === "PAID" && (
-                <button
-                    className="p-2 text-slate-300 cursor-not-allowed"
-                    title="Đã thanh toán"
-                    disabled
-                >
-                  <CheckCircle className="w-5 h-5" />
-                </button>
-            )}
-          </div>
-      ),
+          return (
+              <div className="flex items-center gap-2">
+                {row.status === "UNPAID" && (
+                    <button
+                        onClick={() => handleCancelInvoice(row.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Hủy hóa đơn"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                )}
+    
+                {row.status === "PAID" && (
+                    <button
+                        className="p-2 text-slate-300 cursor-not-allowed"
+                        title="Đã thanh toán"
+                        disabled
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                    </button>
+                )}
+              </div>
+          );
+      },
     },
   ];
 

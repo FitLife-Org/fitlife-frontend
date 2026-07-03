@@ -34,7 +34,6 @@ export const ROUTES = {
   MEMBER_SCHEDULE: "/member/schedule",
 
   STAFF_CHECKIN: "/staff/checkin",
-  STAFF_MEMBER_LOOKUP: "/staff/members",
   STAFF_SUBSCRIPTION_SUPPORT: "/staff/subscriptions",
 
   TRAINER_SCHEDULE: "/trainer/schedule",

@@ -30,17 +30,17 @@ export interface MemberProfile {
 
 export interface BodyMetric {
   id: number;
-  measuredAt: string;
-  height: number;
-  weight: number;
+  recordedAt: string;
+  heightCm: number;
+  weightKg: number;
   bmi?: number;
-  bodyFat?: number;
-  muscleMass?: number;
-  notes?: string;
+  bodyFatPercent?: number;
+  muscleMassKg?: number;
+  note?: string;
 }
 
 export interface BodyMetricProgress {
-  metric: "weight" | "bmi" | "bodyFat" | "muscleMass";
+  metric: "weightKg" | "bmi" | "bodyFatPercent" | "muscleMassKg";
   startValue: number;
   currentValue: number;
   change: number;

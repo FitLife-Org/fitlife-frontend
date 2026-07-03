@@ -13,7 +13,7 @@ export default function BodyMetricPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   
-  const [formData, setFormData] = useState({ height: "", weight: "", bodyFat: "", muscleMass: "" });
+  const [formData, setFormData] = useState({ heightCm: "", weightKg: "", bodyFatPercent: "", muscleMassKg: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function BodyMetricPage() {
         bodyMetricService.getMyMetrics(),
         bodyMetricService.getMyProgress()
       ]);
-      setMetrics(metricsData.sort((a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime()));
+      setMetrics(metricsData.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()));
       setProgress(progressData);
     } finally {
       setLoading(false);
@@ -35,7 +35,7 @@ export default function BodyMetricPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.height || !formData.weight) {
+    if (!formData.heightCm || !formData.weightKg) {
       toast.error("Vui lòng nhập chiều cao và cân nặng.");
       return;
     }
@@ -43,14 +43,14 @@ export default function BodyMetricPage() {
     setIsSubmitting(true);
     try {
       const newMetric = await bodyMetricService.createMyMetric({
-        height: Number(formData.height),
-        weight: Number(formData.weight),
-        bodyFat: formData.bodyFat ? Number(formData.bodyFat) : undefined,
-        muscleMass: formData.muscleMass ? Number(formData.muscleMass) : undefined,
+        heightCm: Number(formData.heightCm),
+        weightKg: Number(formData.weightKg),
+        bodyFatPercent: formData.bodyFatPercent ? Number(formData.bodyFatPercent) : undefined,
+        muscleMassKg: formData.muscleMassKg ? Number(formData.muscleMassKg) : undefined,
       });
       setMetrics(prev => [newMetric, ...prev]);
       setShowForm(false);
-      setFormData({ height: "", weight: "", bodyFat: "", muscleMass: "" });
+      setFormData({ heightCm: "", weightKg: "", bodyFatPercent: "", muscleMassKg: "" });
       toast.success("Thêm chỉ số mới thành công!");
     } catch (error) {
       toast.error("Lỗi khi thêm chỉ số.");
@@ -71,20 +71,20 @@ export default function BodyMetricPage() {
 
   const getMetricIcon = (metricName: string) => {
     switch (metricName) {
-      case "weight": return <Scale className="w-6 h-6 text-emerald-600" />;
+      case "weightKg": return <Scale className="w-6 h-6 text-emerald-600" />;
       case "bmi": return <Activity className="w-6 h-6 text-blue-600" />;
-      case "bodyFat": return <HeartPulse className="w-6 h-6 text-red-600" />;
-      case "muscleMass": return <Dumbbell className="w-6 h-6 text-orange-600" />;
+      case "bodyFatPercent": return <HeartPulse className="w-6 h-6 text-red-600" />;
+      case "muscleMassKg": return <Dumbbell className="w-6 h-6 text-orange-600" />;
       default: return <Activity className="w-6 h-6 text-slate-600" />;
     }
   };
 
   const getMetricLabel = (metricName: string) => {
     switch (metricName) {
-      case "weight": return "Cân nặng";
+      case "weightKg": return "Cân nặng";
       case "bmi": return "Chỉ số BMI";
-      case "bodyFat": return "Tỷ lệ mỡ (Body Fat)";
-      case "muscleMass": return "Lượng cơ bắp";
+      case "bodyFatPercent": return "Tỷ lệ mỡ (Body Fat)";
+      case "muscleMassKg": return "Lượng cơ bắp";
       default: return metricName;
     }
   };
@@ -119,29 +119,29 @@ export default function BodyMetricPage() {
               <Input 
                 label="Chiều cao (cm) *" 
                 type="number" 
-                value={formData.height} 
-                onChange={(e) => setFormData({...formData, height: e.target.value})} 
+                value={formData.heightCm} 
+                onChange={(e) => setFormData({...formData, heightCm: e.target.value})} 
                 placeholder="Ví dụ: 175"
               />
               <Input 
                 label="Cân nặng (kg) *" 
                 type="number" 
-                value={formData.weight} 
-                onChange={(e) => setFormData({...formData, weight: e.target.value})} 
+                value={formData.weightKg} 
+                onChange={(e) => setFormData({...formData, weightKg: e.target.value})} 
                 placeholder="Ví dụ: 70.5"
               />
               <Input 
                 label="Tỷ lệ mỡ (%)" 
                 type="number" 
-                value={formData.bodyFat} 
-                onChange={(e) => setFormData({...formData, bodyFat: e.target.value})} 
+                value={formData.bodyFatPercent} 
+                onChange={(e) => setFormData({...formData, bodyFatPercent: e.target.value})} 
                 placeholder="Ví dụ: 15.5"
               />
               <Input 
                 label="Cơ bắp (kg)" 
                 type="number" 
-                value={formData.muscleMass} 
-                onChange={(e) => setFormData({...formData, muscleMass: e.target.value})} 
+                value={formData.muscleMassKg} 
+                onChange={(e) => setFormData({...formData, muscleMassKg: e.target.value})} 
                 placeholder="Ví dụ: 35.2"
               />
             </div>
@@ -180,14 +180,14 @@ export default function BodyMetricPage() {
                     prog.trend === "down" ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-600"
                   }`}>
                     {prog.trend === "up" ? <TrendingUp className="w-3 h-3" /> : prog.trend === "down" ? <TrendingDown className="w-3 h-3" /> : null}
-                    {prog.change > 0 ? "+" : ""}{prog.change}{prog.metric === "bodyFat" ? "%" : "kg"}
+                    {prog.change > 0 ? "+" : ""}{prog.change}{prog.metric === "bodyFatPercent" ? "%" : "kg"}
                   </div>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">{getMetricLabel(prog.metric)}</p>
                   <h3 className="text-3xl font-black text-slate-900">
                     {prog.currentValue}
-                    <span className="text-base font-medium text-slate-400 ml-1">{prog.metric === "bodyFat" ? "%" : prog.metric === "bmi" ? "" : "kg"}</span>
+                    <span className="text-base font-medium text-slate-400 ml-1">{prog.metric === "bodyFatPercent" ? "%" : prog.metric === "bmi" ? "" : "kg"}</span>
                   </h3>
                 </div>
               </motion.div>
