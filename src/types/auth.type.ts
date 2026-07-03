@@ -32,14 +32,22 @@ export interface AuthResponsePayload {
   accessToken?: string;
   token?: string;
   tokenType?: string;
+
   userId?: number;
+  id?: number;
+
+  username?: string;
   email?: string;
   fullName?: string;
+
+  role?: Role;
   roles?: Role[];
+  authorities?: Role[];
 }
 
 export interface AuthUser {
   userId: number;
+  username?: string;
   email: string;
   fullName: string;
   roles: Role[];

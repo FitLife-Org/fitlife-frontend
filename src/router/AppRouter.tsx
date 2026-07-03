@@ -33,6 +33,7 @@ import NutritionPage from "../pages/member/NutritionPage";
 import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
 import PackageListPage from "../pages/member/PackageListPage";
 import PaymentPage from "../pages/member/PaymentPage";
+import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import SettingsPage from "../pages/settings/SettingsPage";
 import CheckinPage from "../pages/staff/CheckinPage";
 import MemberLookupPage from "../pages/staff/MemberLookupPage";
@@ -186,6 +187,14 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
                                     <InvoiceManagementPage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={ROUTES.ADMIN_PAYMENTS}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <PaymentManagementPage />
                                 </RoleGuard>
                             }
                         />

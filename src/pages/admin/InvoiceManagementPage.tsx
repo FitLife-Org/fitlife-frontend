@@ -8,6 +8,7 @@ import { formatCurrency } from "../../utils/formatCurrency";
 import { showAlert } from "../../utils/alert";
 import type { Invoice } from "../../types/invoice.type";
 import apiClient from "../../services/apiClient";
+import {invoiceService} from "../../services/invoiceService";
 
 export default function InvoiceManagementPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -21,44 +22,29 @@ export default function InvoiceManagementPage() {
   const fetchInvoices = async () => {
     try {
       setLoading(true);
-      // We will map this to standard Admin Invoice Controller which might not exist in backend yet.
-      // E.g. GET /admin/invoices
-      const response = await apiClient.get("/admin/invoices");
-      const responseData = response.data.data;
-      if (responseData && Array.isArray(responseData.data)) {
-        setInvoices(responseData.data);
-      } else if (Array.isArray(responseData)) {
-        setInvoices(responseData);
-      } else if (Array.isArray(response.data)) {
-        setInvoices(response.data);
-      } else {
-        setInvoices([]);
-      }
-    } catch (_error) {
+      const data = await invoiceService.getAdminInvoices();
+      setInvoices(data);
+    } catch (error: any) {
+      console.error("GET_ADMIN_INVOICES_ERROR:", error?.response?.data || error);
       setInvoices([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleConfirmPayment = async (invoiceId: number) => {
-    try {
-      // Mock endpoint to confirm payment manually
-      await apiClient.post(`/admin/invoices/${invoiceId}/confirm-payment`);
-      showAlert.success("Thành công", "Đã xác nhận thanh toán");
-      fetchInvoices();
-    } catch (_error) {
-      showAlert.error("Lỗi", "Không thể xác nhận thanh toán");
-    }
-  };
-
   const handleCancelInvoice = async (invoiceId: number) => {
     try {
-      await apiClient.post(`/admin/invoices/${invoiceId}/cancel`);
+      await invoiceService.cancelInvoice(invoiceId, "Admin hủy hóa đơn");
+
       showAlert.success("Thành công", "Đã hủy hóa đơn");
       fetchInvoices();
-    } catch (_error) {
-      showAlert.error("Lỗi", "Không thể hủy hóa đơn");
+    } catch (error: any) {
+      console.error("CANCEL_INVOICE_ERROR:", error?.response?.data || error);
+
+      showAlert.error(
+          "Lỗi",
+          error?.response?.data?.message || "Không thể hủy hóa đơn"
+      );
     }
   };
 
@@ -103,14 +89,18 @@ export default function InvoiceManagementPage() {
       key: "amount",
       header: "Số tiền",
       render: (row: Invoice) => (
-        <span className="font-bold text-fit-primary">{formatCurrency(row.amount)}</span>
+          <span className="font-bold text-fit-primary">
+      {formatCurrency(row.finalAmount ?? row.amount ?? 0)}
+    </span>
       ),
     },
     {
       key: "createdAt",
       header: "Ngày tạo",
       render: (row: Invoice) => (
-        <span className="text-sm text-fit-muted">{row.createdAt}</span>
+          <span className="text-sm text-fit-muted">
+      {row.issuedAt || row.createdAt || "-"}
+    </span>
       ),
     },
     {
@@ -122,31 +112,27 @@ export default function InvoiceManagementPage() {
       key: "actions",
       header: "Thao tác",
       render: (row: Invoice) => (
-        <div className="flex items-center gap-2">
-          {row.status === "UNPAID" && (
-            <>
-              <button 
-                onClick={() => handleConfirmPayment(row.id)} 
-                className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" 
-                title="Xác nhận đã thanh toán (Tiền mặt/Chuyển khoản)"
-              >
-                <CheckCircle className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={() => handleCancelInvoice(row.id)} 
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" 
-                title="Hủy hóa đơn"
-              >
-                <XCircle className="w-5 h-5" />
-              </button>
-            </>
-          )}
-          {row.status === "PAID" && (
-            <button className="p-2 text-slate-300 cursor-not-allowed" title="Đã thanh toán" disabled>
-               <CheckCircle className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+          <div className="flex items-center gap-2">
+            {row.status === "UNPAID" && (
+                <button
+                    onClick={() => handleCancelInvoice(row.id)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Hủy hóa đơn"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+            )}
+
+            {row.status === "PAID" && (
+                <button
+                    className="p-2 text-slate-300 cursor-not-allowed"
+                    title="Đã thanh toán"
+                    disabled
+                >
+                  <CheckCircle className="w-5 h-5" />
+                </button>
+            )}
+          </div>
       ),
     },
   ];

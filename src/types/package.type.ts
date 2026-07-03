@@ -1,4 +1,10 @@
-import type { Status } from "./common.type";
+export interface PackageQueryParams {
+  page?: number;
+  size?: number;
+  keyword?: string;
+  packageType?: string;
+  status?: string;
+}
 
 export interface GymPackage {
   id: number;
@@ -6,13 +12,16 @@ export interface GymPackage {
   name: string;
   packageType: string;
   basePrice: number;
+  description?: string;
+  benefits?: string;
+  thumbnailUrl?: string;
   hasAiWorkoutPlan: boolean;
   hasNutritionPlan: boolean;
   ptSessionsPerMonth: number;
-  description?: string;
-  benefits?: string;
-  status: Status;
-  thumbnailUrl?: string;
+  status: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PackageDuration {
@@ -21,7 +30,7 @@ export interface PackageDuration {
   name: string;
   months: number;
   discountPercent: number;
-  status: Status;
+  status: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -31,9 +40,9 @@ export interface AdminPackageCreateRequest {
   name: string;
   packageType: string;
   basePrice: number;
+  ptSessionsPerMonth: number;
   hasAiWorkoutPlan: boolean;
   hasNutritionPlan: boolean;
-  ptSessionsPerMonth: number;
   description?: string;
   benefits?: string;
   thumbnailUrl?: string;
@@ -44,9 +53,9 @@ export interface AdminPackageUpdateRequest {
   name: string;
   packageType: string;
   basePrice: number;
+  ptSessionsPerMonth: number;
   hasAiWorkoutPlan: boolean;
   hasNutritionPlan: boolean;
-  ptSessionsPerMonth: number;
   description?: string;
   benefits?: string;
   thumbnailUrl?: string;

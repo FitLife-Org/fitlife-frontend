@@ -59,6 +59,7 @@ const menuItems: MenuItemType[] = [
     {label: "Hóa đơn", path: ROUTES.ADMIN_INVOICES, icon: Receipt, roles: ["ROLE_ADMIN"]},
     {label: "Báo cáo", path: ROUTES.ADMIN_REPORTS, icon: BarChart, roles: ["ROLE_ADMIN"]},
 
+
     // STAFF
     {label: "Check-in", path: ROUTES.STAFF_CHECKIN, icon: ClipboardCheck, roles: ["ROLE_STAFF", "ROLE_ADMIN"]},
     {label: "Tra cứu hội viên", path: ROUTES.STAFF_MEMBER_LOOKUP, icon: Users, roles: ["ROLE_STAFF", "ROLE_ADMIN"]},
@@ -67,6 +68,12 @@ const menuItems: MenuItemType[] = [
         path: ROUTES.STAFF_SUBSCRIPTION_SUPPORT,
         icon: ShieldCheck,
         roles: ["ROLE_STAFF", "ROLE_ADMIN"]
+    },
+    {
+        label: "Quản lý thanh toán",
+        path: ROUTES.ADMIN_PAYMENTS,
+        roles: ["ROLE_ADMIN", "ROLE_STAFF"],
+        icon: WalletCards
     },
 
     // PT
