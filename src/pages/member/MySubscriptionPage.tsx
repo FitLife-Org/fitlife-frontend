@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, CreditCard, ChevronRight, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Calendar, CreditCard, ChevronRight, CheckCircle2, Clock, XCircle, Dumbbell } from "lucide-react";
 import { Link } from "react-router-dom";
 import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import { subscriptionService } from "../../services/subscriptionService";
 import type { Subscription } from "../../types/subscription.type";
+import { formatCurrency } from "../../utils/formatCurrency";
 
 export default function MySubscriptionPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -95,13 +96,23 @@ export default function MySubscriptionPage() {
                 <div>
                   {getStatusBadge(activeSubscription.status)}
                   <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight">{activeSubscription.gymPackageName || "Gói tập"}</h2>
-                  <div className="mt-4 flex items-center gap-4 text-slate-300">
+                  <div className="mt-4 flex flex-wrap items-center gap-4 text-slate-300">
                     <span className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" /> Bắt đầu: {activeSubscription.startDate}
                     </span>
                     <span className="flex items-center gap-2">
                       <Clock className="h-4 w-4" /> Hết hạn: {activeSubscription.endDate}
                     </span>
+                    {activeSubscription.packageDurationName && (
+                      <span className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" /> Thời hạn: {activeSubscription.packageDurationName}
+                      </span>
+                    )}
+                    {activeSubscription.ptSessionsTotal !== undefined && activeSubscription.ptSessionsTotal > 0 && (
+                      <span className="flex items-center gap-2 text-emerald-400">
+                        <Dumbbell className="h-4 w-4" /> PT: {activeSubscription.ptSessionsUsed} / {activeSubscription.ptSessionsTotal} buổi
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="min-w-[200px] rounded-2xl bg-white/10 p-6 backdrop-blur-md border border-white/20 text-center">
@@ -147,8 +158,15 @@ export default function MySubscriptionPage() {
                       <CreditCard className="h-6 w-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-900">{sub.gymPackageName || "Gói tập"}</h4>
+                      <h4 className="font-bold text-slate-900">
+                        {sub.gymPackageName || "Gói tập"} {sub.packageDurationName && <span className="text-sm font-normal text-slate-500">({sub.packageDurationName})</span>}
+                      </h4>
                       <p className="text-sm text-slate-500">{sub.startDate} đến {sub.endDate}</p>
+                      {sub.finalPrice !== undefined && (
+                        <p className="text-sm font-medium text-fit-primary mt-1">
+                          {formatCurrency(sub.finalPrice)}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">

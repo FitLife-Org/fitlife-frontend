@@ -17,10 +17,13 @@ export interface GymPackage {
 
 export interface PackageDuration {
   id: number;
-  durationMonths: number;
-  durationDays: number;
-  discountPercentage: number;
+  code: string;
+  name: string;
+  months: number;
+  discountPercent: number;
   status: Status;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AdminPackageCreateRequest {
