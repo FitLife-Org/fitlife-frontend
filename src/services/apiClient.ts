@@ -15,7 +15,17 @@ apiClient.interceptors.request.use((config) => {
   const isAuthEndpoint = config.url?.includes('/auth/login') || config.url?.includes('/auth/register') || config.url?.includes('/auth/google-login');
 
   if (token && !isAuthEndpoint) {
-    config.headers.Authorization = `Bearer ${token}`;
+    // Basic JWT validation: A JWT must have exactly 3 parts separated by 2 periods
+    if (typeof token === 'string' && token.split('.').length === 3) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Invalid token format, clear it
+      tokenStorage.clear();
+      localStorage.removeItem("authUser");
+      if (typeof window !== 'undefined' && !window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
+    }
   }
 
   return config;
@@ -25,14 +35,18 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
       const status = error.response?.status;
+      const data = error.response?.data;
 
       console.error("API_ERROR:", {
         status,
         url: error.config?.url,
-        data: error.response?.data,
+        data,
       });
 
-      if (status === 401) {
+      // Handle 401 or backend 500 MalformedJwtException
+      const isJwtError = status === 500 && data && typeof data.message === 'string' && data.message.includes('JWT');
+      
+      if (status === 401 || isJwtError) {
         tokenStorage.clear();
         localStorage.removeItem("authUser");
 

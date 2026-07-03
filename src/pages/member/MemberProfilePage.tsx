@@ -1,8 +1,8 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import toast from "react-hot-toast";
 import {
-  Camera, User, Calendar, Activity, Lock, ChevronRight, CheckCircle2,
-  Image as ImageIcon, Edit3, ShieldCheck, Info as InfoIcon, Crown, Ruler, Weight
+  Camera, User, Calendar, Activity, Lock, ChevronRight, CheckCircle2
+ , ShieldCheck, Info as InfoIcon, Crown, Mail, Phone
 } from "lucide-react";
 import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
@@ -188,30 +188,38 @@ export default function MemberProfilePage() {
             </div>
           </div>
 
-          <div className="mt-8 space-y-4 text-sm">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className="mt-8 space-y-4 text-sm px-4">
+            <div className="flex flex-col gap-1 pb-3 border-b border-slate-100">
               <span className="flex items-center gap-2 text-slate-500">
-                <InfoIcon className="h-4 w-4" /> Email
+                <Mail className="h-4 w-4" /> Email
               </span>
-              <span className="font-medium text-slate-900 truncate max-w-[150px]" title={profile.email}>{profile.email || "Chưa cập nhật"}</span>
+              <span className="font-medium text-slate-900 break-words w-full">
+                {profile.email || "Chưa cập nhật"}
+              </span>
             </div>
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="flex flex-col gap-1 pb-3 border-b border-slate-100">
               <span className="flex items-center gap-2 text-slate-500">
-                <InfoIcon className="h-4 w-4" /> Điện thoại
+                <Phone className="h-4 w-4" /> Điện thoại
               </span>
-              <span className="font-medium text-slate-900">{profile.phone || "Chưa cập nhật"}</span>
+              <span className="font-medium text-slate-900 break-words w-full">
+                {profile.phone || "Chưa cập nhật"}
+              </span>
             </div>
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="flex flex-col gap-1 pb-3 border-b border-slate-100">
               <span className="flex items-center gap-2 text-slate-500">
                 <Calendar className="h-4 w-4" /> Ngày sinh
               </span>
-              <span className="font-medium text-slate-900">{profile.dateOfBirth || "Chưa cập nhật"}</span>
+              <span className="font-medium text-slate-900 break-words w-full">
+                {profile.dateOfBirth || "Chưa cập nhật"}
+              </span>
             </div>
-            <div className="flex items-center justify-between pb-2">
+            <div className="flex flex-col gap-1 pb-3">
               <span className="flex items-center gap-2 text-fit-muted">
                 <Calendar className="h-4 w-4" /> Ngày tham gia
               </span>
-              <span className="font-medium text-slate-900">{profile.joinDate || profile.createdAt?.substring(0, 10) || "Gần đây"}</span>
+              <span className="font-medium text-slate-900 break-words w-full">
+                {profile.joinDate || profile.createdAt?.substring(0, 10) || "Gần đây"}
+              </span>
             </div>
           </div>
           </div>

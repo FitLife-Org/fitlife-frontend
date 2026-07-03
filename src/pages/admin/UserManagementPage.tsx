@@ -155,7 +155,7 @@ export default function UserManagementPage() {
 
   // Modal states
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [showFormView, setShowFormView] = useState(false);
   const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null);
   const [detailTab, setDetailTab] = useState<"profile" | "subscription" | "checkin">("profile");
 
@@ -261,7 +261,7 @@ export default function UserManagementPage() {
       fitnessGoal: "",
       activityLevel: ""
     } as any);
-    setFormModalOpen(true);
+    setShowFormView(true);
   };
 
   const handleOpenEdit = (member: MemberProfile) => {
@@ -280,13 +280,13 @@ export default function UserManagementPage() {
       fitnessGoal: member.fitnessGoal || "",
       activityLevel: member.activityLevel || ""
     });
-    setFormModalOpen(true);
+    setShowFormView(true);
   };
 
   // Form Submit
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateAdminMemberForm(formValues as any, !isEditMode)) {
+    if (!validateAdminMemberForm(formValues as any, !isEditMode, members, isEditMode && selectedMember ? selectedMember.id : undefined)) {
       return;
     }
 
@@ -314,12 +314,21 @@ export default function UserManagementPage() {
           setMembers(prev => [fallbackCreated, ...prev]);
         }
         
-        showAlert.success("Thêm mới thành công", `Đã tạo tài khoản hội viên cho ${formValues.fullName}.`);
+        if (isEditMode) {
+          showAlert.success("Cập nhật thành công", `Đã lưu thay đổi cho ${formValues.fullName}.`);
+        } else {
+          showAlert.success("Thêm mới thành công", `Đã tạo tài khoản hội viên cho ${formValues.fullName}.`);
+        }
+        setShowFormView(false);
       }
-      setFormModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Form submit failed:", error);
-      showAlert.error("Thao tác thất bại", "Có lỗi xảy ra trong quá trình lưu dữ liệu.");
+      let errorMsg = "Có lỗi xảy ra trong quá trình lưu dữ liệu.";
+      if (error.response?.data?.message) {
+        // Remove exception class name if present (e.g., "RuntimeException: Tên đăng nhập đã tồn tại")
+        errorMsg = error.response.data.message.replace(/^[a-zA-Z0-9_]+Exception:\s*/, "");
+      }
+      showAlert.error("Thao tác thất bại", errorMsg);
     } finally {
       setFormLoading(false);
     }
@@ -402,6 +411,192 @@ export default function UserManagementPage() {
     if (bmiValue < 29.9) return { value: bmiValue, label: "Tiền béo phì", color: "text-amber-500 bg-amber-50" };
     return { value: bmiValue, label: "Béo phì", color: "text-rose-500 bg-rose-50" };
   };
+
+  if (showFormView) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 mb-2">
+          <Button variant="outline" onClick={() => setShowFormView(false)}>
+            Quay lại
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {isEditMode ? "Chỉnh sửa Thông tin Hội viên" : "Thêm Hội viên Mới"}
+            </h1>
+          </div>
+        </div>
+
+        <Card className="p-6">
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {!isEditMode && (
+                <>
+                  <div className="col-span-1">
+                    <Input 
+                      label="Tên đăng nhập *" 
+                      name="username"
+                      value={(formValues as any).username || ""} 
+                      onChange={(e) => setFormValues(prev => ({ ...prev, username: e.target.value }))}
+                      placeholder="Tên đăng nhập (từ 4 ký tự)"
+                      required
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    <Input 
+                      label="Mật khẩu *" 
+                      name="password"
+                      type="password"
+                      value={(formValues as any).password || ""} 
+                      onChange={(e) => setFormValues(prev => ({ ...prev, password: e.target.value }))}
+                      placeholder="Mật khẩu (từ 6 ký tự)"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+              <div className="col-span-2">
+                <Input 
+                  label="Họ và tên *" 
+                  name="fullName"
+                  value={formValues.fullName} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, fullName: e.target.value }))}
+                  placeholder="Nhập họ và tên hội viên"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Input 
+                  label="Số điện thoại *" 
+                  name="phone"
+                  value={formValues.phone} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="Nhập số điện thoại"
+                  required
+                />
+              </div>
+
+              <div>
+                <Input 
+                  label="Email *" 
+                  name="email"
+                  type="email"
+                  value={formValues.email} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="example@gmail.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Giới tính</label>
+                <select 
+                  value={formValues.gender}
+                  onChange={(e) => setFormValues(prev => ({ ...prev, gender: e.target.value as Gender }))}
+                  className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
+                >
+                  <option value="MALE">Nam</option>
+                  <option value="FEMALE">Nữ</option>
+                  <option value="OTHER">Khác</option>
+                </select>
+              </div>
+
+              <div>
+                <Input 
+                  label="Ngày sinh" 
+                  name="dateOfBirth"
+                  type="date"
+                  value={formValues.dateOfBirth} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Input 
+                  label="Chiều cao (cm)" 
+                  name="height"
+                  type="number"
+                  value={formValues.height || ""} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, height: e.target.value ? Number(e.target.value) : undefined }))}
+                  placeholder="Ví dụ: 175"
+                />
+              </div>
+
+              <div>
+                <Input 
+                  label="Cân nặng (kg)" 
+                  name="weight"
+                  type="number"
+                  value={formValues.weight || ""} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
+                  placeholder="Ví dụ: 65"
+                />
+              </div>
+
+              <div className="col-span-2">
+                <Input 
+                  label="Địa chỉ" 
+                  name="address"
+                  value={formValues.address} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Nhập địa chỉ của hội viên"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Mục tiêu tập luyện</label>
+                <select 
+                  value={formValues.fitnessGoal || ""}
+                  onChange={(e) => setFormValues(prev => ({ ...prev, fitnessGoal: e.target.value }))}
+                  className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
+                >
+                  <option value="">-- Chọn mục tiêu --</option>
+                  <option value="LOSE_WEIGHT">Giảm cân/giảm mỡ</option>
+                  <option value="GAIN_MUSCLE">Tăng cơ</option>
+                  <option value="MAINTAIN_FITNESS">Duy trì vóc dáng</option>
+                  <option value="IMPROVE_HEALTH">Cải thiện sức khỏe</option>
+                  <option value="BODY_RECOMPOSITION">Tái tạo hình thể (giảm mỡ, tăng cơ)</option>
+                </select>
+              </div>
+
+              <div>
+                <Input 
+                  label="Tần suất vận động" 
+                  name="activityLevel"
+                  value={formValues.activityLevel} 
+                  onChange={(e) => setFormValues(prev => ({ ...prev, activityLevel: e.target.value }))}
+                  placeholder="Ví dụ: 3 buổi/tuần"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Trạng thái hoạt động</label>
+                <select 
+                  value={formValues.status}
+                  onChange={(e) => setFormValues(prev => ({ ...prev, status: e.target.value as Status }))}
+                  className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
+                >
+                  <option value="ACTIVE">Hoạt động</option>
+                  <option value="PENDING">Chờ xử lý</option>
+                  <option value="INACTIVE">Ngưng hoạt động</option>
+                  <option value="LOCKED">Bị khóa</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
+              <Button type="button" variant="outline" onClick={() => setShowFormView(false)}>
+                Hủy
+              </Button>
+              <Button type="submit" isLoading={formLoading} className="bg-fit-primary hover:bg-fit-primaryHover text-white px-6">
+                {isEditMode ? "Lưu thay đổi" : "Lưu Hội viên"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -810,174 +1005,6 @@ export default function UserManagementPage() {
             </div>
           </div>
         )}
-      </Modal>
-
-      {/* Create / Edit Form Modal */}
-      <Modal 
-        title={isEditMode ? "Chỉnh sửa Thông tin Hội viên" : "Đăng ký Hội viên Mới"}
-        open={formModalOpen}
-        onClose={() => setFormModalOpen(false)}
-      >
-        <form onSubmit={handleFormSubmit} className="space-y-4 max-h-[85vh] overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 gap-4">
-            {!isEditMode && (
-              <>
-                <div className="col-span-1">
-                  <Input 
-                    label="Tên đăng nhập *" 
-                    name="username"
-                    value={(formValues as any).username || ""} 
-                    onChange={(e) => setFormValues(prev => ({ ...prev, username: e.target.value }))}
-                    placeholder="Tên đăng nhập (từ 4 ký tự)"
-                    required
-                  />
-                </div>
-                <div className="col-span-1">
-                  <Input 
-                    label="Mật khẩu *" 
-                    name="password"
-                    type="password"
-                    value={(formValues as any).password || ""} 
-                    onChange={(e) => setFormValues(prev => ({ ...prev, password: e.target.value }))}
-                    placeholder="Mật khẩu (từ 6 ký tự)"
-                    required
-                  />
-                </div>
-              </>
-            )}
-            <div className="col-span-2">
-              <Input 
-                label="Họ và tên *" 
-                name="fullName"
-                value={formValues.fullName} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, fullName: e.target.value }))}
-                placeholder="Nhập họ và tên hội viên"
-                required
-              />
-            </div>
-            
-            <div>
-              <Input 
-                label="Số điện thoại *" 
-                name="phone"
-                value={formValues.phone} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="Nhập số điện thoại"
-                required
-              />
-            </div>
-
-            <div>
-              <Input 
-                label="Email *" 
-                name="email"
-                type="email"
-                value={formValues.email} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="example@gmail.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">Giới tính</label>
-              <select 
-                value={formValues.gender}
-                onChange={(e) => setFormValues(prev => ({ ...prev, gender: e.target.value }))}
-                className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
-              >
-                <option value="MALE">Nam</option>
-                <option value="FEMALE">Nữ</option>
-                <option value="OTHER">Khác</option>
-              </select>
-            </div>
-
-            <div>
-              <Input 
-                label="Ngày sinh" 
-                name="dateOfBirth"
-                type="date"
-                value={formValues.dateOfBirth} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, dateOfBirth: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <Input 
-                label="Chiều cao (cm)" 
-                name="height"
-                type="number"
-                value={formValues.height || ""} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, height: e.target.value ? Number(e.target.value) : undefined }))}
-                placeholder="Ví dụ: 170"
-              />
-            </div>
-
-            <div>
-              <Input 
-                label="Cân nặng (kg)" 
-                name="weight"
-                type="number"
-                value={formValues.weight || ""} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
-                placeholder="Ví dụ: 65"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <Input 
-                label="Địa chỉ" 
-                name="address"
-                value={formValues.address} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Nhập địa chỉ của hội viên"
-              />
-            </div>
-
-            <div>
-              <Input 
-                label="Mục tiêu tập luyện" 
-                name="fitnessGoal"
-                value={formValues.fitnessGoal} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, fitnessGoal: e.target.value }))}
-                placeholder="Ví dụ: Giảm cân, Tăng cơ..."
-              />
-            </div>
-
-            <div>
-              <Input 
-                label="Tần suất vận động" 
-                name="activityLevel"
-                value={formValues.activityLevel} 
-                onChange={(e) => setFormValues(prev => ({ ...prev, activityLevel: e.target.value }))}
-                placeholder="Ví dụ: 3 buổi/tuần"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">Trạng thái hoạt động</label>
-              <select 
-                value={formValues.status}
-                onChange={(e) => setFormValues(prev => ({ ...prev, status: e.target.value as Status }))}
-                className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
-              >
-                <option value="ACTIVE">Hoạt động</option>
-                <option value="PENDING">Chờ xử lý</option>
-                <option value="INACTIVE">Ngưng hoạt động</option>
-                <option value="LOCKED">Bị khóa</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
-            <Button type="button" variant="outline" onClick={() => setFormModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button type="submit" isLoading={formLoading} className="bg-fit-primary hover:bg-fit-primaryHover text-white">
-              {isEditMode ? "Lưu thay đổi" : "Kích hoạt"}
-            </Button>
-          </div>
-        </form>
       </Modal>
     </div>
   );

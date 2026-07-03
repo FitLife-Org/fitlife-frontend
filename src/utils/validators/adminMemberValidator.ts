@@ -1,9 +1,13 @@
 import { showAlert } from "../alert";
 import type { AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../../types/member.type";
 
+import type { MemberProfile } from "../../types/member.type";
+
 export const validateAdminMemberForm = (
   formData: AdminMemberCreateRequest | AdminMemberUpdateRequest,
-  isCreate: boolean
+  isCreate: boolean,
+  existingMembers?: MemberProfile[],
+  currentMemberId?: number
 ): boolean => {
   if (isCreate) {
     const data = formData as AdminMemberCreateRequest;
@@ -73,6 +77,41 @@ export const validateAdminMemberForm = (
     const today = new Date();
     if (dob >= today) {
       showAlert.error("Lỗi", "Ngày sinh phải ở trong quá khứ");
+      return false;
+    }
+    
+    // Validate age >= 10
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    if (age < 10) {
+      showAlert.error("Lỗi", "Hội viên phải từ 10 tuổi trở lên");
+      return false;
+    }
+  }
+
+  // Duplicate checks
+  if (existingMembers && existingMembers.length > 0) {
+    // Exclude current member if edit mode
+    const others = existingMembers.filter(m => m.id !== currentMemberId);
+    
+    if (isCreate) {
+      const data = formData as AdminMemberCreateRequest;
+      if (data.username && others.some(m => m.username === data.username)) {
+        showAlert.error("Lỗi", "Tên đăng nhập đã tồn tại trong hệ thống");
+        return false;
+      }
+    }
+    
+    if (formData.email && others.some(m => m.email === formData.email)) {
+      showAlert.error("Lỗi", "Email đã tồn tại trong hệ thống");
+      return false;
+    }
+    
+    if (formData.phone && others.some(m => m.phone === formData.phone)) {
+      showAlert.error("Lỗi", "Số điện thoại đã tồn tại trong hệ thống");
       return false;
     }
   }

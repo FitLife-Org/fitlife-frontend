@@ -62,7 +62,6 @@ const menuItems: MenuItemType[] = [
 
     // STAFF
     {label: "Check-in", path: ROUTES.STAFF_CHECKIN, icon: ClipboardCheck, roles: ["ROLE_STAFF", "ROLE_ADMIN"]},
-    {label: "Tra cứu hội viên", path: ROUTES.STAFF_MEMBER_LOOKUP, icon: Users, roles: ["ROLE_STAFF", "ROLE_ADMIN"]},
     {
         label: "Hỗ trợ gói tập",
         path: ROUTES.STAFF_SUBSCRIPTION_SUPPORT,

@@ -47,21 +47,25 @@ export default function GuestHeader() {
     >
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <HeartPulse className="h-8 w-8 text-fit-primary" />
+          <div className="w-30" >
+            <img
+                src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png"
+                alt="Logo"></img>
+          </div>
+
             <div className="flex flex-col">
                <span className="text-2xl font-bold tracking-tight text-slate-900 leading-none">
                  FitLife
                </span>
-               <span className="text-[10px] text-slate-500 font-medium">Sống khỏe mỗi ngày</span>
+              <span className="text-[10px] text-slate-500 font-medium">Sống khỏe mỗi ngày</span>
             </div>
-          </Link>
+
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link, index) => (
-              <a
-                key={index}
+                <a
+                    key={index}
                 href={link.href}
                 onClick={(e) => scrollToSection(e, link.href)}
                 className={`text-sm font-semibold transition-colors hover:text-fit-primary ${
