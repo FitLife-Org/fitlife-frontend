@@ -6,6 +6,7 @@ import { useGSAP } from "@gsap/react";
 import { authService } from "../../services/authService";
 import { useAuthStore } from "../../store/authStore";
 import { getRedirectPathByRoles } from "../authRedirect";
+import { showAlert } from "../../utils/alert";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -74,15 +75,14 @@ export function useLoginLogic() {
 
       const session = await authService.googleLogin(idToken);
       setSession(session);
+      showAlert.success("Thành công", "Đăng nhập Google thành công!");
 
       const redirectPath = getRedirectPathByRoles(session.user.roles);
       navigate(redirectPath, { replace: true });
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Đăng nhập Google thất bại. Vui lòng thử lại."
-      );
+      const msg = error instanceof Error ? error.message : "Đăng nhập Google thất bại. Vui lòng thử lại.";
+      setError(msg);
+      showAlert.error("Đăng nhập thất bại", msg);
     } finally {
       setLoading(false);
     }
@@ -90,6 +90,7 @@ export function useLoginLogic() {
 
   const handleGoogleError = useCallback(() => {
     setError("Đăng nhập Google thất bại. Vui lòng thử lại.");
+    showAlert.error("Đăng nhập thất bại", "Đăng nhập Google thất bại. Vui lòng thử lại.");
   }, []);
 
   // Traditional login handler
@@ -122,11 +123,14 @@ export function useLoginLogic() {
       console.log("Login session:", session);
       console.log("Login roles:", session.user.roles);
       setSession(session);
+      showAlert.success("Thành công", "Đăng nhập thành công!");
       const redirectPath = getRedirectPathByRoles(session.user.roles);
       console.log("Redirect path:", redirectPath);
       navigate(redirectPath, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Đăng nhập thất bại.");
+      const msg = err instanceof Error ? err.message : "Đăng nhập thất bại.";
+      setError(msg);
+      showAlert.error("Đăng nhập thất bại", msg);
     } finally {
       setLoading(false);
     }

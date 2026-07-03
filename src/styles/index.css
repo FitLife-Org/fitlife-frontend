@@ -95,7 +95,7 @@
   }
 
   .fit-auth-input {
-    @apply h-14 rounded-2xl border-fit-border bg-white text-base shadow-sm transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10;
+    @apply h-11 rounded-2xl border-fit-border bg-white text-base shadow-sm transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10;
   }
 
   .fit-auth-button {

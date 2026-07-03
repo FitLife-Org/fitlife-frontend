@@ -91,7 +91,7 @@ export default
                         </h1>
 
                         <p className="text-lg leading-relaxed text-slate-700 border-l-4 border-sky-500 pl-6 bg-white/50 backdrop-blur-sm py-3 pr-4 rounded-r-xl shadow-sm border-white/60 border-y border-r">
-                            Quản lý hội viên, gói tập, check-in, lịch PT và thanh toán — tất cả tích hợp trong một hệ thống mượt mà, không độ trễ. Tối ưu vận hành để bạn rảnh tay phát triển phòng tập, còn hội viên cứ việc tập trung "build cơ" — tuyệt đối không "build stress"!
+                            Đồng hành cùng bạn trên hành trình tập luyện với lịch tập, tiến độ và gói tập luôn trong tầm tay
                         </p>
 
            
@@ -137,7 +137,7 @@ export default
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit} className="space-y-5">
+                            <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="space-y-4">
                                     <div className="gsap-form-element">
                                         <Input
@@ -189,7 +189,7 @@ export default
 
                                 <div className="gsap-form-element pt-2">
                                     <Button
-                                        className="w-full py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white transition-all font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 text-base"
+                                        className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white transition-all font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 text-base"
                                         type="submit"
                                         isLoading={loading}
                                     >
@@ -198,7 +198,7 @@ export default
                                 </div>
 
                                 {/* Dải phân cách */}
-                                <div className="gsap-form-element mt-8 flex items-center gap-4">
+                                <div className="gsap-form-element mt-5 flex items-center gap-4">
                                     <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-200"/>
                                     <span
                                         className="uppercase text-slate-400 text-xs font-black tracking-widest">Hoặc</span>
@@ -234,7 +234,7 @@ export default
                                     </div>
                                 </div>
 
-                                <div className="gsap-form-element mt-8 text-center font-medium text-slate-500">
+                                <div className="gsap-form-element mt-6 text-center font-medium text-slate-500">
                                     Chưa có tài khoản?{" "}
                                     <Link to={ROUTES.REGISTER}
                                           className="text-sky-600 hover:text-sky-500 font-bold transition-colors">
