@@ -1,49 +1,68 @@
-export interface AiWorkoutRequest {
+export interface AiFullPlanRequest {
   goal: string;
-  level: string;
-  daysPerWeek: number;
-  durationMinutes: number;
-  equipment?: string[];
-  healthNotes?: string;
+  fitnessLevel: string;
+  trainingDaysPerWeek: number;
+  equipment?: string;
+  healthNote?: string;
 }
 
-export interface AiWorkoutExercise {
+export interface AiGeneratedExercise {
   name: string;
   sets: number;
   reps: string;
-  restSeconds?: number;
   note?: string;
 }
 
-export interface AiWorkoutDay {
-  day: number;
+export interface AiGeneratedWorkoutDay {
+  dayNumber: number;
   title: string;
-  focus: string;
-  exercises: AiWorkoutExercise[];
+  focusArea: string;
+  exercises: AiGeneratedExercise[];
 }
 
-export interface AiWorkoutPlan {
+export interface AiGeneratedMeal {
+  mealName: string;
+  foods: string;
+  calories?: number;
+}
+
+export interface AiGeneratedNutrition {
+  title: string;
+  dailyCalories?: number;
+  proteinGrams?: number;
+  carbsGrams?: number;
+  fatGrams?: number;
+  meals: AiGeneratedMeal[];
+}
+
+export interface AiGeneratedPlan {
   title: string;
   goal: string;
-  level: string;
+  fitnessLevel: string;
   summary: string;
-  days: AiWorkoutDay[];
-  notes?: string[];
+  workoutDays: AiGeneratedWorkoutDay[];
+  nutritionPlan?: AiGeneratedNutrition;
 }
 
-export interface ChatMessage {
-  id: string;
-  sender: "user" | "ai";
-  text: string;
-  timestamp: string;
-  planObject?: AiWorkoutPlan;
-}
-
-export interface AiHistoryItem {
-  id: string;
+export interface AiSuggestionResponse {
+  id: number;
+  memberId: number;
+  suggestionType: "WORKOUT_PLAN" | "NUTRITION_PLAN" | "FULL_PLAN" | "BODY_ANALYSIS";
+  status: "PENDING" | "SUCCESS" | "FAILED" | "APPLIED";
   title: string;
-  type: "workout" | "meal" | "chat";
-  createdAt: string;
+  promptText: string;
   summary: string;
-  planObject?: AiWorkoutPlan;
+  rawResponse?: string;
+  tokenUsed?: number;
+  cost?: number;
+  createdAt: string;
+}
+
+export interface AiSuggestionDetailResponse extends AiSuggestionResponse {
+  errorMessage?: string;
+  isApplied: boolean;
+  appliedAt?: string;
+  planInfo?: AiGeneratedPlan;
+  bodyAnalysis?: any;
+  updatedAt: string;
 }
