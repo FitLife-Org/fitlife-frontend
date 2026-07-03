@@ -22,17 +22,33 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Nếu API trả về 401 (Unauthorized) hoặc 403 (Forbidden)
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      tokenStorage.clear();
-      localStorage.removeItem("authUser");
-      // Redirect về trang đăng nhập
-      window.location.href = "/login";
+    (response) => response,
+    (error) => {
+      const status = error.response?.status;
+
+      console.error("API_ERROR:", {
+        status,
+        url: error.config?.url,
+        data: error.response?.data,
+      });
+
+      if (status === 401) {
+        tokenStorage.clear();
+        localStorage.removeItem("authUser");
+
+        if (!window.location.pathname.includes("/login")) {
+          window.location.href = "/login";
+        }
+      }
+
+      if (status === 403) {
+        if (!window.location.pathname.includes("/403")) {
+          window.location.href = "/403";
+        }
+      }
+
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
 );
 
 export default apiClient;

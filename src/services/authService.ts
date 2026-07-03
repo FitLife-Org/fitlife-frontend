@@ -1,3 +1,4 @@
+import axios from "axios";
 import apiClient from "./apiClient";
 import type { ApiResponse } from "../types/common.type";
 import type {
@@ -11,6 +12,22 @@ import type {
 import { tokenStorage } from "../utils/token";
 import type { Role } from "../types/common.type";
 
+const normalizeRoles = (payload: AuthResponsePayload): Role[] => {
+  if (Array.isArray(payload.roles) && payload.roles.length > 0) {
+    return payload.roles;
+  }
+
+  if (Array.isArray(payload.authorities) && payload.authorities.length > 0) {
+    return payload.authorities;
+  }
+
+  if (payload.role) {
+    return [payload.role];
+  }
+
+  return [];
+};
+
 const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
   if (!payload) {
     throw new Error("Máy chủ không trả về dữ liệu đăng nhập.");
@@ -22,16 +39,18 @@ const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
     throw new Error("Không nhận được token từ máy chủ.");
   }
 
-  const roles: Role[] =
-      payload.roles && payload.roles.length > 0
-          ? payload.roles
-          : ["ROLE_MEMBER"];
+  const roles = normalizeRoles(payload);
+
+  if (roles.length === 0) {
+    throw new Error("Không nhận được quyền người dùng từ máy chủ.");
+  }
 
   return {
     token,
     user: {
-      userId: payload.userId ?? 0,
-      email: payload.email ?? "unknown@email.com",
+      userId: payload.userId ?? payload.id ?? 0,
+      username: payload.username,
+      email: payload.email ?? "",
       fullName: payload.fullName ?? "User",
       roles,
     },
@@ -39,24 +58,18 @@ const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
 };
 
 const extractErrorMessage = (error: unknown): string => {
-  if (typeof error === "object" && error !== null && "response" in error) {
-    const axiosError = error as {
-      response?: {
-        status?: number;
-        data?: {
-          message?: string;
-          error?: string;
-        };
-      };
-    };
-
-    if (axiosError.response?.status === 401) {
+  if (axios.isAxiosError(error)) {
+    if (error.response?.status === 401) {
       return "Email, tên đăng nhập hoặc mật khẩu không chính xác.";
     }
 
+    if (error.response?.status === 403) {
+      return "Tài khoản không có quyền truy cập chức năng này.";
+    }
+
     return (
-        axiosError.response?.data?.message ||
-        axiosError.response?.data?.error ||
+        error.response?.data?.message ||
+        error.response?.data?.error ||
         "Có lỗi xảy ra. Vui lòng thử lại."
     );
   }
@@ -80,34 +93,8 @@ export const authService = {
       tokenStorage.set(session.token);
 
       return session;
-    } catch (error) {
-      // Nếu có backend trả về lỗi 4xx
-      if (typeof error === "object" && error !== null && "response" in error) {
-        const axiosError = error as any;
-        if (axiosError.response?.status === 401) {
-            throw new Error("Email, tên đăng nhập hoặc mật khẩu không chính xác.");
-        }
-      }
-
-      // MOCK FALLBACK: Nếu không có backend, giả lập login
-      const id = credentials.identifier;
-      const pwd = credentials.password;
-      
-      if (id === "admin@fitlife.com" && pwd === "123456") {
-          const mockSession: AuthSession = { token: "mock-admin-token", user: { userId: 1, email: id, fullName: "Admin System", roles: ["ROLE_ADMIN"] } };
-          tokenStorage.set(mockSession.token);
-          return mockSession;
-      } else if (id === "member@fitlife.com" && pwd === "123456") {
-          const mockSession: AuthSession = { token: "mock-member-token", user: { userId: 2, email: id, fullName: "Member User", roles: ["ROLE_MEMBER"] } };
-          tokenStorage.set(mockSession.token);
-          return mockSession;
-      } else if (id === "staff@fitlife.com" && pwd === "123456") {
-          const mockSession: AuthSession = { token: "mock-staff-token", user: { userId: 3, email: id, fullName: "Staff User", roles: ["ROLE_STAFF"] } };
-          tokenStorage.set(mockSession.token);
-          return mockSession;
-      }
-
-      throw new Error("Email, tên đăng nhập hoặc mật khẩu không chính xác.");
+    } catch (error: unknown) {
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -122,62 +109,24 @@ export const authService = {
       tokenStorage.set(session.token);
 
       return session;
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
-  async googleLogin(token: string): Promise<AuthSession> {
+  async googleLogin(idToken: string): Promise<AuthSession> {
     try {
-      // Đầu tiên thử gửi token (access_token hoặc id_token) lên backend
       const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
           "/auth/google-login",
-          { idToken: token }
+          { idToken }
       );
 
       const session = normalizeSession(response.data.data);
       tokenStorage.set(session.token);
 
       return session;
-    } catch (error) {
-      console.warn("Backend google-login failed, falling back to mock session...", error);
-      
-      try {
-        // Fetch user info từ Google bằng access_token
-        const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (!userInfoRes.ok) throw new Error("Invalid access token");
-        
-        const userInfo = await userInfoRes.json();
-        
-        // Tạo mock session
-        const mockSession: AuthSession = {
-          token: "mock-google-jwt-token-" + Date.now(),
-          user: {
-            userId: 999,
-            email: userInfo.email,
-            fullName: userInfo.name,
-            roles: ["ROLE_MEMBER"]
-          }
-        };
-        
-        tokenStorage.set(mockSession.token);
-        
-        // Lưu cả thông tin user vào localStorage để các màn hình khác có thể hiển thị
-        localStorage.setItem("user", JSON.stringify({
-          userId: mockSession.user.userId,
-          email: mockSession.user.email,
-          roles: mockSession.user.roles,
-          fullName: mockSession.user.fullName
-        }));
-
-        return mockSession;
-      } catch (fallbackError) {
-        console.error("Mock fallback also failed:", fallbackError);
-        throw error; // Throw original error
-      }
+    } catch (error: unknown) {
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -189,7 +138,7 @@ export const authService = {
       );
 
       return response.data.message || "OTP đã được gửi đến email của bạn.";
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(extractErrorMessage(error));
     }
   },
@@ -202,13 +151,14 @@ export const authService = {
       );
 
       return response.data.message || "Đặt lại mật khẩu thành công.";
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
   logout(): void {
     tokenStorage.clear();
+    localStorage.removeItem("authUser");
   },
 
   isAuthenticated(): boolean {

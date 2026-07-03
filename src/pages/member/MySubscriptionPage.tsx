@@ -44,11 +44,14 @@ export default function MySubscriptionPage() {
     }
   };
 
-  const calculateDaysLeft = (endDate: string) => {
+  const calculateDaysLeft = (endDate?: string | null) => {
+    if (!endDate) return 0;
+
     const end = new Date(endDate);
     const now = new Date();
     const diff = end.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 3600 * 24));
+
     return days > 0 ? days : 0;
   };
 
@@ -61,7 +64,6 @@ export default function MySubscriptionPage() {
   }
 
   const activeSubscription = subscriptions.find(s => s.status === "ACTIVE");
-  const otherSubscriptions = subscriptions.filter(s => s.status !== "ACTIVE");
 
   return (
     <div className="space-y-8">
@@ -98,10 +100,13 @@ export default function MySubscriptionPage() {
                   <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight">{activeSubscription.gymPackageName || "Gói tập"}</h2>
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-slate-300">
                     <span className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" /> Bắt đầu: {activeSubscription.startDate}
+                      <Calendar className="h-4 w-4" />
+                      Bắt đầu: {activeSubscription.startDate || "Chưa kích hoạt"}
                     </span>
+
                     <span className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" /> Hết hạn: {activeSubscription.endDate}
+                      <Clock className="h-4 w-4" />
+                      Hết hạn: {activeSubscription.endDate || "Chưa kích hoạt"}
                     </span>
                     {activeSubscription.packageDurationName && (
                       <span className="flex items-center gap-2">
@@ -161,7 +166,9 @@ export default function MySubscriptionPage() {
                       <h4 className="font-bold text-slate-900">
                         {sub.gymPackageName || "Gói tập"} {sub.packageDurationName && <span className="text-sm font-normal text-slate-500">({sub.packageDurationName})</span>}
                       </h4>
-                      <p className="text-sm text-slate-500">{sub.startDate} đến {sub.endDate}</p>
+                      <p className="text-sm text-slate-500">
+                        {sub.startDate || "Chưa kích hoạt"} đến {sub.endDate || "Chưa kích hoạt"}
+                      </p>
                       {sub.finalPrice !== undefined && (
                         <p className="text-sm font-medium text-fit-primary mt-1">
                           {formatCurrency(sub.finalPrice)}

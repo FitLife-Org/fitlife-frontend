@@ -7,11 +7,20 @@ const USER_KEY = "authUser";
 const getUserFromStorage = (): AuthUser | null => {
   try {
     const userStr = localStorage.getItem(USER_KEY);
-    return userStr ? JSON.parse(userStr) : null;
+
+    if (!userStr) {
+      return null;
+    }
+
+    return JSON.parse(userStr) as AuthUser;
   } catch {
+    localStorage.removeItem(USER_KEY);
     return null;
   }
 };
+
+const initialToken = tokenStorage.get();
+const initialUser = getUserFromStorage();
 
 interface AuthState {
   token: string | null;
@@ -22,9 +31,9 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  token: tokenStorage.get(),
-  user: getUserFromStorage(),
-  isAuthenticated: Boolean(tokenStorage.get()),
+  token: initialToken,
+  user: initialUser,
+  isAuthenticated: Boolean(initialToken && initialUser),
 
   setSession: (session) => {
     tokenStorage.set(session.token);

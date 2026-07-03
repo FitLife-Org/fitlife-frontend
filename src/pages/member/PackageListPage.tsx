@@ -1,4 +1,12 @@
-import { Check, Dumbbell, Loader2, Star, Zap, Crown, ArrowRight } from "lucide-react";
+import axios from "axios";
+import {
+  Check,
+  Dumbbell,
+  Loader2,
+  Star,
+  Zap,
+  Crown,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
@@ -8,55 +16,143 @@ import Card from "../../components/common/Card";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { packageService } from "../../services/packageService";
 import { subscriptionService } from "../../services/subscriptionService";
-import { paymentService } from "../../services/paymentService";
-import type { GymPackage } from "../../types/package.type";
+import type { GymPackage, PackageDuration } from "../../types/package.type";
 import type { Subscription } from "../../types/subscription.type";
 
+type PriceInfo = {
+  originalPrice: number;
+  discountAmount: number;
+  finalPrice: number;
+};
+
 export default function PackageListPage() {
+  const navigate = useNavigate();
+
   const [packages, setPackages] = useState<GymPackage[]>([]);
-  const [mySubscription, setMySubscription] = useState<Subscription | null>(null);
+  const [durations, setDurations] = useState<PackageDuration[]>([]);
+  const [selectedDurationId, setSelectedDurationId] = useState<number | null>(
+      null
+  );
+  const [mySubscription, setMySubscription] = useState<Subscription | null>(
+      null
+  );
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (): Promise<void> => {
       try {
         setLoading(true);
-        const [pkgs, sub] = await Promise.all([
+
+        const [pkgs, sub, durationData] = await Promise.all([
           packageService.getPublicPackages(),
-          subscriptionService.getMySubscription()
+          subscriptionService.getMySubscription(),
+          packageService.getPackageDurations(),
         ]);
-        setPackages(pkgs.filter(p => p.status === "ACTIVE"));
+
+        const activePackages = pkgs.filter(
+            (pkg) => pkg.status === "ACTIVE"
+        );
+
+        const activeDurations = durationData.filter(
+            (duration) => duration.status === "ACTIVE"
+        );
+
+        setPackages(activePackages);
+        setDurations(activeDurations);
         setMySubscription(sub);
-      } catch (_error) {
+
+        if (activeDurations.length > 0) {
+          setSelectedDurationId(activeDurations[0].id);
+        }
+      } catch (error: unknown) {
+        console.error("LOAD_PACKAGES_ERROR:", error);
         showAlert.error("Lỗi", "Không thể tải danh sách gói tập");
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
-  const navigate = useNavigate();
+  const selectedDuration = durations.find(
+      (duration) => duration.id === selectedDurationId
+  );
 
-  const handlePurchase = async (pkgId: number) => {
+  const calculatePrice = (pkg: GymPackage): PriceInfo => {
+    if (!selectedDuration) {
+      return {
+        originalPrice: pkg.basePrice,
+        discountAmount: 0,
+        finalPrice: pkg.basePrice,
+      };
+    }
+
+    const originalPrice = pkg.basePrice * selectedDuration.months;
+    const discountPercent = selectedDuration.discountPercent || 0;
+    const discountAmount = originalPrice * (discountPercent / 100);
+    const finalPrice = originalPrice - discountAmount;
+
+    return {
+      originalPrice,
+      discountAmount,
+      finalPrice,
+    };
+  };
+
+  const getDurationLabel = (): string => {
+    if (!selectedDuration) {
+      return "Giá cơ bản";
+    }
+
+    return selectedDuration.name;
+  };
+
+  const handlePurchase = async (pkgId: number): Promise<void> => {
+    if (!selectedDurationId) {
+      showAlert.error("Lỗi", "Vui lòng chọn thời hạn gói tập.");
+      return;
+    }
+
     try {
       setProcessingId(pkgId);
-      const sub = await subscriptionService.createSubscription({
+
+      const subscription = await subscriptionService.createSubscription({
         gymPackageId: pkgId,
-        packageDurationId: 1,
-        autoRenew: false
+        packageDurationId: selectedDurationId,
+        autoRenew: false,
+        note: `Đăng ký gói tập ${selectedDuration?.name || ""}`,
       });
 
-      if (sub && sub.invoiceId) {
-        navigate(`/member/payment/${sub.invoiceId}`);
-      } else {
-        showAlert.success("Thành công", "Đăng ký thành công!");
-        const activeSub = await subscriptionService.getMySubscription();
-        setMySubscription(activeSub);
+      if (subscription?.invoiceId) {
+        navigate(`/member/payment/${subscription.invoiceId}`);
+        return;
       }
-    } catch (_error) {
-      showAlert.error("Lỗi", "Lỗi khi xử lý đăng ký");
+
+      showAlert.success(
+          "Đã tạo đăng ký",
+          "Vui lòng kiểm tra hóa đơn và tiếp tục thanh toán."
+      );
+
+      navigate("/member/subscription");
+    } catch (error: unknown) {
+      console.error("CREATE_SUBSCRIPTION_ERROR:", error);
+
+      let code: number | undefined;
+      let message = "Lỗi khi xử lý đăng ký";
+
+      if (axios.isAxiosError(error)) {
+        code = error.response?.data?.code;
+        message = error.response?.data?.message || message;
+      }
+
+      if (code === 8003) {
+        message =
+            "Bạn đã có gói tập đang hoạt động, không thể đăng ký thêm gói mới.";
+      }
+
+      showAlert.error("Lỗi", message);
     } finally {
       setProcessingId(null);
     }
@@ -66,8 +162,8 @@ export default function PackageListPage() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15 }
-    }
+      transition: { staggerChildren: 0.15 },
+    },
   };
 
   const itemVariants: Variants = {
@@ -75,25 +171,52 @@ export default function PackageListPage() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 100, damping: 15 }
-    }
+      transition: { type: "spring", stiffness: 100, damping: 15 },
+    },
   };
 
-  const renderFeatures = (pkg: GymPackage) => {
+  const renderFeatures = (pkg: GymPackage): string[] => {
     let features: string[] = [];
+
     if (pkg.benefits) {
-      features = pkg.benefits.split(',').map(f => f.trim()).filter(Boolean);
+      features = pkg.benefits
+          .split(",")
+          .map((feature) => feature.trim())
+          .filter(Boolean);
     } else if (pkg.description) {
-      features = pkg.description.split('\n').map(f => f.replace(/^- /, '').trim()).filter(Boolean);
+      features = pkg.description
+          .split("\n")
+          .map((feature) => feature.replace(/^- /, "").trim())
+          .filter(Boolean);
     } else {
-      features = ["Truy cập phòng tập 24/7", "Sử dụng thiết bị cao cấp", "Check-in không giới hạn", "Tủ đồ cá nhân", "Phòng tắm & xông hơi"];
+      features = [
+        "Truy cập phòng tập 24/7",
+        "Sử dụng thiết bị cao cấp",
+        "Check-in không giới hạn",
+        "Tủ đồ cá nhân",
+        "Phòng tắm & xông hơi",
+      ];
     }
 
-    if (pkg.hasAiWorkoutPlan) features.unshift("Tích hợp AI tạo Lịch tập");
-    if (pkg.hasNutritionPlan) features.unshift("Tích hợp Gợi ý Dinh dưỡng");
-    if (pkg.ptSessionsPerMonth > 0) features.unshift(`Tặng ${pkg.ptSessionsPerMonth} buổi PT cá nhân/tháng`);
+    if (pkg.hasAiWorkoutPlan) {
+      features.unshift("Tích hợp AI tạo lịch tập");
+    }
+
+    if (pkg.hasNutritionPlan) {
+      features.unshift("Tích hợp gợi ý dinh dưỡng");
+    }
+
+    if (pkg.ptSessionsPerMonth > 0) {
+      features.unshift(
+          `Tặng ${pkg.ptSessionsPerMonth} buổi PT cá nhân/tháng`
+      );
+    }
 
     return features;
+  };
+
+  const renderBoolean = (value: boolean): string => {
+    return value ? "Có" : "Không";
   };
 
   if (loading) {
@@ -101,7 +224,9 @@ export default function PackageListPage() {
         <div className="flex h-[60vh] items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-fit-primary" />
-            <p className="text-fit-muted font-medium animate-pulse">Đang tải gói tập...</p>
+            <p className="animate-pulse font-medium text-fit-muted">
+              Đang tải gói tập...
+            </p>
           </div>
         </div>
     );
@@ -109,16 +234,78 @@ export default function PackageListPage() {
 
   return (
       <div className="pb-12">
-        <div className="mb-10 text-center pt-8">
-          <h1 className="text-4xl md:text-5xl font-black text-fit-text tracking-tight mb-4">
-            Nâng tầm <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-green-500">Sức khoẻ của bạn</span>
+        <div className="mb-10 pt-8 text-center">
+          <h1 className="mb-4 text-4xl font-black tracking-tight text-fit-text md:text-5xl">
+            Nâng tầm{" "}
+            <span className="bg-gradient-to-r from-sky-400 to-green-500 bg-clip-text text-transparent">
+            Sức khoẻ của bạn
+          </span>
           </h1>
-          <p className="text-lg text-fit-muted max-w-2xl mx-auto">
-            Lựa chọn gói hội viên phù hợp để bắt đầu hành trình thay đổi vóc dáng và sức khỏe với hệ thống phòng tập đẳng cấp 5 sao.
+
+          <p className="mx-auto max-w-2xl text-lg text-fit-muted">
+            Lựa chọn gói hội viên phù hợp để bắt đầu hành trình thay đổi vóc dáng
+            và sức khỏe với hệ thống phòng tập đẳng cấp 5 sao.
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto">
+        {durations.length > 0 && (
+            <div className="mx-auto mb-10 max-w-4xl">
+              <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+                <div className="mb-4 text-center">
+                  <p className="text-sm font-bold uppercase tracking-wider text-fit-primary">
+                    Chọn thời hạn
+                  </p>
+
+                  <h2 className="mt-1 text-2xl font-black text-slate-900">
+                    Linh hoạt theo mục tiêu tập luyện của bạn
+                  </h2>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+                  {durations.map((duration) => {
+                    const active = selectedDurationId === duration.id;
+
+                    return (
+                        <button
+                            key={duration.id}
+                            type="button"
+                            onClick={() => setSelectedDurationId(duration.id)}
+                            className={`rounded-2xl border-2 p-4 text-center transition-all ${
+                                active
+                                    ? "border-fit-primary bg-emerald-50 shadow-lg shadow-emerald-500/20"
+                                    : "border-slate-200 bg-white hover:border-fit-primary/40 hover:bg-slate-50"
+                            }`}
+                        >
+                          <p
+                              className={`text-lg font-black ${
+                                  active ? "text-fit-primary" : "text-slate-900"
+                              }`}
+                          >
+                            {duration.name}
+                          </p>
+
+                          <p className="mt-1 text-sm text-slate-500">
+                            {duration.months} tháng
+                          </p>
+
+                          {duration.discountPercent > 0 ? (
+                              <span className="mt-3 inline-flex rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-700">
+                        Giảm {duration.discountPercent}%
+                      </span>
+                          ) : (
+                              <span className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">
+                        Không giảm giá
+                      </span>
+                          )}
+                        </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+        )}
+
+        <div className="mx-auto max-w-6xl">
           <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -126,122 +313,233 @@ export default function PackageListPage() {
               className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
           >
             {packages.map((item, index) => {
-              const isCurrent = mySubscription?.package?.id === item.id && mySubscription?.status === "ACTIVE";
-              const isPopular = item.name.toLowerCase().includes("standard") || item.name.toLowerCase().includes("phổ biến") || index === 1; // Fallback highlight
-              const isPremium = item.name.toLowerCase().includes("vip") || item.name.toLowerCase().includes("premium") || item.basePrice > 500000;
+              const isCurrent =
+                  (mySubscription?.gymPackageId === item.id ||
+                      mySubscription?.package?.id === item.id) &&
+                  mySubscription?.status === "ACTIVE";
 
-              // Basic styles
-              let cardStyle = "border-slate-200 bg-white hover:border-slate-300 hover:shadow-lg hover:-translate-y-1 rounded-3xl";
+              const isPopular =
+                  item.name.toLowerCase().includes("standard") ||
+                  item.name.toLowerCase().includes("phổ biến") ||
+                  index === 1;
+
+              const isPremium =
+                  item.name.toLowerCase().includes("vip") ||
+                  item.name.toLowerCase().includes("premium") ||
+                  item.basePrice > 500000;
+
+              const priceInfo = calculatePrice(item);
+
+              let cardStyle =
+                  "border-slate-200 bg-white hover:border-slate-300 hover:shadow-lg hover:-translate-y-1 rounded-3xl";
               let headerStyle = "text-slate-800";
               let priceStyle = "text-slate-900";
-              let buttonClass = "bg-white text-slate-700 border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm";
-              let buttonVariant: "primary" | "outline" | "ghost" | "danger" = "outline";
+              let buttonClass =
+                  "bg-white text-slate-700 border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm";
+              let buttonVariant: "primary" | "outline" | "ghost" | "danger" =
+                  "outline";
               let featureIconStyle = "bg-slate-100 text-slate-500";
               let featureTextStyle = "text-slate-600";
 
               if (isPopular) {
-                // Standard styles (Brand colors)
-                cardStyle = "border-fit-primary bg-gradient-to-b from-emerald-50/50 to-white shadow-xl hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-3 ring-2 ring-fit-primary/20 rounded-3xl";
+                cardStyle =
+                    "border-fit-primary bg-gradient-to-b from-emerald-50/50 to-white shadow-xl hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-3 ring-2 ring-fit-primary/20 rounded-3xl";
                 headerStyle = "text-fit-primary";
                 priceStyle = "text-fit-primary";
-                buttonClass = "bg-gradient-to-r from-emerald-600 to-emerald-700 border-0 text-white shadow-lg shadow-emerald-600/30 hover:-translate-y-0.5 hover:shadow-emerald-600/40";
+                buttonClass =
+                    "bg-gradient-to-r from-emerald-600 to-emerald-700 border-0 text-white shadow-lg shadow-emerald-600/30 hover:-translate-y-0.5 hover:shadow-emerald-600/40";
                 buttonVariant = "primary";
                 featureIconStyle = "bg-emerald-100 text-emerald-600";
                 featureTextStyle = "text-slate-700 font-medium";
               } else if (isPremium) {
-                // VIP styles (Dark theme, metallic gold, spiky/cool frame)
-                cardStyle = "bg-gradient-to-br from-gray-900 via-gray-800 to-black border-2 border-yellow-500 shadow-2xl shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:-translate-y-3 rounded-none rounded-tr-[3rem] rounded-bl-[3rem]";
-                headerStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-sm";
-                priceStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500";
-                buttonClass = "bg-gradient-to-r from-yellow-500 to-yellow-700 border-0 !text-black font-black uppercase shadow-lg shadow-yellow-600/40 hover:-translate-y-0.5 hover:shadow-yellow-600/50";
+                cardStyle =
+                    "bg-gradient-to-br from-gray-900 via-gray-800 to-black border-2 border-yellow-500 shadow-2xl shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:-translate-y-3 rounded-none rounded-tr-[3rem] rounded-bl-[3rem]";
+                headerStyle =
+                    "text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-sm";
+                priceStyle =
+                    "text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500";
+                buttonClass =
+                    "bg-gradient-to-r from-yellow-500 to-yellow-700 border-0 !text-black font-black uppercase shadow-lg shadow-yellow-600/40 hover:-translate-y-0.5 hover:shadow-yellow-600/50";
                 buttonVariant = "primary";
                 featureIconStyle = "bg-yellow-500/20 text-yellow-400";
                 featureTextStyle = "text-white font-medium";
               }
+
               if (isCurrent) {
-                cardStyle = "border-sky-500 bg-sky-50 ring-2 ring-sky-500 hover:-translate-y-1 rounded-3xl";
+                cardStyle =
+                    "border-sky-500 bg-sky-50 ring-2 ring-sky-500 hover:-translate-y-1 rounded-3xl";
                 headerStyle = "text-sky-700";
                 priceStyle = "text-sky-600";
-                buttonClass = "bg-white text-sky-600 border-2 border-sky-500 hover:bg-sky-50 shadow-sm";
+                buttonClass =
+                    "bg-white text-sky-600 border-2 border-sky-500 hover:bg-sky-50 shadow-sm";
                 buttonVariant = "outline";
                 featureIconStyle = "bg-sky-100 text-sky-600";
                 featureTextStyle = "text-sky-900";
               }
 
               return (
-                  <motion.div variants={itemVariants} key={item.id} className="h-full pt-4">
-                    <Card className={`h-full min-h-[550px] relative flex flex-col transition-all duration-500 group ${cardStyle}`}>
+                  <motion.div
+                      variants={itemVariants}
+                      key={item.id}
+                      className="h-full pt-4"
+                  >
+                    <Card
+                        className={`group relative flex h-full min-h-[550px] flex-col transition-all duration-500 ${cardStyle}`}
+                    >
                       {item.thumbnailUrl && (
-                          <div className={`h-48 w-full overflow-hidden relative ${isPremium ? 'rounded-tr-[3rem]' : 'rounded-t-3xl'}`}>
+                          <div
+                              className={`relative h-48 w-full overflow-hidden ${
+                                  isPremium ? "rounded-tr-[3rem]" : "rounded-t-3xl"
+                              }`}
+                          >
                             <img
                                 src={item.thumbnailUrl}
                                 alt={item.name}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
-                            <div className={`absolute inset-0 bg-gradient-to-t ${isPremium ? 'from-gray-900' : 'from-white via-white/20'} to-transparent`} />
+
+                            <div
+                                className={`absolute inset-0 bg-gradient-to-t ${
+                                    isPremium
+                                        ? "from-gray-900"
+                                        : "from-white via-white/20"
+                                } to-transparent`}
+                            />
                           </div>
                       )}
 
-                      <div className={`p-8 flex-1 flex flex-col ${item.thumbnailUrl ? 'pt-2' : ''}`}>
+                      <div
+                          className={`flex flex-1 flex-col p-8 ${
+                              item.thumbnailUrl ? "pt-2" : ""
+                          }`}
+                      >
                         {isPopular && !isCurrent && (
-                            <div className={`absolute ${item.thumbnailUrl ? 'top-4' : '-top-4'} left-1/2 -translate-x-1/2 w-full text-center z-10`}>
-                      <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white text-xs font-bold px-5 py-2 rounded-full shadow-lg shadow-emerald-700/30 uppercase tracking-wider">
-                        <Star className="w-3.5 h-3.5 fill-current" /> Phổ biến nhất
-                      </span>
+                            <div
+                                className={`absolute ${
+                                    item.thumbnailUrl ? "top-4" : "-top-4"
+                                } left-1/2 z-10 w-full -translate-x-1/2 text-center`}
+                            >
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-800 px-5 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-700/30">
+                          <Star className="h-3.5 w-3.5 fill-current" /> Phổ
+                          biến nhất
+                        </span>
                             </div>
                         )}
+
                         {isPremium && !isPopular && !isCurrent && (
-                            <div className={`absolute ${item.thumbnailUrl ? 'top-4' : '-top-4'} left-1/2 -translate-x-1/2 w-full text-center z-10`}>
-                      <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-yellow-500 to-yellow-700 text-white text-xs font-white px-5 py-2 rounded-none rounded-tr-xl rounded-bl-xl shadow-lg shadow-yellow-600/40 uppercase tracking-wider border border-yellow-400">
-                        <Crown className="w-4 h-4 fill-current" /> Dành cho VIP
-                      </span>
+                            <div
+                                className={`absolute ${
+                                    item.thumbnailUrl ? "top-4" : "-top-4"
+                                } left-1/2 z-10 w-full -translate-x-1/2 text-center`}
+                            >
+                        <span className="inline-flex items-center gap-1.5 rounded-none rounded-bl-xl rounded-tr-xl border border-yellow-400 bg-gradient-to-r from-yellow-500 to-yellow-700 px-5 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-yellow-600/40">
+                          <Crown className="h-4 w-4 fill-current" /> Dành cho
+                          VIP
+                        </span>
                             </div>
                         )}
+
                         {isCurrent && (
-                            <div className={`absolute ${item.thumbnailUrl ? 'top-4' : '-top-4'} left-1/2 -translate-x-1/2 w-full text-center z-10`}>
-                      <span className="inline-flex items-center gap-1.5 bg-fit-blue text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md uppercase tracking-wider">
-                        Gói hiện tại của bạn
-                      </span>
+                            <div
+                                className={`absolute ${
+                                    item.thumbnailUrl ? "top-4" : "-top-4"
+                                } left-1/2 z-10 w-full -translate-x-1/2 text-center`}
+                            >
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-fit-blue px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow-md">
+                          Gói hiện tại của bạn
+                        </span>
                             </div>
                         )}
 
                         <div className="mb-2 mt-2 text-center">
-                          <div className="flex justify-center items-center gap-2 mb-2">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${isPremium ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
-                        {item.packageType || "BASIC"}
-                      </span>
-                            <span className={`text-[10px] font-mono ${isPremium ? 'text-gray-300' : 'text-gray-400'}`}>{item.code}</span>
-                          </div>
-                          <h2 className={`text-3xl font-black ${headerStyle}`}>{item.name}</h2>
-                          <p className={`text-sm mt-3 ${isPremium ? 'text-white' : 'text-fit-muted'}`}>{item.description ? item.description.split('\n')[0] : "Tuyệt vời để bắt đầu tập luyện."}</p>
-                        </div>
+                          <div className="mb-2 flex items-center justify-center gap-2">
+                        <span
+                            className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                isPremium
+                                    ? "border-yellow-500/30 bg-yellow-500/20 text-yellow-400"
+                                    : "border-gray-200 bg-gray-100 text-gray-500"
+                            }`}
+                        >
+                          {item.packageType || "BASIC"}
+                        </span>
 
-                        <div className="my-6 text-center">
-                          <div className="flex justify-center items-end gap-1">
-                      <span className={`text-4xl font-black ${priceStyle}`}>
-                        {formatCurrency(item.basePrice)}
-                      </span>
+                            <span
+                                className={`font-mono text-[10px] ${
+                                    isPremium ? "text-gray-300" : "text-gray-400"
+                                }`}
+                            >
+                          {item.code}
+                        </span>
                           </div>
-                          <p className={`text-sm font-medium mt-2 ${isPremium ? 'text-gray-300' : 'text-fit-muted'}`}>
-                            / Giá cơ bản
+
+                          <h2 className={`text-3xl font-black ${headerStyle}`}>
+                            {item.name}
+                          </h2>
+
+                          <p
+                              className={`mt-3 text-sm ${
+                                  isPremium ? "text-white" : "text-fit-muted"
+                              }`}
+                          >
+                            {item.description
+                                ? item.description.split("\n")[0]
+                                : "Tuyệt vời để bắt đầu tập luyện."}
                           </p>
                         </div>
 
-                        <div className="flex-1 space-y-4 mb-8">
-                          {renderFeatures(item).map((feature, idx) => (
-                              <div className={`flex items-start gap-3 text-sm group/item ${featureTextStyle}`} key={idx}>
-                        <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-transform duration-300 group-hover/item:scale-110 ${featureIconStyle}`}>
-                          <Check className="h-3 w-3 stroke-[3]" />
+                        <div className="my-6 text-center">
+                          <div className="flex items-end justify-center gap-1">
+                        <span className={`text-4xl font-black ${priceStyle}`}>
+                          {formatCurrency(priceInfo.finalPrice)}
                         </span>
+                          </div>
+
+                          {selectedDuration && priceInfo.discountAmount > 0 && (
+                              <p
+                                  className={`mt-2 text-sm line-through ${
+                                      isPremium ? "text-gray-400" : "text-slate-400"
+                                  }`}
+                              >
+                                {formatCurrency(priceInfo.originalPrice)}
+                              </p>
+                          )}
+
+                          <p
+                              className={`mt-2 text-sm font-medium ${
+                                  isPremium ? "text-gray-300" : "text-fit-muted"
+                              }`}
+                          >
+                            / {getDurationLabel()}
+                          </p>
+
+                          {selectedDuration && priceInfo.discountAmount > 0 && (
+                              <p className="mt-1 text-xs font-bold text-yellow-500">
+                                Tiết kiệm {formatCurrency(priceInfo.discountAmount)}
+                              </p>
+                          )}
+                        </div>
+
+                        <div className="mb-8 flex-1 space-y-4">
+                          {renderFeatures(item).map((feature, idx) => (
+                              <div
+                                  className={`group/item flex items-start gap-3 text-sm ${featureTextStyle}`}
+                                  key={`${item.id}-${idx}`}
+                              >
+                          <span
+                              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-transform duration-300 group-hover/item:scale-110 ${featureIconStyle}`}
+                          >
+                            <Check className="h-3 w-3 stroke-[3]" />
+                          </span>
+
                                 <span className="leading-snug">{feature}</span>
                               </div>
                           ))}
                         </div>
 
                         <Button
-                            className={`mt-auto w-full py-3 text-base font-bold transition-all duration-300 rounded-2xl ${buttonClass}`}
+                            className={`mt-auto w-full rounded-2xl py-3 text-base font-bold transition-all duration-300 ${buttonClass}`}
                             variant={buttonVariant}
-                            disabled={isCurrent}
+                            disabled={isCurrent || !selectedDurationId}
                             isLoading={processingId === item.id}
                             onClick={() => handlePurchase(item.id)}
                         >
@@ -254,68 +552,183 @@ export default function PackageListPage() {
             })}
 
             {packages.length === 0 && (
-                <div className="col-span-full py-16 text-center text-fit-muted flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed border-fit-border">
-                  <Dumbbell className="h-12 w-12 text-fit-border mb-4" />
-                  <p className="text-lg">Hiện tại chưa có gói tập nào đang hoạt động.</p>
-                  <p className="text-sm mt-2">Vui lòng quay lại sau.</p>
+                <div className="col-span-full flex flex-col items-center justify-center rounded-3xl border border-dashed border-fit-border bg-white py-16 text-center text-fit-muted">
+                  <Dumbbell className="mb-4 h-12 w-12 text-fit-border" />
+                  <p className="text-lg">
+                    Hiện tại chưa có gói tập nào đang hoạt động.
+                  </p>
+                  <p className="mt-2 text-sm">Vui lòng quay lại sau.</p>
                 </div>
             )}
           </motion.div>
         </div>
 
+        {packages.length > 0 && (
+            <div className="mx-auto mt-16 max-w-6xl">
+              <div className="mb-6 text-center">
+                <p className="text-sm font-bold uppercase tracking-wider text-fit-primary">
+                  So sánh nhanh
+                </p>
+
+                <h2 className="mt-1 text-3xl font-black text-slate-900">
+                  Chọn gói phù hợp với nhu cầu của bạn
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  Giá bên dưới được tính theo thời hạn:{" "}
+                  <span className="font-bold text-fit-primary">
+                {selectedDuration?.name || "Chưa chọn"}
+              </span>
+                </p>
+              </div>
+
+              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                <div className="grid grid-cols-4 border-b border-slate-200 bg-slate-50 text-sm font-bold text-slate-700">
+                  <div className="p-4">Tiêu chí</div>
+                  {packages.map((pkg) => (
+                      <div key={pkg.id} className="p-4 text-center">
+                        {pkg.name}
+                      </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-4 border-b border-slate-100 text-sm">
+                  <div className="p-4 font-semibold text-slate-600">Giá</div>
+                  {packages.map((pkg) => {
+                    const priceInfo = calculatePrice(pkg);
+
+                    return (
+                        <div
+                            key={pkg.id}
+                            className="p-4 text-center font-black text-fit-primary"
+                        >
+                          {formatCurrency(priceInfo.finalPrice)}
+                        </div>
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-4 border-b border-slate-100 text-sm">
+                  <div className="p-4 font-semibold text-slate-600">
+                    AI lịch tập
+                  </div>
+                  {packages.map((pkg) => (
+                      <div key={pkg.id} className="p-4 text-center">
+                        {renderBoolean(pkg.hasAiWorkoutPlan)}
+                      </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-4 border-b border-slate-100 text-sm">
+                  <div className="p-4 font-semibold text-slate-600">
+                    Gợi ý dinh dưỡng
+                  </div>
+                  {packages.map((pkg) => (
+                      <div key={pkg.id} className="p-4 text-center">
+                        {renderBoolean(pkg.hasNutritionPlan)}
+                      </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-4 text-sm">
+                  <div className="p-4 font-semibold text-slate-600">
+                    PT mỗi tháng
+                  </div>
+                  {packages.map((pkg) => (
+                      <div key={pkg.id} className="p-4 text-center">
+                        {pkg.ptSessionsPerMonth > 0
+                            ? `${pkg.ptSessionsPerMonth} buổi`
+                            : "Không"}
+                      </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+        )}
+
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-16 max-w-[700px] mx-auto"
+            className="mx-auto mt-16 max-w-[700px]"
         >
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 p-8 text-white shadow-xl group flex flex-col md:flex-row items-center justify-between">
-            <div className="absolute top-0 right-1/2 p-4 opacity-10 transform translate-x-1/2 -translate-y-4 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
-              <Zap className="w-48 h-48 text-yellow-400" />
+          <div className="group relative flex flex-col items-center justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 p-8 text-white shadow-xl md:flex-row">
+            <div className="pointer-events-none absolute right-1/2 top-0 translate-x-1/2 -translate-y-4 p-4 opacity-10 transition-transform duration-700 group-hover:scale-110">
+              <Zap className="h-48 w-48 text-yellow-400" />
             </div>
 
-            <div className="relative z-10 text-center md:text-left mb-8 md:mb-0 md:mr-8">
-            <span className="inline-flex rounded-full px-3 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 mb-4 shadow-sm">
+            <div className="relative z-10 mb-8 text-center md:mb-0 md:mr-8 md:text-left">
+            <span className="mb-4 inline-flex rounded-full border border-yellow-400/30 bg-yellow-400/20 px-3 py-1 text-xs font-bold text-yellow-400 shadow-sm">
               Ưu đãi giới hạn
             </span>
-              <h2 className="text-3xl font-black text-white leading-tight mt-1">Deal sốc mùa hè<br />Đốt mỡ cực bốc</h2>
-              <div className="mt-4 flex flex-col sm:flex-row items-center md:items-baseline gap-3">
-              <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-sm">
+
+              <h2 className="mt-1 text-3xl font-black leading-tight text-white">
+                Deal sốc mùa hè
+                <br />
+                Đốt mỡ cực bốc
+              </h2>
+
+              <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row md:items-baseline">
+              <span className="bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-5xl font-black text-transparent drop-shadow-sm">
                 -20%
               </span>
-                <span className="text-gray-300 text-sm mt-2 sm:mt-0 text-left">Áp dụng cho tất cả gói tập khi đăng ký theo năm.<br/>Nhanh tay lên!</span>
+
+                <span className="mt-2 text-left text-sm text-gray-300 sm:mt-0">
+                Áp dụng cho tất cả gói tập khi đăng ký theo năm.
+                <br />
+                Nhanh tay lên!
+              </span>
               </div>
             </div>
 
-            <div className="relative z-10 flex flex-col items-center w-full md:w-auto">
-              <div className="grid grid-cols-4 gap-2 text-center mb-6 w-full">
-                {["06 Ng", "23 Gi", "48 Ph", "12 Gi"].map((time, i) => (
-                    <div className="rounded-xl bg-white/10 backdrop-blur-md p-3 border border-white/10 shadow-inner" key={i}>
-                      <div className="font-bold text-white text-xl">{time.split(" ")[0]}</div>
-                      <div className="text-[10px] text-gray-400 font-medium uppercase mt-1">{time.split(" ")[1]}</div>
+            <div className="relative z-10 flex w-full flex-col items-center md:w-auto">
+              <div className="mb-6 grid w-full grid-cols-4 gap-2 text-center">
+                {["06 Ng", "23 Gi", "48 Ph", "12 Gi"].map((time) => (
+                    <div
+                        className="rounded-xl border border-white/10 bg-white/10 p-3 shadow-inner backdrop-blur-md"
+                        key={time}
+                    >
+                      <div className="text-xl font-bold text-white">
+                        {time.split(" ")[0]}
+                      </div>
+                      <div className="mt-1 text-[10px] font-medium uppercase text-gray-400">
+                        {time.split(" ")[1]}
+                      </div>
                     </div>
                 ))}
               </div>
-              <Button className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-black border-0 shadow-lg hover:shadow-xl transition-all">
+
+              <Button className="w-full border-0 bg-yellow-400 font-black text-gray-900 shadow-lg transition-all hover:bg-yellow-500 hover:shadow-xl">
                 Nhận ưu đãi ngay
               </Button>
             </div>
           </div>
         </motion.div>
 
-        <div className="mt-12 max-w-2xl mx-auto">
-          <Card className="p-6 border-fit-border hover:border-fit-primary/30 transition-colors shadow-sm bg-white/60 backdrop-blur-sm">
-            <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
-              <div className="flex gap-4 items-center">
-                <div className="w-14 h-14 rounded-2xl bg-fit-primarySoft text-fit-primary flex items-center justify-center shrink-0">
-                  <Dumbbell className="w-7 h-7" />
+        <div className="mx-auto mt-12 max-w-2xl">
+          <Card className="border-fit-border bg-white/60 p-6 shadow-sm backdrop-blur-sm transition-colors hover:border-fit-primary/30">
+            <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-fit-primarySoft text-fit-primary">
+                  <Dumbbell className="h-7 w-7" />
                 </div>
+
                 <div>
-                  <h2 className="text-xl font-bold text-fit-text">Cần tư vấn thêm?</h2>
-                  <p className="mt-1 text-sm text-fit-muted leading-relaxed">Để lại thông tin, HLV của chúng tôi sẽ liên hệ bạn ngay lập tức.</p>
+                  <h2 className="text-xl font-bold text-fit-text">
+                    Cần tư vấn thêm?
+                  </h2>
+
+                  <p className="mt-1 text-sm leading-relaxed text-fit-muted">
+                    Để lại thông tin, HLV của chúng tôi sẽ liên hệ bạn ngay lập
+                    tức.
+                  </p>
                 </div>
               </div>
-              <Button className="w-full md:w-auto shrink-0 bg-white text-slate-800 border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm" variant="outline">
+
+              <Button
+                  className="w-full shrink-0 border-2 border-slate-200 bg-white text-slate-800 shadow-sm hover:border-slate-300 hover:bg-slate-50 md:w-auto"
+                  variant="outline"
+              >
                 Chat với Tư vấn viên
               </Button>
             </div>
@@ -323,20 +736,48 @@ export default function PackageListPage() {
         </div>
 
         {packages.length > 0 && (
-            <div className="mt-20 text-center max-w-5xl mx-auto">
-              <h2 className="text-2xl font-black text-fit-text mb-8">Tất cả các gói đều đi kèm tiện ích đẳng cấp</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="mx-auto mt-20 max-w-5xl text-center">
+              <h2 className="mb-8 text-2xl font-black text-fit-text">
+                Tất cả các gói đều đi kèm tiện ích đẳng cấp
+              </h2>
+
+              <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                 {[
-                  { icon: '🕒', title: 'Hoạt động 24/7', desc: 'Tập bất cứ khi nào bạn muốn' },
-                  { icon: '🚿', title: 'Phòng tắm cao cấp', desc: 'Đầy đủ tiện nghi xông hơi' },
-                  { icon: '🧘', title: 'Khu vực Yoga', desc: 'Không gian yên tĩnh, thư giãn' },
-                  { icon: '🚗', title: 'Bãi đỗ xe miễn phí', desc: 'An toàn và rộng rãi' },
-                ].map((feature, idx) => (
-                    <div key={idx} className="p-6 rounded-3xl bg-white border border-fit-border flex flex-col items-center justify-center gap-3 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  {
+                    icon: "🕒",
+                    title: "Hoạt động 24/7",
+                    desc: "Tập bất cứ khi nào bạn muốn",
+                  },
+                  {
+                    icon: "🚿",
+                    title: "Phòng tắm cao cấp",
+                    desc: "Đầy đủ tiện nghi xông hơi",
+                  },
+                  {
+                    icon: "🧘",
+                    title: "Khu vực Yoga",
+                    desc: "Không gian yên tĩnh, thư giãn",
+                  },
+                  {
+                    icon: "🚗",
+                    title: "Bãi đỗ xe miễn phí",
+                    desc: "An toàn và rộng rãi",
+                  },
+                ].map((feature) => (
+                    <div
+                        key={feature.title}
+                        className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-fit-border bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                    >
                       <span className="text-4xl">{feature.icon}</span>
+
                       <div>
-                        <h3 className="font-bold text-base text-fit-text">{feature.title}</h3>
-                        <p className="text-xs text-fit-muted mt-1">{feature.desc}</p>
+                        <h3 className="text-base font-bold text-fit-text">
+                          {feature.title}
+                        </h3>
+
+                        <p className="mt-1 text-xs text-fit-muted">
+                          {feature.desc}
+                        </p>
                       </div>
                     </div>
                 ))}
