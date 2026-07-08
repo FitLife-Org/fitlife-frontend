@@ -46,7 +46,9 @@ apiClient.interceptors.response.use(
       // Handle 401 or backend 500 MalformedJwtException
       const isJwtError = status === 500 && data && typeof data.message === 'string' && data.message.includes('JWT');
       
-      if (status === 401 || isJwtError) {
+      const isPublicEndpoint = error.config?.url?.includes('/public/');
+
+      if ((status === 401 || isJwtError) && !isPublicEndpoint) {
         tokenStorage.clear();
         localStorage.removeItem("authUser");
 
@@ -56,7 +58,8 @@ apiClient.interceptors.response.use(
       }
 
       if (status === 403) {
-        if (!window.location.pathname.includes("/403")) {
+        // Do not redirect to 403 if the request was for a public endpoint
+        if (!isPublicEndpoint && !window.location.pathname.includes("/403")) {
           window.location.href = "/403";
         }
       }
