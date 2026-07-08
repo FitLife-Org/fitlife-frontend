@@ -9,9 +9,6 @@ export interface MemberProfile {
   phone: string;
   gender?: string;
   dateOfBirth?: string;
-  height?: number;
-  weight?: number;
-  bmi?: number;
   status: Status;
   avatarUrl?: string;
   address?: string;
@@ -19,9 +16,7 @@ export interface MemberProfile {
   emergencyContactPhone?: string;
   healthNote?: string;
   fitnessGoal?: string;
-  activityLevel?: string;
   memberCode?: string;
-  memberSince?: string;
   joinDate?: string;
   isDeleted?: boolean;
   createdAt?: string;

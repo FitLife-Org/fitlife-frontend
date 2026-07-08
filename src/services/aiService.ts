@@ -4,21 +4,9 @@ import type {
   AiSuggestionResponse, 
   AiSuggestionDetailResponse, 
   AiFullPlanRequest,
+  AiBodyAnalysisRequest,
   AiGeneratedPlan
 } from "../types/ai.type";
-
-const MOCK_HISTORY: AiSuggestionResponse[] = [
-  { 
-    id: 1,
-    memberId: 1,
-    suggestionType: "FULL_PLAN",
-    status: "SUCCESS",
-    title: "Giáo án Giảm mỡ - Người mới", 
-    createdAt: "2026-07-01T10:00:00Z", 
-    promptText: "Mục tiêu giảm mỡ",
-    summary: "4 ngày/tuần kết hợp sức mạnh và tim mạch"
-  }
-];
 
 export const aiService = {
   async generateFullPlan(data: AiFullPlanRequest): Promise<AiSuggestionResponse> {
@@ -34,14 +22,17 @@ export const aiService = {
     return response.data.data;
   },
 
+  async analyzeBody(data: AiBodyAnalysisRequest): Promise<AiSuggestionResponse> {
+    const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
+        "/ai/suggestions/body-analysis",
+        data
+    );
+    return response.data.data;
+  },
+
   async getAiHistory(page = 0, size = 10): Promise<AiSuggestionResponse[]> {
-    try {
-      const response = await apiClient.get<ApiResponse<PageResponse<AiSuggestionResponse>>>(`/ai/suggestions/my?page=${page}&size=${size}`);
-      return response.data.data.content;
-    } catch (error) {
-      console.warn("API GET /ai/suggestions/my failed, using mock data");
-      return MOCK_HISTORY;
-    }
+    const response = await apiClient.get<ApiResponse<PageResponse<AiSuggestionResponse>>>(`/ai/suggestions/my?page=${page}&size=${size}`);
+    return response.data.data.content;
   },
 
   async getAiSuggestionDetail(id: number): Promise<AiSuggestionDetailResponse> {

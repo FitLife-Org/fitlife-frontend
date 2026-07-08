@@ -29,13 +29,9 @@ const MOCK_MEMBERS: MemberProfile[] = [
     phone: "0987654321",
     gender: "FEMALE",
     dateOfBirth: "1998-05-20",
-    height: 165,
-    weight: 55,
     status: "ACTIVE",
     address: "123 Cầu Giấy, Hà Nội",
     fitnessGoal: "Giảm mỡ, săn chắc cơ thể",
-    activityLevel: "Vừa phải (3-4 buổi/tuần)",
-    memberSince: "2026-01-15"
   },
   {
     id: 2,
@@ -45,13 +41,9 @@ const MOCK_MEMBERS: MemberProfile[] = [
     phone: "0978161320",
     gender: "MALE",
     dateOfBirth: "1995-10-12",
-    height: 178,
-    weight: 74,
     status: "ACTIVE",
     address: "456 Nguyễn Lương Bằng, Đà Nẵng",
     fitnessGoal: "Tăng cơ, cải thiện sức mạnh",
-    activityLevel: "Nhiều (5-6 buổi/tuần)",
-    memberSince: "2026-02-10"
   },
   {
     id: 3,
@@ -61,13 +53,9 @@ const MOCK_MEMBERS: MemberProfile[] = [
     phone: "0966482109",
     gender: "FEMALE",
     dateOfBirth: "2000-08-15",
-    height: 160,
-    weight: 48,
     status: "PENDING",
     address: "789 Nguyễn Thị Minh Khai, TP. Hồ Chí Minh",
     fitnessGoal: "Duy trì cân nặng, tăng dẻo dai",
-    activityLevel: "Nhẹ nhàng (1-2 buổi/tuần)",
-    memberSince: "2026-06-01"
   },
   {
     id: 4,
@@ -77,13 +65,9 @@ const MOCK_MEMBERS: MemberProfile[] = [
     phone: "0912345678",
     gender: "MALE",
     dateOfBirth: "1990-03-05",
-    height: 172,
-    weight: 68,
     status: "LOCKED",
     address: "101 Lạch Tray, Hải Phòng",
     fitnessGoal: "Tăng thể lực, cải thiện tim mạch",
-    activityLevel: "Lười vận động",
-    memberSince: "2025-11-20"
   }
 ];
 
@@ -173,12 +157,9 @@ export default function UserManagementPage() {
     phone: "",
     gender: "MALE",
     dateOfBirth: "",
-    height: undefined,
-    weight: undefined,
     status: "ACTIVE",
     address: "",
     fitnessGoal: "",
-    activityLevel: ""
   });
   const [formLoading, setFormLoading] = useState(false);
 
@@ -259,7 +240,6 @@ export default function UserManagementPage() {
       status: "ACTIVE",
       address: "",
       fitnessGoal: "",
-      activityLevel: ""
     } as any);
     setShowFormView(true);
   };
@@ -273,12 +253,9 @@ export default function UserManagementPage() {
       phone: member.phone,
       gender: member.gender || "MALE",
       dateOfBirth: member.dateOfBirth || "",
-      height: member.height,
-      weight: member.weight,
       status: member.status,
       address: member.address || "",
       fitnessGoal: member.fitnessGoal || "",
-      activityLevel: member.activityLevel || ""
     });
     setShowFormView(true);
   };
@@ -511,28 +488,6 @@ export default function UserManagementPage() {
                 />
               </div>
 
-              <div>
-                <Input 
-                  label="Chiều cao (cm)" 
-                  name="height"
-                  type="number"
-                  value={formValues.height || ""} 
-                  onChange={(e) => setFormValues(prev => ({ ...prev, height: e.target.value ? Number(e.target.value) : undefined }))}
-                  placeholder="Ví dụ: 175"
-                />
-              </div>
-
-              <div>
-                <Input 
-                  label="Cân nặng (kg)" 
-                  name="weight"
-                  type="number"
-                  value={formValues.weight || ""} 
-                  onChange={(e) => setFormValues(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
-                  placeholder="Ví dụ: 65"
-                />
-              </div>
-
               <div className="col-span-2">
                 <Input 
                   label="Địa chỉ" 
@@ -557,16 +512,6 @@ export default function UserManagementPage() {
                   <option value="IMPROVE_HEALTH">Cải thiện sức khỏe</option>
                   <option value="BODY_RECOMPOSITION">Tái tạo hình thể (giảm mỡ, tăng cơ)</option>
                 </select>
-              </div>
-
-              <div>
-                <Input 
-                  label="Tần suất vận động" 
-                  name="activityLevel"
-                  value={formValues.activityLevel} 
-                  onChange={(e) => setFormValues(prev => ({ ...prev, activityLevel: e.target.value }))}
-                  placeholder="Ví dụ: 3 buổi/tuần"
-                />
               </div>
 
               <div>
@@ -753,7 +698,7 @@ export default function UserManagementPage() {
                         {member.gender === "MALE" ? "Nam" : member.gender === "FEMALE" ? "Nữ" : "Khác"}
                       </td>
                       <td className="px-6 py-4 text-[13px] text-slate-500 font-medium">
-                        {member.memberSince || "Gần đây"}
+                        {member.joinDate || "Gần đây"}
                       </td>
                       <td className="px-6 py-4">
                         {renderStatusBadge(member.status)}
@@ -882,39 +827,12 @@ export default function UserManagementPage() {
                       <span className="text-sm font-medium text-slate-800 mt-1">{selectedMember.address || "Chưa cập nhật"}</span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100 flex flex-col items-center">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">Chiều cao</span>
-                        <span className="text-base font-black text-slate-800 mt-1">{selectedMember.height ? `${selectedMember.height} cm` : "-"}</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100 flex flex-col items-center">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">Cân nặng</span>
-                        <span className="text-base font-black text-slate-800 mt-1">{selectedMember.weight ? `${selectedMember.weight} kg` : "-"}</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100 flex flex-col items-center">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">Chỉ số BMI</span>
-                        {(() => {
-                          const bmi = getBmiInfo(selectedMember.height, selectedMember.weight, selectedMember.bmi);
-                          return (
-                            <>
-                              <span className="text-base font-black text-slate-800 mt-1">{bmi.value}</span>
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1 ${bmi.color}`}>
-                                {bmi.label}
-                              </span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
+                    
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-3 rounded-xl border border-slate-100 flex flex-col">
                         <span className="text-[10px] text-slate-400 font-bold uppercase">Mục tiêu tập luyện</span>
                         <span className="text-xs font-semibold text-slate-700 mt-1.5">{selectedMember.fitnessGoal || "Chưa cập nhật"}</span>
-                      </div>
-                      <div className="p-3 rounded-xl border border-slate-100 flex flex-col">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">Tần suất vận động</span>
-                        <span className="text-xs font-semibold text-slate-700 mt-1.5">{selectedMember.activityLevel || "Chưa cập nhật"}</span>
                       </div>
                     </div>
                   </div>

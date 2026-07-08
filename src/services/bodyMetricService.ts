@@ -97,6 +97,9 @@ export const bodyMetricService = {
 
   deleteMetric: async (id: number): Promise<void> => {
     await apiClient.delete(`/admin/body-metrics/${id}`);
+  },
+  async getAdminLatestMetric(memberId: number): Promise<BodyMetric | null> {
+    const response = await apiClient.get<ApiResponse<BodyMetric | null>>(`/admin/body-metrics/member/${memberId}/latest`);
+    return response.data.data;
   }
 };
-

@@ -25,8 +25,7 @@ export default function GymPackageTab() {
     name: "",
     packageType: "BASIC",
     basePrice: "",
-    ptSessionsPerMonth: "0",
-    hasPtService: false,
+    ptSessionsPerMonth: 0,
     hasAiWorkoutPlan: false,
     hasNutritionPlan: false,
     description: "",
@@ -61,8 +60,7 @@ export default function GymPackageTab() {
         name: pkg.name,
         packageType: pkg.packageType || "BASIC",
         basePrice: pkg.basePrice.toString(),
-        ptSessionsPerMonth: pkg.ptSessionsPerMonth.toString(),
-        hasPtService: pkg.hasPtService || false,
+        ptSessionsPerMonth: pkg.ptSessionsPerMonth || 0,
         hasAiWorkoutPlan: pkg.hasAiWorkoutPlan || false,
         hasNutritionPlan: pkg.hasNutritionPlan || false,
         description: pkg.description || "",
@@ -76,8 +74,7 @@ export default function GymPackageTab() {
         name: "", 
         packageType: "BASIC", 
         basePrice: "", 
-        ptSessionsPerMonth: "0",
-        hasPtService: false,
+        ptSessionsPerMonth: 0,
         hasAiWorkoutPlan: false,
         hasNutritionPlan: false,
         description: "",
@@ -292,19 +289,10 @@ export default function GymPackageTab() {
               placeholder="VD: 4"
               required
               value={formData.ptSessionsPerMonth}
-              onChange={(e) => setFormData({ ...formData, ptSessionsPerMonth: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, ptSessionsPerMonth: Number(e.target.value) })}
             />
           </div>
           <div className="flex gap-6 mt-2 mb-4">
-            <label className="flex items-center gap-2 text-sm font-semibold text-fit-text cursor-pointer">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded border-fit-border text-fit-primary focus:ring-fit-primary"
-                checked={formData.hasPtService}
-                onChange={(e) => setFormData({ ...formData, hasPtService: e.target.checked })}
-              />
-              Bao gồm PT cá nhân
-            </label>
             <label className="flex items-center gap-2 text-sm font-semibold text-fit-text cursor-pointer">
               <input
                 type="checkbox"
@@ -313,6 +301,15 @@ export default function GymPackageTab() {
                 onChange={(e) => setFormData({ ...formData, hasAiWorkoutPlan: e.target.checked })}
               />
               Tích hợp AI
+            </label>
+            <label className="flex items-center gap-2 text-sm font-semibold text-fit-text cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-fit-border text-fit-primary focus:ring-fit-primary"
+                checked={formData.hasNutritionPlan}
+                onChange={(e) => setFormData({ ...formData, hasNutritionPlan: e.target.checked })}
+              />
+              Gói dinh dưỡng
             </label>
           </div>
           <div className="flex justify-end gap-3 mt-6">

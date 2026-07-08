@@ -29,7 +29,7 @@ export const userService = {
         fullName: u.fullName,
         email: u.email,
         phone: u.phone,
-        role: (u.roles && u.roles.length > 0) ? u.roles[0] : "ROLE_MEMBER",
+        roles: u.roles || ["ROLE_MEMBER"],
         status: u.status
       })),
       totalItems: pageData.totalElements || 0,
@@ -49,7 +49,7 @@ export const userService = {
       fullName: u.fullName,
       email: u.email,
       phone: u.phone,
-      role: (u.roles && u.roles.length > 0) ? u.roles[0] : "ROLE_MEMBER",
+      roles: u.roles || ["ROLE_MEMBER"],
       status: u.status
     };
   },
@@ -64,7 +64,7 @@ export const userService = {
       fullName: u.fullName,
       email: u.email,
       phone: u.phone,
-      role: (u.roles && u.roles.length > 0) ? u.roles[0] : "ROLE_MEMBER",
+      roles: u.roles || ["ROLE_MEMBER"],
       status: u.status
     };
   },
@@ -79,7 +79,7 @@ export const userService = {
       fullName: u.fullName,
       email: u.email,
       phone: u.phone,
-      role: (u.roles && u.roles.length > 0) ? u.roles[0] : "ROLE_MEMBER",
+      roles: u.roles || ["ROLE_MEMBER"],
       status: u.status
     };
   },
@@ -94,7 +94,7 @@ export const userService = {
       fullName: u.fullName,
       email: u.email,
       phone: u.phone,
-      role: (u.roles && u.roles.length > 0) ? u.roles[0] : "ROLE_MEMBER",
+      roles: u.roles || ["ROLE_MEMBER"],
       status: u.status
     };
   },
@@ -109,7 +109,7 @@ export const userService = {
       fullName: u.fullName,
       email: u.email,
       phone: u.phone,
-      role: (u.roles && u.roles.length > 0) ? u.roles[0] : "ROLE_MEMBER",
+      roles: u.roles || ["ROLE_MEMBER"],
       status: u.status
     };
   },
@@ -124,7 +124,7 @@ export const userService = {
       fullName: u.fullName,
       email: u.email,
       phone: u.phone,
-      role: (u.roles && u.roles.length > 0) ? u.roles[0] : "ROLE_MEMBER",
+      roles: u.roles || ["ROLE_MEMBER"],
       status: u.status
     };
   },
@@ -139,7 +139,7 @@ export const userService = {
       fullName: u.fullName,
       email: u.email,
       phone: u.phone,
-      role: "ROLE_MEMBER",
+      roles: ["ROLE_MEMBER"],
       status: u.status
     };
   },

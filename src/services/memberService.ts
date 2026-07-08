@@ -120,5 +120,9 @@ export const memberService = {
     const response = await apiClient.get<ApiResponse<CheckinRecord[]>>(`/admin/members/${id}/checkins`);
     return response.data.data || [];
   },
-};
 
+  async restoreMember(id: number): Promise<MemberProfile> {
+    const response = await apiClient.patch<ApiResponse<MemberProfile>>(`/admin/members/${id}/restore`);
+    return response.data.data as MemberProfile;
+  }
+};

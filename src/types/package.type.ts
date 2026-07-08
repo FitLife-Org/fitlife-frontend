@@ -15,12 +15,10 @@ export interface GymPackage {
   description?: string;
   benefits?: string;
   thumbnailUrl?: string;
-  hasPtService?: boolean;
   hasAiWorkoutPlan: boolean;
   hasNutritionPlan: boolean;
   ptSessionsPerMonth: number;
   status: string;
-  isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
