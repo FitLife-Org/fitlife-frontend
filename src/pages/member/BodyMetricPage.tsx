@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Plus, TrendingDown, TrendingUp, Scale, Ruler, HeartPulse, Dumbbell } from "lucide-react";
+import { motion } from "framer-motion";
+import { Activity, TrendingDown, TrendingUp, Scale, Ruler, HeartPulse, Dumbbell } from "lucide-react";
 import toast from "react-hot-toast";
 import { bodyMetricService } from "../../services/bodyMetricService";
 import type { BodyMetric, BodyMetricProgress } from "../../types/member.type";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
 
 export default function BodyMetricPage() {
   const [metrics, setMetrics] = useState<BodyMetric[]>([]);
   const [progress, setProgress] = useState<BodyMetricProgress[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  
-  const [formData, setFormData] = useState({ heightCm: "", weightKg: "", bodyFatPercent: "", muscleMassKg: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -28,34 +22,10 @@ export default function BodyMetricPage() {
       ]);
       setMetrics(metricsData.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()));
       setProgress(progressData);
+    } catch (error) {
+      toast.error("Không thể tải chỉ số cơ thể.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.heightCm || !formData.weightKg) {
-      toast.error("Vui lòng nhập chiều cao và cân nặng.");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    try {
-      const newMetric = await bodyMetricService.createMyMetric({
-        heightCm: Number(formData.heightCm),
-        weightKg: Number(formData.weightKg),
-        bodyFatPercent: formData.bodyFatPercent ? Number(formData.bodyFatPercent) : undefined,
-        muscleMassKg: formData.muscleMassKg ? Number(formData.muscleMassKg) : undefined,
-      });
-      setMetrics(prev => [newMetric, ...prev]);
-      setShowForm(false);
-      setFormData({ heightCm: "", weightKg: "", bodyFatPercent: "", muscleMassKg: "" });
-      toast.success("Thêm chỉ số mới thành công!");
-    } catch (error) {
-      toast.error("Lỗi khi thêm chỉ số.");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -96,68 +66,13 @@ export default function BodyMetricPage() {
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Chỉ số cơ thể</h1>
           <p className="text-slate-500 mt-2 text-lg">Theo dõi hành trình thay đổi vóc dáng của bạn.</p>
         </div>
-        <Button 
-          variant="primary"
-          onClick={() => setShowForm(!showForm)}
-          className="rounded-full bg-slate-900 text-white flex items-center gap-2 hover:bg-slate-800 shadow-lg shadow-slate-900/20 border-none"
-        >
-          {showForm ? "Hủy" : <><Plus className="w-4 h-4" /> Cập nhật InBody</>}
-        </Button>
       </div>
-
-      <AnimatePresence>
-        {showForm && (
-          <motion.form 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-sm"
-            onSubmit={handleCreate}
-          >
-            <h3 className="text-xl font-bold text-slate-900 mb-6">Thêm chỉ số mới (Hôm nay)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-              <Input 
-                label="Chiều cao (cm) *" 
-                type="number" 
-                value={formData.heightCm} 
-                onChange={(e) => setFormData({...formData, heightCm: e.target.value})} 
-                placeholder="Ví dụ: 175"
-              />
-              <Input 
-                label="Cân nặng (kg) *" 
-                type="number" 
-                value={formData.weightKg} 
-                onChange={(e) => setFormData({...formData, weightKg: e.target.value})} 
-                placeholder="Ví dụ: 70.5"
-              />
-              <Input 
-                label="Tỷ lệ mỡ (%)" 
-                type="number" 
-                value={formData.bodyFatPercent} 
-                onChange={(e) => setFormData({...formData, bodyFatPercent: e.target.value})} 
-                placeholder="Ví dụ: 15.5"
-              />
-              <Input 
-                label="Cơ bắp (kg)" 
-                type="number" 
-                value={formData.muscleMassKg} 
-                onChange={(e) => setFormData({...formData, muscleMassKg: e.target.value})} 
-                placeholder="Ví dụ: 35.2"
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button type="submit" className="rounded-full bg-emerald-500 text-white border-none hover:bg-emerald-600 px-8" disabled={isSubmitting}>
-                {isSubmitting ? "Đang lưu..." : "Lưu chỉ số"}
-              </Button>
-            </div>
-          </motion.form>
-        )}
-      </AnimatePresence>
 
       {!latestMetric ? (
         <div className="bg-slate-50 rounded-3xl p-12 text-center border border-slate-100">
-          <p className="text-slate-500 mb-4">Chưa có dữ liệu InBody nào.</p>
-          <Button variant="primary" onClick={() => setShowForm(true)} className="rounded-full">Thêm chỉ số đầu tiên</Button>
+          <Activity className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">Bạn chưa có dữ liệu InBody nào.</p>
+          <p className="text-sm text-slate-400 mt-2">Vui lòng liên hệ Huấn luyện viên (PT) hoặc Lễ tân để được đo và cập nhật chỉ số.</p>
         </div>
       ) : (
         <div className="space-y-8">

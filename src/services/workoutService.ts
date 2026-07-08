@@ -40,7 +40,6 @@ const MOCK_WORKOUT_PLAN: WorkoutPlan = {
 };
 
 export const workoutService = {
-  // WKT-01: Lấy danh sách kế hoạch tập (Trainer/Admin)
   getWorkoutPlans: async (): Promise<WorkoutPlan[]> => {
     try {
       const response = await apiClient.get<ApiResponse<WorkoutPlan[]>>("/workout-plans");
@@ -51,7 +50,6 @@ export const workoutService = {
     }
   },
 
-  // WKT-02: Chi tiết kế hoạch tập
   getWorkoutPlanDetails: async (id: string): Promise<WorkoutPlan> => {
     try {
       const response = await apiClient.get<ApiResponse<WorkoutPlan>>(`/workout-plans/${id}`);

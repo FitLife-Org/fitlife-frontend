@@ -9,14 +9,12 @@ const MOCK_CHECKINS: CheckinRecord[] = [
 ];
 
 export const checkinService = {
-  // CHK-01: Member generate QR
   async generateQr(): Promise<GenerateQrResponse> {
     try {
       const response = await apiClient.post<ApiResponse<GenerateQrResponse>>("/checkin/qr/generate");
       return response.data.data;
     } catch (error) {
       console.warn("API POST /checkin/qr/generate failed, using mock data", error);
-      // Giả lập QR code dạng chuỗi
       return {
         qrCodeData: "MOCK_QR_CODE_MEMBER_1_" + Date.now(),
         expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // Hết hạn sau 5 phút
@@ -35,8 +33,7 @@ export const checkinService = {
     }
   },
   
-  // Lấy lịch sử của bản thân (Member dùng chung Endpoint GET /checkins/me hoặc /checkin/history)
-  async getMyCheckins(): Promise<CheckinRecord[]> {
+ async getMyCheckins(): Promise<CheckinRecord[]> {
     try {
       const response = await apiClient.get<ApiResponse<CheckinRecord[]>>("/checkins/me");
       return response.data.data;

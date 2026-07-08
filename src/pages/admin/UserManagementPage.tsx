@@ -87,7 +87,7 @@ const MOCK_MEMBERS: MemberProfile[] = [
   }
 ];
 
-const MOCK_SUBSCRIPTIONS: Record<number, Subscription[]> = {
+const MOCK_SUBSCRIPTIONS: Record<number, any> = {
   1: [
     {
       id: 101,
@@ -492,7 +492,7 @@ export default function UserManagementPage() {
                 <label className="block text-sm font-semibold text-slate-700">Giới tính</label>
                 <select 
                   value={formValues.gender}
-                  onChange={(e) => setFormValues(prev => ({ ...prev, gender: e.target.value as Gender }))}
+                  onChange={(e) => setFormValues(prev => ({ ...prev, gender: e.target.value }))}
                   className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
                 >
                   <option value="MALE">Nam</option>
@@ -942,7 +942,7 @@ export default function UserManagementPage() {
                             </div>
                             <div className="flex flex-col items-end gap-1.5">
                               <span className="font-semibold text-fit-primary">
-                                {sub.package?.basePrice?.toLocaleString("vi-VN")} ₫
+                                {((sub.package as any)?.basePrice || sub.basePrice || 0).toLocaleString("vi-VN")} ₫
                               </span>
                               {sub.status === "ACTIVE" ? (
                                 <Badge variant="success">Hoạt động</Badge>

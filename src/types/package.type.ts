@@ -15,6 +15,7 @@ export interface GymPackage {
   description?: string;
   benefits?: string;
   thumbnailUrl?: string;
+  hasPtService?: boolean;
   hasAiWorkoutPlan: boolean;
   hasNutritionPlan: boolean;
   ptSessionsPerMonth: number;
@@ -59,5 +60,20 @@ export interface AdminPackageUpdateRequest {
   description?: string;
   benefits?: string;
   thumbnailUrl?: string;
+  status?: string;
+}
+
+export interface AdminPackageDurationCreateRequest {
+  code: string;
+  name: string;
+  months: number;
+  discountPercent: number;
+  status?: string;
+}
+
+export interface AdminPackageDurationUpdateRequest {
+  name: string;
+  months: number;
+  discountPercent: number;
   status?: string;
 }

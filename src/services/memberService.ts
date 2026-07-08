@@ -62,48 +62,48 @@ export const memberService = {
   async getMemberById(id: number): Promise<MemberProfile> {
     const response = await apiClient.get<ApiResponse<MemberProfile>>(`/admin/members/${id}`);
     const member = response.data.data;
-    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
 
   async getMemberByCode(memberCode: string): Promise<MemberProfile> {
     const response = await apiClient.get<ApiResponse<MemberProfile>>(`/admin/members/code/${memberCode}`);
     const member = response.data.data;
-    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
 
   async createMember(data: AdminMemberCreateRequest): Promise<MemberProfile> {
-    const payload = { ...data };
-    if (payload.status === 'LOCKED') payload.status = 'SUSPENDED' as any;
-    if (payload.status === 'PENDING') payload.status = 'INACTIVE' as any;
-    if ((payload as any).fitnessGoal === "") delete (payload as any).fitnessGoal;
+    const payload: any = { ...data };
+    if (payload.status === 'LOCKED') payload.status = 'SUSPENDED';
+    if (payload.status === 'PENDING') payload.status = 'INACTIVE';
+    if (payload.fitnessGoal === "") delete payload.fitnessGoal;
     
     const response = await apiClient.post<ApiResponse<MemberProfile>>("/admin/members", payload);
     const member = response.data.data;
-    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
 
   async updateMember(id: number, data: AdminMemberUpdateRequest): Promise<MemberProfile> {
-    const payload = { ...data };
-    if (payload.status === 'LOCKED') payload.status = 'SUSPENDED' as any;
-    if (payload.status === 'PENDING') payload.status = 'INACTIVE' as any;
-    if ((payload as any).fitnessGoal === "") delete (payload as any).fitnessGoal;
+    const payload: any = { ...data };
+    if (payload.status === 'LOCKED') payload.status = 'SUSPENDED';
+    if (payload.status === 'PENDING') payload.status = 'INACTIVE';
+    if (payload.fitnessGoal === "") delete payload.fitnessGoal;
     
     const response = await apiClient.put<ApiResponse<MemberProfile>>(`/admin/members/${id}`, payload);
     const member = response.data.data;
-    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
 
   async updateMemberStatus(id: number, status: Status): Promise<MemberProfile> {
-    let mappedStatus = status;
-    if (status === 'LOCKED') mappedStatus = 'SUSPENDED' as any;
-    if (status === 'PENDING') mappedStatus = 'INACTIVE' as any;
+    let mappedStatus: any = status;
+    if (status === 'LOCKED') mappedStatus = 'SUSPENDED';
+    if (status === 'PENDING') mappedStatus = 'INACTIVE';
     const response = await apiClient.patch<ApiResponse<MemberProfile>>(`/admin/members/${id}/status`, { status: mappedStatus });
     const member = response.data.data;
-    if (member.status === 'SUSPENDED') member.status = 'LOCKED';
+    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
 
