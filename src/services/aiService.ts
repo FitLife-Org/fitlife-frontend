@@ -6,7 +6,7 @@ import type {
   AiFullPlanRequest,
   AiBodyAnalysisRequest,
   AiGeneratedPlan
-} from "../types/ai.type";
+, AiFeedbackRequest} from "../types/ai.type";
 
 export const aiService = {
   async generateFullPlan(data: AiFullPlanRequest): Promise<AiSuggestionResponse> {
@@ -40,7 +40,13 @@ export const aiService = {
     return response.data.data;
   },
 
+  
+  async submitFeedback(id: number, data: AiFeedbackRequest): Promise<void> {
+    await apiClient.post<ApiResponse<void>>(`/ai/suggestions/${id}/feedback`, data);
+  },
+
   async applyPlan(plan: AiGeneratedPlan): Promise<void> {
+
     try {
       // Backend doesn't have an apply endpoint yet, so we mock it
       // await apiClient.post(`/ai/suggestions/${planId}/apply`);

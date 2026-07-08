@@ -69,3 +69,8 @@ export interface AiSuggestionDetailResponse extends AiSuggestionResponse {
 export interface AiBodyAnalysisRequest {
   userNote?: string;
 }
+
+export interface AiFeedbackRequest {
+  rating: number;
+  comment?: string;
+}

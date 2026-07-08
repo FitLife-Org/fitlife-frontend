@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const stats = await adminDashboardService.getStats();
+        const stats = await adminDashboardService.getDashboardStats();
         setData(stats);
       } catch (error) {
         console.error("Failed to load dashboard stats", error);

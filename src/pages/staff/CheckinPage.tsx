@@ -23,8 +23,8 @@ export default function CheckinPage() {
 
   const fetchHistory = async () => {
     try {
-      const data = await checkinService.getHistory();
-      setHistory(data.sort((a, b) => new Date(b.checkedInAt).getTime() - new Date(a.checkedInAt).getTime()));
+      const data = await checkinService.getCheckinHistory();
+      setHistory(data.sort((a: any, b: any) => new Date(b.checkedInAt).getTime() - new Date(a.checkedInAt).getTime()));
     } catch (e) {
       console.error(e);
     }
@@ -33,7 +33,7 @@ export default function CheckinPage() {
   const handleSimulateScan = async () => {
     setScanning(true);
     try {
-      const record = await checkinService.scanCheckin({ qrToken: "MOCK_QR_TOKEN_" + Date.now() });
+      const record = await checkinService.scanQr({ qrToken: "MOCK_QR_TOKEN_" + Date.now() });
       toast.success(`Check-in thành công cho: ${record.memberName}`);
       setHistory(prev => [record, ...prev]);
     } catch (error) {
