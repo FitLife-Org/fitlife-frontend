@@ -20,3 +20,12 @@ export interface ManualCheckinRequest {
 export interface ScanCheckinRequest {
   qrToken: string;
 }
+
+export interface MemberLookupResult {
+  id: number;
+  fullName: string;
+  phone: string;
+  avatarUrl?: string;
+  packageName: string;
+  packageStatus: "ACTIVE" | "EXPIRED" | "NONE";
+}

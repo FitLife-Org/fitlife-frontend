@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 import type { ApiResponse } from "../types/common.type";
-import type { CheckinRecord, GenerateQrResponse, ManualCheckinRequest, ScanCheckinRequest } from "../types/checkin.type";
+import type { CheckinRecord, GenerateQrResponse, ManualCheckinRequest, ScanCheckinRequest, MemberLookupResult } from "../types/checkin.type";
 
 export const checkinService = {
   async generateQr(): Promise<GenerateQrResponse> {
@@ -24,8 +24,8 @@ export const checkinService = {
   },
 
   // Lookup for manual checkin
-  async lookupMember(query: string): Promise<any[]> {
-    const response = await apiClient.get<ApiResponse<any[]>>(`/check-ins/lookup?query=${query}`);
+  async lookupMember(query: string): Promise<MemberLookupResult[]> {
+    const response = await apiClient.get<ApiResponse<MemberLookupResult[]>>(`/check-ins/lookup?query=${query}`);
     return response.data.data;
   },
 
