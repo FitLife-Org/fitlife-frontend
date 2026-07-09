@@ -57,7 +57,6 @@ export default function AdminDashboardPage() {
         description="Tổng quan hoạt động và doanh thu hệ thống phòng gym FitLife" 
       />
       
-      {/* Overview Metric Cards */}
       <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <AdminMetric 
           icon={<Users className="w-7 h-7" />} 
@@ -89,7 +88,6 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      {/* Charts Row */}
       <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <Card className="p-6 sm:p-8 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent pointer-events-none" />
@@ -187,7 +185,6 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Activity Logs Row */}
       <div className="grid gap-6 md:grid-cols-3">
         <ListCard title="Hội viên mới (24h)" items={recentMembers} />
         <ListCard title="Lịch PT sắp diễn ra" items={todaySchedule} />
@@ -218,7 +215,6 @@ function AdminMetric({ icon, label, value, growth, tone = "green" }: AdminMetric
 
   return (
     <Card className="p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1 relative overflow-hidden group">
-      {/* Decorative gradient blob */}
       <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 transition-transform duration-500 group-hover:scale-150 ${tones[tone].split(' ')[1].replace('text-', 'bg-')}`} />
       
       <div className="flex items-start justify-between relative z-10">

@@ -18,11 +18,9 @@ export default function TrainerManagementPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   
-  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
   
-  // Form state
   const [formData, setFormData] = useState<TrainerFormData>({
     fullName: "",
     specialty: "",
@@ -77,7 +75,6 @@ export default function TrainerManagementPage() {
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error on type
     if (formErrors[name as keyof TrainerFormData]) {
       setFormErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -200,7 +197,6 @@ export default function TrainerManagementPage() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="group relative bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300 overflow-hidden"
               >
-                {/* Decorative gradient blur */}
                 <div className="absolute -right-10 -top-10 w-32 h-32 bg-slate-950/5 rounded-full blur-2xl group-hover:bg-slate-950/10 transition-colors" />
                 
                 <div className="relative z-10">
@@ -257,7 +253,6 @@ export default function TrainerManagementPage() {
         </motion.div>
       )}
 
-      {/* CREATE / UPDATE MODAL */}
       <Modal 
         title={editingTrainer ? "Chỉnh sửa Thông tin PT" : "Thêm PT Mới"} 
         open={isModalOpen} 
