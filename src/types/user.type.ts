@@ -6,8 +6,13 @@ export interface User {
   fullName: string;
   email: string;
   phone?: string;
-  role: Role;
+  roles: string[];
   status: Status;
+  avatarUrl?: string;
+  authProvider?: string;
+  emailVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AdminUserCreateRequest {

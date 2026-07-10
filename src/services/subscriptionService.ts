@@ -75,5 +75,24 @@ export const subscriptionService = {
             console.error("GET_MY_ACTIVE_SUBSCRIPTION_ERROR:", error);
             return null;
         }
-    }
+    },
+  async getAdminSubscriptions(params?: { page?: number; size?: number; status?: string; memberId?: number; gymPackageId?: number; }): Promise<Subscription[]> {
+    const response = await apiClient.get<ApiResponse<PageResponse<Subscription> | Subscription[]>>('/admin/subscriptions', { params });
+    return extractPageContent<Subscription>(response.data.data);
+  },
+
+  async getAdminSubscriptionById(id: number): Promise<Subscription> {
+    const response = await apiClient.get<ApiResponse<Subscription>>(`/admin/subscriptions/${id}`);
+    return response.data.data;
+  },
+
+  async expireSubscription(id: number, reason: string): Promise<Subscription> {
+    const response = await apiClient.patch<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/expire`, { reason });
+    return response.data.data;
+  },
+
+  async cancelSubscriptionAdmin(id: number, reason: string): Promise<Subscription> {
+    const response = await apiClient.patch<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/cancel`, { reason });
+    return response.data.data;
+  }
 };

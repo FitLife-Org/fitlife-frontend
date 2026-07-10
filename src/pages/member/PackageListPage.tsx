@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, type Variants } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { showAlert } from "../../utils/alert";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
@@ -249,58 +249,69 @@ export default function PackageListPage() {
         </div>
 
         {durations.length > 0 && (
-            <div className="mx-auto mb-10 max-w-4xl">
-              <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
-                <div className="mb-4 text-center">
-                  <p className="text-sm font-bold uppercase tracking-wider text-fit-primary">
-                    Chọn thời hạn
-                  </p>
+            <div className="mx-auto mb-16 mt-8 flex flex-col items-center">
+              <div className="mb-6 text-center">
+                <p className="text-sm font-bold uppercase tracking-wider text-fit-primary">
+                  Chọn thời hạn
+                </p>
+                <h2 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">
+                  Linh hoạt theo mục tiêu tập luyện
+                </h2>
+              </div>
 
-                  <h2 className="mt-1 text-2xl font-black text-slate-900">
-                    Linh hoạt theo mục tiêu tập luyện của bạn
-                  </h2>
-                </div>
+              <div className="relative flex w-full max-w-4xl flex-wrap justify-center gap-2 rounded-3xl bg-slate-100/80 p-2 shadow-inner backdrop-blur sm:flex-nowrap sm:rounded-full">
+                {durations.map((duration) => {
+                  const active = selectedDurationId === duration.id;
+                  const isRecommended = duration.months >= 6; // Đề xuất gói từ 6 tháng trở lên
 
-                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-                  {durations.map((duration) => {
-                    const active = selectedDurationId === duration.id;
-
-                    return (
-                        <button
-                            key={duration.id}
-                            type="button"
-                            onClick={() => setSelectedDurationId(duration.id)}
-                            className={`rounded-2xl border-2 p-4 text-center transition-all ${
-                                active
-                                    ? "border-fit-primary bg-emerald-50 shadow-lg shadow-emerald-500/20"
-                                    : "border-slate-200 bg-white hover:border-fit-primary/40 hover:bg-slate-50"
-                            }`}
-                        >
-                          <p
-                              className={`text-lg font-black ${
-                                  active ? "text-fit-primary" : "text-slate-900"
-                              }`}
-                          >
-                            {duration.name}
-                          </p>
-
-                          <p className="mt-1 text-sm text-slate-500">
-                            {duration.months} tháng
-                          </p>
-
-                          {duration.discountPercent > 0 ? (
-                              <span className="mt-3 inline-flex rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-700">
-                        Giảm {duration.discountPercent}%
-                      </span>
-                          ) : (
-                              <span className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">
-                        Không giảm giá
-                      </span>
-                          )}
-                        </button>
-                    );
-                  })}
-                </div>
+                  return (
+                      <button
+                          key={duration.id}
+                          onClick={() => setSelectedDurationId(duration.id)}
+                          className={`relative flex-1 rounded-2xl sm:rounded-full px-4 py-4 sm:py-5 text-center transition-colors ${
+                              active ? "text-slate-900" : "text-slate-500 hover:text-slate-800"
+                          }`}
+                          style={{ minWidth: "150px" }}
+                      >
+                        {active && (
+                            <motion.div
+                                layoutId="active-duration-pill"
+                                className="absolute inset-0 rounded-2xl sm:rounded-full bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-slate-200/50"
+                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            />
+                        )}
+                        <div className="relative z-10 flex flex-col items-center justify-center gap-1">
+                          <span className="text-base font-black sm:text-lg">{duration.name}</span>
+                          <span className="text-xs font-medium opacity-80">{duration.months} tháng</span>
+                          
+                          {/* Discount Badge */}
+                          <div className="mt-1 h-5">
+                            {duration.discountPercent > 0 && (
+                                <motion.span 
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                                      active 
+                                        ? "bg-emerald-100 text-emerald-700 shadow-sm" 
+                                        : "bg-amber-100 text-amber-700"
+                                  }`}
+                                >
+                                  Giảm {duration.discountPercent}%
+                                </motion.span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Ping effect for recommended options */}
+                        {isRecommended && !active && (
+                            <div className="absolute right-2 top-2 z-20 flex h-2.5 w-2.5 sm:right-4 sm:top-4">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-fit-primary opacity-75"></span>
+                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-fit-primary"></span>
+                            </div>
+                        )}
+                      </button>
+                  );
+                })}
               </div>
             </div>
         )}
@@ -488,10 +499,19 @@ export default function PackageListPage() {
                         </div>
 
                         <div className="my-6 text-center">
-                          <div className="flex items-end justify-center gap-1">
-                        <span className={`text-4xl font-black ${priceStyle}`}>
-                          {formatCurrency(priceInfo.finalPrice)}
-                        </span>
+                          <div className="flex items-end justify-center gap-1 h-12 overflow-hidden">
+                            <AnimatePresence mode="popLayout">
+                              <motion.span 
+                                key={priceInfo.finalPrice}
+                                initial={{ y: -20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 20, opacity: 0 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                className={`text-4xl font-black ${priceStyle}`}
+                              >
+                                {formatCurrency(priceInfo.finalPrice)}
+                              </motion.span>
+                            </AnimatePresence>
                           </div>
 
                           {selectedDuration && priceInfo.discountAmount > 0 && (

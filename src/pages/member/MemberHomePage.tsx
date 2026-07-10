@@ -120,7 +120,7 @@ export default function MemberHomePage() {
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 text-center min-w-[120px]">
                     <p className="text-xs text-slate-300 font-medium">Còn lại</p>
-                    <p className="text-3xl font-black text-emerald-400">{calculateDaysLeft(activeSub.endDate)}</p>
+                    <p className="text-3xl font-black text-emerald-400">{calculateDaysLeft(activeSub.endDate || "")}</p>
                     <p className="text-xs text-slate-300">ngày</p>
                   </div>
                 </div>

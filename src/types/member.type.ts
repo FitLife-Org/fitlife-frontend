@@ -9,9 +9,6 @@ export interface MemberProfile {
   phone: string;
   gender?: string;
   dateOfBirth?: string;
-  height?: number;
-  weight?: number;
-  bmi?: number;
   status: Status;
   avatarUrl?: string;
   address?: string;
@@ -19,9 +16,7 @@ export interface MemberProfile {
   emergencyContactPhone?: string;
   healthNote?: string;
   fitnessGoal?: string;
-  activityLevel?: string;
   memberCode?: string;
-  memberSince?: string;
   joinDate?: string;
   isDeleted?: boolean;
   createdAt?: string;
@@ -30,13 +25,23 @@ export interface MemberProfile {
 
 export interface BodyMetric {
   id: number;
-  recordedAt: string;
-  heightCm: number;
+  memberId: number;
+  memberCode: string;
+  fullName: string;
+  email: string;
+  phone: string;
   weightKg: number;
-  bmi?: number;
-  bodyFatPercent?: number;
-  muscleMassKg?: number;
+  heightCm: number;
+  bmi: number;
+  bodyFatPercent: number;
+  muscleMassKg: number;
   note?: string;
+  recordedAt: string;
+  createdById?: number;
+  createdByName?: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BodyMetricProgress {
@@ -74,4 +79,23 @@ export interface AdminMemberUpdateRequest {
   fitnessGoal?: string;
   healthNote?: string;
   status?: string;
+}
+
+export interface BodyMetricCreateRequest {
+  memberId: number;
+  weightKg: number;
+  heightCm?: number;
+  bodyFatPercent?: number;
+  muscleMassKg?: number;
+  note?: string;
+  recordedAt?: string;
+}
+
+export interface BodyMetricUpdateRequest {
+  weightKg?: number;
+  heightCm?: number;
+  bodyFatPercent?: number;
+  muscleMassKg?: number;
+  note?: string;
+  recordedAt?: string;
 }

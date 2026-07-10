@@ -125,7 +125,7 @@ export default function AccountManagementPage() {
       password: "", // Not used in edit mode
       fullName: user.fullName,
       phone: user.phone || "",
-      roleCode: user.role,
+      roleCode: (user.roles && user.roles.length > 0) ? user.roles[0] : "ROLE_MEMBER",
       status: user.status
     });
     setFormModalOpen(true);
@@ -134,7 +134,7 @@ export default function AccountManagementPage() {
   // Open Role Edit Modal
   const handleOpenRoleEdit = (user: User) => {
     setSelectedUser(user);
-    setSelectedRoles([user.role]);
+    setSelectedRoles(user.roles || ["ROLE_MEMBER"]);
     setRoleModalOpen(true);
   };
 
@@ -361,7 +361,7 @@ export default function AccountManagementPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-xs font-semibold">
-                        {renderRoleBadge(user.role)}
+                        {user.roles && user.roles.length > 0 ? user.roles.map(r => <span key={r} className="mr-1">{renderRoleBadge(r as any)}</span>) : renderRoleBadge("ROLE_MEMBER")}
                       </td>
                       <td className="px-6 py-4">
                         {renderStatusBadge(user.status)}
@@ -455,7 +455,7 @@ export default function AccountManagementPage() {
                 <h4 className="font-bold text-slate-900 text-base">{selectedUser.fullName}</h4>
                 <p className="text-xs text-slate-500 mt-0.5">Username: {selectedUser.username}</p>
                 <div className="mt-1.5 flex gap-1.5">
-                  {renderRoleBadge(selectedUser.role)}
+                  {selectedUser.roles && selectedUser.roles.length > 0 ? selectedUser.roles.map((r: string) => <span key={r} className="mr-1">{renderRoleBadge(r as any)}</span>) : renderRoleBadge("ROLE_MEMBER")}
                   {renderStatusBadge(selectedUser.status)}
                 </div>
               </div>

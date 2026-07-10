@@ -19,7 +19,6 @@ export interface GymPackage {
   hasNutritionPlan: boolean;
   ptSessionsPerMonth: number;
   status: string;
-  isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -59,5 +58,20 @@ export interface AdminPackageUpdateRequest {
   description?: string;
   benefits?: string;
   thumbnailUrl?: string;
+  status?: string;
+}
+
+export interface AdminPackageDurationCreateRequest {
+  code: string;
+  name: string;
+  months: number;
+  discountPercent: number;
+  status?: string;
+}
+
+export interface AdminPackageDurationUpdateRequest {
+  name: string;
+  months: number;
+  discountPercent: number;
   status?: string;
 }

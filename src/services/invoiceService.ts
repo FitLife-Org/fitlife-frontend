@@ -50,4 +50,13 @@ export const invoiceService = {
 
     return response.data.data as Invoice;
   },
+
+  async generateInvoice(): Promise<void> {
+    await apiClient.post<ApiResponse<void>>("/admin/invoices/generate");
+  },
+
+  async getInvoicePayments(id: number): Promise<any[]> {
+    const response = await apiClient.get<ApiResponse<any>>(`/admin/invoices/${id}/payments`);
+    return response.data.data;
+  }
 };

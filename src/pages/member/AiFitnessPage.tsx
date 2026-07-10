@@ -20,6 +20,7 @@ export interface ChatMessage {
   text: string;
   timestamp: string;
   planObject?: AiGeneratedPlan;
+  suggestionId?: number;
 }
 
 const INITIAL_MESSAGE: ChatMessage = {
@@ -142,6 +143,70 @@ function AiPlanViewer({ plan }: { plan: AiGeneratedPlan }) {
           )}
         </Button>
       </div>
+    </div>
+  );
+}
+
+
+function AiFeedbackForm({ suggestionId }: { suggestionId: number }) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (rating === 0) {
+      toast.error("Vui lòng chọn số sao đánh giá");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await aiService.submitFeedback(suggestionId, { rating, comment });
+      setSubmitted(true);
+      toast.success("Cảm ơn đánh giá của bạn!");
+    } catch (e) {
+      toast.error("Không thể gửi đánh giá.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="mt-4 bg-emerald-50 text-emerald-700 p-3 rounded-xl flex items-center gap-2 text-sm">
+        <CheckCircle2 className="w-5 h-5" />
+        Đánh giá của bạn đã được ghi nhận.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+      <p className="text-sm font-bold text-slate-800 mb-2">Đánh giá kết quả này:</p>
+      <div className="flex gap-1 mb-3">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            className="focus:outline-none transition-colors"
+            onMouseEnter={() => setHoverRating(star)}
+            onMouseLeave={() => setHoverRating(0)}
+            onClick={() => setRating(star)}
+          >
+            <Sparkles className={`w-6 h-6 ${(hoverRating || rating) >= star ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200'}`} />
+          </button>
+        ))}
+      </div>
+      <Input
+        placeholder="Nhận xét thêm (không bắt buộc)..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        className="mb-3"
+      />
+      <Button variant="primary" onClick={handleSubmit} disabled={submitting} className="w-full text-sm py-2">
+        {submitting ? "Đang gửi..." : "Gửi đánh giá"}
+      </Button>
     </div>
   );
 }
@@ -379,7 +444,10 @@ export default function AiFitnessPage() {
               </div>
               <div className="flex-1 overflow-y-auto p-4 sm:p-8">
                 {selectedHistoryItem.planInfo ? (
-                   <AiPlanViewer plan={selectedHistoryItem.planInfo} />
+                   <>
+                    <AiPlanViewer plan={selectedHistoryItem.planInfo} />
+                    <AiFeedbackForm suggestionId={selectedHistoryItem.id} />
+                  </>
                 ) : (
                   <div className="bg-white p-6 rounded-2xl shadow-sm">
                     <p className="text-slate-700">{selectedHistoryItem.rawResponse}</p>
@@ -499,6 +567,7 @@ export default function AiFitnessPage() {
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.text}</p>
                 </div>
                 {msg.planObject && <AiPlanViewer plan={msg.planObject} />}
+                {msg.suggestionId && <AiFeedbackForm suggestionId={msg.suggestionId} />}
                 <p className="text-[10px] text-slate-400 px-2">{msg.timestamp}</p>
               </div>
             </div>
