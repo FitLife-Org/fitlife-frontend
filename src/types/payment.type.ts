@@ -13,6 +13,17 @@ export interface PaymentRequest {
   note?: string;
 }
 
+export interface VnpayCreateUrlRequest {
+  invoiceId: number;
+}
+
+export interface VnpayCreateUrlResponse {
+  paymentId: number;
+  paymentCode: string;
+  paymentUrl: string;
+  amount: number;
+}
+
 export interface PaymentResult {
   id: number;
   paymentCode?: string;
@@ -41,3 +52,4 @@ export interface PaymentResult {
   createdAt?: string;
   updatedAt?: string;
 }
+

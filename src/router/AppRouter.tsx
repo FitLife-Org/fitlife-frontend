@@ -34,6 +34,7 @@ import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
 import PackageListPage from "../pages/member/PackageListPage";
 import PaymentPage from "../pages/member/PaymentPage";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
+import PaymentResultPage from "../pages/member/PaymentResultPage";
 import SettingsPage from "../pages/settings/SettingsPage";
 import CheckinPage from "../pages/staff/CheckinPage";
 import SubscriptionSupportPage from "../pages/staff/SubscriptionSupportPage";
@@ -93,6 +94,14 @@ export default function AppRouter() {
                         <Route path={ROUTES.MEMBER_PAYMENT_DETAIL} element={<RoleGuard roles={["ROLE_MEMBER"]}><PaymentPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_PAYMENT}
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><PaymentPage/></RoleGuard>}/>
+                        <Route
+                            path={ROUTES.MEMBER_PAYMENT_RESULT}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <PaymentResultPage />
+                                </RoleGuard>
+                            }
+                        />
                         <Route path={ROUTES.MEMBER_CHECKINS}
                                element={<RoleGuard roles={["ROLE_MEMBER"]}><CheckinHistoryPage/></RoleGuard>}/>
                         <Route path={ROUTES.MEMBER_BOOKING}
