@@ -1,6 +1,11 @@
 import apiClient from "./apiClient";
 import type { ApiResponse, PageResponse } from "../types/common.type";
-import type { PaymentRequest, PaymentResult } from "../types/payment.type";
+import type {
+  PaymentRequest,
+  PaymentResult,
+  VnpayCreateUrlRequest,
+  VnpayCreateUrlResponse,
+} from "../types/payment.type";
 
 const extractPageContent = <T>(data: PageResponse<T> | T[]): T[] => {
   if (Array.isArray(data)) {
@@ -16,6 +21,26 @@ export const paymentService = {
         "/payments",
         data
     );
+
+    return response.data.data;
+  },
+
+  async createVnpayPaymentUrl(data: {
+    invoiceId: number;
+  }): Promise<{
+    paymentId: number;
+    paymentCode: string;
+    paymentUrl: string;
+    amount: number;
+  }> {
+    const response = await apiClient.post<
+        ApiResponse<{
+          paymentId: number;
+          paymentCode: string;
+          paymentUrl: string;
+          amount: number;
+        }>
+    >("/payments/vnpay/create-url", data);
 
     return response.data.data;
   },

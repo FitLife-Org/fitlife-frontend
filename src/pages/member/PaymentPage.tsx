@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CreditCard,
   Loader2,
+  QrCode,
 } from "lucide-react";
 
 import Card from "../../components/common/Card";
@@ -21,7 +22,7 @@ import type { Invoice } from "../../types/invoice.type";
 import type { PaymentResult } from "../../types/payment.type";
 import { validatePaymentForm } from "../../utils/validators/paymentValidator";
 
-type MemberPaymentMethod = "CASH" | "BANK_TRANSFER";
+type MemberPaymentMethod = "CASH" | "BANK_TRANSFER" | "VNPAY";
 
 export default function PaymentPage() {
   const { id } = useParams();
@@ -31,7 +32,7 @@ export default function PaymentPage() {
   const [payments, setPayments] = useState<PaymentResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] =
-      useState<MemberPaymentMethod>("BANK_TRANSFER");
+      useState<MemberPaymentMethod>("VNPAY");
   const [note, setNote] = useState("");
   const [processing, setProcessing] = useState(false);
 
@@ -109,18 +110,27 @@ export default function PaymentPage() {
       return;
     }
 
-    const payload = {
-      invoiceId: invoice.id,
-      paymentMethod,
-      note: note.trim() || undefined,
-    };
-
-    if (!validatePaymentForm(payload)) {
-      return;
-    }
-
     try {
       setProcessing(true);
+
+      if (paymentMethod === "VNPAY") {
+        const result = await paymentService.createVnpayPaymentUrl({
+          invoiceId: invoice.id,
+        });
+
+        window.location.href = result.paymentUrl;
+        return;
+      }
+
+      const payload = {
+        invoiceId: invoice.id,
+        paymentMethod,
+        note: note.trim() || undefined,
+      };
+
+      if (!validatePaymentForm(payload)) {
+        return;
+      }
 
       await paymentService.createPayment(payload);
 
@@ -278,6 +288,35 @@ export default function PaymentPage() {
                     <div className="space-y-3">
                       <label
                           className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-all ${
+                              paymentMethod === "VNPAY"
+                                  ? "border-blue-500 bg-blue-50"
+                                  : "border-slate-200 hover:border-slate-300"
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                              type="radio"
+                              name="payment"
+                              value="VNPAY"
+                              checked={paymentMethod === "VNPAY"}
+                              onChange={() => setPaymentMethod("VNPAY")}
+                              className="h-4 w-4 text-blue-500 focus:ring-blue-500"
+                          />
+                          <div>
+                        <span className="font-bold text-slate-800">
+                          Thanh toán online VNPay
+                        </span>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Thanh toán qua ngân hàng, thẻ hoặc QR trên cổng VNPay.
+                            </p>
+                          </div>
+                        </div>
+
+                        <QrCode className="h-6 w-6 text-blue-600" />
+                      </label>
+
+                      <label
+                          className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-all ${
                               paymentMethod === "BANK_TRANSFER"
                                   ? "border-fit-primary bg-blue-50"
                                   : "border-slate-200 hover:border-slate-300"
@@ -335,18 +374,28 @@ export default function PaymentPage() {
                       </label>
                     </div>
 
-                    <div className="flex flex-col gap-3 pt-6">
-                      <label className="text-sm font-semibold text-slate-700">
-                        Ghi chú thanh toán
-                      </label>
-                      <textarea
-                          value={note}
-                          onChange={(e) => setNote(e.target.value)}
-                          className="w-full resize-none rounded-xl border border-slate-200 p-3 text-sm focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary"
-                          rows={2}
-                          placeholder="VD: Đã chuyển khoản, vui lòng kiểm tra..."
-                      />
-                    </div>
+                    {paymentMethod !== "VNPAY" && (
+                        <div className="flex flex-col gap-3 pt-6">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Ghi chú thanh toán
+                          </label>
+                          <textarea
+                              value={note}
+                              onChange={(e) => setNote(e.target.value)}
+                              className="w-full resize-none rounded-xl border border-slate-200 p-3 text-sm focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary"
+                              rows={2}
+                              placeholder="VD: Đã chuyển khoản, vui lòng kiểm tra..."
+                          />
+                        </div>
+                    )}
+
+                    {paymentMethod === "VNPAY" && (
+                        <div className="mt-6 rounded-xl bg-blue-50 p-4 text-sm text-blue-700">
+                          Bạn sẽ được chuyển sang cổng thanh toán VNPay để hoàn tất
+                          giao dịch. Gói tập sẽ được kích hoạt sau khi VNPay trả kết
+                          quả thanh toán thành công.
+                        </div>
+                    )}
                   </Card>
               )}
             </div>
@@ -370,12 +419,19 @@ export default function PaymentPage() {
                   {processing ? (
                       <>
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        Đang tạo yêu cầu...
+                        {paymentMethod === "VNPAY"
+                            ? "Đang chuyển sang VNPay..."
+                            : "Đang tạo yêu cầu..."}
                       </>
                   ) : isPaid ? (
                       <>
                         <CheckCircle2 className="h-5 w-5" />
                         Đã thanh toán
+                      </>
+                  ) : paymentMethod === "VNPAY" ? (
+                      <>
+                        Thanh toán qua VNPay
+                        <ChevronRight className="h-5 w-5" />
                       </>
                   ) : (
                       <>
@@ -387,7 +443,9 @@ export default function PaymentPage() {
 
                 <p className="mt-4 flex items-center justify-center gap-1 text-center text-xs text-slate-400">
                   <AlertCircle className="h-3 w-3" />
-                  Gói tập chỉ được kích hoạt sau khi Admin/Staff xác nhận.
+                  {paymentMethod === "VNPAY"
+                      ? "VNPay sẽ tự động cập nhật kết quả nếu giao dịch thành công."
+                      : "Gói tập chỉ được kích hoạt sau khi Admin/Staff xác nhận."}
                 </p>
               </Card>
             </div>

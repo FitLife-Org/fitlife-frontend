@@ -25,6 +25,7 @@ export const ROUTES = {
   MEMBER_SUBSCRIPTION: "/member/subscription",
   MEMBER_PAYMENT: "/member/payment",
   MEMBER_PAYMENT_DETAIL: "/member/payment/:id",
+  MEMBER_PAYMENT_RESULT: "/member/payment/result",
   MEMBER_CHECKINS: "/member/checkins",
   MEMBER_AI: "/member/ai",
   MEMBER_BOOKING: "/member/booking",
