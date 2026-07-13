@@ -28,9 +28,24 @@ export interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface LogoutRequest {
+  refreshToken: string;
+}
+
+export interface ResendVerificationEmailRequest {
+  email: string;
+}
+
 export interface AuthResponsePayload {
-  accessToken?: string;
-  token?: string;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+
+  // Giữ token để tương thích response cũ nếu có
+  token?: string | null;
   tokenType?: string;
 
   userId?: number;
@@ -54,6 +69,14 @@ export interface AuthUser {
 }
 
 export interface AuthSession {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   user: AuthUser;
+}
+
+export interface RegisterResult {
+  userId: number;
+  email: string;
+  fullName: string;
+  roles: Role[];
 }

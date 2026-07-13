@@ -1,23 +1,45 @@
 import axios from "axios";
+
 import apiClient from "./apiClient";
-import type { ApiResponse } from "../types/common.type";
+
+import type {
+  ApiResponse,
+  Role,
+} from "../types/common.type";
+
 import type {
   AuthResponsePayload,
   AuthSession,
   ForgotPasswordRequest,
   LoginRequest,
   RegisterRequest,
+  RegisterResult,
+  ResendVerificationEmailRequest,
   ResetPasswordRequest,
 } from "../types/auth.type";
-import { tokenStorage } from "../utils/token";
-import type { Role } from "../types/common.type";
 
-const normalizeRoles = (payload: AuthResponsePayload): Role[] => {
-  if (Array.isArray(payload.roles) && payload.roles.length > 0) {
+import { tokenStorage } from "../utils/token";
+
+interface BackendErrorResponse {
+  code?: number;
+  message?: string;
+  error?: string;
+}
+
+const normalizeRoles = (
+    payload: AuthResponsePayload,
+): Role[] => {
+  if (
+      Array.isArray(payload.roles) &&
+      payload.roles.length > 0
+  ) {
     return payload.roles;
   }
 
-  if (Array.isArray(payload.authorities) && payload.authorities.length > 0) {
+  if (
+      Array.isArray(payload.authorities) &&
+      payload.authorities.length > 0
+  ) {
     return payload.authorities;
   }
 
@@ -28,48 +50,148 @@ const normalizeRoles = (payload: AuthResponsePayload): Role[] => {
   return [];
 };
 
-const normalizeSession = (payload?: AuthResponsePayload): AuthSession => {
+const normalizeSession = (
+    payload?: AuthResponsePayload,
+): AuthSession => {
   if (!payload) {
-    throw new Error("Máy chủ không trả về dữ liệu đăng nhập.");
+    throw new Error(
+        "Máy chủ không trả về dữ liệu đăng nhập.",
+    );
   }
 
-  const token = payload.accessToken || payload.token;
+  const accessToken =
+      payload.accessToken || payload.token;
 
-  if (!token) {
-    throw new Error("Không nhận được token từ máy chủ.");
+  const refreshToken =
+      payload.refreshToken;
+
+  if (!accessToken) {
+    throw new Error(
+        "Không nhận được access token từ máy chủ.",
+    );
+  }
+
+  if (!refreshToken) {
+    throw new Error(
+        "Không nhận được refresh token từ máy chủ.",
+    );
   }
 
   const roles = normalizeRoles(payload);
 
   if (roles.length === 0) {
-    throw new Error("Không nhận được quyền người dùng từ máy chủ.");
+    throw new Error(
+        "Không nhận được quyền người dùng từ máy chủ.",
+    );
   }
 
   return {
-    token,
+    accessToken,
+    refreshToken,
+
     user: {
-      userId: payload.userId ?? payload.id ?? 0,
+      userId:
+          payload.userId ??
+          payload.id ??
+          0,
+
       username: payload.username,
+
       email: payload.email ?? "",
-      fullName: payload.fullName ?? "User",
+
+      fullName:
+          payload.fullName ?? "User",
+
       roles,
     },
   };
 };
 
-const extractErrorMessage = (error: unknown): string => {
+const normalizeRegisterResult = (
+    payload: AuthResponsePayload | undefined,
+    fallbackEmail: string,
+    fallbackFullName: string,
+): RegisterResult => {
+  const roles = payload
+      ? normalizeRoles(payload)
+      : [];
+
+  return {
+    userId:
+        payload?.userId ??
+        payload?.id ??
+        0,
+
+    email:
+        payload?.email ??
+        fallbackEmail,
+
+    fullName:
+        payload?.fullName ??
+        fallbackFullName,
+
+    roles,
+  };
+};
+
+export const extractErrorCode = (
+    error: unknown,
+): number | undefined => {
+  if (!axios.isAxiosError(error)) {
+    return undefined;
+  }
+
+  const responseData =
+      error.response
+          ?.data as
+          | BackendErrorResponse
+          | undefined;
+
+  return responseData?.code;
+};
+
+export const extractErrorMessage = (
+    error: unknown,
+): string => {
   if (axios.isAxiosError(error)) {
-    if (error.response?.status === 401) {
+    const responseData =
+        error.response
+            ?.data as
+            | BackendErrorResponse
+            | undefined;
+
+    const backendCode =
+        responseData?.code;
+
+    const backendMessage =
+        responseData?.message ||
+        responseData?.error;
+
+    if (
+        backendCode === 5018 ||
+        backendMessage ===
+        "Email has not been verified"
+    ) {
+      return "Email chưa được xác minh. Vui lòng kiểm tra hộp thư hoặc gửi lại email xác minh.";
+    }
+
+    if (
+        error.response?.status === 401
+    ) {
       return "Email, tên đăng nhập hoặc mật khẩu không chính xác.";
     }
 
-    if (error.response?.status === 403) {
-      return "Tài khoản không có quyền truy cập chức năng này.";
+    if (
+        error.response?.status === 403
+    ) {
+      return (
+          backendMessage ||
+          "Tài khoản hiện không thể đăng nhập."
+      );
     }
 
     return (
-        error.response?.data?.message ||
-        error.response?.data?.error ||
+        backendMessage ||
         "Có lỗi xảy ra. Vui lòng thử lại."
     );
   }
@@ -82,86 +204,217 @@ const extractErrorMessage = (error: unknown): string => {
 };
 
 export const authService = {
-  async login(credentials: LoginRequest): Promise<AuthSession> {
+  async login(
+      credentials: LoginRequest,
+  ): Promise<AuthSession> {
+    const response =
+        await apiClient.post<
+            ApiResponse<AuthResponsePayload>
+        >(
+            "/auth/login",
+            credentials,
+        );
+
+    return normalizeSession(
+        response.data.data,
+    );
+  },
+
+  async register(
+      data: RegisterRequest,
+  ): Promise<RegisterResult> {
     try {
-      const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
-          "/auth/login",
-          credentials
+      const response =
+          await apiClient.post<
+              ApiResponse<AuthResponsePayload>
+          >(
+              "/auth/register",
+              data,
+          );
+
+      return normalizeRegisterResult(
+          response.data.data,
+          data.email,
+          data.fullName,
       );
-
-      const session = normalizeSession(response.data.data);
-      tokenStorage.set(session.token);
-
-      return session;
     } catch (error: unknown) {
-      throw new Error(extractErrorMessage(error));
+      throw new Error(
+          extractErrorMessage(error),
+      );
     }
   },
 
-  async register(data: RegisterRequest): Promise<AuthSession> {
+  async googleLogin(
+      idToken: string,
+  ): Promise<AuthSession> {
+    const response =
+        await apiClient.post<
+            ApiResponse<AuthResponsePayload>
+        >(
+            "/auth/google-login",
+            {
+              idToken,
+            },
+        );
+
+    return normalizeSession(
+        response.data.data,
+    );
+  },
+
+  async verifyEmail(
+      token: string,
+  ): Promise<string> {
     try {
-      const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
-          "/auth/register",
-          data
+      const response =
+          await apiClient.get<
+              ApiResponse<void>
+          >(
+              "/auth/verify-email",
+              {
+                params: {
+                  token,
+                },
+              },
+          );
+
+      return (
+          response.data.message ||
+          "Xác minh email thành công."
       );
-
-      const session = normalizeSession(response.data.data);
-      tokenStorage.set(session.token);
-
-      return session;
     } catch (error: unknown) {
-      throw new Error(extractErrorMessage(error));
+      throw new Error(
+          extractErrorMessage(error),
+      );
     }
   },
 
-  async googleLogin(idToken: string): Promise<AuthSession> {
+  async resendVerificationEmail(
+      data: ResendVerificationEmailRequest,
+  ): Promise<string> {
     try {
-      const response = await apiClient.post<ApiResponse<AuthResponsePayload>>(
-          "/auth/google-login",
-          { idToken }
+      const response =
+          await apiClient.post<
+              ApiResponse<void>
+          >(
+              "/auth/resend-verification-email",
+              data,
+          );
+
+      return (
+          response.data.message ||
+          "Email xác minh đã được gửi lại."
       );
-
-      const session = normalizeSession(response.data.data);
-      tokenStorage.set(session.token);
-
-      return session;
     } catch (error: unknown) {
-      throw new Error(extractErrorMessage(error));
+      throw new Error(
+          extractErrorMessage(error),
+      );
     }
   },
 
-  async forgotPassword(data: ForgotPasswordRequest): Promise<string> {
-    try {
-      const response = await apiClient.post<ApiResponse<void>>(
-          "/auth/forgot-password",
-          data
-      );
+  async refreshToken(): Promise<AuthSession> {
+    const refreshToken =
+        tokenStorage.getRefreshToken();
 
-      return response.data.message || "OTP đã được gửi đến email của bạn.";
+    if (!refreshToken) {
+      throw new Error(
+          "Không tìm thấy refresh token.",
+      );
+    }
+
+    try {
+      const response =
+          await apiClient.post<
+              ApiResponse<AuthResponsePayload>
+          >(
+              "/auth/refresh-token",
+              {
+                refreshToken,
+              },
+          );
+
+      return normalizeSession(
+          response.data.data,
+      );
     } catch (error: unknown) {
-      throw new Error(extractErrorMessage(error));
+      throw new Error(
+          extractErrorMessage(error),
+      );
     }
   },
 
-  async resetPassword(data: ResetPasswordRequest): Promise<string> {
+  async forgotPassword(
+      data: ForgotPasswordRequest,
+  ): Promise<string> {
     try {
-      const response = await apiClient.post<ApiResponse<void>>(
-          "/auth/reset-password",
-          data
-      );
+      const response =
+          await apiClient.post<
+              ApiResponse<void>
+          >(
+              "/auth/forgot-password",
+              data,
+          );
 
-      return response.data.message || "Đặt lại mật khẩu thành công.";
+      return (
+          response.data.message ||
+          "OTP đã được gửi đến email của bạn."
+      );
     } catch (error: unknown) {
-      throw new Error(extractErrorMessage(error));
+      throw new Error(
+          extractErrorMessage(error),
+      );
     }
   },
 
-  logout(): void {
-    tokenStorage.clear();
-    localStorage.removeItem("authUser");
+  async resetPassword(
+      data: ResetPasswordRequest,
+  ): Promise<string> {
+    try {
+      const response =
+          await apiClient.post<
+              ApiResponse<void>
+          >(
+              "/auth/reset-password",
+              data,
+          );
+
+      return (
+          response.data.message ||
+          "Đặt lại mật khẩu thành công."
+      );
+    } catch (error: unknown) {
+      throw new Error(
+          extractErrorMessage(error),
+      );
+    }
+  },
+
+  async logout(): Promise<void> {
+    const refreshToken =
+        tokenStorage.getRefreshToken();
+
+    if (!refreshToken) {
+      return;
+    }
+
+    await apiClient.post<ApiResponse<void>>(
+        "/auth/logout",
+        {
+          refreshToken,
+        },
+    );
+  },
+
+  async logoutAll(): Promise<void> {
+    await apiClient.post<ApiResponse<void>>(
+        "/auth/logout-all",
+    );
   },
 
   isAuthenticated(): boolean {
-    return Boolean(tokenStorage.get());
+    return Boolean(
+        tokenStorage.getAccessToken() &&
+        tokenStorage.getRefreshToken(),
+    );
   },
 };
