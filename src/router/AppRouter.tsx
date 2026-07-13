@@ -19,6 +19,8 @@ import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
+import CheckEmailPage from "../pages/auth/CheckEmailPage";
+import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import ForbiddenPage from "../pages/error/ForbiddenPage";
 import NotFoundPage from "../pages/error/NotFoundPage";
@@ -68,6 +70,15 @@ export default function AppRouter() {
                 <Route path={ROUTES.HOME} element={<HomePage/>}/>
                 <Route path={ROUTES.LOGIN} element={<LoginPage/>}/>
                 <Route path={ROUTES.REGISTER} element={<RegisterPage/>}/>
+                <Route
+                    path={ROUTES.CHECK_EMAIL}
+                    element={<CheckEmailPage />}
+                />
+
+                <Route
+                    path={ROUTES.VERIFY_EMAIL}
+                    element={<VerifyEmailPage />}
+                />
                 <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage/>}/>
                 <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage/>}/>
                 

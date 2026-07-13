@@ -1,59 +1,176 @@
 import { create } from "zustand";
-import type { AuthSession, AuthUser } from "../types/auth.type";
+
+import type {
+  AuthSession,
+  AuthUser,
+} from "../types/auth.type";
+
 import { tokenStorage } from "../utils/token";
+import { authService } from "../services/authService";
 
 const USER_KEY = "authUser";
 
-const getUserFromStorage = (): AuthUser | null => {
-  try {
-    const userStr = localStorage.getItem(USER_KEY);
+const getUserFromStorage =
+    (): AuthUser | null => {
+      try {
+        const userString =
+            localStorage.getItem(USER_KEY);
 
-    if (!userStr) {
-      return null;
-    }
+        if (!userString) {
+          return null;
+        }
 
-    return JSON.parse(userStr) as AuthUser;
-  } catch {
-    localStorage.removeItem(USER_KEY);
-    return null;
-  }
-};
+        return JSON.parse(
+            userString,
+        ) as AuthUser;
+      } catch {
+        localStorage.removeItem(USER_KEY);
+        return null;
+      }
+    };
 
-const initialToken = tokenStorage.get();
-const initialUser = getUserFromStorage();
+const initialAccessToken =
+    tokenStorage.getAccessToken();
+
+const initialRefreshToken =
+    tokenStorage.getRefreshToken();
+
+const initialUser =
+    getUserFromStorage();
 
 interface AuthState {
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
-  setSession: (session: AuthSession) => void;
-  logout: () => void;
+  loggingOut: boolean;
+
+  setSession: (
+      session: AuthSession,
+  ) => void;
+
+  updateAccessToken: (
+      accessToken: string,
+  ) => void;
+
+  clearSession: () => void;
+
+  logout: () => Promise<void>;
+
+  logoutAll: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: initialToken,
-  user: initialUser,
-  isAuthenticated: Boolean(initialToken && initialUser),
+export const useAuthStore =
+    create<AuthState>((set) => ({
+      accessToken: initialAccessToken,
+      refreshToken: initialRefreshToken,
+      user: initialUser,
 
-  setSession: (session) => {
-    tokenStorage.set(session.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(session.user));
+      isAuthenticated: Boolean(
+          initialAccessToken &&
+          initialRefreshToken &&
+          initialUser,
+      ),
 
-    set({
-      token: session.token,
-      user: session.user,
-      isAuthenticated: true,
-    });
-  },
+      loggingOut: false,
 
-  logout: () => {
-    tokenStorage.clear();
-    localStorage.removeItem(USER_KEY);
+      setSession: (session) => {
+        tokenStorage.setTokens(
+            session.accessToken,
+            session.refreshToken,
+        );
 
-    set({
-      token: null,
-      user: null,
-      isAuthenticated: false,
-    });
-  },
-}));
+        localStorage.setItem(
+            USER_KEY,
+            JSON.stringify(session.user),
+        );
+
+        set({
+          accessToken:
+          session.accessToken,
+
+          refreshToken:
+          session.refreshToken,
+
+          user: session.user,
+
+          isAuthenticated: true,
+        });
+      },
+
+      updateAccessToken: (
+          accessToken,
+      ) => {
+        tokenStorage.setAccessToken(
+            accessToken,
+        );
+
+        set({
+          accessToken,
+        });
+      },
+
+      clearSession: () => {
+        tokenStorage.clear();
+
+        localStorage.removeItem(
+            USER_KEY,
+        );
+
+        set({
+          accessToken: null,
+          refreshToken: null,
+          user: null,
+          isAuthenticated: false,
+          loggingOut: false,
+        });
+      },
+
+      logout: async () => {
+        set({
+          loggingOut: true,
+        });
+
+        try {
+          await authService.logout();
+        } finally {
+          tokenStorage.clear();
+
+          localStorage.removeItem(
+              USER_KEY,
+          );
+
+          set({
+            accessToken: null,
+            refreshToken: null,
+            user: null,
+            isAuthenticated: false,
+            loggingOut: false,
+          });
+        }
+      },
+
+      logoutAll: async () => {
+        set({
+          loggingOut: true,
+        });
+
+        try {
+          await authService.logoutAll();
+        } finally {
+          tokenStorage.clear();
+
+          localStorage.removeItem(
+              USER_KEY,
+          );
+
+          set({
+            accessToken: null,
+            refreshToken: null,
+            user: null,
+            isAuthenticated: false,
+            loggingOut: false,
+          });
+        }
+      },
+    }));
