@@ -67,9 +67,21 @@ export default function AppRouter() {
         <BrowserRouter>
             <ScrollToTop />
             <Routes>
-                <Route path={ROUTES.HOME} element={<HomePage/>}/>
-                <Route path={ROUTES.LOGIN} element={<LoginPage/>}/>
-                <Route path={ROUTES.REGISTER} element={<RegisterPage/>}/>
+                <Route
+                    path={ROUTES.HOME}
+                    element={<HomePage />}
+                />
+
+                <Route
+                    path={ROUTES.LOGIN}
+                    element={<LoginPage />}
+                />
+
+                <Route
+                    path={ROUTES.REGISTER}
+                    element={<RegisterPage />}
+                />
+
                 <Route
                     path={ROUTES.CHECK_EMAIL}
                     element={<CheckEmailPage />}
@@ -79,10 +91,17 @@ export default function AppRouter() {
                     path={ROUTES.VERIFY_EMAIL}
                     element={<VerifyEmailPage />}
                 />
-                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage/>}/>
-                <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage/>}/>
-                
-                <Route path={ROUTES.FORBIDDEN} element={<ForbiddenPage/>}/>
+
+                <Route
+                    path={ROUTES.FORGOT_PASSWORD}
+                    element={<ForgotPasswordPage />}
+                />
+
+                <Route
+                    path={ROUTES.RESET_PASSWORD}
+                    element={<ResetPasswordPage />}
+                />
+
 
 
                 <Route element={<ProtectedRoute/>}>

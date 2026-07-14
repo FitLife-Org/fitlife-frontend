@@ -1,154 +1,166 @@
-import { useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+
 import {
     Link,
-    useLocation,
+    useSearchParams,
 } from "react-router-dom";
 
 import {
     CheckCircle2,
     Loader2,
-    Mail,
-    RefreshCw,
+    XCircle,
 } from "lucide-react";
 
 import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
 
-interface CheckEmailLocationState {
-    email?: string;
-}
+type VerifyStatus =
+    | "loading"
+    | "success"
+    | "error";
 
-export default function CheckEmailPage() {
-    const location = useLocation();
+export default function VerifyEmailPage() {
+    const [searchParams] = useSearchParams();
 
-    const state =
-        location.state as
-            | CheckEmailLocationState
-            | null;
-
-    const [email, setEmail] = useState(
-        state?.email ?? "",
-    );
+    const [status, setStatus] =
+        useState<VerifyStatus>("loading");
 
     const [message, setMessage] =
-        useState("");
+        useState("Đang xác minh email...");
 
-    const [error, setError] =
-        useState("");
+    const verificationStarted = useRef(false);
 
-    const [loading, setLoading] =
-        useState(false);
+    useEffect(() => {
+        /*
+         * React StrictMode ở môi trường development
+         * có thể gọi useEffect hai lần.
+         */
+        if (verificationStarted.current) {
+            return;
+        }
 
-    const handleResend = async () => {
-        const normalizedEmail =
-            email.trim().toLowerCase();
+        verificationStarted.current = true;
 
-        if (!normalizedEmail) {
-            setError(
-                "Vui lòng nhập email đã đăng ký.",
+        const token = searchParams.get("token");
+
+        if (!token) {
+            setStatus("error");
+            setMessage(
+                "Liên kết xác minh không hợp lệ hoặc thiếu token.",
             );
             return;
         }
 
-        try {
-            setLoading(true);
-            setMessage("");
-            setError("");
+        const verifyEmail = async () => {
+            try {
+                const responseMessage =
+                    await authService.verifyEmail(token);
 
-            const responseMessage =
-                await authService
-                    .resendVerificationEmail({
-                        email: normalizedEmail,
-                    });
+                setStatus("success");
 
-            setMessage(responseMessage);
-        } catch (requestError: unknown) {
-            setError(
-                requestError instanceof Error
-                    ? requestError.message
-                    : "Không thể gửi lại email xác minh.",
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+                setMessage(
+                    responseMessage ||
+                    "Email đã được xác minh thành công.",
+                );
+            } catch (requestError: unknown) {
+                setStatus("error");
+
+                setMessage(
+                    requestError instanceof Error
+                        ? requestError.message
+                        : "Không thể xác minh email.",
+                );
+            }
+        };
+
+        void verifyEmail();
+    }, [searchParams]);
 
     return (
         <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center px-4">
             <div className="absolute inset-0 bg-white/50 backdrop-blur-[3px]" />
 
             <section className="relative z-10 w-full max-w-md rounded-[2rem] border border-white/70 bg-white/85 p-8 text-center shadow-[0_8px_40px_-12px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sky-100">
-                    <Mail className="h-10 w-10 text-sky-600" />
-                </div>
+                {status === "loading" && (
+                    <>
+                        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sky-100">
+                            <Loader2 className="h-10 w-10 animate-spin text-sky-600" />
+                        </div>
 
-                <h1 className="mt-6 text-3xl font-black text-slate-900">
-                    Kiểm tra email
-                </h1>
+                        <h1 className="mt-6 text-3xl font-black text-slate-900">
+                            Đang xác minh email
+                        </h1>
 
-                <p className="mt-3 text-slate-600">
-                    FitLife đã gửi liên kết xác minh
-                    đến email của bạn.
-                </p>
-
-                <div className="mt-6">
-                    <label
-                        htmlFor="verification-email"
-                        className="mb-2 block text-left text-sm font-bold text-slate-700"
-                    >
-                        Email đăng ký
-                    </label>
-
-                    <input
-                        id="verification-email"
-                        type="email"
-                        value={email}
-                        onChange={(event) =>
-                            setEmail(event.target.value)
-                        }
-                        placeholder="member@example.com"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
-                    />
-                </div>
-
-                {message && (
-                    <div className="mt-5 flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-left text-sm text-green-700">
-                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
-                        <span>{message}</span>
-                    </div>
+                        <p className="mt-3 text-slate-600">
+                            {message}
+                        </p>
+                    </>
                 )}
 
-                {error && (
-                    <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                        {error}
-                    </div>
+                {status === "success" && (
+                    <>
+                        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+                            <CheckCircle2 className="h-11 w-11 text-green-600" />
+                        </div>
+
+                        <h1 className="mt-6 text-3xl font-black text-green-700">
+                            Xác minh thành công
+                        </h1>
+
+                        <p className="mt-3 text-slate-600">
+                            {message}
+                        </p>
+
+                        <p className="mt-2 text-sm text-slate-500">
+                            Tài khoản của bạn đã được kích hoạt.
+                            Bạn có thể đăng nhập ngay bây giờ.
+                        </p>
+
+                        <Link
+                            to={ROUTES.LOGIN}
+                            replace
+                            className="mt-7 inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-800"
+                        >
+                            Đăng nhập ngay
+                        </Link>
+                    </>
                 )}
 
-                <button
-                    type="button"
-                    onClick={handleResend}
-                    disabled={loading}
-                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    {loading ? (
-                        <>
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            Đang gửi...
-                        </>
-                    ) : (
-                        <>
-                            <RefreshCw className="h-5 w-5" />
-                            Gửi lại email xác minh
-                        </>
-                    )}
-                </button>
+                {status === "error" && (
+                    <>
+                        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+                            <XCircle className="h-11 w-11 text-red-600" />
+                        </div>
 
-                <Link
-                    to={ROUTES.LOGIN}
-                    className="mt-5 inline-block font-bold text-sky-600 hover:text-sky-500"
-                >
-                    Quay lại đăng nhập
-                </Link>
+                        <h1 className="mt-6 text-3xl font-black text-red-700">
+                            Xác minh thất bại
+                        </h1>
+
+                        <p className="mt-3 text-slate-600">
+                            {message}
+                        </p>
+
+                        <div className="mt-7 space-y-3">
+                            <Link
+                                to={ROUTES.CHECK_EMAIL}
+                                className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-800"
+                            >
+                                Gửi lại email xác minh
+                            </Link>
+
+                            <Link
+                                to={ROUTES.LOGIN}
+                                className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 font-bold text-slate-700 transition hover:bg-slate-50"
+                            >
+                                Quay lại đăng nhập
+                            </Link>
+                        </div>
+                    </>
+                )}
             </section>
         </main>
     );
