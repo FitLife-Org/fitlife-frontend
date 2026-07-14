@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { QrCode, Clock, CheckCircle2, History, X, ScanLine } from "lucide-react";
+import { QrCode, Clock, CheckCircle2, History, X, ScanLine, XCircle } from "lucide-react";
 import Button from "../../components/common/Button";
 import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
 import { useCheckinHistory } from "../../hooks/useCheckinHistory";
@@ -66,17 +66,17 @@ export default function CheckinHistoryPage() {
         ) : (
           <div className="divide-y divide-slate-50">
             {history.map((record) => (
-              <div key={record.id} className="p-6 hover:bg-slate-50 transition-colors flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-400">
-                    <Clock className="w-6 h-6" />
+              <div key={record.id} className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group hover:bg-slate-50 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-xl flex-shrink-0 ${record.status === "SUCCESS" ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"}`}>
+                    {record.status === "SUCCESS" ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900">
-                      {new Date(record.checkedInAt).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      {new Date(record.checkInTime).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </h3>
                     <p className="text-sm text-slate-500 mt-1">
-                      Thời gian: {new Date(record.checkedInAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                      Thời gian: {new Date(record.checkInTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>

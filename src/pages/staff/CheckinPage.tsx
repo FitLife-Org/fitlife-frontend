@@ -22,6 +22,7 @@ export default function CheckinPage() {
     isSearching,
     isCheckingIn,
     recentCheckins,
+    activeMembers,
     handleSearch,
     handleQrSuccess,
     handleManualConfirm
@@ -203,34 +204,68 @@ export default function CheckinPage() {
           </AnimatePresence>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
-            <History className="w-5 h-5 text-slate-400" /> Lượt check-in gần nhất hôm nay
-          </h3>
-          {recentCheckins.length > 0 ? (
-            <div className="space-y-3">
-              {recentCheckins.map(record => (
-                <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
-                      {record.memberName?.charAt(0) || 'U'}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Lịch sử Check-in */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
+              <History className="w-5 h-5 text-slate-400" /> Lượt check-in gần nhất hôm nay
+            </h3>
+            {recentCheckins.length > 0 ? (
+              <div className="space-y-3">
+                {recentCheckins.map(record => (
+                  <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
+                        {record.memberName?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
+                        <p className="text-xs text-slate-500">{new Date(record.checkInTime).toLocaleTimeString('vi-VN')}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
-                      <p className="text-xs text-slate-500">{new Date(record.checkedInAt).toLocaleTimeString('vi-VN')}</p>
-                    </div>
+                    {record.type === "CHECK_OUT" ? (
+                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">OUT</span>
+                    ) : record.status === "SUCCESS" ? (
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">IN</span>
+                    ) : (
+                      <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">FAIL</span>
+                    )}
                   </div>
-                  {record.status === "SUCCESS" ? (
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">SUCCESS</span>
-                  ) : (
-                    <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">FAILED</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500 text-center py-4">Chưa có lượt check-in nào.</p>
-          )}
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-4">Chưa có lượt check-in nào.</p>
+            )}
+          </div>
+
+          {/* Đang trong phòng tập */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h3 className="font-bold text-emerald-700 flex items-center gap-2 mb-4">
+              <Activity className="w-5 h-5 text-emerald-500" /> Hội viên đang trong phòng tập
+            </h3>
+            {activeMembers.length > 0 ? (
+              <div className="space-y-3 overflow-y-auto max-h-60 pr-2">
+                {activeMembers.map(record => (
+                  <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs shadow-sm">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
+                        <p className="text-xs text-slate-500">Vào lúc: {new Date(record.checkInTime).toLocaleTimeString('vi-VN')}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-4">Hiện không có hội viên nào.</p>
+            )}
+          </div>
         </div>
 
       </div>

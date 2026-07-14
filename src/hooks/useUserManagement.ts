@@ -101,17 +101,17 @@ const MOCK_SUBSCRIPTIONS: Record<number, any> = {
 
 const MOCK_CHECKINS: Record<number, CheckinRecord[]> = {
   1: [
-    { id: 1001, memberId: 1, checkedInAt: "2026-06-28T08:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 1002, memberId: 1, checkedInAt: "2026-06-26T17:15:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 1003, memberId: 1, checkedInAt: "2026-06-25T08:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
+    { id: 1001, memberId: 1, checkInTime: "2026-06-28T08:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
+    { id: 1002, memberId: 1, checkInTime: "2026-06-26T17:15:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
+    { id: 1003, memberId: 1, checkInTime: "2026-06-25T08:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
   ],
   2: [
-    { id: 2001, memberId: 2, checkedInAt: "2026-06-28T09:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 2002, memberId: 2, checkedInAt: "2026-06-27T18:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
+    { id: 2001, memberId: 2, checkInTime: "2026-06-28T09:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
+    { id: 2002, memberId: 2, checkInTime: "2026-06-27T18:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
   ],
   3: [],
   4: [
-    { id: 4001, memberId: 4, checkedInAt: "2026-05-25T19:00:00Z", note: "Tài khoản bị khóa - Check-in thất bại", status: "FAILED" }
+    { id: 4001, memberId: 4, checkInTime: "2026-05-25T19:00:00Z", note: "Tài khoản bị khóa - Check-in thất bại", status: "FAILED" }
   ]
 };
 

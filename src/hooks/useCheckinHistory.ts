@@ -18,7 +18,7 @@ export function useCheckinHistory() {
   const fetchHistory = async () => {
     try {
       const data = await checkinService.getMyCheckins();
-      setHistory(data.sort((a, b) => new Date(b.checkedInAt).getTime() - new Date(a.checkedInAt).getTime()));
+      setHistory(data.sort((a, b) => new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime()));
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,8 @@ export function useCheckinHistory() {
     setShowScanner(false);
     try {
       const record = await checkinService.selfCheckin({ gymCode: decodedText });
-      toast.success(`Check-in thành công lúc ${new Date(record.checkedInAt).toLocaleTimeString('vi-VN')}`);
+      const actionName = record.type === "CHECK_OUT" ? "Check-out" : "Check-in";
+      toast.success(`${actionName} thành công lúc ${new Date(record.checkInTime).toLocaleTimeString('vi-VN')}`);
       await fetchHistory();
     } catch (error) {
       toast.error("Mã QR không hợp lệ hoặc lỗi kết nối.");

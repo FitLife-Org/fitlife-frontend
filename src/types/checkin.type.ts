@@ -2,9 +2,11 @@ export interface CheckinRecord {
   id: number;
   memberId: number;
   memberName?: string;
-  checkedInAt: string;
+  memberCode?: string;
+  checkInTime: string;
   note?: string;
-  status: "SUCCESS" | "FAILED";
+  status: "SUCCESS" | "CANCELLED" | "FAILED";
+  type?: "CHECK_IN" | "CHECK_OUT"; // For frontend mock
 }
 
 export interface GenerateQrResponse {

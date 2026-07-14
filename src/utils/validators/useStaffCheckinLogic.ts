@@ -11,10 +11,21 @@ export function useStaffCheckinLogic() {
   const [isSearching, setIsSearching] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [recentCheckins, setRecentCheckins] = useState<CheckinRecord[]>([]);
+  const [activeMembers, setActiveMembers] = useState<CheckinRecord[]>([]);
 
   useEffect(() => {
     fetchRecentCheckins();
+    fetchActiveMembers();
   }, []);
+
+  const fetchActiveMembers = async () => {
+    try {
+      const data = await checkinService.getActiveMembers();
+      setActiveMembers(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchRecentCheckins = async () => {
     try {
@@ -55,8 +66,10 @@ export function useStaffCheckinLogic() {
     try {
       setIsCheckingIn(true);
       const record = await checkinService.scanQr({ qrToken: decodedText });
-      toast.success(`Check-in thành công: ${record.memberName || 'Hội viên'}`);
+      const actionName = record.type === "CHECK_OUT" ? "Check-out" : "Check-in";
+      toast.success(`${actionName} thành công: ${record.memberName || 'Hội viên'}`);
       await fetchRecentCheckins();
+      await fetchActiveMembers();
     } catch (error) {
       toast.error("Mã QR không hợp lệ hoặc đã hết hạn.");
     } finally {
@@ -76,12 +89,14 @@ export function useStaffCheckinLogic() {
 
     try {
       setIsCheckingIn(true);
-      const record = await checkinService.manualCheckin({ memberId: selectedMember.id });
-      toast.success(`Check-in thành công cho ${record.memberName}`);
+      const record = await checkinService.manualCheckin({ memberId: selectedMember.id, note: "Manual Check-in via Staff UI" });
+      const actionName = record.type === "CHECK_OUT" ? "Check-out" : "Check-in";
+      toast.success(`${actionName} thành công: ${selectedMember.fullName}`);
       setSelectedMember(null);
       setSearchQuery("");
       setSearchResults([]);
       await fetchRecentCheckins();
+      await fetchActiveMembers();
     } catch (error) {
       toast.error("Check-in thất bại.");
     } finally {
@@ -100,6 +115,7 @@ export function useStaffCheckinLogic() {
     isSearching,
     isCheckingIn,
     recentCheckins,
+    activeMembers,
     handleSearch,
     handleQrSuccess,
     handleManualConfirm
