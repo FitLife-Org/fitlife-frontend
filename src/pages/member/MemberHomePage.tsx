@@ -8,36 +8,10 @@ import {
 import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
-import { useAuthStore } from "../../store/authStore";
-import { subscriptionService } from "../../services/subscriptionService";
-import type { Subscription } from "../../types/subscription.type";
+import { useMemberHome } from "../../hooks/useMemberHome";
 
 export default function MemberHomePage() {
-  const { user } = useAuthStore();
-  const [activeSub, setActiveSub] = useState<Subscription | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const sub = await subscriptionService.getMySubscription();
-        setActiveSub(sub);
-      } catch (error) {
-        console.error("Failed to load dashboard data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadDashboardData();
-  }, []);
-
-  const calculateDaysLeft = (endDate: string) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const diff = end.getTime() - now.getTime();
-    const days = Math.ceil(diff / (1000 * 3600 * 24));
-    return days > 0 ? days : 0;
-  };
+  const { user, activeSub, loading, calculateDaysLeft } = useMemberHome();
 
   const statCards = [
     { title: "Ngày tập tháng này", value: "12", unit: "ngày", icon: <CalendarIcon className="h-6 w-6" />, color: "from-blue-500 to-cyan-400" },
@@ -70,7 +44,6 @@ export default function MemberHomePage() {
         </Link>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
         {statCards.map((stat, idx) => (
           <motion.div
@@ -95,10 +68,8 @@ export default function MemberHomePage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Left Column: Active Sub & Workout Plan */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* Active Subscription Card */}
           <section>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-fit-text flex items-center gap-2">
@@ -139,7 +110,6 @@ export default function MemberHomePage() {
             )}
           </section>
 
-          {/* Today's Workout (Mocked for dashboard) */}
           <section>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-fit-text flex items-center gap-2">
@@ -178,7 +148,6 @@ export default function MemberHomePage() {
 
         </div>
 
-        {/* Right Column: Activity History & Quick Actions */}
         <div className="space-y-8">
           <section>
             <div className="mb-4 flex items-center justify-between">

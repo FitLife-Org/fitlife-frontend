@@ -44,6 +44,11 @@ export const checkinService = {
     return response.data.data;
   },
 
+  async selfCheckin(data: { gymCode: string }): Promise<CheckinRecord> {
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/self", data);
+    return response.data.data;
+  },
+
   async getTodayStatistics(): Promise<any> {
     const response = await apiClient.get<ApiResponse<any>>("/check-ins/statistics/today");
     return response.data.data;

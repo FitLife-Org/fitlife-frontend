@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+
 import Button from "../../../components/common/Button";
 import { publicService } from "../../../services/publicService";
 import type { PublicPackage } from "../../../types/public.type";
@@ -10,15 +10,13 @@ export default function PricingSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPackages = async () => {
+    (async () => {
       try {
-        const data = await publicService.getPackages();
-        setPackages(data);
+        setPackages(await publicService.getPackages());
       } finally {
         setLoading(false);
       }
-    };
-    fetchPackages();
+    })();
   }, []);
 
   if (loading) {

@@ -8,87 +8,24 @@ import type { CheckinRecord, MemberLookupResult } from "../../types/checkin.type
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
-
-
+import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
 
 export default function CheckinPage() {
-  const [activeTab, setActiveTab] = useState<"SCAN" | "MANUAL">("SCAN");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<MemberLookupResult[]>([]);
-  const [selectedMember, setSelectedMember] = useState<MemberLookupResult | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [isCheckingIn, setIsCheckingIn] = useState(false);
-  const [recentCheckins, setRecentCheckins] = useState<CheckinRecord[]>([]);
-
-  useEffect(() => {
-    fetchRecentCheckins();
-  }, []);
-
-  const fetchRecentCheckins = async () => {
-    try {
-      const data = await checkinService.getCheckinHistory({ limit: 5 });
-      setRecentCheckins(data.slice(0, 5));
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    setIsSearching(true);
-    try {
-      const results = await checkinService.lookupMember(searchQuery);
-      
-      setSearchResults(results);
-      if (results.length === 1) {
-        setSelectedMember(results[0]);
-      }
-    } catch (error) {
-      toast.error("Không tìm thấy hội viên nào.");
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleQrSuccess = async (decodedText: string) => {
-    if (isCheckingIn) return; 
-
-    try {
-      setIsCheckingIn(true);
-      const record = await checkinService.scanQr({ qrToken: decodedText });
-      toast.success(`Check-in thành công: ${record.memberName || 'Hội viên'}`);
-      fetchRecentCheckins();
-    } catch (error) {
-      toast.error("Mã QR không hợp lệ hoặc đã hết hạn.");
-    } finally {
-      setIsCheckingIn(false);
-    }
-  };
-
-  const handleManualConfirm = async () => {
-    if (!selectedMember) return;
-    if (selectedMember.packageStatus !== "ACTIVE") {
-      toast.error("Gói tập đã hết hạn, không thể check-in.");
-      return;
-    }
-
-    try {
-      setIsCheckingIn(true);
-      const record = await checkinService.manualCheckin({ memberId: selectedMember.id, note: "Manual Check-in via Staff UI" });
-      toast.success(`Check-in thành công: ${selectedMember.fullName}`);
-      setSelectedMember(null);
-      setSearchQuery("");
-      setSearchResults([]);
-      fetchRecentCheckins();
-    } catch (error) {
-      toast.error("Check-in thủ công thất bại.");
-    } finally {
-      setIsCheckingIn(false);
-    }
-  };
-
+  const {
+    activeTab,
+    setActiveTab,
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    selectedMember,
+    setSelectedMember,
+    isSearching,
+    isCheckingIn,
+    recentCheckins,
+    handleSearch,
+    handleQrSuccess,
+    handleManualConfirm
+  } = useStaffCheckinLogic();
   return (
     <div className="h-full flex flex-col md:flex-row gap-6">
       

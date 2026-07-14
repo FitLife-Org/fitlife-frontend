@@ -19,7 +19,6 @@ export interface Invoice {
   discountAmount: number;
   finalAmount: number;
 
-  // giữ tạm để tương thích UI cũ
   amount?: number;
 
   status: InvoiceStatus;

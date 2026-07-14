@@ -1,49 +1,22 @@
-import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { QrCode, Clock, CheckCircle2, History, X } from "lucide-react";
-import toast from "react-hot-toast";
-import { checkinService } from "../../services/checkinService";
-import type { CheckinRecord, GenerateQrResponse } from "../../types/checkin.type";
+import { QrCode, Clock, CheckCircle2, History, X, ScanLine } from "lucide-react";
 import Button from "../../components/common/Button";
+import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
+import { useCheckinHistory } from "../../hooks/useCheckinHistory";
 
 export default function CheckinHistoryPage() {
-  const [history, setHistory] = useState<CheckinRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [qrData, setQrData] = useState<GenerateQrResponse | null>(null);
-  const [generating, setGenerating] = useState(false);
-
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const fetchHistory = async () => {
-    try {
-      const data = await checkinService.getMyCheckins();
-      setHistory(data.sort((a, b) => new Date(b.checkedInAt).getTime() - new Date(a.checkedInAt).getTime()));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleShowQr = async () => {
-    setShowQrModal(true);
-    setGenerating(true);
-    try {
-      const data = await checkinService.generateQr();
-      setQrData(data);
-    } catch (error) {
-      toast.error("Không thể tạo mã QR lúc này.");
-      setShowQrModal(false);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const closeQrModal = () => {
-    setShowQrModal(false);
-    setQrData(null);
-  };
+  const {
+    history,
+    loading,
+    showQrModal,
+    qrData,
+    generating,
+    showScanner,
+    setShowScanner,
+    handleShowQr,
+    closeQrModal,
+    handleScanSuccess
+  } = useCheckinHistory();
 
   if (loading) {
     return (
@@ -60,13 +33,22 @@ export default function CheckinHistoryPage() {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Check-in</h1>
           <p className="text-slate-500 mt-1">Sử dụng mã QR để điểm danh khi đến phòng tập.</p>
         </div>
-        <Button 
-          variant="primary" 
-          onClick={handleShowQr}
-          className="rounded-full bg-slate-900 text-white flex items-center gap-2 hover:bg-slate-800 shadow-lg shadow-slate-900/20 border-none"
-        >
-          <QrCode className="w-5 h-5" /> Mã QR của tôi
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowScanner(true)}
+            className="rounded-xl flex items-center gap-2 border-slate-200"
+          >
+            <ScanLine className="w-5 h-5 text-emerald-600" /> Quét QR Phòng tập
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleShowQr}
+            className="rounded-xl bg-slate-900 text-white flex items-center gap-2 hover:bg-slate-800 shadow-lg shadow-slate-900/20 border-none"
+          >
+            <QrCode className="w-5 h-5" /> Mã QR của tôi
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -156,6 +138,40 @@ export default function CheckinHistoryPage() {
               )}
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showScanner && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 w-full max-w-md relative"
+            >
+              <button 
+                onClick={() => setShowScanner(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-rose-500"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <ScanLine className="w-5 h-5 text-emerald-600" /> Quét mã QR Phòng tập
+              </h2>
+              <div className="rounded-xl overflow-hidden bg-slate-50 border border-slate-100">
+                <Html5QrcodePlugin 
+                  fps={10} 
+                  qrbox={250} 
+                  disableFlip={false}
+                  qrCodeSuccessCallback={handleScanSuccess} 
+                />
+              </div>
+              <p className="text-sm text-center text-slate-500 mt-4">
+                Đưa camera vào mã QR tĩnh đặt tại quầy lễ tân.
+              </p>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

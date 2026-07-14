@@ -1,35 +1,14 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, CreditCard, ChevronRight, CheckCircle2, Clock, XCircle, Dumbbell } from "lucide-react";
+import { Calendar, CreditCard, CheckCircle2, Clock, XCircle, Dumbbell, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
-import { subscriptionService } from "../../services/subscriptionService";
-import type { Subscription } from "../../types/subscription.type";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { useMySubscription } from "../../hooks/useMySubscription";
 
 export default function MySubscriptionPage() {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchSubscriptions();
-  }, []);
-
-  const fetchSubscriptions = async () => {
-    try {
-      setLoading(true);
-      const data = await subscriptionService.getMySubscriptions();
-      setSubscriptions(data || []);
-    } catch (error) {
-      console.error("Failed to fetch subscriptions:", error);
-      // Fallback for demo when backend is down
-      setSubscriptions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { subscriptions, loading, activeSubscription, calculateDaysLeft } = useMySubscription();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -44,17 +23,6 @@ export default function MySubscriptionPage() {
     }
   };
 
-  const calculateDaysLeft = (endDate?: string | null) => {
-    if (!endDate) return 0;
-
-    const end = new Date(endDate);
-    const now = new Date();
-    const diff = end.getTime() - now.getTime();
-    const days = Math.ceil(diff / (1000 * 3600 * 24));
-
-    return days > 0 ? days : 0;
-  };
-
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -62,8 +30,6 @@ export default function MySubscriptionPage() {
       </div>
     );
   }
-
-  const activeSubscription = subscriptions.find(s => s.status === "ACTIVE");
 
   return (
     <div className="space-y-8">

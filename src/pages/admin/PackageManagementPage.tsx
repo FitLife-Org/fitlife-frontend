@@ -1,11 +1,11 @@
-import { useState } from "react";
 import { Package, Clock } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import GymPackageTab from "./components/GymPackageTab";
 import PackageDurationTab from "./components/PackageDurationTab";
+import { usePackageManagement } from "../../hooks/usePackageManagement";
 
 export default function PackageManagementPage() {
-  const [activeTab, setActiveTab] = useState<"packages" | "durations">("packages");
+  const { activeTab, setActiveTab } = usePackageManagement();
 
   return (
     <div className="space-y-6">
@@ -14,7 +14,6 @@ export default function PackageManagementPage() {
         description="Quản lý thông tin gói tập Gym và cấu hình thời hạn chung (1 tháng, 3 tháng...)" 
       />
 
-      {/* Tabs */}
       <div className="relative flex space-x-2 bg-slate-900/5 p-1.5 rounded-2xl w-fit border border-white/40 shadow-sm backdrop-blur-md">
         <button
           onClick={() => setActiveTab("packages")}
@@ -40,7 +39,6 @@ export default function PackageManagementPage() {
         </button>
       </div>
 
-      {/* Tab Content */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeTab === "packages" ? <GymPackageTab /> : <PackageDurationTab />}
       </div>
