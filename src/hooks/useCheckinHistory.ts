@@ -46,7 +46,7 @@ export function useCheckinHistory() {
   const handleScanSuccess = async (decodedText: string) => {
     setShowScanner(false);
     try {
-      const record = await checkinService.selfCheckin({ gymCode: decodedText });
+      const record = await checkinService.scanQr({ code: decodedText });
       const actionName = record.type === "CHECK_OUT" ? "Check-out" : "Check-in";
       toast.success(`${actionName} thành công lúc ${new Date(record.checkInTime).toLocaleTimeString('vi-VN')}`);
       await fetchHistory();

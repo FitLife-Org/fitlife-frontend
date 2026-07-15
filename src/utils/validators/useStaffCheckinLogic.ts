@@ -65,7 +65,7 @@ export function useStaffCheckinLogic() {
 
     try {
       setIsCheckingIn(true);
-      const record = await checkinService.scanQr({ qrToken: decodedText });
+      const record = await checkinService.scanQr({ code: decodedText });
       const actionName = record.type === "CHECK_OUT" ? "Check-out" : "Check-in";
       toast.success(`${actionName} thành công: ${record.memberName || 'Hội viên'}`);
       await fetchRecentCheckins();

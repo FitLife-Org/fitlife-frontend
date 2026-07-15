@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { QrCode, Clock, CheckCircle2, History, X, ScanLine, XCircle } from "lucide-react";
+import { QrCode, CheckCircle2, History, X, ScanLine, XCircle } from "lucide-react";
 import Button from "../../components/common/Button";
 import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
 import { useCheckinHistory } from "../../hooks/useCheckinHistory";

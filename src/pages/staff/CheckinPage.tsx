@@ -1,14 +1,12 @@
-import { useState, useEffect } from "react";
-import { QrCode, Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import toast from "react-hot-toast";
 
-import { checkinService } from "../../services/checkinService";
-import type { CheckinRecord, MemberLookupResult } from "../../types/checkin.type";
+import { QrCode, Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
 import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
+import GymQrManager from "../admin/components/GymQrManager";
+import { useState } from "react";
 
 export default function CheckinPage() {
   const {
@@ -27,10 +25,13 @@ export default function CheckinPage() {
     handleQrSuccess,
     handleManualConfirm
   } = useStaffCheckinLogic();
+
+  const [showGymQr, setShowGymQr] = useState(false);
+
   return (
     <div className="h-full flex flex-col md:flex-row gap-6">
       
-      {/* TRÁI: Khu vực Nhập liệu / Quét mã */}
+
       <div className="w-full md:w-5/12 lg:w-1/3 flex flex-col gap-6">
         
         <div className="flex bg-white rounded-xl p-1 shadow-sm border border-slate-200">
@@ -206,9 +207,16 @@ export default function CheckinPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Lịch sử Check-in */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative">
+            <button
+              onClick={() => setShowGymQr(true)}
+              className="absolute top-6 right-6 p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors tooltip"
+              title="Mở mã QR Phòng Tập"
+            >
+              <Smartphone className="w-5 h-5" />
+            </button>
             <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
-              <History className="w-5 h-5 text-slate-400" /> Lượt check-in gần nhất hôm nay
+              <History className="w-5 h-5 text-slate-400" /> Lượt check-in gần nhất
             </h3>
             {recentCheckins.length > 0 ? (
               <div className="space-y-3">
@@ -267,8 +275,9 @@ export default function CheckinPage() {
             )}
           </div>
         </div>
-
       </div>
+
+      <GymQrManager isOpen={showGymQr} onClose={() => setShowGymQr(false)} />
     </div>
   );
 }

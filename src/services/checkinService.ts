@@ -13,7 +13,7 @@ export const checkinService = {
     return response.data.data;
   },
 
-  async scanQr(data: ScanCheckinRequest): Promise<CheckinRecord> {
+  async scanQr(data: { code: string }): Promise<CheckinRecord> {
     const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/qr", data);
     return response.data.data;
   },
@@ -41,11 +41,6 @@ export const checkinService = {
 
   async getMyCheckins(): Promise<CheckinRecord[]> {
     const response = await apiClient.get<ApiResponse<CheckinRecord[]>>("/check-ins/my");
-    return response.data.data;
-  },
-
-  async selfCheckin(data: { gymCode: string }): Promise<CheckinRecord> {
-    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/self", data);
     return response.data.data;
   },
 
