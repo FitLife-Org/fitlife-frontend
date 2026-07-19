@@ -1,5 +1,5 @@
-import { showAlert } from "../alert";
-import type { PaymentRequest } from "../../types/payment.type";
+import { showAlert } from "../../../utils/alert";
+import type { PaymentRequest } from "../types/payment.type";
 
 export const validatePaymentForm = (data: PaymentRequest): boolean => {
   if (!data.invoiceId) {

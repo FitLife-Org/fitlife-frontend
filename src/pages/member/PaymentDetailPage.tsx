@@ -14,9 +14,9 @@ import PageHeader from "../../components/common/PageHeader";
 import Badge from "../../components/common/Badge";
 import { showAlert } from "../../utils/alert";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { paymentService } from "../../services/paymentService";
-import { validatePaymentForm } from "../../utils/validators/paymentValidator";
-import { usePaymentDetail, MemberPaymentMethod } from "../../hooks/usePaymentHooks";
+import { paymentService } from "../../features/payment/services/paymentService";
+import { validatePaymentForm } from "../../features/payment/utils/paymentValidator";
+import { usePaymentDetail, MemberPaymentMethod } from "../../features/payment/hooks/usePaymentHooks";
 
 export default function PaymentDetailPage() {
   const { id } = useParams();

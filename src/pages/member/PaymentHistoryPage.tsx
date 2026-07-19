@@ -3,8 +3,8 @@ import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Badge from "../../components/common/Badge";
 import { formatCurrency } from "../../utils/formatCurrency";
-import type { PaymentResult } from "../../types/payment.type";
-import { usePaymentHistory } from "../../hooks/usePaymentHooks";
+import type { PaymentResult } from "../../features/payment/types/payment.type";
+import { usePaymentHistory } from "../../features/payment/hooks/usePaymentHooks";
 
 const getPaymentStatus = (payment: PaymentResult): string => {
   return payment.paymentStatus ?? payment.status ?? "PENDING";

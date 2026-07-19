@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient from "../lib/apiClient";
 import type { ApiResponse, Status } from "../types/common.type";
 import type { GymPackage, PackageDuration, AdminPackageCreateRequest, AdminPackageUpdateRequest, AdminPackageDurationCreateRequest, AdminPackageDurationUpdateRequest } from "../types/package.type";
 

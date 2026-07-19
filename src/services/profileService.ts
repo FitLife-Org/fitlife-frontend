@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient from "../lib/apiClient";
 import type { ApiResponse, PageResult } from "../types/common.type";
 import type { ProfileResponse, UpdateProfileRequest, MembershipResponse } from "../types/profile.type";
 

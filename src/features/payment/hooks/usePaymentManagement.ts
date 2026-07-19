@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { showAlert } from "../utils/alert";
+import { showAlert } from "../../../utils/alert";
 import { paymentService } from "../services/paymentService";
 import type { PaymentResult } from "../types/payment.type";
 

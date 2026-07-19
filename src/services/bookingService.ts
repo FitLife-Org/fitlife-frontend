@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient from "../lib/apiClient";
 import type { ApiResponse } from "../types/common.type";
 import type { Booking } from "../types/booking.type";
 

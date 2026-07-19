@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { showAlert } from "../utils/alert";
-import { invoiceService } from "../services/invoiceService";
+import { showAlert } from "../../../utils/alert";
+import { invoiceService } from "../../../services/invoiceService";
 import { paymentService } from "../services/paymentService";
-import type { Invoice } from "../types/invoice.type";
+import type { Invoice } from "../../../types/invoice.type";
 import type { PaymentResult } from "../types/payment.type";
 
 export type MemberPaymentMethod = "CASH" | "BANK_TRANSFER" | "VNPAY";

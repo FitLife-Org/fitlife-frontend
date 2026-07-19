@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import apiClient from "./apiClient";
+import apiClient from "../lib/apiClient";
 
 import type {
   ApiResponse,

@@ -4,8 +4,8 @@ import PageHeader from "../../components/common/PageHeader";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
 import { formatCurrency } from "../../utils/formatCurrency";
-import type { PaymentResult } from "../../types/payment.type";
-import { usePaymentManagement } from "../../hooks/usePaymentManagement";
+import type { PaymentResult } from "../../features/payment/types/payment.type";
+import { usePaymentManagement } from "../../features/payment/hooks/usePaymentManagement";
 
 export default function PaymentManagementPage() {
     const { payments, loading, handleConfirm, handleFail } = usePaymentManagement();

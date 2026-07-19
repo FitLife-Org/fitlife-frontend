@@ -1,5 +1,5 @@
-import apiClient from "./apiClient";
-import type { ApiResponse, PageResponse } from "../types/common.type";
+import apiClient from "../../../lib/apiClient";
+import type { ApiResponse, PageResponse } from "../../../types/common.type";
 import type {
   PaymentRequest,
   PaymentResult,
