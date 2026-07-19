@@ -9,7 +9,7 @@ export type PaymentStatus =
 
 export interface PaymentRequest {
   invoiceId: number;
-  paymentMethod: "CASH" | "BANK_TRANSFER";
+  paymentMethod: PaymentMethod;
   note?: string;
 }
 

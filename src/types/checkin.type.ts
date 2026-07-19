@@ -4,30 +4,62 @@ export interface CheckinRecord {
   memberName?: string;
   memberCode?: string;
   checkInTime: string;
+  checkOutTime?: string;
   note?: string;
   status: "SUCCESS" | "CANCELLED" | "FAILED";
-  type?: "CHECK_IN" | "CHECK_OUT"; // For frontend mock
+  type?: "CHECK_IN" | "CHECK_OUT";
 }
 
-export interface GenerateQrResponse {
-  qrCodeData: string; // Base64 image data or token string
-  expiresAt: string;
+export interface AdminCheckInQrResponse {
+  id: number;
+  name: string;
+  token: string;
+  location?: string;
+  isActive: boolean;
+  createdAt: string;
+  regeneratedAt?: string;
 }
 
-export interface ManualCheckinRequest {
-  memberId: number;
-  note?: string;
+export interface StaffManualCheckInRequest {
+  memberId?: number;
+  memberCode?: string;
+  reason?: string;
 }
 
-export interface ScanCheckinRequest {
+export interface StaffMemberQrCheckInRequest {
+  qrData: string;
+  reason?: string;
+}
+
+export interface MemberCheckInRequest {
+  qrToken: string;
+}
+
+export interface MemberCheckOutRequest {
   qrToken: string;
 }
 
 export interface MemberLookupResult {
-  id: number;
+  memberId: number;
+  memberCode: string;
   fullName: string;
+  email: string;
   phone: string;
-  avatarUrl?: string;
-  packageName: string;
-  packageStatus: "ACTIVE" | "EXPIRED" | "NONE";
+  userStatus: string;
+  currentSubscription?: {
+    packageName: string;
+    status: string;
+  };
+  canCheckIn: boolean;
+  checkInMessage: string;
+}
+
+export interface CheckInCancelRequest {
+  reason: string;
+}
+
+export interface CheckInTodayStatisticsResponse {
+  totalCheckIns: number;
+  successfulCheckIns: number;
+  failedCheckIns: number;
 }

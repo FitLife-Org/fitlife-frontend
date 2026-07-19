@@ -40,9 +40,8 @@ export default function EditEquipmentPage() {
                 category: data.category || "Cardio",
                 area: data.area || "Khu Cardio – Tầng 1",
                 status: data.status || "ACTIVE",
-                // Handle parsing if necessary, depending on API format. Assuming YYYY-MM-DD
-                purchaseDate: "", // Update later if data returns it
-                warrantyExpiry: "", // Update later if data returns it
+                purchaseDate: "",
+                warrantyExpiry: "",
                 description: "",
                 image: data.image || ""
             });
