@@ -4,7 +4,6 @@ import { ArrowRight, Loader2 } from "lucide-react";
 
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
-import CustomCursor from "../../components/common/CustomCursor";
 import { ROUTES } from "../../config/routes";
 import { useRegisterLogic } from "../../utils/validators/useRegisterLogic";
 
@@ -53,7 +52,6 @@ export default function RegisterPage() {
     formRef,
     updateField,
     handleSubmit,
-    setError,
   } = useRegisterLogic();
 
   return (

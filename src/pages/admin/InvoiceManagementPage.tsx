@@ -1,52 +1,20 @@
-import { useEffect, useState } from "react";
-import { CheckCircle, XCircle, Search, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Search } from "lucide-react";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { showAlert } from "../../utils/alert";
 import type { Invoice } from "../../types/invoice.type";
-import apiClient from "../../services/apiClient";
-import {invoiceService} from "../../services/invoiceService";
+import { useInvoiceManagement } from "../../hooks/useInvoiceManagement";
 
 export default function InvoiceManagementPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [keyword, setKeyword] = useState("");
-
-  useEffect(() => {
-    fetchInvoices();
-  }, []);
-
-  const fetchInvoices = async () => {
-    try {
-      setLoading(true);
-      const data = await invoiceService.getAdminInvoices();
-      setInvoices(data);
-    } catch (error: any) {
-      console.error("GET_ADMIN_INVOICES_ERROR:", error?.response?.data || error);
-      setInvoices([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelInvoice = async (invoiceId: number) => {
-    try {
-      await invoiceService.cancelInvoice(invoiceId, "Admin hủy hóa đơn");
-
-      showAlert.success("Thành công", "Đã hủy hóa đơn");
-      fetchInvoices();
-    } catch (error: any) {
-      console.error("CANCEL_INVOICE_ERROR:", error?.response?.data || error);
-
-      showAlert.error(
-          "Lỗi",
-          error?.response?.data?.message || "Không thể hủy hóa đơn"
-      );
-    }
-  };
+  const {
+    loading,
+    keyword,
+    setKeyword,
+    filteredInvoices,
+    handleCancelInvoice
+  } = useInvoiceManagement();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -62,13 +30,6 @@ export default function InvoiceManagementPage() {
         return <Badge variant="default">{status}</Badge>;
     }
   };
-
-  const filteredInvoices = invoices.filter(inv => {
-    if (!keyword) return true;
-    const lowerKeyword = keyword.toLowerCase();
-    return inv.invoiceCode?.toLowerCase().includes(lowerKeyword) ||
-           inv.memberName?.toLowerCase().includes(lowerKeyword);
-  });
 
   const columns = [
     {

@@ -16,6 +16,11 @@ export const bodyMetricService = {
     return response.data.data.content;
   },
 
+  createMyMetric: async (data: { weightKg: number; heightCm?: number; bodyFatPercent?: number; muscleMassKg?: number }): Promise<BodyMetric> => {
+    const response = await apiClient.post<ApiResponse<BodyMetric>>(`/body-metrics/me`, data);
+    return response.data.data;
+  },
+
   getMyProgress: async (): Promise<BodyMetricProgress[]> => {
     const response = await apiClient.get<ApiResponse<PageResponse<BodyMetric>>>(`/body-metrics/me?page=0&size=2`);
     const metrics = response.data.data.content;

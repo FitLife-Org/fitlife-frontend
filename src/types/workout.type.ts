@@ -13,8 +13,8 @@ export interface Exercise {
 
 export interface WorkoutSession {
   id: string;
-  name: string; // e.g., "Ngực & Tay sau", "Full Body"
-  dayOfWeek: number; // 1 = Monday, 7 = Sunday
+  name: string;
+  dayOfWeek: number;
   isCompleted: boolean;
   exercises: Exercise[];
 }

@@ -53,7 +53,7 @@ export default
         handleGoogleSuccess,
         handleGoogleError,
         handleSubmit,
-        setError,
+
     } = useLoginLogic();
 
     return (
@@ -208,7 +208,6 @@ export default
                                 {/* Đăng nhập Google */}
                                 <div className="gsap-form-element pt-2">
                                     <div className={loading ? "hidden" : "relative flex w-full justify-center max-w-[400px] mx-auto group"}>
-                                        {/* Fake custom button */}
                                         <div className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-200 bg-white px-4 py-[11px] text-sm font-bold text-slate-700 transition-all group-hover:bg-slate-50 group-hover:border-slate-300 shadow-sm cursor-pointer">
                                             <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -218,7 +217,6 @@ export default
                                             </svg>
                                             Tiếp tục với Google
                                         </div>
-                                        {/* Iframe thật (Opacity rất thấp) */}
                                         <div className="absolute inset-0 z-10 w-full h-full opacity-[0.01] overflow-hidden flex items-center justify-center cursor-pointer">
                                             <GoogleLogin
                                                 onSuccess={handleGoogleSuccess}

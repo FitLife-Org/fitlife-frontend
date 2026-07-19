@@ -1,98 +1,37 @@
-import { useState, useEffect } from "react";
-import { QrCode, Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import toast from "react-hot-toast";
 
-import { checkinService } from "../../services/checkinService";
-import type { CheckinRecord, MemberLookupResult } from "../../types/checkin.type";
+import { QrCode, Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
-
-
+import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
+import GymQrManager from "../admin/components/GymQrManager";
+import { useState } from "react";
 
 export default function CheckinPage() {
-  const [activeTab, setActiveTab] = useState<"SCAN" | "MANUAL">("SCAN");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<MemberLookupResult[]>([]);
-  const [selectedMember, setSelectedMember] = useState<MemberLookupResult | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [isCheckingIn, setIsCheckingIn] = useState(false);
-  const [recentCheckins, setRecentCheckins] = useState<CheckinRecord[]>([]);
+  const {
+    activeTab,
+    setActiveTab,
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    selectedMember,
+    setSelectedMember,
+    isSearching,
+    isCheckingIn,
+    recentCheckins,
+    activeMembers,
+    handleSearch,
+    handleQrSuccess,
+    handleManualConfirm
+  } = useStaffCheckinLogic();
 
-  useEffect(() => {
-    fetchRecentCheckins();
-  }, []);
-
-  const fetchRecentCheckins = async () => {
-    try {
-      const data = await checkinService.getCheckinHistory({ limit: 5 });
-      setRecentCheckins(data.slice(0, 5));
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    setIsSearching(true);
-    try {
-      const results = await checkinService.lookupMember(searchQuery);
-      
-      setSearchResults(results);
-      if (results.length === 1) {
-        setSelectedMember(results[0]);
-      }
-    } catch (error) {
-      toast.error("Không tìm thấy hội viên nào.");
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleQrSuccess = async (decodedText: string) => {
-    if (isCheckingIn) return; 
-
-    try {
-      setIsCheckingIn(true);
-      const record = await checkinService.scanQr({ qrToken: decodedText });
-      toast.success(`Check-in thành công: ${record.memberName || 'Hội viên'}`);
-      fetchRecentCheckins();
-    } catch (error) {
-      toast.error("Mã QR không hợp lệ hoặc đã hết hạn.");
-    } finally {
-      setIsCheckingIn(false);
-    }
-  };
-
-  const handleManualConfirm = async () => {
-    if (!selectedMember) return;
-    if (selectedMember.packageStatus !== "ACTIVE") {
-      toast.error("Gói tập đã hết hạn, không thể check-in.");
-      return;
-    }
-
-    try {
-      setIsCheckingIn(true);
-      const record = await checkinService.manualCheckin({ memberId: selectedMember.id, note: "Manual Check-in via Staff UI" });
-      toast.success(`Check-in thành công: ${selectedMember.fullName}`);
-      setSelectedMember(null);
-      setSearchQuery("");
-      setSearchResults([]);
-      fetchRecentCheckins();
-    } catch (error) {
-      toast.error("Check-in thủ công thất bại.");
-    } finally {
-      setIsCheckingIn(false);
-    }
-  };
+  const [showGymQr, setShowGymQr] = useState(false);
 
   return (
     <div className="h-full flex flex-col md:flex-row gap-6">
       
-      {/* TRÁI: Khu vực Nhập liệu / Quét mã */}
+
       <div className="w-full md:w-5/12 lg:w-1/3 flex flex-col gap-6">
         
         <div className="flex bg-white rounded-xl p-1 shadow-sm border border-slate-200">
@@ -266,37 +205,79 @@ export default function CheckinPage() {
           </AnimatePresence>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
-            <History className="w-5 h-5 text-slate-400" /> Lượt check-in gần nhất hôm nay
-          </h3>
-          {recentCheckins.length > 0 ? (
-            <div className="space-y-3">
-              {recentCheckins.map(record => (
-                <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
-                      {record.memberName?.charAt(0) || 'U'}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Lịch sử Check-in */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative">
+            <button
+              onClick={() => setShowGymQr(true)}
+              className="absolute top-6 right-6 p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors tooltip"
+              title="Mở mã QR Phòng Tập"
+            >
+              <Smartphone className="w-5 h-5" />
+            </button>
+            <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
+              <History className="w-5 h-5 text-slate-400" /> Lượt check-in gần nhất
+            </h3>
+            {recentCheckins.length > 0 ? (
+              <div className="space-y-3">
+                {recentCheckins.map(record => (
+                  <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
+                        {record.memberName?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
+                        <p className="text-xs text-slate-500">{new Date(record.checkInTime).toLocaleTimeString('vi-VN')}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
-                      <p className="text-xs text-slate-500">{new Date(record.checkedInAt).toLocaleTimeString('vi-VN')}</p>
-                    </div>
+                    {record.type === "CHECK_OUT" ? (
+                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">OUT</span>
+                    ) : record.status === "SUCCESS" ? (
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">IN</span>
+                    ) : (
+                      <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">FAIL</span>
+                    )}
                   </div>
-                  {record.status === "SUCCESS" ? (
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">SUCCESS</span>
-                  ) : (
-                    <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">FAILED</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500 text-center py-4">Chưa có lượt check-in nào.</p>
-          )}
-        </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-4">Chưa có lượt check-in nào.</p>
+            )}
+          </div>
 
+          {/* Đang trong phòng tập */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h3 className="font-bold text-emerald-700 flex items-center gap-2 mb-4">
+              <Activity className="w-5 h-5 text-emerald-500" /> Hội viên đang trong phòng tập
+            </h3>
+            {activeMembers.length > 0 ? (
+              <div className="space-y-3 overflow-y-auto max-h-60 pr-2">
+                {activeMembers.map(record => (
+                  <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs shadow-sm">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
+                        <p className="text-xs text-slate-500">Vào lúc: {new Date(record.checkInTime).toLocaleTimeString('vi-VN')}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-4">Hiện không có hội viên nào.</p>
+            )}
+          </div>
+        </div>
       </div>
+
+      <GymQrManager isOpen={showGymQr} onClose={() => setShowGymQr(false)} />
     </div>
   );
 }

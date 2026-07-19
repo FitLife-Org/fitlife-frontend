@@ -41,7 +41,6 @@ export interface PaymentResult {
 
   paymentStatus?: PaymentStatus;
 
-  // giữ tạm để UI cũ không vỡ
   status?: PaymentStatus;
 
   transactionNo?: string;

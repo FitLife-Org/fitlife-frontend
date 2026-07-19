@@ -52,6 +52,7 @@ export const paymentService = {
       >("/payments/my");
 
       return extractPageContent<PaymentResult>(response.data.data);
+
     } catch (error: unknown) {
       console.error("GET_MY_PAYMENTS_ERROR:", error);
       return [];

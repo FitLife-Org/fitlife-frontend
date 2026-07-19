@@ -5,39 +5,16 @@ import {
   Activity, Calendar as CalendarIcon, CreditCard, Dumbbell, 
   Flame, Heart, History, TrendingUp, ChevronRight 
 } from "lucide-react";
+import QRCode from "react-qr-code";
 import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
-import { useAuthStore } from "../../store/authStore";
-import { subscriptionService } from "../../services/subscriptionService";
-import type { Subscription } from "../../types/subscription.type";
+import { useMemberHome } from "../../hooks/useMemberHome";
+import { X } from "lucide-react";
 
 export default function MemberHomePage() {
-  const { user } = useAuthStore();
-  const [activeSub, setActiveSub] = useState<Subscription | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const sub = await subscriptionService.getMySubscription();
-        setActiveSub(sub);
-      } catch (error) {
-        console.error("Failed to load dashboard data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadDashboardData();
-  }, []);
-
-  const calculateDaysLeft = (endDate: string) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const diff = end.getTime() - now.getTime();
-    const days = Math.ceil(diff / (1000 * 3600 * 24));
-    return days > 0 ? days : 0;
-  };
+  const { user, activeSub, loading, calculateDaysLeft } = useMemberHome();
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const statCards = [
     { title: "Ngày tập tháng này", value: "12", unit: "ngày", icon: <CalendarIcon className="h-6 w-6" />, color: "from-blue-500 to-cyan-400" },
@@ -61,16 +38,24 @@ export default function MemberHomePage() {
           title={`Chào mừng trở lại, ${user?.fullName?.split(" ").pop() || "Hội viên"}! 👋`}
           description="Cùng xem lại tiến trình tập luyện của bạn hôm nay nhé."
         />
-        <Link 
-          to="/member/checkin"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-fit-primary px-6 py-3 font-bold text-white shadow-lg shadow-fit-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl"
-        >
-          <img src="https://api.iconify.design/mdi:qrcode-scan.svg?color=white" alt="QR" className="w-5 h-5" />
-          Mã QR Check-in
-        </Link>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setShowQrModal(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white border-2 border-slate-200 px-5 py-3 font-bold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50"
+          >
+            <img src="https://api.iconify.design/lucide:qr-code.svg?color=currentColor" alt="My QR" className="w-5 h-5" />
+            Thẻ QR Của Tôi
+          </button>
+          <Link 
+            to="/member/checkin"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-bold text-white shadow-lg shadow-fit-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl"
+          >
+            <img src="https://api.iconify.design/mdi:qrcode-scan.svg?color=white" alt="Scan QR" className="w-5 h-5" />
+            Quét Mã Phòng Tập
+          </Link>
+        </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
         {statCards.map((stat, idx) => (
           <motion.div
@@ -95,10 +80,8 @@ export default function MemberHomePage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Left Column: Active Sub & Workout Plan */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* Active Subscription Card */}
           <section>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-fit-text flex items-center gap-2">
@@ -139,7 +122,6 @@ export default function MemberHomePage() {
             )}
           </section>
 
-          {/* Today's Workout (Mocked for dashboard) */}
           <section>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-fit-text flex items-center gap-2">
@@ -178,7 +160,6 @@ export default function MemberHomePage() {
 
         </div>
 
-        {/* Right Column: Activity History & Quick Actions */}
         <div className="space-y-8">
           <section>
             <div className="mb-4 flex items-center justify-between">
@@ -248,6 +229,46 @@ export default function MemberHomePage() {
           </section>
         </div>
       </div>
+
+      {/* QR Modal */}
+      {showQrModal && user && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 p-4">
+              <h3 className="font-bold text-slate-800 text-lg">Thẻ QR Thành Viên</h3>
+              <button 
+                onClick={() => setShowQrModal(false)}
+                className="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center p-8">
+              <div className="mb-6 rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-100">
+                <QRCode
+                  value={user.userId?.toString() || ""}
+                  size={200}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  viewBox={`0 0 256 256`}
+                />
+              </div>
+              <p className="text-center text-sm font-medium text-slate-500">
+                Đưa mã này cho nhân viên lễ tân để<br />thực hiện Check-in / Check-out
+              </p>
+              <div className="mt-6 rounded-xl bg-slate-50 px-6 py-3 border border-slate-100 text-center w-full">
+                <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Mã Thành Viên</p>
+                <p className="text-lg font-black text-slate-800 font-mono tracking-widest">{user.userId}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
