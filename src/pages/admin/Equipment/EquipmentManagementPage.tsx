@@ -3,8 +3,8 @@ import { Search, Plus, Filter, Eye, Edit2, MoreVertical, Layers, CheckCircle2, W
 import { Link } from "react-router-dom";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
-import { EquipmentService } from "../../../services/equipmentService";
-import type { Equipment, EquipmentSummary } from "../../../types/equipment.type";
+import { EquipmentService } from "../../../features/equipment/services/equipmentService";
+import type { Equipment, EquipmentSummary } from "../../../features/equipment/types/equipment.type";
 const INITIAL_SUMMARY: EquipmentSummary = {
   total: 0,
   active: { count: 0, percentage: 0 },

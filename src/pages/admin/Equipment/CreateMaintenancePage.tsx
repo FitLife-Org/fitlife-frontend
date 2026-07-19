@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, Calendar as CalIcon } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
-import { EquipmentService } from "../../../services/equipmentService";
+import { EquipmentService } from "../../../features/equipment/services/equipmentService";
 export default function CreateMaintenancePage() {
     const navigate = useNavigate();
     const { id } = useParams(); // Lấy ID của thiết bị từ URL

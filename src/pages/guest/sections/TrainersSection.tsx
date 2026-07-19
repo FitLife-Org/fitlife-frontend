@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { publicService } from "../../../services/publicService";
-import type { PublicTrainer } from "../../../types/public.type";
+import { publicService } from "../../../features/public/services/publicService";
+import type { PublicTrainer } from "../../../features/public/types/public.type";
 
 export default function TrainersSection() {
   const [trainers, setTrainers] = useState<PublicTrainer[]>([]);

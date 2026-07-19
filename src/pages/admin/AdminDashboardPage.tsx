@@ -18,8 +18,8 @@ import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { adminDashboardService } from "../../services/adminDashboardService";
-import type { DashboardStatsResponse } from "../../types/dashboard.type";
+import { adminDashboardService } from "../../features/dashboard/services/adminDashboardService";
+import type { DashboardStatsResponse } from "../../features/dashboard/types/dashboard.type";
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardStatsResponse | null>(null);

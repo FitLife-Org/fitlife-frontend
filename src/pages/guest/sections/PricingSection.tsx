@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 
 import Button from "../../../components/common/Button";
-import { publicService } from "../../../services/publicService";
-import type { PublicPackage } from "../../../types/public.type";
+import { publicService } from "../../../features/public/services/publicService";
+import type { PublicPackage } from "../../../features/public/types/public.type";
 
 export default function PricingSection() {
   const [packages, setPackages] = useState<PublicPackage[]>([]);

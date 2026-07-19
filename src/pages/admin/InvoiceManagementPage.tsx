@@ -4,8 +4,8 @@ import PageHeader from "../../components/common/PageHeader";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
 import { formatCurrency } from "../../utils/formatCurrency";
-import type { Invoice } from "../../types/invoice.type";
-import { useInvoiceManagement } from "../../hooks/useInvoiceManagement";
+import type { Invoice } from "../../features/invoice/types/invoice.type";
+import { useInvoiceManagement } from "../../features/invoice/hooks/useInvoiceManagement";
 
 export default function InvoiceManagementPage() {
   const {

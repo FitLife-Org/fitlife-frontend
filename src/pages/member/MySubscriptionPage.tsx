@@ -5,7 +5,7 @@ import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { useMySubscription } from "../../hooks/useMySubscription";
+import { useMySubscription } from "../../features/subscription/hooks/useMySubscription";
 
 export default function MySubscriptionPage() {
   const { subscriptions, loading, activeSubscription, calculateDaysLeft } = useMySubscription();

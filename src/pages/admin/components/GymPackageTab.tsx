@@ -9,9 +9,9 @@ import Input from "../../../components/common/Input";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { showAlert } from "../../../utils/alert";
-import { packageService } from "../../../services/packageService";
-import type { GymPackage } from "../../../types/package.type";
-import { validateAdminPackageForm } from "../../../utils/validators/adminPackageValidator";
+import { packageService } from "../../../features/package/services/packageService";
+import type { GymPackage } from "../../../features/package/types/package.type";
+import { validateAdminPackageForm } from "../../../features/package/utils/adminPackageValidator";
 
 export default function GymPackageTab() {
   const [packages, setPackages] = useState<GymPackage[]>([]);

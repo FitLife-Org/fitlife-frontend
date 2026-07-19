@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { CheckCircle2, Loader2, Mail, RefreshCw, ArrowRight } from "lucide-react";
 
 import { ROUTES } from "../../config/routes";
-import { authService } from "../../services/authService";
+import { authService } from "../../features/auth/services/authService";
 
 interface CheckEmailLocationState {
     email?: string;

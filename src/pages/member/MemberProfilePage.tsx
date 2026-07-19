@@ -11,10 +11,10 @@ import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import PageHeader from "../../components/common/PageHeader";
 import { showAlert } from "../../utils/alert";
-import { validateProfileForm, validateChangePassword } from "../../utils/validators/profileValidator";
-import { profileService } from "../../services/profileService";
-import { userService } from "../../services/userService";
-import type { ProfileResponse, UpdateProfileRequest } from "../../types/profile.type";
+import { validateProfileForm, validateChangePassword } from "../../features/user/utils/profileValidator";
+import { profileService } from "../../features/user/services/profileService";
+import { userService } from "../../features/user/services/userService";
+import type { ProfileResponse, UpdateProfileRequest } from "../../features/user/types/profile.type";
 
 export default function MemberProfilePage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);

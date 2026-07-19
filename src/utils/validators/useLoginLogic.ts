@@ -16,7 +16,7 @@ import {
   authService,
   extractErrorCode,
   extractErrorMessage,
-} from "../../services/authService";
+} from "../../features/auth/services/authService";
 
 import { useAuthStore } from "../../store/authStore";
 import { getRedirectPathByRoles } from "../authRedirect";

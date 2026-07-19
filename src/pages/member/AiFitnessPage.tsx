@@ -9,8 +9,8 @@ import type {
   AiSuggestionResponse, 
   AiSuggestionDetailResponse, 
   AiGeneratedPlan 
-} from "../../types/ai.type";
-import { aiService } from "../../services/aiService";
+} from "../../features/ai/types/ai.type";
+import { aiService } from "../../features/ai/services/aiService";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 

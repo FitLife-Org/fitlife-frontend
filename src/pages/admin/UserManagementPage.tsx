@@ -11,13 +11,13 @@ import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 import Loading from "../../components/common/Loading";
-import { memberService } from "../../services/memberService";
+import { memberService } from "../../features/user/services/memberService";
 import { showAlert } from "../../utils/alert";
-import { validateAdminMemberForm } from "../../utils/validators/adminMemberValidator";
-import type { MemberProfile, AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../../types/member.type";
+import { validateAdminMemberForm } from "../../features/user/utils/adminMemberValidator";
+import type { MemberProfile, AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../../features/user/types/member.type";
 import type { Status } from "../../types/common.type";
-import type { Subscription } from "../../types/subscription.type";
-import type { CheckinRecord } from "../../types/checkin.type";
+import type { Subscription } from "../../features/subscription/types/subscription.type";
+import type { CheckinRecord } from "../../features/checkin/types/checkin.type";
 
 // Dữ liệu mock phục vụ fallback khi không kết nối được backend
 const MOCK_MEMBERS: MemberProfile[] = [

@@ -1,0 +1,55 @@
+import { showAlert } from "../../../utils/alert";
+import type { AdminEquipmentCreateRequest, AdminEquipmentUpdateRequest } from "../types/equipment.type";
+
+export const validateAdminEquipmentForm = (
+  formData: AdminEquipmentCreateRequest | AdminEquipmentUpdateRequest,
+  isCreate: boolean
+): boolean => {
+  if (isCreate) {
+    const data = formData as AdminEquipmentCreateRequest;
+    if (!data.equipmentCode || data.equipmentCode.trim() === "") {
+      showAlert.error("Lỗi", "Mã thiết bị không được để trống");
+      return false;
+    }
+    if (data.equipmentCode.length > 50) {
+      showAlert.error("Lỗi", "Mã thiết bị không được vượt quá 50 ký tự");
+      return false;
+    }
+  }
+
+  if (!formData.name || formData.name.trim() === "") {
+    showAlert.error("Lỗi", "Tên thiết bị không được để trống");
+    return false;
+  }
+  
+  if (formData.name.length > 150) {
+    showAlert.error("Lỗi", "Tên thiết bị không được vượt quá 150 ký tự");
+    return false;
+  }
+
+  if (formData.category && formData.category.length > 100) {
+    showAlert.error("Lỗi", "Danh mục không được vượt quá 100 ký tự");
+    return false;
+  }
+
+  if (formData.area && formData.area.length > 100) {
+    showAlert.error("Lỗi", "Khu vực không được vượt quá 100 ký tự");
+    return false;
+  }
+
+  if (formData.description && formData.description.length > 1000) {
+    showAlert.error("Lỗi", "Ghi chú không được vượt quá 1000 ký tự");
+    return false;
+  }
+
+  if (formData.purchaseDate && formData.warrantyExpiry) {
+    const purchase = new Date(formData.purchaseDate);
+    const warranty = new Date(formData.warrantyExpiry);
+    if (warranty < purchase) {
+      showAlert.error("Lỗi", "Ngày hết hạn bảo hành không thể trước ngày mua");
+      return false;
+    }
+  }
+
+  return true;
+};

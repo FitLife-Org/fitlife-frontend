@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dumbbell, Calendar, Target, Clock, CheckCircle2, ChevronRight, Activity } from "lucide-react";
 import toast from "react-hot-toast";
-import { workoutService } from "../../services/workoutService";
-import type { WorkoutPlan, WorkoutSession } from "../../types/workout.type";
+import { workoutService } from "../../features/workout/services/workoutService";
+import type { WorkoutPlan, WorkoutSession } from "../../features/workout/types/workout.type";
 import Button from "../../components/common/Button";
 
 export default function WorkoutPlansPage() {

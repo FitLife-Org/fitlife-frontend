@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Upload } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
-import { EquipmentService } from "../../../services/equipmentService";
-import { validateAdminEquipmentForm } from "../../../utils/validators/adminEquipmentValidator";
-import type { AdminEquipmentCreateRequest } from "../../../types/equipment.type";
+import { EquipmentService } from "../../../features/equipment/services/equipmentService";
+import { validateAdminEquipmentForm } from "../../../features/equipment/utils/adminEquipmentValidator";
+import type { AdminEquipmentCreateRequest } from "../../../features/equipment/types/equipment.type";
 import { showAlert } from "../../../utils/alert";
 
 export default function AddEquipmentPage() {

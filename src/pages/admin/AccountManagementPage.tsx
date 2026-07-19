@@ -10,10 +10,10 @@ import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 import Loading from "../../components/common/Loading";
-import { userService } from "../../services/userService";
+import { userService } from "../../features/user/services/userService";
 import { showAlert } from "../../utils/alert";
-import { validateAdminAccountForm } from "../../utils/validators/adminAccountValidator";
-import type { User, AdminUserCreateRequest, AdminUserUpdateRequest } from "../../types/user.type";
+import { validateAdminAccountForm } from "../../features/user/utils/adminAccountValidator";
+import type { User, AdminUserCreateRequest, AdminUserUpdateRequest } from "../../features/user/types/user.type";
 import type { Role, Status } from "../../types/common.type";
 
 export default function AccountManagementPage() {

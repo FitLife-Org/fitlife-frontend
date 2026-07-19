@@ -14,10 +14,10 @@ import { showAlert } from "../../utils/alert";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { packageService } from "../../services/packageService";
-import { subscriptionService } from "../../services/subscriptionService";
-import type { GymPackage, PackageDuration } from "../../types/package.type";
-import type { Subscription } from "../../types/subscription.type";
+import { packageService } from "../../features/package/services/packageService";
+import { subscriptionService } from "../../features/subscription/services/subscriptionService";
+import type { GymPackage, PackageDuration } from "../../features/package/types/package.type";
+import type { Subscription } from "../../features/subscription/types/subscription.type";
 
 type PriceInfo = {
   originalPrice: number;

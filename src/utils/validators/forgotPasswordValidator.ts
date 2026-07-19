@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 import { ROUTES } from "../../config/routes";
-import { authService } from "../../services/authService";   
+import { authService } from "../../features/auth/services/authService";   
 export const forgotPasswordSchema = z.object({
     email: z
         .string()

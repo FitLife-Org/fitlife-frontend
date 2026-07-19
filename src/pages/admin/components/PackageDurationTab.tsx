@@ -6,8 +6,8 @@ import Badge from "../../../components/common/Badge";
 import Modal from "../../../components/common/Modal";
 import Input from "../../../components/common/Input";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
-import type { PackageDuration } from "../../../types/package.type";
-import { usePackageDurationTab } from "../../../hooks/usePackageDurationTab";
+import type { PackageDuration } from "../../../features/package/types/package.type";
+import { usePackageDurationTab } from "../../../features/package/hooks/usePackageDurationTab";
 
 export default function PackageDurationTab() {
   const {

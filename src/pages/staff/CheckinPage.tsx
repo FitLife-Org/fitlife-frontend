@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
-import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
+import { useStaffCheckinLogic } from "../../features/checkin/utils/useStaffCheckinLogic";
 import GymQrManager from "../admin/components/GymQrManager";
 import { useState } from "react";
 

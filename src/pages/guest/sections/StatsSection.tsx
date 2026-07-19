@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Users, Building2, Dumbbell, Award } from "lucide-react";
-import { publicService } from "../../../services/publicService";
-import type { HomeData } from "../../../types/public.type";
+import { publicService } from "../../../features/public/services/publicService";
+import type { HomeData } from "../../../features/public/types/public.type";
 
 export default function StatsSection() {
   const [homeData, setHomeData] = useState<HomeData | null>(null);

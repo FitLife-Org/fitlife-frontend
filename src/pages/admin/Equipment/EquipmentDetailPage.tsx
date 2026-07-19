@@ -3,8 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit2, Wrench, Calendar, MapPin, Tag } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
-import { EquipmentService } from "../../../services/equipmentService";
-import type { Equipment } from "../../../types/equipment.type";
+import { EquipmentService } from "../../../features/equipment/services/equipmentService";
+import type { Equipment } from "../../../features/equipment/types/equipment.type";
 export default function EquipmentDetailPage() {
     const navigate = useNavigate();
     const { id } = useParams();

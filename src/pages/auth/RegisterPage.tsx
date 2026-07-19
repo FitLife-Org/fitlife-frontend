@@ -5,7 +5,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { ROUTES } from "../../config/routes";
-import { useRegisterLogic } from "../../utils/validators/useRegisterLogic";
+import { useRegisterLogic } from "../../features/user/utils/useRegisterLogic";
 
 function AnimatedText() {
   const [activeStep, setActiveStep] = useState(0);

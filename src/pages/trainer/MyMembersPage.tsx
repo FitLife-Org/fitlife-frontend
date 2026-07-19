@@ -3,8 +3,8 @@ import { Users, Search, Activity, UserCircle2 } from "lucide-react";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
-import { trainerService } from "../../services/trainerService";
-import type { TrainerMember } from "../../types/trainer.type";
+import { trainerService } from "../../features/trainer/services/trainerService";
+import type { TrainerMember } from "../../features/trainer/types/trainer.type";
 
 export default function MyMembersPage() {
   const [members, setMembers] = useState<TrainerMember[]>([]);

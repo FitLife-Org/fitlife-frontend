@@ -9,9 +9,9 @@ import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 
-import { trainerService } from "../../services/trainerService";
-import type { Trainer } from "../../types/trainer.type";
-import { validateTrainerForm, type TrainerFormData } from "../../utils/validators/trainerValidator";
+import { trainerService } from "../../features/trainer/services/trainerService";
+import type { Trainer } from "../../features/trainer/types/trainer.type";
+import { validateTrainerForm, type TrainerFormData } from "../../features/trainer/utils/trainerValidator";
 
 export default function TrainerManagementPage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);

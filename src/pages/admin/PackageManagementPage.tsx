@@ -2,7 +2,7 @@ import { Package, Clock } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import GymPackageTab from "./components/GymPackageTab";
 import PackageDurationTab from "./components/PackageDurationTab";
-import { usePackageManagement } from "../../hooks/usePackageManagement";
+import { usePackageManagement } from "../../features/package/hooks/usePackageManagement";
 
 export default function PackageManagementPage() {
   const { activeTab, setActiveTab } = usePackageManagement();

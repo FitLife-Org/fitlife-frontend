@@ -1,0 +1,101 @@
+import type { Status } from "../../../types/common.type";
+
+export interface MemberProfile {
+  id: number;
+  userId?: number;
+  username?: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  gender?: string;
+  dateOfBirth?: string;
+  status: Status;
+  avatarUrl?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  healthNote?: string;
+  fitnessGoal?: string;
+  memberCode?: string;
+  joinDate?: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BodyMetric {
+  id: number;
+  memberId: number;
+  memberCode: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  weightKg: number;
+  heightCm: number;
+  bmi: number;
+  bodyFatPercent: number;
+  muscleMassKg: number;
+  note?: string;
+  recordedAt: string;
+  createdById?: number;
+  createdByName?: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BodyMetricProgress {
+  metric: "weightKg" | "bmi" | "bodyFatPercent" | "muscleMassKg";
+  startValue: number;
+  currentValue: number;
+  change: number;
+  trend: "up" | "down" | "stable";
+}
+
+export interface AdminMemberCreateRequest {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  phone?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  fitnessGoal?: string;
+  healthNote?: string;
+}
+
+export interface AdminMemberUpdateRequest {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  fitnessGoal?: string;
+  healthNote?: string;
+  status?: string;
+}
+
+export interface BodyMetricCreateRequest {
+  memberId: number;
+  weightKg: number;
+  heightCm?: number;
+  bodyFatPercent?: number;
+  muscleMassKg?: number;
+  note?: string;
+  recordedAt?: string;
+}
+
+export interface BodyMetricUpdateRequest {
+  weightKg?: number;
+  heightCm?: number;
+  bodyFatPercent?: number;
+  muscleMassKg?: number;
+  note?: string;
+  recordedAt?: string;
+}

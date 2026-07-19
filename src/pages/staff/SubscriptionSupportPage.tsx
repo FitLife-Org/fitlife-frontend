@@ -4,8 +4,8 @@ import PageHeader from "../../components/common/PageHeader";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
 import { formatCurrency } from "../../utils/formatCurrency";
-import type { Subscription } from "../../types/subscription.type";
-import { useSubscriptionSupport } from "../../hooks/useSubscriptionSupport";
+import type { Subscription } from "../../features/subscription/types/subscription.type";
+import { useSubscriptionSupport } from "../../features/subscription/hooks/useSubscriptionSupport";
 import { useState } from "react";
 
 export default function SubscriptionSupportPage() {

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, PhoneCall, Mail, MapPin } from "lucide-react";
 import toast from "react-hot-toast";
-import { publicService } from "../../../services/publicService";
-import type { ContactRequestForm } from "../../../types/public.type";
+import { publicService } from "../../../features/public/services/publicService";
+import type { ContactRequestForm } from "../../../features/public/types/public.type";
 import Button from "../../../components/common/Button";
 import Input from "../../../components/common/Input";
 

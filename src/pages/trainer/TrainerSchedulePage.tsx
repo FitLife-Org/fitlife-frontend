@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Calendar, Clock, CheckCircle2, XCircle, User, Loader2 } from "lucide-react";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
-import { trainerService } from "../../services/trainerService";
-import type { TrainerSession } from "../../types/trainer.type";
+import { trainerService } from "../../features/trainer/services/trainerService";
+import type { TrainerSession } from "../../features/trainer/types/trainer.type";
 
 export default function TrainerSchedulePage() {
   const [sessions, setSessions] = useState<TrainerSession[]>([]);

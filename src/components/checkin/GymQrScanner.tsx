@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import Html5QrcodePlugin from "../common/Html5QrcodePlugin";
-import { useGymQrScanner } from "../../hooks/useGymQrScanner";
+import { useGymQrScanner } from "../../features/checkin/hooks/useGymQrScanner";
 
 interface GymQrScannerProps {
   onSuccess?: () => void;

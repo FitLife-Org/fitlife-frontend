@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, CheckCircle2, Clock } from "lucide-react";
 import Card from "../../../components/common/Card";
-import { EquipmentService } from "../../../services/equipmentService";
+import { EquipmentService } from "../../../features/equipment/services/equipmentService";
 
 const MOCK_SCHEDULES = [
     { id: "BT001", equipName: "Máy chạy bộ TechnoGym T20", date: "15/06/2024", type: "Định kỳ", status: "PENDING", staff: "Nguyễn Văn A" },

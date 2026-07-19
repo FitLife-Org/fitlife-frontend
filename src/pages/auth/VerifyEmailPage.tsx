@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, XCircle, Loader2, MailCheck, ArrowRight } from "lucide-react";
 import { ROUTES } from "../../config/routes";
-import { authService } from "../../services/authService";
+import { authService } from "../../features/auth/services/authService";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function VerifyEmailPage() {

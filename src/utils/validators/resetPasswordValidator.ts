@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { z } from "zod";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTES } from "../../config/routes";
-import { authService } from "../../services/authService";
+import { authService } from "../../features/auth/services/authService";
 
 export const resetPasswordSchema = z.object({
     email: z

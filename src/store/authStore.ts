@@ -3,10 +3,10 @@ import { create } from "zustand";
 import type {
   AuthSession,
   AuthUser,
-} from "../types/auth.type";
+} from "../features/auth/types/auth.type";
 
 import { tokenStorage } from "../utils/token";
-import { authService } from "../services/authService";
+import { authService } from "../features/auth/services/authService";
 
 const USER_KEY = "authUser";
 
