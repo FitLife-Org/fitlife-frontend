@@ -13,7 +13,7 @@ import { z } from "zod";
 
 import { ROUTES } from "../../../config/routes";
 import { authService } from "../../auth/services/authService";
-import { useAuthStore } from "../../../store/authStore";
+import { useAuthStore } from "../../../context/authStore";
 import { showAlert } from "../../../utils/alert";
 import { getRedirectPathByRoles } from "../../../utils/authRedirect";
 

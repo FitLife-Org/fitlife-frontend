@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { ROUTES } from "../../config/routes";
-import Button from "../common/Button";
+import { ROUTES } from "../config/routes";
+import Button from "../components/common/Button";
 import { HeartPulse, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useAuthStore } from "../../store/authStore";
-import { getRedirectPathByRoles } from "../../utils/authRedirect";
+import { useAuthStore } from "../context/authStore";
+import { getRedirectPathByRoles } from "../utils/authRedirect";
 
 export default function GuestHeader() {
   const [isScrolled, setIsScrolled] = useState(false);

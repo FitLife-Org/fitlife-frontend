@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuthStore } from "../../../store/authStore";
+import { useAuthStore } from "../../../context/authStore";
 import { subscriptionService } from "../../subscription/services/subscriptionService";
 import type { Subscription } from "../../subscription/types/subscription.type";
 

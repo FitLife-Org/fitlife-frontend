@@ -4,7 +4,7 @@ import Footer from "./Footer";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
-import { useUiStore } from "../../store/uiStore";
+import { useUiStore } from "../context/uiStore";
 
 interface DashboardLayoutProps {
     children: ReactNode;

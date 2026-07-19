@@ -22,10 +22,10 @@ import {
 } from "lucide-react";
 import {useState, useEffect} from "react";
 import {NavLink, useLocation} from "react-router-dom";
-import {ROUTES} from "../../config/routes";
-import {useAuthStore} from "../../store/authStore";
-import {useUiStore} from "../../store/uiStore";
-import type {Role} from "../../types/common.type";
+import {ROUTES} from "../config/routes";
+import {useAuthStore} from "../context/authStore";
+import {useUiStore} from "../context/uiStore";
+import type {Role} from "../types/common.type";
 
 type MenuItemType = {
     label: string;

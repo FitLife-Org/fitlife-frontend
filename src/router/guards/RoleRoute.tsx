@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { ROUTES } from "../../config/routes";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "../../context/authStore";
 import { tokenStorage } from "../../utils/token";
 import type { Role } from "../../types/common.type";
 

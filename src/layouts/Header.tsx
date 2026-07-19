@@ -9,13 +9,13 @@ import {
   UserRound,
 } from "lucide-react";
 
-import Button from "../common/Button";
-import ConfirmDialog from "../common/ConfirmDialog";
+import Button from "../components/common/Button";
+import ConfirmDialog from "../components/common/ConfirmDialog";
 
-import { ROUTES } from "../../config/routes";
-import { useAuthStore } from "../../store/authStore";
-import { useUiStore } from "../../store/uiStore";
-import { showAlert } from "../../utils/alert";
+import { ROUTES } from "../config/routes";
+import { useAuthStore } from "../context/authStore";
+import { useUiStore } from "../context/uiStore";
+import { showAlert } from "../utils/alert";
 
 export default function Header() {
   const navigate = useNavigate();

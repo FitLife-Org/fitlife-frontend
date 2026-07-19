@@ -1,7 +1,7 @@
 import {BrowserRouter, Navigate, Outlet, Route, Routes} from "react-router-dom";
-import DashboardLayout from "../components/layout/DashboardLayout";
-import ProtectedRoute from "../components/guards/ProtectedRoute";
-import RoleRoute from "../components/guards/RoleRoute";
+import DashboardLayout from "../layouts/DashboardLayout";
+import ProtectedRoute from "./guards/ProtectedRoute";
+import RoleRoute from "./guards/RoleRoute";
 import {ROUTES} from "../config/routes";
 import HomePage from "../pages/HomePage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";

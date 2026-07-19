@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, History, X, ScanLine, XCircle } from "lucide-react";
 import Button from "../../components/common/Button";
-import GymQrScanner from "../../components/checkin/GymQrScanner";
+import GymQrScanner from "../../features/checkin/components/GymQrScanner";
 import { useCheckinHistory } from "../../features/checkin/hooks/useCheckinHistory";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "../../context/authStore";
 
 export default function CheckinHistoryPage() {
   const user = useAuthStore(state => state.user);

@@ -1,5 +1,5 @@
-import GuestHeader from "../guest/GuestHeader";
-import GuestFooter from "../guest/GuestFooter";
+import GuestHeader from "./GuestHeader";
+import GuestFooter from "./GuestFooter";
 
 interface GuestLayoutProps {
   children: React.ReactNode;
