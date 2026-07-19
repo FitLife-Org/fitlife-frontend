@@ -5,14 +5,6 @@ import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
 import type { Equipment, EquipmentSummary } from "../../../types/equipment.type";
-const MOCK_SUMMARY: EquipmentSummary = {
-  total: 128,
-  active: { count: 102, percentage: 79.7 },
-  maintenance: { count: 15, percentage: 11.7 },
-  inactive: { count: 11, percentage: 8.6 },
-  upcomingMaintenance: { count: 8, timeFrame: "Trong 7 ngày tới" }
-};
-
 const INITIAL_SUMMARY: EquipmentSummary = {
   total: 0,
   active: { count: 0, percentage: 0 },
@@ -24,7 +16,7 @@ const INITIAL_SUMMARY: EquipmentSummary = {
 export default function EquipmentManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [equipments, setEquipments] = useState<Equipment[]>([]);
-  const [summary] = useState<EquipmentSummary>(MOCK_SUMMARY);
+  const [summary, setSummary] = useState<EquipmentSummary>(INITIAL_SUMMARY);
   const [loading, setLoading] = useState(false);
   
   // Pagination States
@@ -35,7 +27,17 @@ export default function EquipmentManagementPage() {
 
   useEffect(() => {
     fetchEquipments();
+    fetchSummary();
   }, [currentPage, statusFilter]);
+
+  const fetchSummary = async () => {
+    try {
+      const summaryData = await EquipmentService.getSummary();
+      setSummary(summaryData);
+    } catch (error) {
+      console.error("Lỗi khi tải thống kê thiết bị:", error);
+    }
+  };
 
   const fetchEquipments = async () => {
     setLoading(true);

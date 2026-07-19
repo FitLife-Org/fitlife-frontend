@@ -40,6 +40,13 @@ export default function PaymentDetailPage() {
 
     try {
       setProcessing(true);
+
+      if (paymentMethod === "VNPAY") {
+        const result = await paymentService.createVnpayPaymentUrl({ invoiceId: invoice.id });
+        window.location.href = result.paymentUrl;
+        return;
+      }
+
       await paymentService.createPayment(payload);
       showAlert.success(
         "Tạo yêu cầu thanh toán thành công",
@@ -232,6 +239,38 @@ export default function PaymentDetailPage() {
                   </div>
                   <span className="font-black text-emerald-600">CASH</span>
                 </label>
+
+                <label
+                  className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-all ${
+                    paymentMethod === "VNPAY"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="VNPAY"
+                      checked={paymentMethod === "VNPAY"}
+                      onChange={() => setPaymentMethod("VNPAY")}
+                      className="h-4 w-4 text-blue-500 focus:ring-blue-500"
+                    />
+                    <div>
+                      <span className="font-bold text-slate-800">
+                        Thanh toán qua VNPay
+                      </span>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Chuyển hướng đến cổng thanh toán an toàn VNPay.
+                      </p>
+                    </div>
+                  </div>
+                  <img
+                    src="https://vnpay.vn/s1/statics.vnpay.vn/2023/9/06ncktiwd6dc1694418196384.png"
+                    alt="VNPay"
+                    className="h-6 object-contain grayscale-0"
+                  />
+                </label>
               </div>
 
               <div className="flex flex-col gap-3 pt-6">
@@ -269,7 +308,7 @@ export default function PaymentDetailPage() {
               {processing ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Đang tạo yêu cầu...
+                  Đang xử lý...
                 </>
               ) : isPaid ? (
                 <>
@@ -278,7 +317,7 @@ export default function PaymentDetailPage() {
                 </>
               ) : (
                 <>
-                  Tạo yêu cầu thanh toán
+                  {paymentMethod === "VNPAY" ? "Thanh toán bằng VNPay" : "Tạo yêu cầu thanh toán"}
                   <ChevronRight className="h-5 w-5" />
                 </>
               )}

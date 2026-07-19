@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { checkinService } from "../services/checkinService";
-import type { CheckinRecord, GenerateQrResponse } from "../types/checkin.type";
+import { memberCheckinService } from "../services/checkinService";
+import type { CheckinRecord } from "../types/checkin.type";
 
 export function useCheckinHistory() {
   const [history, setHistory] = useState<CheckinRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showQrModal, setShowQrModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
-  const [qrData, setQrData] = useState<GenerateQrResponse | null>(null);
-  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     fetchHistory();
@@ -17,41 +15,42 @@ export function useCheckinHistory() {
 
   const fetchHistory = async () => {
     try {
-      const data = await checkinService.getMyCheckins();
+      const data = await memberCheckinService.getMyHistory({ page: 0, size: 50 });
       setHistory(data.sort((a, b) => new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime()));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleShowQr = async () => {
+  const handleShowQr = () => {
     setShowQrModal(true);
-    setGenerating(true);
-    try {
-      const data = await checkinService.generateQr();
-      setQrData(data);
-    } catch (error) {
-      toast.error("Không thể tạo mã QR lúc này.");
-      setShowQrModal(false);
-    } finally {
-      setGenerating(false);
-    }
   };
 
   const closeQrModal = () => {
     setShowQrModal(false);
-    setQrData(null);
   };
 
   const handleScanSuccess = async (decodedText: string) => {
     setShowScanner(false);
     try {
-      const record = await checkinService.scanQr({ code: decodedText });
-      const actionName = record.type === "CHECK_OUT" ? "Check-out" : "Check-in";
+      const latestRecord = history.length > 0 ? history[0] : null;
+      const isInside = latestRecord && latestRecord.status === "SUCCESS" && !latestRecord.checkOutTime;
+
+      let record;
+      let actionName = "";
+
+      if (isInside) {
+        record = await memberCheckinService.selfCheckout({ qrToken: decodedText });
+        actionName = "Check-out";
+      } else {
+        record = await memberCheckinService.selfCheckin({ qrToken: decodedText });
+        actionName = "Check-in";
+      }
+
       toast.success(`${actionName} thành công lúc ${new Date(record.checkInTime).toLocaleTimeString('vi-VN')}`);
       await fetchHistory();
-    } catch (error) {
-      toast.error("Mã QR không hợp lệ hoặc lỗi kết nối.");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Mã QR không hợp lệ hoặc lỗi kết nối.");
     }
   };
 
@@ -61,8 +60,6 @@ export function useCheckinHistory() {
     showQrModal,
     showScanner,
     setShowScanner,
-    qrData,
-    generating,
     handleShowQr,
     closeQrModal,
     handleScanSuccess

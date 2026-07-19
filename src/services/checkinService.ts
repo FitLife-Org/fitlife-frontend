@@ -1,60 +1,98 @@
 import apiClient from "./apiClient";
-import type { ApiResponse } from "../types/common.type";
-import type { CheckinRecord, GenerateQrResponse, ManualCheckinRequest, ScanCheckinRequest, MemberLookupResult } from "../types/checkin.type";
+import type { ApiResponse, PageResponse } from "../types/common.type";
+import type { 
+  CheckinRecord, 
+  AdminCheckInQrResponse, 
+  StaffManualCheckInRequest, 
+  StaffMemberQrCheckInRequest, 
+  MemberCheckInRequest,
+  MemberCheckOutRequest,
+  MemberLookupResult,
+  CheckInCancelRequest,
+  CheckInTodayStatisticsResponse
+} from "../types/checkin.type";
 
-export const checkinService = {
-  async generateQr(): Promise<GenerateQrResponse> {
-    const response = await apiClient.post<ApiResponse<GenerateQrResponse>>("/check-ins/qr");
+// ==========================================
+export const adminQrService = {
+  async getAllGymQrs(): Promise<AdminCheckInQrResponse[]> {
+    const response = await apiClient.get<ApiResponse<AdminCheckInQrResponse[]>>("/admin/check-in-qrs");
     return response.data.data;
   },
 
-  async getCheckinHistory(params?: any): Promise<CheckinRecord[]> {
-    const response = await apiClient.get<ApiResponse<CheckinRecord[]>>("/check-ins", { params });
+  async regenerateGymQrToken(id: number): Promise<AdminCheckInQrResponse> {
+    const response = await apiClient.post<ApiResponse<AdminCheckInQrResponse>>(`/admin/check-in-qrs/${id}/regenerate`);
+    return response.data.data;
+  }
+};
+
+// ==========================================
+export const staffCheckinService = {
+  async lookupMember(query: string): Promise<MemberLookupResult> {
+    const response = await apiClient.get<ApiResponse<MemberLookupResult>>(`/check-ins/lookup?keyword=${query}`);
     return response.data.data;
   },
 
-  async scanQr(data: { code: string }): Promise<CheckinRecord> {
-    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/qr", data);
-    return response.data.data;
-  },
-
-  async manualCheckin(data: ManualCheckinRequest): Promise<CheckinRecord> {
+  async manualCheckin(data: StaffManualCheckInRequest): Promise<CheckinRecord> {
     const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/manual", data);
     return response.data.data;
   },
 
-  // Lookup for manual checkin
-  async lookupMember(query: string): Promise<MemberLookupResult[]> {
-    const response = await apiClient.get<ApiResponse<MemberLookupResult[]>>(`/check-ins/lookup?query=${query}`);
+  async scanMemberQr(data: StaffMemberQrCheckInRequest): Promise<CheckinRecord> {
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/member-qr", data);
     return response.data.data;
   },
 
-  async getCheckinById(id: number): Promise<CheckinRecord> {
-    const response = await apiClient.get<ApiResponse<CheckinRecord>>(`/check-ins/${id}`);
+  async manualCheckout(id: number): Promise<CheckinRecord> {
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>(`/check-ins/${id}/check-out`);
     return response.data.data;
   },
 
-  async cancelCheckin(id: number, reason: string): Promise<CheckinRecord> {
-    const response = await apiClient.patch<ApiResponse<CheckinRecord>>(`/check-ins/${id}/cancel`, { reason });
+  async getMembersCurrentlyInside(page = 0, size = 10): Promise<CheckinRecord[]> {
+    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord>>>(`/check-ins/current?page=${page}&size=${size}`);
+    return response.data.data.content;
+  },
+
+  async getCheckinHistory(params?: any): Promise<CheckinRecord[]> {
+    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord>>>("/check-ins", { params });
+    return response.data.data.content;
+  },
+
+  async cancelCheckin(id: number, data: CheckInCancelRequest): Promise<CheckinRecord> {
+    const response = await apiClient.patch<ApiResponse<CheckinRecord>>(`/check-ins/${id}/cancel`, data);
     return response.data.data;
   },
 
-  async getMyCheckins(): Promise<CheckinRecord[]> {
-    const response = await apiClient.get<ApiResponse<CheckinRecord[]>>("/check-ins/my");
+  async getTodayStatistics(): Promise<CheckInTodayStatisticsResponse> {
+    const response = await apiClient.get<ApiResponse<CheckInTodayStatisticsResponse>>("/check-ins/statistics/today");
     return response.data.data;
-  },
-
-  async getTodayStatistics(): Promise<any> {
-    const response = await apiClient.get<ApiResponse<any>>("/check-ins/statistics/today");
-    return response.data.data;
-  },
-
-  async getActiveMembers(): Promise<CheckinRecord[]> {
-    // Tạm thời mock API vì backend chưa có API trả về danh sách hội viên đang trong phòng tập
-    return [
-      { id: 101, memberId: 1, memberName: "Nguyễn Văn A", memberCode: "MEM001", checkInTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(), status: "SUCCESS" },
-      { id: 102, memberId: 2, memberName: "Trần Thị B", memberCode: "MEM002", checkInTime: new Date(Date.now() - 1000 * 60 * 60).toISOString(), status: "SUCCESS" },
-      { id: 103, memberId: 3, memberName: "Lê Hoàng C", memberCode: "MEM003", checkInTime: new Date(Date.now() - 1000 * 60 * 120).toISOString(), status: "SUCCESS" },
-    ];
   }
+};
+
+// ==========================================
+export const memberCheckinService = {
+  async selfCheckin(data: MemberCheckInRequest): Promise<CheckinRecord> {
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/member/check-ins/qr", data);
+    return response.data.data;
+  },
+
+  async selfCheckout(data: MemberCheckOutRequest): Promise<CheckinRecord> {
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/member/check-outs/qr", data);
+    return response.data.data;
+  },
+
+  async getMyCurrentStatus(): Promise<CheckinRecord> {
+    const response = await apiClient.get<ApiResponse<CheckinRecord>>("/member/check-ins/current");
+    return response.data.data;
+  },
+
+  async getMyHistory(params?: any): Promise<CheckinRecord[]> {
+    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord>>>("/member/check-ins/history", { params });
+    return response.data.data.content;
+  }
+};
+
+export const checkinService = {
+  ...staffCheckinService,
+  ...memberCheckinService,
+  ...adminQrService
 };

@@ -118,8 +118,15 @@ export default function EquipmentDetailPage() {
                         <div className="flex items-start gap-3">
                             <Calendar className="w-5 h-5 text-slate-400 mt-0.5" />
                             <div>
-                                <p className="text-sm font-medium text-slate-500">Ngày nhập</p>
-                                <p className="text-sm text-slate-900 mt-0.5">{equipment.purchaseDate}</p>
+                                <p className="text-sm font-medium text-slate-500">Bảo trì gần nhất</p>
+                                <p className="text-sm text-slate-900 mt-0.5">{equipment.lastMaintenance || "Chưa có"}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Wrench className="w-5 h-5 text-slate-400 mt-0.5" />
+                            <div>
+                                <p className="text-sm font-medium text-slate-500">Bảo trì tiếp theo</p>
+                                <p className="text-sm text-slate-900 mt-0.5">{equipment.nextMaintenance || "Chưa lên lịch"} {equipment.daysToNextMaintenance ? `(Còn ${equipment.daysToNextMaintenance} ngày)` : ""}</p>
                             </div>
                         </div>
                     </div>

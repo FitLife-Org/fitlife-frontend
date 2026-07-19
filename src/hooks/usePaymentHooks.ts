@@ -6,7 +6,7 @@ import { paymentService } from "../services/paymentService";
 import type { Invoice } from "../types/invoice.type";
 import type { PaymentResult } from "../types/payment.type";
 
-export type MemberPaymentMethod = "CASH" | "BANK_TRANSFER";
+export type MemberPaymentMethod = "CASH" | "BANK_TRANSFER" | "VNPAY";
 
 export function usePaymentHistory() {
   const [payments, setPayments] = useState<PaymentResult[]>([]);
