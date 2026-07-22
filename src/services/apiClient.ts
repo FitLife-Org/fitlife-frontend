@@ -9,24 +9,33 @@ const API_BASE_URL =
     import.meta.env.VITE_API_URL ||
     "http://localhost:8080/api/v1";
 
+const DEFAULT_TIMEOUT_MS = 30_000;
+const REFRESH_TIMEOUT_MS = 15_000;
+
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
+
     headers: {
         "Content-Type": "application/json",
     },
-    timeout: 15000,
+
+    timeout: DEFAULT_TIMEOUT_MS,
 });
 
 /**
- * Axios instance riêng để refresh token.
- * Không dùng apiClient để tránh interceptor gọi lặp vô hạn.
+ * Axios instance riêng dùng để refresh token.
+ *
+ * Không dùng apiClient để tránh interceptor tự gọi lặp
+ * khi refresh token hết hạn hoặc không hợp lệ.
  */
 const refreshClient = axios.create({
     baseURL: API_BASE_URL,
+
     headers: {
         "Content-Type": "application/json",
     },
-    timeout: 15000,
+
+    timeout: REFRESH_TIMEOUT_MS,
 });
 
 interface RetryRequestConfig
@@ -40,6 +49,12 @@ interface BackendErrorResponse {
     error?: string;
 }
 
+/**
+ * Các Auth API không cần access token.
+ *
+ * Không đưa /auth/logout và /auth/logout-all vào đây
+ * vì backend yêu cầu access token cho hai endpoint này.
+ */
 const PUBLIC_AUTH_ENDPOINTS = [
     "/auth/login",
     "/auth/register",
@@ -49,7 +64,6 @@ const PUBLIC_AUTH_ENDPOINTS = [
     "/auth/forgot-password",
     "/auth/reset-password",
     "/auth/refresh-token",
-    "/auth/logout",
 ];
 
 const isPublicAuthEndpoint = (
@@ -59,8 +73,8 @@ const isPublicAuthEndpoint = (
         return false;
     }
 
-    return PUBLIC_AUTH_ENDPOINTS.some((endpoint) =>
-        url.includes(endpoint),
+    return PUBLIC_AUTH_ENDPOINTS.some(
+        (endpoint) => url.includes(endpoint),
     );
 };
 
@@ -73,9 +87,10 @@ const isPublicEndpoint = (
 
     return (
         isPublicAuthEndpoint(url) ||
-        url.includes("/public/") ||
-        url.includes("/gym-packages") ||
-        url.includes("/package-durations") ||
+        url === "/gym-packages" ||
+        url.startsWith("/gym-packages/") ||
+        url === "/package-durations" ||
+        url.startsWith("/package-durations/") ||
         url.includes("/payments/vnpay/return") ||
         url.includes("/payments/vnpay/ipn")
     );
@@ -87,17 +102,18 @@ const isValidJwtFormat = (
     return token.split(".").length === 3;
 };
 
-const clearAuthenticationAndRedirect = (): void => {
-    tokenStorage.clear();
-    localStorage.removeItem("authUser");
+const clearAuthenticationAndRedirect =
+    (): void => {
+        tokenStorage.clear();
+        localStorage.removeItem("authUser");
 
-    if (
-        typeof window !== "undefined" &&
-        !window.location.pathname.includes("/login")
-    ) {
-        window.location.href = "/login";
-    }
-};
+        if (
+            typeof window !== "undefined" &&
+            !window.location.pathname.includes("/login")
+        ) {
+            window.location.href = "/login";
+        }
+    };
 
 apiClient.interceptors.request.use(
     (config) => {
@@ -105,23 +121,32 @@ apiClient.interceptors.request.use(
             tokenStorage.getAccessToken();
 
         /*
-         * Không gửi access token tới các Auth API public.
+         * Không gửi access token vào các Auth API public.
+         *
+         * Các API protected, bao gồm AI, logout và logout-all,
+         * sẽ tự động được gắn Bearer token.
          */
         if (
             accessToken &&
             !isPublicAuthEndpoint(config.url)
         ) {
-            if (isValidJwtFormat(accessToken)) {
-                config.headers.Authorization =
-                    `Bearer ${accessToken}`;
-            } else {
+            if (!isValidJwtFormat(accessToken)) {
                 clearAuthenticationAndRedirect();
+
+                return Promise.reject(
+                    new Error("Access token không hợp lệ."),
+                );
             }
+
+            config.headers.Authorization =
+                `Bearer ${accessToken}`;
         }
 
         return config;
     },
-    (error: unknown) => Promise.reject(error),
+
+    (error: unknown) =>
+        Promise.reject(error),
 );
 
 apiClient.interceptors.response.use(
@@ -134,32 +159,40 @@ apiClient.interceptors.response.use(
         const data = error.response?.data;
 
         const originalRequest =
-            error.config as RetryRequestConfig | undefined;
+            error.config as
+                | RetryRequestConfig
+                | undefined;
 
-        const requestUrl = originalRequest?.url;
+        const requestUrl =
+            originalRequest?.url;
 
-        console.error("API_ERROR:", {
-            status,
-            url: requestUrl,
-            data,
-        });
+        if (import.meta.env.DEV) {
+            console.error("API_ERROR:", {
+                status,
+                url: requestUrl,
+                data,
+            });
+        }
 
         /*
-         * Auth API tự xử lý lỗi ở page/hook.
+         * Auth public API tự hiển thị lỗi tại page/hook.
          *
-         * Ví dụ login trả EMAIL_NOT_VERIFIED 403 thì không được
-         * tự chuyển người dùng sang /403.
+         * Ví dụ:
+         * - EMAIL_NOT_VERIFIED
+         * - INVALID_CREDENTIALS
+         * - INVALID_REFRESH_TOKEN
          */
         if (isPublicAuthEndpoint(requestUrl)) {
             return Promise.reject(error);
         }
 
         /*
-         * Nếu API protected trả 401:
-         * - lấy refresh token;
-         * - gọi refresh-token;
-         * - lưu access token mới;
-         * - gửi lại request cũ.
+         * Protected API trả 401:
+         *
+         * 1. Lấy refresh token.
+         * 2. Gọi /auth/refresh-token bằng refreshClient.
+         * 3. Lưu access token mới.
+         * 4. Gửi lại request ban đầu đúng một lần.
          */
         if (
             status === 401 &&
@@ -173,6 +206,7 @@ apiClient.interceptors.response.use(
 
             if (!refreshToken) {
                 clearAuthenticationAndRedirect();
+
                 return Promise.reject(error);
             }
 
@@ -186,13 +220,16 @@ apiClient.interceptors.response.use(
                     );
 
                 const newAccessToken =
-                    refreshResponse.data?.data?.accessToken;
+                    refreshResponse.data?.data
+                        ?.accessToken;
 
                 const returnedRefreshToken =
-                    refreshResponse.data?.data?.refreshToken;
+                    refreshResponse.data?.data
+                        ?.refreshToken;
 
                 if (!newAccessToken) {
                     clearAuthenticationAndRedirect();
+
                     return Promise.reject(error);
                 }
 
@@ -201,14 +238,17 @@ apiClient.interceptors.response.use(
                 );
 
                 /*
-                 * Backend MVP có thể trả lại refresh token cũ.
-                 * Sau này nếu có token rotation thì lưu token mới.
+                 * Backend có thể triển khai refresh-token rotation.
+                 * Nếu response có refresh token mới thì lưu lại.
                  */
                 if (returnedRefreshToken) {
                     tokenStorage.setRefreshToken(
                         returnedRefreshToken,
                     );
                 }
+
+                originalRequest.headers =
+                    originalRequest.headers ?? {};
 
                 originalRequest.headers.Authorization =
                     `Bearer ${newAccessToken}`;
@@ -217,13 +257,15 @@ apiClient.interceptors.response.use(
             } catch (refreshError) {
                 clearAuthenticationAndRedirect();
 
-                return Promise.reject(refreshError);
+                return Promise.reject(
+                    refreshError,
+                );
             }
         }
 
         /*
-         * Token malformed phía backend phải trả 401.
-         * Giữ fallback này trong giai đoạn chuyển đổi.
+         * Fallback tạm thời cho backend cũ từng trả lỗi JWT dưới dạng 500.
+         * Khi toàn backend đã chuẩn hóa 401 thì có thể xóa đoạn này.
          */
         const isLegacyJwtServerError =
             status === 500 &&
@@ -241,16 +283,20 @@ apiClient.interceptors.response.use(
             !isPublicEndpoint(requestUrl)
         ) {
             clearAuthenticationAndRedirect();
+
             return Promise.reject(error);
         }
 
         /*
-         * 403 của API protected mới chuyển Forbidden.
-         * Không áp dụng với Auth API.
+         * 403 của protected API chuyển sang trang Forbidden.
+         *
+         * Không áp dụng với Auth API public vì page Auth
+         * cần tự hiển thị lỗi nghiệp vụ.
          */
         if (
             status === 403 &&
             !isPublicEndpoint(requestUrl) &&
+            typeof window !== "undefined" &&
             !window.location.pathname.includes("/403")
         ) {
             window.location.href = "/403";

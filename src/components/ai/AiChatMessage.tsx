@@ -1,0 +1,83 @@
+import {
+  Bot,
+  User,
+} from "lucide-react";
+
+import AiFeedbackForm from "./AiFeedbackForm";
+import AiPlanViewer from "./AiPlanViewer";
+
+import type {
+  AiChatMessageModel,
+  AiSuggestionDetailResponse,
+} from "../../types/ai.type";
+
+interface AiChatMessageProps {
+  message: AiChatMessageModel;
+  onSuggestionChanged?: (
+    suggestion: AiSuggestionDetailResponse,
+  ) => void;
+}
+
+export default function AiChatMessage({
+  message,
+  onSuggestionChanged,
+}: AiChatMessageProps) {
+  const isUser = message.sender === "user";
+
+  return (
+    <div
+      className={`flex max-w-4xl gap-3 sm:gap-4 ${
+        isUser ? "ml-auto flex-row-reverse" : ""
+      }`}
+    >
+      <div
+        className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${
+          isUser
+            ? "bg-slate-950"
+            : "bg-gradient-to-br from-emerald-500 to-violet-600"
+        }`}
+      >
+        {isUser ? (
+          <User className="h-4 w-4" />
+        ) : (
+          <Bot className="h-4 w-4" />
+        )}
+      </div>
+
+      <div
+        className={`min-w-0 flex-1 space-y-2 ${
+          isUser ? "text-right" : ""
+        }`}
+      >
+        <div
+          className={`inline-block max-w-2xl rounded-2xl p-4 text-left text-sm leading-6 ${
+            isUser
+              ? "rounded-tr-sm bg-slate-950 text-white"
+              : "rounded-tl-sm border border-slate-200 bg-white text-slate-700 shadow-sm"
+          }`}
+        >
+          <p className="whitespace-pre-wrap">{message.text}</p>
+        </div>
+
+        {message.suggestionDetail && (
+          <div className="mt-3 text-left">
+            <AiPlanViewer
+              suggestion={message.suggestionDetail}
+              onChanged={onSuggestionChanged}
+            />
+
+            {!message.suggestionDetail.feedback && (
+              <AiFeedbackForm
+                suggestionId={message.suggestionDetail.id}
+              />
+            )}
+          </div>
+        )}
+
+        <p className="px-2 text-[10px] font-medium text-slate-400">
+          {message.timestamp}
+        </p>
+      </div>
+    </div>
+  );
+}

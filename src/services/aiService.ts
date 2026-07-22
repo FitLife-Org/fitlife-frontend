@@ -1,60 +1,211 @@
 import apiClient from "./apiClient";
-import type { ApiResponse, PageResponse } from "../types/common.type";
-import type { 
-  AiSuggestionResponse, 
-  AiSuggestionDetailResponse, 
-  AiFullPlanRequest,
-  AiBodyAnalysisRequest,
-  AiGeneratedPlan
-, AiFeedbackRequest} from "../types/ai.type";
+
+import type {
+    ApiResponse,
+    PageResponse,
+} from "../types/common.type";
+
+import type {
+    AiApplyPlanResponse,
+    AiBodyAnalysisRequest,
+    AiFeedbackRequest,
+    AiFeedbackResponse,
+    AiFullPlanRequest,
+    AiHistoryFilter,
+    AiNutritionPlanRequest,
+    AiSuggestionDetailResponse,
+    AiSuggestionResponse,
+    AiUsageTodayResponse,
+    AiWorkoutPlanRequest,
+} from "../types/ai.type";
+
+const AI_BASE_URL = "/ai/suggestions";
+const AI_GENERATE_TIMEOUT_MS = 60_000;
+
+function requireData<T>(
+    response: ApiResponse<T>,
+    fallbackMessage: string,
+): T {
+    if (response.data === null || response.data === undefined) {
+        throw new Error(response.message || fallbackMessage);
+    }
+
+    return response.data;
+}
+
+function validateSuggestionId(suggestionId: number): void {
+    if (!Number.isInteger(suggestionId) || suggestionId <= 0) {
+        throw new Error("AI suggestion ID không hợp lệ.");
+    }
+}
 
 export const aiService = {
-  async generateFullPlan(data: AiFullPlanRequest): Promise<AiSuggestionResponse> {
-    const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
-        "/ai/suggestions/full-plan",
-        data
-    );
+    async getTodayUsage(): Promise<AiUsageTodayResponse> {
+        const response = await apiClient.get<ApiResponse<AiUsageTodayResponse>>(
+            `${AI_BASE_URL}/usage/today`,
+        );
 
-    if (!response.data.data) {
-      throw new Error("Máy chủ không trả về kết quả.");
-    }
+        return requireData(
+            response.data,
+            "Không thể lấy lượt sử dụng AI hôm nay.",
+        );
+    },
 
-    return response.data.data;
-  },
+    async generateFullPlan(
+        request: AiFullPlanRequest,
+    ): Promise<AiSuggestionResponse> {
+        const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
+            `${AI_BASE_URL}/full-plan`,
+            request,
+            { timeout: AI_GENERATE_TIMEOUT_MS },
+        );
 
-  async analyzeBody(data: AiBodyAnalysisRequest): Promise<AiSuggestionResponse> {
-    const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
-        "/ai/suggestions/body-analysis",
-        data
-    );
-    return response.data.data;
-  },
+        return requireData(
+            response.data,
+            "Máy chủ không trả về kế hoạch AI.",
+        );
+    },
 
-  async getAiHistory(page = 0, size = 10): Promise<AiSuggestionResponse[]> {
-    const response = await apiClient.get<ApiResponse<PageResponse<AiSuggestionResponse>>>(`/ai/suggestions/my?page=${page}&size=${size}`);
-    return response.data.data.content;
-  },
+    async generateWorkoutPlan(
+        request: AiWorkoutPlanRequest,
+    ): Promise<AiSuggestionResponse> {
+        const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
+            `${AI_BASE_URL}/workout-plan`,
+            request,
+            { timeout: AI_GENERATE_TIMEOUT_MS },
+        );
 
-  async getAiSuggestionDetail(id: number): Promise<AiSuggestionDetailResponse> {
-    const response = await apiClient.get<ApiResponse<AiSuggestionDetailResponse>>(`/ai/suggestions/${id}`);
-    return response.data.data;
-  },
+        return requireData(
+            response.data,
+            "Máy chủ không trả về kế hoạch tập luyện.",
+        );
+    },
 
-  
-  async submitFeedback(id: number, data: AiFeedbackRequest): Promise<void> {
-    await apiClient.post<ApiResponse<void>>(`/ai/suggestions/${id}/feedback`, data);
-  },
+    async generateNutritionPlan(
+        request: AiNutritionPlanRequest,
+    ): Promise<AiSuggestionResponse> {
+        const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
+            `${AI_BASE_URL}/nutrition-plan`,
+            request,
+            { timeout: AI_GENERATE_TIMEOUT_MS },
+        );
 
-  async applyPlan(plan: AiGeneratedPlan): Promise<void> {
+        return requireData(
+            response.data,
+            "Máy chủ không trả về kế hoạch dinh dưỡng.",
+        );
+    },
 
-    try {
-      // Backend doesn't have an apply endpoint yet, so we mock it
-      // await apiClient.post(`/ai/suggestions/${planId}/apply`);
-      console.warn("API POST /ai/suggestions/{id}/apply is missing on backend, mocking success");
-      await new Promise(r => setTimeout(r, 1200));
-    } catch (error) {
-      console.error("Failed to apply plan", error);
-      throw error;
-    }
-  }
+    async analyzeBody(
+        request: AiBodyAnalysisRequest,
+    ): Promise<AiSuggestionDetailResponse> {
+        const response = await apiClient.post<ApiResponse<AiSuggestionDetailResponse>>(
+            `${AI_BASE_URL}/body-analysis`,
+            request,
+            { timeout: AI_GENERATE_TIMEOUT_MS },
+        );
+
+        return requireData(
+            response.data,
+            "Máy chủ không trả về kết quả phân tích cơ thể.",
+        );
+    },
+
+    async getAiHistory(
+        page = 0,
+        size = 10,
+    ): Promise<PageResponse<AiSuggestionResponse>> {
+        const response = await apiClient.get<
+            ApiResponse<PageResponse<AiSuggestionResponse>>
+        >(`${AI_BASE_URL}/my`, {
+            params: { page, size },
+        });
+
+        return requireData(
+            response.data,
+            "Không thể tải lịch sử AI.",
+        );
+    },
+
+    async getFilteredHistory(
+        filter: AiHistoryFilter,
+    ): Promise<PageResponse<AiSuggestionResponse>> {
+        const response = await apiClient.get<
+            ApiResponse<PageResponse<AiSuggestionResponse>>
+        >(`${AI_BASE_URL}/my/filter`, {
+            params: {
+                suggestionType: filter.suggestionType,
+                status: filter.status,
+                page: filter.page ?? 0,
+                size: filter.size ?? 10,
+            },
+        });
+
+        return requireData(
+            response.data,
+            "Không thể tải lịch sử AI.",
+        );
+    },
+
+    async getAiSuggestionDetail(
+        suggestionId: number,
+    ): Promise<AiSuggestionDetailResponse> {
+        validateSuggestionId(suggestionId);
+
+        const response = await apiClient.get<
+            ApiResponse<AiSuggestionDetailResponse>
+        >(`${AI_BASE_URL}/${suggestionId}`);
+
+        return requireData(
+            response.data,
+            "Không thể tải chi tiết kế hoạch AI.",
+        );
+    },
+
+    async applyWorkoutPlan(
+        suggestionId: number,
+    ): Promise<AiApplyPlanResponse> {
+        validateSuggestionId(suggestionId);
+
+        const response = await apiClient.post<ApiResponse<AiApplyPlanResponse>>(
+            `${AI_BASE_URL}/${suggestionId}/apply-workout-plan`,
+        );
+
+        return requireData(
+            response.data,
+            "Không thể áp dụng kế hoạch tập luyện.",
+        );
+    },
+
+    async applyNutritionPlan(
+        suggestionId: number,
+    ): Promise<AiApplyPlanResponse> {
+        validateSuggestionId(suggestionId);
+
+        const response = await apiClient.post<ApiResponse<AiApplyPlanResponse>>(
+            `${AI_BASE_URL}/${suggestionId}/apply-nutrition-plan`,
+        );
+
+        return requireData(
+            response.data,
+            "Không thể áp dụng kế hoạch dinh dưỡng.",
+        );
+    },
+
+    async submitFeedback(
+        suggestionId: number,
+        request: AiFeedbackRequest,
+    ): Promise<AiFeedbackResponse> {
+        validateSuggestionId(suggestionId);
+
+        const response = await apiClient.post<ApiResponse<AiFeedbackResponse>>(
+            `${AI_BASE_URL}/${suggestionId}/feedback`,
+            request,
+        );
+
+        return requireData(
+            response.data,
+            "Không thể gửi đánh giá AI.",
+        );
+    },
 };

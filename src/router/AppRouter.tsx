@@ -107,8 +107,7 @@ export default function AppRouter() {
 
                 <Route element={<ProtectedRoute/>}>
                     <Route element={<DashboardLayoutRoute/>}>
-                        <Route path={ROUTES.DASHBOARD} element={<DashboardPage/>}/><Route path={ROUTES.DASHBOARD}
-                                                                                          element={<DashboardPage/>}/>
+                        <Route path={ROUTES.DASHBOARD} element={<DashboardPage/>}/>
                         <Route path={ROUTES.COMMON_SETTINGS} element={<SettingsPage/>}/>
 
                         {/* Member Routes */}
