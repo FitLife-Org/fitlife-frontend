@@ -1,623 +1,1012 @@
-import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { Bot, CalendarPlus, Mic, Send, Utensils, Activity, User, Sparkles, Loader2, Dumbbell, Target, History, X, CheckCircle2, Wand2 } from "lucide-react";
-import gsap from "gsap";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
+
+import {
+  Activity,
+  Bot,
+  CalendarPlus,
+  History,
+  Loader2,
+  Send,
+  Sparkles,
+  Utensils,
+  Wand2,
+  X,
+} from "lucide-react";
+
 import { useGSAP } from "@gsap/react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+} from "framer-motion";
+import gsap from "gsap";
 import toast from "react-hot-toast";
-import PageHeader from "../../components/common/PageHeader";
-import type { 
-  AiSuggestionResponse, 
-  AiSuggestionDetailResponse, 
-  AiGeneratedPlan 
-} from "../../types/ai.type";
-import { aiService } from "../../services/aiService";
+
+import AiAdvancedPlanModal from "../../components/ai/AiAdvancedPlanModal";
+import AiChatMessage from "../../components/ai/AiChatMessage";
+import AiFeedbackForm from "../../components/ai/AiFeedbackForm";
+import AiHistoryDrawer from "../../components/ai/AiHistoryDrawer";
+import AiPlanViewer from "../../components/ai/AiPlanViewer";
+import AiUsageCard from "../../components/ai/AiUsageCard";
+
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
+import PageHeader from "../../components/common/PageHeader";
 
-export interface ChatMessage {
-  id: string;
-  sender: "user" | "ai";
-  text: string;
-  timestamp: string;
-  planObject?: AiGeneratedPlan;
-  suggestionId?: number;
+import { aiService } from "../../services/aiService";
+
+import type {
+    AiActivityLevel,
+    AiAdvancedPlanFormValue,
+    AiChatMessageModel,
+    AiFullPlanRequest,
+    AiSuggestionDetailResponse,
+    AiSuggestionResponse,
+    AiUsageTodayResponse,
+} from "../../types/ai.type";
+
+import { getApiErrorMessage } from "../../utils/apiError";
+
+type QuickActionType =
+    | "FULL_PLAN"
+    | "BODY_ANALYSIS"
+    | "WORKOUT_GUIDE"
+    | "NUTRITION_GUIDE";
+
+interface QuickAction {
+  label: string;
+  description: string;
+  prompt: string;
+  icon: typeof Bot;
+  type: QuickActionType;
 }
 
-const INITIAL_MESSAGE: ChatMessage = {
-  id: "msg-0",
-  sender: "ai",
-  text: "Chào bạn! Mình là Trợ lý AI FitLife. Mình có thể giúp bạn tạo lịch tập, gợi ý thực đơn hoặc tính toán các chỉ số cơ thể. Bạn cần hỗ trợ gì hôm nay?",
-  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-};
-
-const QUICK_ACTIONS = [
-  { label: "Tạo lịch tập", icon: CalendarPlus, prompt: "Tạo giúp mình lịch tập 4 buổi/tuần cho người mới bắt đầu để giảm mỡ." },
-  { label: "Gợi ý meal plan", icon: Utensils, prompt: "Mình cần một thực đơn 2000 kcal giàu protein, dễ chuẩn bị." },
-  { label: "Phân tích BMI", icon: Activity, prompt: "Mình cao 1m75, nặng 80kg. Hãy phân tích BMI và đưa ra lời khuyên." },
-  { label: "Hỏi PT", icon: Bot, prompt: "Làm sao để tập Squat đúng kỹ thuật không bị đau lưng?" },
+const QUICK_ACTIONS: QuickAction[] = [
+  {
+    label: "Tạo kế hoạch toàn diện",
+    description:
+        "Tạo lịch tập và thực đơn phù hợp với mục tiêu cá nhân.",
+    prompt:
+        "Mình muốn tạo một kế hoạch tập luyện và dinh dưỡng toàn diện.",
+    icon: Sparkles,
+    type: "FULL_PLAN",
+  },
+  {
+    label: "Phân tích cơ thể",
+    description:
+        "AI phân tích chỉ số cơ thể và đưa ra khuyến nghị.",
+    prompt:
+        "Hãy phân tích tình trạng cơ thể hiện tại của mình.",
+    icon: Activity,
+    type: "BODY_ANALYSIS",
+  },
+  {
+    label: "Tư vấn tập luyện",
+    description:
+        "Nhận hướng dẫn về lịch tập và cách tập an toàn.",
+    prompt:
+        "Mình cần tư vấn xây dựng lịch tập phù hợp.",
+    icon: CalendarPlus,
+    type: "WORKOUT_GUIDE",
+  },
+  {
+    label: "Tư vấn dinh dưỡng",
+    description:
+        "Nhận gợi ý về calories, protein và bữa ăn.",
+    prompt:
+        "Mình cần tư vấn dinh dưỡng phù hợp với mục tiêu.",
+    icon: Utensils,
+    type: "NUTRITION_GUIDE",
+  },
 ];
 
-function AiPlanViewer({ plan }: { plan: AiGeneratedPlan }) {
-  const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(false);
-
-  const handleApply = async () => {
-    setApplying(true);
-    try {
-      await aiService.applyPlan(plan);
-      setApplied(true);
-      toast.success("Tuyệt vời! Giáo án đã được áp dụng vào lịch tập của bạn.");
-    } catch (e) {
-      toast.error("Lỗi khi áp dụng giáo án.");
-    } finally {
-      setApplying(false);
-    }
-  };
-
-  return (
-    <div className="mt-4 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden text-left">
-      <div className="bg-slate-900 text-white p-6">
-        <h3 className="text-xl font-black">{plan.title}</h3>
-        <p className="text-slate-300 mt-2 text-sm">{plan.summary}</p>
-        <div className="flex flex-wrap gap-3 mt-4">
-          <span className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full text-xs font-bold">
-            <Target className="w-4 h-4" /> {plan.goal}
-          </span>
-          <span className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full text-xs font-bold">
-            <User className="w-4 h-4" /> {plan.fitnessLevel}
-          </span>
-        </div>
-      </div>
-      
-      <div className="p-6 space-y-6">
-        {plan.workoutDays && plan.workoutDays.map((day, idx) => (
-          <div key={idx} className="border border-slate-100 rounded-2xl p-4 bg-slate-50">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-              <h4 className="font-bold text-slate-900 flex items-center gap-2">
-                <span className="bg-emerald-100 text-emerald-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">
-                  {day.dayNumber}
-                </span>
-                {day.title}
-              </h4>
-              <span className="text-xs font-bold text-slate-500 uppercase">{day.focusArea}</span>
-            </div>
-            
-            <div className="space-y-3">
-              {day.exercises.map((exe, eIdx) => (
-                <div key={eIdx} className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center">
-                      <Dumbbell className="w-4 h-4 text-slate-400" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm text-slate-900">{exe.name}</p>
-                      {exe.note && <p className="text-[11px] text-slate-500">{exe.note}</p>}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-black text-slate-700 text-sm">{exe.sets} <span className="text-xs text-slate-400 font-normal">sets</span></p>
-                    <p className="font-black text-slate-700 text-sm">{exe.reps} <span className="text-xs text-slate-400 font-normal">reps</span></p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        {plan.nutritionPlan && (
-           <div className="border border-slate-100 rounded-2xl p-4 bg-orange-50">
-           <div className="flex items-center justify-between mb-4 border-b border-orange-200 pb-3">
-             <h4 className="font-bold text-orange-900 flex items-center gap-2">
-               <Utensils className="w-5 h-5" />
-               {plan.nutritionPlan.title}
-             </h4>
-           </div>
-           
-           <div className="space-y-3">
-             {plan.nutritionPlan.meals.map((meal, mIdx) => (
-               <div key={mIdx} className="bg-white p-3 rounded-xl shadow-sm border border-orange-100">
-                 <p className="font-bold text-sm text-orange-900">{meal.mealName}</p>
-                 <p className="text-xs text-slate-600 mt-1">{meal.foods}</p>
-               </div>
-             ))}
-           </div>
-         </div>
-        )}
-      </div>
-
-      <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <Button 
-          variant="primary"
-          disabled={applying || applied}
-          onClick={handleApply}
-          className={`rounded-full flex items-center gap-2 transition-all ${
-            applied ? "bg-emerald-500 text-white border-none" : "bg-slate-900 text-white border-none hover:bg-slate-800"
-          }`}
-        >
-          {applying ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Đang xử lý...</>
-          ) : applied ? (
-            <><CheckCircle2 className="w-4 h-4" /> Đã áp dụng</>
-          ) : (
-            <><CalendarPlus className="w-4 h-4" /> Áp dụng vào lịch tập</>
-          )}
-        </Button>
-      </div>
-    </div>
+function createTimestamp(): string {
+  return new Date().toLocaleTimeString(
+      "vi-VN",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      },
   );
 }
 
+function createMessageId(
+    prefix: string,
+): string {
+  return `${prefix}-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
+}
 
-function AiFeedbackForm({ suggestionId }: { suggestionId: number }) {
-  const [rating, setRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+const INITIAL_MESSAGE: AiChatMessageModel = {
+  id: "initial-ai-message",
+  sender: "ai",
+  text:
+      "Chào bạn! Mình là Trợ lý AI FitLife. Mình có thể phân tích chỉ số cơ thể, tạo kế hoạch tập luyện và đề xuất dinh dưỡng phù hợp với dữ liệu cá nhân của bạn.",
+  timestamp: createTimestamp(),
+};
 
-  const handleSubmit = async () => {
-    if (rating === 0) {
-      toast.error("Vui lòng chọn số sao đánh giá");
-      return;
+function createPlanRequestMessage(
+    value: AiAdvancedPlanFormValue,
+): string {
+    const goalLabels: Record<
+        string,
+        string
+    > = {
+        LOSE_WEIGHT: "Giảm mỡ",
+        GAIN_MUSCLE: "Tăng cơ",
+        BODY_RECOMPOSITION:
+            "Tăng cơ giảm mỡ",
+        MAINTAIN_FITNESS:
+            "Duy trì thể lực",
+        IMPROVE_ENDURANCE:
+            "Cải thiện sức bền",
+    };
+
+    const levelLabels: Record<
+        string,
+        string
+    > = {
+        BEGINNER: "Người mới",
+        INTERMEDIATE: "Trung bình",
+        ADVANCED: "Nâng cao",
+    };
+
+    const activityLabels: Record<
+        AiActivityLevel,
+        string
+    > = {
+        SEDENTARY: "Ít vận động",
+        LIGHT: "Vận động nhẹ",
+        MODERATE: "Vận động vừa",
+        ACTIVE: "Vận động nhiều",
+        VERY_ACTIVE: "Vận động rất nhiều",
+    };
+
+    const parts = [
+        `Mục tiêu: ${
+            goalLabels[value.goal] ??
+            value.goal
+        }`,
+
+        `Trình độ: ${
+            levelLabels[
+                value.experienceLevel
+                ] ??
+            value.experienceLevel
+        }`,
+
+        `Mức vận động: ${
+            activityLabels[
+                value.activityLevel
+                ] ??
+            value.activityLevel
+        }`,
+
+        `${value.workoutDaysPerWeek} buổi/tuần`,
+
+        `${value.workoutDurationMinutes} phút/buổi`,
+
+        `${value.mealsPerDay} bữa/ngày`,
+    ];
+
+    if (value.userNote.trim()) {
+        parts.push(
+            `Ghi chú: ${
+                value.userNote.trim()
+            }`,
+        );
     }
-    setSubmitting(true);
-    try {
-      await aiService.submitFeedback(suggestionId, { rating, comment });
-      setSubmitted(true);
-      toast.success("Cảm ơn đánh giá của bạn!");
-    } catch (e) {
-      toast.error("Không thể gửi đánh giá.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
-  if (submitted) {
-    return (
-      <div className="mt-4 bg-emerald-50 text-emerald-700 p-3 rounded-xl flex items-center gap-2 text-sm">
-        <CheckCircle2 className="w-5 h-5" />
-        Đánh giá của bạn đã được ghi nhận.
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-4 bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
-      <p className="text-sm font-bold text-slate-800 mb-2">Đánh giá kết quả này:</p>
-      <div className="flex gap-1 mb-3">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            className="focus:outline-none transition-colors"
-            onMouseEnter={() => setHoverRating(star)}
-            onMouseLeave={() => setHoverRating(0)}
-            onClick={() => setRating(star)}
-          >
-            <Sparkles className={`w-6 h-6 ${(hoverRating || rating) >= star ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200'}`} />
-          </button>
-        ))}
-      </div>
-      <Input
-        placeholder="Nhận xét thêm (không bắt buộc)..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        className="mb-3"
-      />
-      <Button variant="primary" onClick={handleSubmit} disabled={submitting} className="w-full text-sm py-2">
-        {submitting ? "Đang gửi..." : "Gửi đánh giá"}
-      </Button>
-    </div>
-  );
+    return `Tạo kế hoạch AI với ${parts.join(
+        ", ",
+    )}.`;
 }
 
 export default function AiFitnessPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
-  const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [historyItems, setHistoryItems] = useState<AiSuggestionResponse[]>([]);
-  
-  // AI-FE-01: Form Modal State
-  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
-  const [formData, setFormData] = useState({ goal: "LOSE_WEIGHT", level: "BEGINNER", daysPerWeek: 4, durationMinutes: 60 });
-  
-  // AI-FE-04: History Detail Modal State
-  const [selectedHistoryItem, setSelectedHistoryItem] = useState<AiSuggestionDetailResponse | null>(null);
+  const [messages, setMessages] =
+      useState<AiChatMessageModel[]>([
+        INITIAL_MESSAGE,
+      ]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [input, setInput] =
+      useState("");
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const [isTyping, setIsTyping] =
+      useState(false);
+
+  const [
+    showAdvancedForm,
+    setShowAdvancedForm,
+  ] = useState(false);
+
+  const [
+    historyOpen,
+    setHistoryOpen,
+  ] = useState(false);
+
+  const [
+    historyItems,
+    setHistoryItems,
+  ] = useState<
+      AiSuggestionResponse[]
+  >([]);
+
+  const [
+    historyLoading,
+    setHistoryLoading,
+  ] = useState(false);
+
+  const [
+    historyError,
+    setHistoryError,
+  ] = useState<string | null>(null);
+
+  const [
+    selectedHistoryItem,
+    setSelectedHistoryItem,
+  ] =
+      useState<AiSuggestionDetailResponse | null>(
+          null,
+      );
+
+  const [
+    detailLoading,
+    setDetailLoading,
+  ] = useState(false);
+
+  const [usage, setUsage] =
+      useState<AiUsageTodayResponse | null>(
+          null,
+      );
+
+  const [
+    usageLoading,
+    setUsageLoading,
+  ] = useState(false);
+
+  const [usageError, setUsageError] =
+      useState<string | null>(null);
+
+  const messagesEndRef =
+      useRef<HTMLDivElement>(null);
+
+  const containerRef =
+      useRef<HTMLDivElement>(null);
+
+  const loadUsage =
+      useCallback(async () => {
+        try {
+          setUsageLoading(true);
+          setUsageError(null);
+
+          const result =
+              await aiService.getTodayUsage();
+
+          setUsage(result);
+        } catch (error) {
+          setUsageError(
+              getApiErrorMessage(
+                  error,
+                  "Không thể tải lượt sử dụng AI.",
+              ),
+          );
+        } finally {
+          setUsageLoading(false);
+        }
+      }, []);
+
+  const loadHistory =
+      useCallback(async () => {
+        try {
+          setHistoryLoading(true);
+          setHistoryError(null);
+
+          const page =
+              await aiService.getAiHistory(
+                  0,
+                  20,
+              );
+
+          setHistoryItems(
+              page.content ?? [],
+          );
+        } catch (error) {
+          setHistoryError(
+              getApiErrorMessage(
+                  error,
+                  "Không thể tải lịch sử AI.",
+              ),
+          );
+        } finally {
+          setHistoryLoading(false);
+        }
+      }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    void loadUsage();
+    void loadHistory();
+  }, [loadHistory, loadUsage]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView(
+        {
+          behavior: "smooth",
+        },
+    );
   }, [messages, isTyping]);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      const data = await aiService.getAiHistory();
-      setHistoryItems(data);
-    };
-    fetchHistory();
-  }, []);
+  useGSAP(
+      () => {
+        gsap.from(
+            ".quick-action-card",
+            {
+              y: 20,
+              opacity: 0,
+              duration: 0.5,
+              stagger: 0.08,
+              ease: "power2.out",
+            },
+        );
+      },
+      {
+        scope: containerRef,
+      },
+  );
 
-  useGSAP(() => {
-    gsap.from(".quick-action-card", {
-      y: 20,
-      opacity: 0,
-      duration: 0.5,
-      stagger: 0.1,
-      ease: "power2.out",
-    });
-  }, { scope: containerRef });
-
-  const generateAiResponse = async (userText: string) => {
-    setIsTyping(true);
-    
-    // Giả lập chat thông thường
-    setTimeout(() => {
-      const newMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        sender: "ai",
-        text: "Mình đã ghi nhận yêu cầu của bạn. Tính năng chat tự do với AI đang được nâng cấp, bạn hãy dùng chức năng 'Tạo giáo án nâng cao' bằng cách bấm vào biểu tượng cây đũa phép nhé!",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, newMsg]);
-      setIsTyping(false);
-    }, 1500);
-  };
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-
-    const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
+  const appendUserMessage = (
+      text: string,
+  ): void => {
+    const message: AiChatMessageModel = {
+      id: createMessageId(
+          "user-message",
+      ),
       sender: "user",
-      text: input.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      text,
+      timestamp: createTimestamp(),
     };
 
-    setMessages(prev => [...prev, newMsg]);
-    setInput("");
-    generateAiResponse(newMsg.text);
+    setMessages((previous) => [
+      ...previous,
+      message,
+    ]);
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+    const appendAiMessage = (
+        text: string,
+        suggestionDetail?: AiSuggestionDetailResponse,
+    ): void => {
+        const message: AiChatMessageModel = {
+            id: createMessageId("ai-message"),
+            sender: "ai",
+            text,
+            timestamp: createTimestamp(),
+            suggestionDetail,
+        };
+
+        setMessages((previous) => [
+            ...previous,
+            message,
+        ]);
+    };
+
+  const updateSuggestionEverywhere =
+      useCallback(
+          (
+              updated:
+              AiSuggestionDetailResponse,
+          ) => {
+            setSelectedHistoryItem(
+                (current) =>
+                    current?.id === updated.id
+                        ? updated
+                        : current,
+            );
+
+            setMessages((previous) =>
+                previous.map((message) =>
+                    message.suggestionDetail
+                        ?.id === updated.id
+                        ? {
+                          ...message,
+                          suggestionDetail:
+                          updated,
+                        }
+                        : message,
+                ),
+            );
+
+            setHistoryItems(
+                (previous) =>
+                    previous.map((item) =>
+                        item.id === updated.id
+                            ? {
+                              ...item,
+                              ...updated,
+                            }
+                            : item,
+                    ),
+            );
+
+            void loadHistory();
+            void loadUsage();
+          },
+          [loadHistory, loadUsage],
+      );
+
+    const submitAdvancedForm =
+        async (
+            value: AiAdvancedPlanFormValue,
+        ): Promise<void> => {
+            if (isTyping) {
+                return;
+            }
+
+            const requestMessage =
+                createPlanRequestMessage(
+                    value,
+                );
+
+            appendUserMessage(
+                requestMessage,
+            );
+
+            setIsTyping(true);
+
+            try {
+                const payload = {
+                    goal: value.goal,
+
+                    experienceLevel:
+                    value.experienceLevel,
+
+                    activityLevel:
+                    value.activityLevel,
+
+                    workoutDaysPerWeek:
+                    value.workoutDaysPerWeek,
+
+                    workoutDurationMinutes:
+                    value.workoutDurationMinutes,
+
+                    mealsPerDay:
+                    value.mealsPerDay,
+
+                    preferredLanguage:
+                    value.preferredLanguage,
+
+                    userNote:
+                        value.userNote.trim() ||
+                        undefined,
+                };
+
+                console.log(
+                    "AI_FULL_PLAN_PAYLOAD:",
+                    payload,
+                );
+
+                const result =
+                    await aiService.generateFullPlan(
+                        payload,
+                    );
+
+                const detail =
+                    await aiService
+                        .getAiSuggestionDetail(
+                            result.id,
+                        );
+
+                appendAiMessage(
+                    detail.summary ||
+                    "FitLife AI đã tạo xong kế hoạch tập luyện và dinh dưỡng cho bạn.",
+                    detail,
+                );
+
+                setShowAdvancedForm(false);
+
+                toast.success(
+                    "Đã tạo kế hoạch AI thành công.",
+                );
+
+                await Promise.all([
+                    loadHistory(),
+                    loadUsage(),
+                ]);
+            } catch (error) {
+                const message =
+                    getApiErrorMessage(
+                        error,
+                        "Không thể tạo kế hoạch AI.",
+                    );
+
+                appendAiMessage(
+                    `Xin lỗi, mình chưa thể tạo kế hoạch lúc này.\n\n${message}`,
+                );
+
+                toast.error(message);
+            } finally {
+                setIsTyping(false);
+            }
+        };
+
+  const handleBodyAnalysis =
+      async (): Promise<void> => {
+        if (isTyping) {
+          return;
+        }
+
+        const prompt =
+            "Phân tích chỉ số cơ thể hiện tại và đưa ra khuyến nghị phù hợp.";
+
+        appendUserMessage(prompt);
+
+        setIsTyping(true);
+
+        try {
+          const detail =
+              await aiService.analyzeBody({
+                preferredLanguage: "vi",
+                userNote:
+                    "Phân tích tổng quan chỉ số cơ thể hiện tại của tôi.",
+              });
+
+          appendAiMessage(
+              detail.summary ||
+              "FitLife AI đã hoàn thành phân tích cơ thể.",
+              detail,
+          );
+
+          toast.success(
+              "Đã phân tích cơ thể thành công.",
+          );
+
+          await Promise.all([
+            loadHistory(),
+            loadUsage(),
+          ]);
+        } catch (error) {
+          const message =
+              getApiErrorMessage(
+                  error,
+                  "Không thể phân tích cơ thể.",
+              );
+
+          appendAiMessage(
+              `Xin lỗi, mình chưa thể phân tích cơ thể lúc này.\n\n${message}`,
+          );
+
+          toast.error(message);
+        } finally {
+          setIsTyping(false);
+        }
+      };
+
+  const handleQuickAction = (
+      action: QuickAction,
+  ): void => {
+    switch (action.type) {
+      case "FULL_PLAN":
+        setShowAdvancedForm(true);
+        return;
+
+      case "BODY_ANALYSIS":
+        void handleBodyAnalysis();
+        return;
+
+      case "WORKOUT_GUIDE":
+        setInput(
+            "Mình muốn tạo kế hoạch tập luyện phù hợp. Hãy mở biểu mẫu AI để nhập mục tiêu và lịch tập.",
+        );
+        setShowAdvancedForm(true);
+        return;
+
+      case "NUTRITION_GUIDE":
+        setInput(
+            "Mình muốn tạo kế hoạch dinh dưỡng phù hợp. Hãy mở biểu mẫu AI để nhập mục tiêu và số bữa ăn.",
+        );
+        setShowAdvancedForm(true);
+        return;
+
+      default:
+        return;
+    }
+  };
+
+  const handleSend = (): void => {
+    const normalizedInput =
+        input.trim();
+
+    if (
+        !normalizedInput ||
+        isTyping
+    ) {
+      return;
+    }
+
+    appendUserMessage(
+        normalizedInput,
+    );
+
+    setInput("");
+
+    appendAiMessage(
+        "Tính năng chat tự do đang được hoàn thiện. Hiện tại bạn có thể dùng biểu tượng cây đũa phép để tạo kế hoạch AI hoặc chọn chức năng phân tích cơ thể.",
+    );
+  };
+
+  const handleKeyDown = (
+      event:
+      KeyboardEvent<HTMLInputElement>,
+  ): void => {
+    if (
+        event.key === "Enter" &&
+        !event.shiftKey
+    ) {
+      event.preventDefault();
       handleSend();
     }
   };
 
-  const submitAdvancedForm = async () => {
-    setShowAdvancedForm(false);
-    
-    const goalMap: Record<string, string> = { LOSE_WEIGHT: "Giảm mỡ", GAIN_MUSCLE: "Tăng cơ", MAINTAIN_FITNESS: "Duy trì vóc dáng" };
-    const levelMap: Record<string, string> = { BEGINNER: "Người mới", INTERMEDIATE: "Trung bình", ADVANCED: "Nâng cao" };
-    
-    const textPrompt = `Tạo giáo án nâng cao: Mục tiêu ${goalMap[formData.goal] || formData.goal}, Trình độ ${levelMap[formData.level] || formData.level}, ${formData.daysPerWeek} buổi/tuần, ${formData.durationMinutes} phút/buổi.`;
-    
-    const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      sender: "user",
-      text: textPrompt,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setMessages(prev => [...prev, newMsg]);
-    setIsTyping(true);
+  const openHistoryDetail =
+      async (
+          item:
+          AiSuggestionResponse,
+      ): Promise<void> => {
+        try {
+          setHistoryOpen(false);
+          setDetailLoading(true);
 
-    try {
-      const result = await aiService.generateFullPlan({
-        goal: formData.goal,
-        fitnessLevel: formData.level,
-        trainingDaysPerWeek: formData.daysPerWeek,
-      });
+          const detail =
+              await aiService.getAiSuggestionDetail(
+                  item.id,
+              );
 
-      // Lấy chi tiết để có được planObject
-      const detail = await aiService.getAiSuggestionDetail(result.id);
-      
-      const aiResponseMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        sender: "ai",
-        text: detail.summary || "Đã tạo xong giáo án cho bạn:",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        planObject: detail.planInfo
+          setSelectedHistoryItem(
+              detail,
+          );
+        } catch (error) {
+          toast.error(
+              getApiErrorMessage(
+                  error,
+                  "Không thể tải chi tiết lịch sử AI.",
+              ),
+          );
+        } finally {
+          setDetailLoading(false);
+        }
       };
-      setMessages(prev => [...prev, aiResponseMsg]);
-    } catch (e) {
-      toast.error("Lỗi khi tạo giáo án từ Backend.");
-      const errorMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        sender: "ai",
-        text: "Xin lỗi, đã có lỗi kết nối đến Backend khi tạo giáo án.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, errorMsg]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const openHistoryDetail = async (item: AiSuggestionResponse) => {
-    setSidebarOpen(false); // Đóng sidebar khi mở chi tiết
-    try {
-      const detail = await aiService.getAiSuggestionDetail(item.id);
-      setSelectedHistoryItem(detail);
-    } catch(e) {
-      toast.error("Không thể lấy chi tiết lịch sử.");
-    }
-  };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] relative overflow-hidden">
-      <div className="flex justify-between items-center pr-2">
-        <PageHeader title="FitLife AI" description="Trợ lý cá nhân thông minh của bạn" />
-        <Button 
-          variant="outline" 
-          onClick={() => setSidebarOpen(true)}
-          className="rounded-full flex items-center gap-2 border-slate-200 text-slate-600 hover:text-slate-900 bg-white"
+      <div className="relative flex min-h-[calc(100vh-8rem)] flex-col">
+        <PageHeader
+            title="FitLife AI"
+            description="Trợ lý cá nhân thông minh tạo kế hoạch tập luyện và dinh dưỡng phù hợp với bạn."
+            action={
+              <Button
+                  variant="outline"
+                  onClick={() =>
+                      setHistoryOpen(true)
+                  }
+                  className="rounded-full"
+              >
+                <History className="h-4 w-4" />
+
+                <span>
+              Lịch sử AI
+            </span>
+              </Button>
+            }
+        />
+
+        <div className="mb-5">
+          <AiUsageCard
+              usage={usage}
+              loading={usageLoading}
+              error={usageError}
+              onReload={() => {
+                void loadUsage();
+              }}
+          />
+        </div>
+
+        <div
+            ref={containerRef}
+            className="flex min-h-[650px] flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
         >
-          <History className="w-4 h-4" /> <span className="hidden sm:inline">Lịch sử</span>
-        </Button>
-      </div>
-      
-      {/* Drawer / Sidebar cho Lịch sử */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSidebarOpen(false)}
-              className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm z-40 rounded-3xl"
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute right-0 top-0 bottom-0 w-80 bg-white border-l border-slate-100 shadow-2xl z-50 flex flex-col rounded-r-3xl"
-            >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                  <History className="w-5 h-5 text-emerald-500" /> Lịch sử AI
-                </h3>
-                <button 
-                  onClick={() => setSidebarOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {historyItems.map(item => (
-                  <div 
-                    key={item.id} 
-                    onClick={() => openHistoryDetail(item)}
-                    className="p-4 rounded-2xl hover:bg-slate-50 cursor-pointer transition-colors border border-transparent hover:border-slate-100"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      {item.suggestionType === "FULL_PLAN" || item.suggestionType === "WORKOUT_PLAN" ? <CalendarPlus className="w-4 h-4 text-emerald-500" /> : 
-                       item.suggestionType === "NUTRITION_PLAN" ? <Utensils className="w-4 h-4 text-orange-500" /> : 
-                       <Bot className="w-4 h-4 text-blue-500" />}
-                      <h4 className="font-bold text-sm text-slate-900 line-clamp-1">{item.title}</h4>
+          <div className="flex-1 overflow-y-auto bg-slate-50/70 p-4 sm:p-6">
+            {messages.length === 1 && (
+                <section className="mb-8">
+                  <div className="mb-4">
+                    <h2 className="text-lg font-black text-slate-900">
+                      Bạn muốn FitLife AI hỗ trợ gì?
+                    </h2>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      Chọn một chức năng để bắt đầu nhanh.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {QUICK_ACTIONS.map(
+                        (action) => {
+                          const Icon =
+                              action.icon;
+
+                          return (
+                              <button
+                                  key={action.type}
+                                  type="button"
+                                  disabled={
+                                    isTyping
+                                  }
+                                  onClick={() =>
+                                      handleQuickAction(
+                                          action,
+                                      )
+                                  }
+                                  className="quick-action-card group rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-violet-100 text-emerald-700 transition group-hover:scale-110">
+                                  <Icon className="h-5 w-5" />
+                                </div>
+
+                                <h3 className="mt-4 font-black text-slate-900">
+                                  {action.label}
+                                </h3>
+
+                                <p className="mt-1 text-xs leading-5 text-slate-500">
+                                  {
+                                    action.description
+                                  }
+                                </p>
+                              </button>
+                          );
+                        },
+                    )}
+                  </div>
+                </section>
+            )}
+
+            <div className="space-y-6">
+              {messages.map(
+                  (message) => (
+                      <AiChatMessage
+                          key={message.id}
+                          message={message}
+                          onSuggestionChanged={
+                            updateSuggestionEverywhere
+                          }
+                      />
+                  ),
+              )}
+
+              {isTyping && (
+                  <div className="flex max-w-4xl gap-4">
+                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-violet-600 text-white">
+                      <Bot className="h-4 w-4" />
                     </div>
-                    <p className="text-xs text-slate-500 line-clamp-2">{item.summary}</p>
-                    <p className="text-[10px] text-slate-400 mt-2">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
 
-      {/* Modal History Detail (AI-FE-04) */}
-      <AnimatePresence>
-        {selectedHistoryItem && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedHistoryItem(null)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 rounded-3xl"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="absolute inset-4 sm:inset-10 bg-slate-50 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden"
-            >
-              <div className="bg-white p-4 flex justify-between items-center border-b border-slate-100">
-                <h3 className="font-bold text-slate-900">Chi tiết Lịch sử</h3>
-                <button 
-                  onClick={() => setSelectedHistoryItem(null)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-slate-100"
+                    <div className="flex items-center gap-3 rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                      <Loader2 className="h-4 w-4 animate-spin text-violet-600" />
+
+                      <div>
+                        <p className="text-sm font-bold text-slate-700">
+                          FitLife AI đang xử lý...
+                        </p>
+
+                        <p className="text-xs text-slate-400">
+                          Quá trình có thể mất từ 10 đến 60 giây.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200 bg-white p-4">
+            <div className="mx-auto flex max-w-5xl items-center gap-2">
+              <button
+                  type="button"
+                  disabled={isTyping}
+                  title="Tạo kế hoạch AI"
+                  aria-label="Tạo kế hoạch AI"
+                  onClick={() =>
+                      setShowAdvancedForm(true)
+                  }
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-700 transition hover:bg-violet-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Wand2 className="h-5 w-5" />
+              </button>
+
+              <div className="relative flex-1">
+                <Input
+                    value={input}
+                    disabled={isTyping}
+                    onChange={(event) =>
+                        setInput(
+                            event.target.value,
+                        )
+                    }
+                    onKeyDown={
+                      handleKeyDown
+                    }
+                    placeholder="Nhập câu hỏi hoặc mở biểu mẫu để tạo kế hoạch AI..."
+                    className="mt-0 pr-14"
+                />
+
+                <Button
+                    variant="primary"
+                    disabled={
+                        !input.trim() ||
+                        isTyping
+                    }
+                    onClick={handleSend}
+                    aria-label="Gửi yêu cầu"
+                    className="absolute right-1.5 top-1/2 h-9 min-h-9 w-9 -translate-y-1/2 rounded-lg p-0"
                 >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 sm:p-8">
-                {selectedHistoryItem.planInfo ? (
-                   <>
-                    <AiPlanViewer plan={selectedHistoryItem.planInfo} />
-                    <AiFeedbackForm suggestionId={selectedHistoryItem.id} />
-                  </>
-                ) : (
-                  <div className="bg-white p-6 rounded-2xl shadow-sm">
-                    <p className="text-slate-700">{selectedHistoryItem.rawResponse}</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Modal Advanced AI Form (AI-FE-01) */}
-      <AnimatePresence>
-        {showAdvancedForm && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowAdvancedForm(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-40 rounded-3xl"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-[2rem] p-8 shadow-2xl z-50"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-black text-xl text-slate-900 flex items-center gap-2">
-                  <Wand2 className="w-6 h-6 text-emerald-500" /> Tạo AI Plan nâng cao
-                </h3>
-                <button onClick={() => setShowAdvancedForm(false)} className="text-slate-400 hover:text-slate-900"><X className="w-5 h-5"/></button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Mục tiêu</label>
-                  <select 
-                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                    value={formData.goal}
-                    onChange={e => setFormData({...formData, goal: e.target.value})}
-                  >
-                    <option value="LOSE_WEIGHT">Giảm mỡ</option>
-                    <option value="GAIN_MUSCLE">Tăng cơ</option>
-                    <option value="MAINTAIN_FITNESS">Duy trì vóc dáng</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Trình độ</label>
-                  <select 
-                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                    value={formData.level}
-                    onChange={e => setFormData({...formData, level: e.target.value})}
-                  >
-                    <option value="BEGINNER">Người mới (Beginner)</option>
-                    <option value="INTERMEDIATE">Trung bình (Intermediate)</option>
-                    <option value="ADVANCED">Nâng cao (Advanced)</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Số buổi/tuần</label>
-                    <Input type="number" min={1} max={7} value={formData.daysPerWeek} onChange={e => setFormData({...formData, daysPerWeek: Number(e.target.value)})} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Phút/buổi</label>
-                    <Input type="number" min={15} max={120} value={formData.durationMinutes} onChange={e => setFormData({...formData, durationMinutes: Number(e.target.value)})} />
-                  </div>
-                </div>
-                
-                <Button variant="primary" className="w-full bg-slate-900 text-white rounded-xl mt-4" onClick={submitAdvancedForm}>
-                  Tạo giáo án ngay
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      <div className="flex-1 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col overflow-hidden" ref={containerRef}>
-        
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
-          {messages.length === 1 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {QUICK_ACTIONS.map((action, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setInput(action.prompt);
-                    setTimeout(() => handleSend(), 100);
-                  }}
-                  className="quick-action-card text-left p-4 rounded-2xl bg-white border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all group"
-                >
-                  <action.icon className="w-6 h-6 text-emerald-500 mb-3 group-hover:scale-110 transition-transform" />
-                  <h4 className="font-bold text-slate-900 text-sm mb-1">{action.label}</h4>
-                  <p className="text-xs text-slate-500 line-clamp-2">{action.prompt}</p>
-                </button>
-              ))}
             </div>
-          )}
-
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex gap-4 max-w-3xl ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}>
-              <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center mt-1 ${
-                msg.sender === "user" ? "bg-slate-900 text-white" : "bg-emerald-500 text-white"
-              }`}>
-                {msg.sender === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-              </div>
-              <div className={`space-y-1 ${msg.sender === "user" ? "text-right" : ""}`}>
-                <div className={`inline-block p-4 rounded-2xl ${
-                  msg.sender === "user" 
-                    ? "bg-slate-900 text-white rounded-tr-sm" 
-                    : "bg-white border border-slate-200 text-slate-700 rounded-tl-sm shadow-sm"
-                }`}>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.text}</p>
-                </div>
-                {msg.planObject && <AiPlanViewer plan={msg.planObject} />}
-                {msg.suggestionId && <AiFeedbackForm suggestionId={msg.suggestionId} />}
-                <p className="text-[10px] text-slate-400 px-2">{msg.timestamp}</p>
-              </div>
-            </div>
-          ))}
-
-          {isTyping && (
-            <div className="flex gap-4 max-w-3xl">
-              <div className="w-8 h-8 shrink-0 rounded-full bg-emerald-500 text-white flex items-center justify-center mt-1">
-                <Bot className="w-4 h-4" />
-              </div>
-              <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-4 shadow-sm flex items-center gap-2">
-                <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
-                <span className="text-sm text-slate-500 font-medium">AI đang suy nghĩ...</span>
-              </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="p-4 bg-white border-t border-slate-100">
-          <div className="flex items-end gap-2 max-w-4xl mx-auto relative">
-            <button 
-              onClick={() => setShowAdvancedForm(true)}
-              className="p-3 bg-slate-100 rounded-xl text-emerald-600 hover:bg-emerald-100 transition-colors shrink-0 group"
-              title="Tạo giáo án nâng cao"
-            >
-              <Wand2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            </button>
-            <div className="flex-1 relative">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Nhập câu hỏi hoặc yêu cầu của bạn..."
-                className="w-full bg-slate-50 border-transparent focus:bg-white pr-12 rounded-xl resize-none"
-              />
-            </div>
-            <Button
-              variant="primary"
-              onClick={handleSend}
-              disabled={!input.trim() || isTyping}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-emerald-500 text-white w-10 h-10 p-0 flex items-center justify-center hover:bg-emerald-600 disabled:opacity-50 border-none"
-            >
-              <Send className="w-4 h-4 ml-0.5" />
-            </Button>
           </div>
         </div>
+
+        <AiAdvancedPlanModal
+            open={showAdvancedForm}
+            submitting={isTyping}
+            onClose={() => {
+              if (!isTyping) {
+                setShowAdvancedForm(
+                    false,
+                );
+              }
+            }}
+            onSubmit={
+              submitAdvancedForm
+            }
+        />
+
+        <AiHistoryDrawer
+            open={historyOpen}
+            items={historyItems}
+            loading={historyLoading}
+            error={historyError}
+            onClose={() =>
+                setHistoryOpen(false)
+            }
+            onReload={() => {
+              void loadHistory();
+            }}
+            onSelect={(item) => {
+              void openHistoryDetail(
+                  item,
+              );
+            }}
+        />
+
+        <AnimatePresence>
+          {(selectedHistoryItem ||
+              detailLoading) && (
+              <>
+                <motion.div
+                    initial={{
+                      opacity: 0,
+                    }}
+                    animate={{
+                      opacity: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                    }}
+                    onClick={() => {
+                      if (!detailLoading) {
+                        setSelectedHistoryItem(
+                            null,
+                        );
+                      }
+                    }}
+                    className="absolute inset-0 z-50 rounded-3xl bg-slate-950/60 backdrop-blur-sm"
+                />
+
+                <motion.section
+                    initial={{
+                      opacity: 0,
+                      scale: 0.96,
+                      y: 20,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                      y: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.96,
+                      y: 20,
+                    }}
+                    className="absolute inset-3 z-50 flex flex-col overflow-hidden rounded-3xl bg-slate-50 shadow-2xl sm:inset-8"
+                >
+                  <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
+                    <div>
+                      <h2 className="font-black text-slate-900">
+                        Chi tiết gợi ý AI
+                      </h2>
+
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        Xem nội dung, áp dụng kế hoạch và gửi đánh giá.
+                      </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        disabled={
+                          detailLoading
+                        }
+                        onClick={() =>
+                            setSelectedHistoryItem(
+                                null,
+                            )
+                        }
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </header>
+
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                    {detailLoading &&
+                    !selectedHistoryItem ? (
+                        <div className="flex min-h-80 flex-col items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+
+                          <p className="mt-3 text-sm font-semibold text-slate-500">
+                            Đang tải chi tiết...
+                          </p>
+                        </div>
+                    ) : (
+                        selectedHistoryItem && (
+                            <div className="mx-auto max-w-5xl">
+                              <AiPlanViewer
+                                  suggestion={
+                                    selectedHistoryItem
+                                  }
+                                  onChanged={
+                                    updateSuggestionEverywhere
+                                  }
+                              />
+
+                              {!selectedHistoryItem.feedback && (
+                                  <AiFeedbackForm
+                                      suggestionId={
+                                        selectedHistoryItem.id
+                                      }
+                                      onSubmitted={() => {
+                                        void aiService
+                                            .getAiSuggestionDetail(
+                                                selectedHistoryItem.id,
+                                            )
+                                            .then(
+                                                updateSuggestionEverywhere,
+                                            );
+                                      }}
+                                  />
+                              )}
+                            </div>
+                        )
+                    )}
+                  </div>
+                </motion.section>
+              </>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
   );
 }

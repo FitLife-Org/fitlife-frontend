@@ -34,6 +34,8 @@ export const ROUTES = {
       "/member/payment/result",
   MEMBER_CHECKINS: "/member/checkins",
   MEMBER_AI: "/member/ai",
+  MEMBER_AI_HISTORY: "/member/ai/history",
+  MEMBER_AI_DETAIL: "/member/ai/:id",
   MEMBER_BOOKING: "/member/booking",
   MEMBER_NUTRITION: "/member/nutrition",
   MEMBER_CHECKIN_HISTORY: "/member/checkins",
