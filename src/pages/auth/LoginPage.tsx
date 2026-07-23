@@ -19,19 +19,19 @@ function AnimatedText() {
     }, []);
 
     return (
-        <div className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-sky-500/40 pl-6">
+        <div className="mt-10 flex flex-wrap items-center gap-2 sm:gap-4 border-l-2 border-fit-primary/40 pl-6">
             {["EAT", "SLEEP", "GYM", "REPEAT"].map((text, idx) => {
                 const isActive = activeStep === idx;
                 return (
                     <div key={text} className="flex items-center gap-2 sm:gap-4">
                         <span
-                            className={`font-black tracking-widest transition-all duration-500 ${isActive ? "scale-110 bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(56,189,248,0.6)]" : "scale-100 text-slate-600"}`}
+                            className={`font-black tracking-widest transition-all duration-500 ${isActive ? "scale-110 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(5,150,105,0.4)]" : "scale-100 text-slate-600"}`}
                             style={{ fontSize: "1.5rem" }}
                         >
                             {text}
                         </span>
                         {idx < 3 && <ArrowRight
-                            className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-500 ${isActive ? "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]" : "text-slate-800"}`} />}
+                            className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-500 ${isActive ? "text-fit-primary drop-shadow-[0_0_8px_rgba(5,150,105,0.6)]" : "text-slate-800"}`} />}
                     </div>
                 );
             })}
@@ -67,34 +67,30 @@ export default
             {/* Nội dung chính */}
             <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-2">
 
-
                 <section ref={introRef} className="hidden flex-col justify-center p-12 text-slate-900 lg:flex lg:pl-24">
                     <div className="flex items-center gap-2 text-3xl font-black mb-2">
-                        <div className="p-3 ">
-
+                        <div className="p-3">
                             <img
                                 src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png"
                                 alt="FitLife logo"
-                                className=" w-35 object-contain"
+                                className="w-35 object-contain"
                             />
                         </div>
                         <span
-                            className="tracking-tight text-5xl  bg-clip-text  bg-gradient-to-r from-green-500  to-cyan-500">FitLife</span>
+                            className="tracking-tight text-5xl bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">FitLife</span>
                     </div>
 
                     <div className="max-w-x2">
                         <h1 className="text-5xl lg:text-5xl font-black leading-[1.15] mb-6 text-slate-900">
                             Làm chủ phòng gym<br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-cyan-500">
-    gọn – chuẩn – chiến
-  </span> mỗi ngày.
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">
+                                gọn – chuẩn – chiến
+                            </span> mỗi ngày.
                         </h1>
 
-                        <p className="text-lg leading-relaxed text-slate-700 border-l-4 border-sky-500 pl-6 bg-white/50 backdrop-blur-sm py-3 pr-4 rounded-r-xl shadow-sm border-white/60 border-y border-r">
+                        <p className="text-lg leading-relaxed text-slate-700 border-l-4 border-fit-primary pl-6 bg-white/50 backdrop-blur-sm py-3 pr-4 rounded-r-xl shadow-sm border-white/60 border-y border-r">
                             Đồng hành cùng bạn trên hành trình tập luyện với lịch tập, tiến độ và gói tập luôn trong tầm tay
                         </p>
-
-           
 
                         <AnimatedText />
                     </div>
@@ -103,31 +99,27 @@ export default
                 {/* Cột phải: Form đăng nhập */}
                 <section className="flex items-center justify-center p-4 lg:p-12">
                     <div ref={formRef}
-                         className="relative w-full max-w-md rounded-[2rem] bg-white/80 p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.15)] backdrop-blur-2xl border border-white/60 lg:p-10 overflow-hidden">
+                         className="relative w-full max-w-md rounded-[2rem] bg-white/90 p-8 shadow-auth backdrop-blur-2xl border border-fit-border lg:p-10 overflow-hidden">
 
                         <div
-                            className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-sky-300/20 blur-3xl pointer-events-none"/>
+                            className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"/>
                         <div
-                            className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-300/20 blur-3xl pointer-events-none"/>
+                            className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"/>
 
                         <div className="relative z-10 flex flex-col">
                             <header className="mb-8 text-center lg:text-left gsap-form-element">
-                                <div className="inline-block rounded-xl bg-sky-50 px-3 py-1 mb-4 lg:hidden">
-                                    <div className="flex items-center gap-2 text-sky-600 font-bold">
-
+                                <div className="inline-block rounded-xl bg-fit-primarySoft px-3 py-1 mb-4 lg:hidden">
+                                    <div className="flex items-center gap-2 text-fit-primary font-bold">
                                         <span>FitLife</span>
                                     </div>
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-900 tracking-tight text-center">Chào mừng
-                                    trở lại</h2>
-                                <p className="mt-2 text-slate-500 font-medium text-center">Nhập thông tin tài khoản của
-                                    bạn để tiếp tục.</p>
+                                <h2 className="fit-title text-center">Chào mừng trở lại</h2>
+                                <p className="fit-subtitle text-center">Nhập thông tin tài khoản của bạn để tiếp tục.</p>
                             </header>
-
 
                             {error && (
                                 <div
-                                    className="gsap-form-element mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-600 backdrop-blur-sm">
+                                    className="gsap-form-element mb-6 flex items-center gap-3 rounded-2xl border border-fit-danger/20 bg-fit-dangerSoft px-4 py-3 text-sm text-fit-danger backdrop-blur-sm">
                                     <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24"
                                          stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -163,25 +155,23 @@ export default
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between mt-2 gsap-form-element">
-                                    {/* Phần Checkbox */}
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="checkbox"
                                             id="remember-me"
-                                            className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer"
+                                            className="w-4 h-4 text-fit-primary border-fit-border rounded focus:ring-fit-primary cursor-pointer"
                                         />
                                         <label
                                             htmlFor="remember-me"
-                                            className="text-sm text-gray-700 cursor-pointer select-none"
+                                            className="text-sm text-slate-700 cursor-pointer select-none font-medium"
                                         >
-                                            Remember me?
+                                            Ghi nhớ đăng nhập
                                         </label>
                                     </div>
 
-
                                     <Link
                                         to={ROUTES.FORGOT_PASSWORD}
-                                        className="text-sm font-bold text-sky-600 transition-colors hover:text-sky-500"
+                                        className="text-sm font-bold text-fit-primary transition-colors hover:text-fit-primaryHover"
                                     >
                                         Quên mật khẩu?
                                     </Link>
@@ -189,7 +179,7 @@ export default
 
                                 <div className="gsap-form-element pt-2">
                                     <Button
-                                        className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white transition-all font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 text-base"
+                                        className="fit-auth-button"
                                         type="submit"
                                         isLoading={loading}
                                     >
@@ -197,7 +187,6 @@ export default
                                     </Button>
                                 </div>
 
-                                {/* Dải phân cách */}
                                 <div className="gsap-form-element mt-5 flex items-center gap-4">
                                     <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-200"/>
                                     <span
@@ -205,7 +194,6 @@ export default
                                     <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-200"/>
                                 </div>
 
-                                {/* Đăng nhập Google */}
                                 <div className="gsap-form-element pt-2">
                                     <div className={loading ? "hidden" : "relative flex w-full justify-center max-w-[400px] mx-auto group"}>
                                         <div className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-200 bg-white px-4 py-[11px] text-sm font-bold text-slate-700 transition-all group-hover:bg-slate-50 group-hover:border-slate-300 shadow-sm cursor-pointer">
@@ -235,7 +223,7 @@ export default
                                 <div className="gsap-form-element mt-6 text-center font-medium text-slate-500">
                                     Chưa có tài khoản?{" "}
                                     <Link to={ROUTES.REGISTER}
-                                          className="text-sky-600 hover:text-sky-500 font-bold transition-colors">
+                                          className="fit-auth-link">
                                         Đăng ký ngay
                                     </Link>
                                 </div>

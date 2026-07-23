@@ -45,7 +45,7 @@ export default function VerifyEmailPage() {
         <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center px-4">
             <div className="absolute inset-0 bg-white/50 backdrop-blur-[3px]" />
 
-            <section className="relative z-10 w-full max-w-md rounded-[2rem] border border-white/70 bg-white/85 p-8 text-center shadow-[0_8px_40px_-12px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+            <section className="relative z-10 w-full max-w-md rounded-[2rem] border border-fit-border bg-white/90 p-8 text-center shadow-auth backdrop-blur-2xl">
                 
                 <AnimatePresence mode="wait">
                     {activeStatus === "loading" && (
@@ -57,12 +57,12 @@ export default function VerifyEmailPage() {
                             className="flex flex-col items-center"
                         >
                             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 shadow-sm border border-slate-200">
-                                <Loader2 className="h-10 w-10 text-slate-400 animate-spin" />
+                                <Loader2 className="h-10 w-10 text-fit-muted animate-spin" />
                             </div>
-                            <h1 className="mt-6 text-3xl font-black text-slate-900">
+                            <h1 className="mt-6 fit-title text-center">
                                 Đang xử lý
                             </h1>
-                            <p className="mt-3 text-slate-600">
+                            <p className="mt-3 fit-subtitle text-center">
                                 Vui lòng đợi trong giây lát...
                             </p>
                         </motion.div>
@@ -76,19 +76,19 @@ export default function VerifyEmailPage() {
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="flex flex-col items-center"
                         >
-                            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 shadow-sm border border-emerald-200">
-                                <MailCheck className="h-10 w-10 text-emerald-600" />
+                            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-fit-primarySoft shadow-sm border border-fit-primary/20">
+                                <MailCheck className="h-10 w-10 text-fit-primary" />
                             </div>
-                            <h1 className="mt-6 text-3xl font-black text-slate-900">
+                            <h1 className="mt-6 fit-title text-center">
                                 Xác thực thành công!
                             </h1>
-                            <div className="mt-5 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left text-sm text-emerald-700">
+                            <div className="mt-5 flex items-start gap-3 rounded-2xl border border-fit-primary/20 bg-fit-primarySoft px-4 py-3 text-left text-sm text-fit-primary font-medium">
                                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
                                 <span>{activeMessage}</span>
                             </div>
                             <Link
                                 to={ROUTES.LOGIN}
-                                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-4 font-bold text-white transition hover:bg-slate-800 shadow-xl shadow-slate-900/20 active:scale-95"
+                                className="mt-6 fit-auth-button flex items-center justify-center gap-2"
                             >
                                 Đăng nhập ngay <ArrowRight className="h-5 w-5" />
                             </Link>
@@ -103,24 +103,24 @@ export default function VerifyEmailPage() {
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="flex flex-col items-center"
                         >
-                            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-rose-100 shadow-sm border border-rose-200">
-                                <XCircle className="h-10 w-10 text-rose-600" />
+                            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-fit-dangerSoft shadow-sm border border-fit-danger/20">
+                                <XCircle className="h-10 w-10 text-fit-danger" />
                             </div>
-                            <h1 className="mt-6 text-3xl font-black text-slate-900">
+                            <h1 className="mt-6 fit-title text-center">
                                 Xác thực thất bại
                             </h1>
-                            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-600">
+                            <div className="mt-5 rounded-2xl border border-fit-danger/20 bg-fit-dangerSoft px-4 py-4 text-sm text-fit-danger">
                                 {activeMessage}
                             </div>
                             <Link
                                 to={ROUTES.CHECK_EMAIL}
-                                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-800 shadow-lg active:scale-95"
+                                className="mt-6 fit-auth-button flex items-center justify-center gap-2"
                             >
                                 Yêu cầu gửi lại email
                             </Link>
                             <Link
                                 to={ROUTES.HOME}
-                                className="mt-4 inline-block font-bold text-slate-500 hover:text-slate-700 transition"
+                                className="mt-4 inline-block font-bold text-fit-muted hover:text-fit-text transition"
                             >
                                 Quay về trang chủ
                             </Link>
