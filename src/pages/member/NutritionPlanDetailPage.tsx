@@ -37,10 +37,6 @@ import {
     getApiErrorMessage,
 } from "../../utils/apiError";
 
-import {
-    getCurrentMemberId,
-} from "../../utils/currentMember";
-
 function formatDate(
     value?: string | null,
 ): string {
@@ -118,14 +114,10 @@ export default function NutritionPlanDetailPage() {
                 setLoading(true);
                 setError(null);
 
-                const memberId =
-                    getCurrentMemberId();
-
                 const result =
                     await nutritionService
                         .getPlanById(
                             planId,
-                            memberId,
                         );
 
                 setPlan(result);
@@ -154,13 +146,9 @@ export default function NutritionPlanDetailPage() {
             try {
                 setActionLoading(true);
 
-                const memberId =
-                    getCurrentMemberId();
-
                 await nutritionService
                     .activatePlan(
                         plan.id,
-                        memberId,
                     );
 
                 toast.success(
@@ -189,14 +177,10 @@ export default function NutritionPlanDetailPage() {
             try {
                 setActionLoading(true);
 
-                const memberId =
-                    getCurrentMemberId();
-
                 const cloned =
                     await nutritionService
                         .clonePlan(
                             plan.id,
-                            memberId,
                         );
 
                 toast.success(

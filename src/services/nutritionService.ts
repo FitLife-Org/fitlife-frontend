@@ -1,330 +1,141 @@
 import apiClient from "./apiClient";
 
-import type {
-    SpringPage,
-} from "../types/common.type";
-
+import type { SpringPage } from "../types/common.type";
 import type {
     NutritionPlan,
     NutritionPlanRequest,
 } from "../types/nutrition.type";
 
-const NUTRITION_BASE_URL =
-    "/nutrition-plans";
+const MY_NUTRITION_BASE_URL = "/nutrition-plans/me";
 
 function validatePositiveId(
     value: number,
     fieldName: string,
 ): void {
-    if (
-        !Number.isInteger(value) ||
-        value <= 0
-    ) {
-        throw new Error(
-            `${fieldName} không hợp lệ.`,
-        );
+    if (!Number.isInteger(value) || value <= 0) {
+        throw new Error(`${fieldName} không hợp lệ.`);
     }
 }
 
+function normalizePlan(plan: NutritionPlan): NutritionPlan {
+    return {
+        ...plan,
+        meals: plan.meals ?? [],
+    };
+}
+
 export const nutritionService = {
-    async getPlansByMember(
-        memberId: number,
+    async getMyPlans(
         page = 0,
         size = 10,
     ): Promise<SpringPage<NutritionPlan>> {
-        validatePositiveId(
-            memberId,
-            "Member ID",
-        );
-
-        const response =
-            await apiClient.get<
-                SpringPage<NutritionPlan>
-            >(NUTRITION_BASE_URL, {
-                params: {
-                    memberId,
-                    page,
-                    size,
-                    sort: "createdAt,desc",
-                },
-            });
+        const response = await apiClient.get<
+            SpringPage<NutritionPlan>
+        >(MY_NUTRITION_BASE_URL, {
+            params: {
+                page,
+                size,
+                sort: "createdAt,desc",
+            },
+        });
 
         return {
             ...response.data,
             content:
-                response.data.content ?? [],
+                response.data.content?.map(normalizePlan) ?? [],
         };
     },
 
-    async getPlanById(
-        planId: number,
-        memberId: number,
-    ): Promise<NutritionPlan> {
-        validatePositiveId(
-            planId,
-            "Nutrition Plan ID",
+    async getPlanById(planId: number): Promise<NutritionPlan> {
+        validatePositiveId(planId, "Nutrition Plan ID");
+
+        const response = await apiClient.get<NutritionPlan>(
+            `${MY_NUTRITION_BASE_URL}/${planId}`,
         );
 
-        validatePositiveId(
-            memberId,
-            "Member ID",
-        );
-
-        const response =
-            await apiClient.get<NutritionPlan>(
-                `${NUTRITION_BASE_URL}/${planId}`,
-                {
-                    params: {
-                        memberId,
-                    },
-                },
-            );
-
-        return {
-            ...response.data,
-            meals:
-                response.data.meals ?? [],
-        };
+        return normalizePlan(response.data);
     },
 
-    async getActivePlan(
-        memberId: number,
-    ): Promise<NutritionPlan> {
-        validatePositiveId(
-            memberId,
-            "Member ID",
+    async getActivePlan(): Promise<NutritionPlan> {
+        const response = await apiClient.get<NutritionPlan>(
+            `${MY_NUTRITION_BASE_URL}/active`,
         );
 
-        const response =
-            await apiClient.get<NutritionPlan>(
-                `${NUTRITION_BASE_URL}/me/active`,
-                {
-                    params: {
-                        memberId,
-                    },
-                },
-            );
-
-        return {
-            ...response.data,
-            meals:
-                response.data.meals ?? [],
-        };
+        return normalizePlan(response.data);
     },
 
-    async getTodayPlan(
-        memberId: number,
-    ): Promise<NutritionPlan> {
-        validatePositiveId(
-            memberId,
-            "Member ID",
+    async getTodayPlan(): Promise<NutritionPlan> {
+        const response = await apiClient.get<NutritionPlan>(
+            `${MY_NUTRITION_BASE_URL}/today`,
         );
 
-        const response =
-            await apiClient.get<NutritionPlan>(
-                `${NUTRITION_BASE_URL}/me/today`,
-                {
-                    params: {
-                        memberId,
-                    },
-                },
-            );
-
-        return {
-            ...response.data,
-            meals:
-                response.data.meals ?? [],
-        };
+        return normalizePlan(response.data);
     },
 
     async createPlan(
-        memberId: number,
         request: NutritionPlanRequest,
     ): Promise<NutritionPlan> {
-        validatePositiveId(
-            memberId,
-            "Member ID",
+        const response = await apiClient.post<NutritionPlan>(
+            MY_NUTRITION_BASE_URL,
+            request,
         );
 
-        const response =
-            await apiClient.post<NutritionPlan>(
-                NUTRITION_BASE_URL,
-                request,
-                {
-                    params: {
-                        memberId,
-                    },
-                },
-            );
-
-        return {
-            ...response.data,
-            meals:
-                response.data.meals ?? [],
-        };
+        return normalizePlan(response.data);
     },
 
     async updatePlan(
         planId: number,
-        memberId: number,
         request: NutritionPlanRequest,
     ): Promise<NutritionPlan> {
-        validatePositiveId(
-            planId,
-            "Nutrition Plan ID",
+        validatePositiveId(planId, "Nutrition Plan ID");
+
+        const response = await apiClient.put<NutritionPlan>(
+            `${MY_NUTRITION_BASE_URL}/${planId}`,
+            request,
         );
 
-        validatePositiveId(
-            memberId,
-            "Member ID",
-        );
-
-        const response =
-            await apiClient.put<NutritionPlan>(
-                `${NUTRITION_BASE_URL}/${planId}`,
-                request,
-                {
-                    params: {
-                        memberId,
-                    },
-                },
-            );
-
-        return {
-            ...response.data,
-            meals:
-                response.data.meals ?? [],
-        };
+        return normalizePlan(response.data);
     },
 
-    async activatePlan(
-        planId: number,
-        memberId: number,
-    ): Promise<void> {
-        validatePositiveId(
-            planId,
-            "Nutrition Plan ID",
-        );
-
-        validatePositiveId(
-            memberId,
-            "Member ID",
-        );
+    async activatePlan(planId: number): Promise<void> {
+        validatePositiveId(planId, "Nutrition Plan ID");
 
         await apiClient.post(
-            `${NUTRITION_BASE_URL}/${planId}/activate`,
-            undefined,
-            {
-                params: {
-                    memberId,
-                },
-            },
+            `${MY_NUTRITION_BASE_URL}/${planId}/activate`,
         );
     },
 
-    async archivePlan(
-        planId: number,
-        memberId: number,
-    ): Promise<void> {
-        validatePositiveId(
-            planId,
-            "Nutrition Plan ID",
-        );
-
-        validatePositiveId(
-            memberId,
-            "Member ID",
-        );
+    async archivePlan(planId: number): Promise<void> {
+        validatePositiveId(planId, "Nutrition Plan ID");
 
         await apiClient.post(
-            `${NUTRITION_BASE_URL}/${planId}/archive`,
-            undefined,
-            {
-                params: {
-                    memberId,
-                },
-            },
+            `${MY_NUTRITION_BASE_URL}/${planId}/archive`,
         );
     },
 
-    async completePlan(
-        planId: number,
-        memberId: number,
-    ): Promise<void> {
-        validatePositiveId(
-            planId,
-            "Nutrition Plan ID",
-        );
-
-        validatePositiveId(
-            memberId,
-            "Member ID",
-        );
+    async completePlan(planId: number): Promise<void> {
+        validatePositiveId(planId, "Nutrition Plan ID");
 
         await apiClient.post(
-            `${NUTRITION_BASE_URL}/${planId}/complete`,
-            undefined,
-            {
-                params: {
-                    memberId,
-                },
-            },
+            `${MY_NUTRITION_BASE_URL}/${planId}/complete`,
         );
     },
 
-    async clonePlan(
-        planId: number,
-        memberId: number,
-    ): Promise<NutritionPlan> {
-        validatePositiveId(
-            planId,
-            "Nutrition Plan ID",
+    async clonePlan(planId: number): Promise<NutritionPlan> {
+        validatePositiveId(planId, "Nutrition Plan ID");
+
+        const response = await apiClient.post<NutritionPlan>(
+            `${MY_NUTRITION_BASE_URL}/${planId}/clone`,
         );
 
-        validatePositiveId(
-            memberId,
-            "Member ID",
-        );
-
-        const response =
-            await apiClient.post<NutritionPlan>(
-                `${NUTRITION_BASE_URL}/${planId}/clone`,
-                undefined,
-                {
-                    params: {
-                        memberId,
-                    },
-                },
-            );
-
-        return {
-            ...response.data,
-            meals:
-                response.data.meals ?? [],
-        };
+        return normalizePlan(response.data);
     },
 
-    async deletePlan(
-        planId: number,
-        memberId: number,
-    ): Promise<void> {
-        validatePositiveId(
-            planId,
-            "Nutrition Plan ID",
-        );
-
-        validatePositiveId(
-            memberId,
-            "Member ID",
-        );
+    async deletePlan(planId: number): Promise<void> {
+        validatePositiveId(planId, "Nutrition Plan ID");
 
         await apiClient.delete(
-            `${NUTRITION_BASE_URL}/${planId}`,
-            {
-                params: {
-                    memberId,
-                },
-            },
+            `${MY_NUTRITION_BASE_URL}/${planId}`,
         );
     },
 };
