@@ -16,7 +16,7 @@ export default function WorkoutTrackingPage() {
       try {
         setLoading(true);
         const data = await trainerService.getMemberWorkoutProgress(MOCK_MEMBER_ID);
-        setProgress(data);
+        if (data) setProgress(data as WorkoutProgress);
       } catch (error) {
         console.error(error);
       } finally {

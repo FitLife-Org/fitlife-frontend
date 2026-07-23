@@ -4,7 +4,7 @@ import type { Invoice } from "../types/invoice.type";
 
 export const invoiceService = {
   async getMyInvoices(): Promise<Invoice[]> {
-    const response = await apiClient.get<ApiResponse<any>>("/invoices/my");
+    const response = await apiClient.get<ApiResponse<Invoice[] | { content?: Invoice[]; data?: Invoice[] }>>("/invoices/my");
     const data = response.data.data;
 
     if (Array.isArray(data)) return data;
@@ -28,7 +28,7 @@ export const invoiceService = {
     status?: string;
     memberId?: number;
   }): Promise<Invoice[]> {
-    const response = await apiClient.get<ApiResponse<any>>(
+    const response = await apiClient.get<ApiResponse<Invoice[] | { content?: Invoice[]; data?: Invoice[] }>>(
         "/admin/invoices",
         { params }
     );
@@ -55,8 +55,8 @@ export const invoiceService = {
     await apiClient.post<ApiResponse<void>>("/admin/invoices/generate");
   },
 
-  async getInvoicePayments(id: number): Promise<any[]> {
-    const response = await apiClient.get<ApiResponse<any>>(`/admin/invoices/${id}/payments`);
+  async getInvoicePayments(id: number): Promise<unknown[]> {
+    const response = await apiClient.get<ApiResponse<unknown[]>>(`/admin/invoices/${id}/payments`);
     return response.data.data;
   }
 };

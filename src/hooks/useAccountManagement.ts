@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { userService } from "../services/userService";
 import { showAlert } from "../utils/alert";
 import { validateAdminAccountForm } from "../utils/validators/adminAccountValidator";
@@ -37,7 +37,7 @@ export function useAccountManagement() {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [roleLoading, setRoleLoading] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const params: Record<string, string | number> = {
@@ -65,11 +65,11 @@ export function useAccountManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, roleFilter, searchTerm, statusFilter]);
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, statusFilter, roleFilter]);
+  }, [fetchUsers]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,7 +119,7 @@ export function useAccountManagement() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateAdminAccountForm(formValues as any, !isEditMode)) {
+    if (!validateAdminAccountForm(formValues as AdminUserCreateRequest | AdminUserUpdateRequest, !isEditMode)) {
       return;
     }
 
@@ -139,10 +139,12 @@ export function useAccountManagement() {
       }
       setFormModalOpen(false);
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to submit form:", error);
-      const errorMsg = error?.response?.data?.message || "Có lỗi xảy ra trong quá trình lưu dữ liệu.";
-      showAlert.error("Thao tác thất bại", errorMsg);
+      const errorMsg = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : "Có lỗi xảy ra trong quá trình lưu dữ liệu.";
+      showAlert.error("Thao tác thất bại", errorMsg || "Có lỗi xảy ra trong quá trình lưu dữ liệu.");
     } finally {
       setFormLoading(false);
     }
@@ -164,7 +166,7 @@ export function useAccountManagement() {
         
         setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus as Status } : u));
         showAlert.success("Thành công", `Đã ${actionText.toLowerCase()} tài khoản.`);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Failed to update status:", error);
         showAlert.error("Thất bại", "Không thể cập nhật trạng thái tài khoản.");
       }
@@ -181,7 +183,7 @@ export function useAccountManagement() {
       showAlert.success("Thành công", "Đã cập nhật vai trò của người dùng.");
       setRoleModalOpen(false);
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to update roles:", error);
       showAlert.error("Thất bại", "Không thể cập nhật vai trò tài khoản.");
     } finally {

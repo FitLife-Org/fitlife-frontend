@@ -29,12 +29,12 @@ export const workoutService = {
 
   // Lấy danh sách kế hoạch của member hiện tại
   getMyWorkoutPlans: async (): Promise<WorkoutPlan[]> => {
-    const response = await apiClient.get<ApiResponse<WorkoutPlan[]>>("/members/me/workout-plans");
+    const response = await apiClient.get<ApiResponse<WorkoutPlan[]>>("/workout-plans/me");
     return response.data.data;
   },
 
   // Đánh dấu hoàn thành buổi tập
-  completeSession: async (sessionId: string, data?: any): Promise<WorkoutSession> => {
+  completeSession: async (sessionId: string, data?: Record<string, unknown>): Promise<WorkoutSession> => {
     const response = await apiClient.patch<ApiResponse<WorkoutSession>>(`/workout-sessions/${sessionId}/complete`, data);
     return response.data.data;
   }

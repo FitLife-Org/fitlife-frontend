@@ -4,7 +4,16 @@ import { ArrowLeft, Search, CheckCircle2, Clock } from "lucide-react";
 import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
 
-const MOCK_SCHEDULES = [
+interface ScheduleItem {
+    id: string;
+    equipName: string;
+    date: string;
+    type: string;
+    status: string;
+    staff: string;
+}
+
+const MOCK_SCHEDULES: ScheduleItem[] = [
     { id: "BT001", equipName: "Máy chạy bộ TechnoGym T20", date: "15/06/2024", type: "Định kỳ", status: "PENDING", staff: "Nguyễn Văn A" },
     { id: "BT002", equipName: "Ghế đẩy ngực Hammer", date: "10/06/2024", type: "Sửa chữa", status: "COMPLETED", staff: "Trần Văn B" },
 ];
@@ -12,7 +21,7 @@ const MOCK_SCHEDULES = [
 export default function MaintenanceSchedulesPage() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
-    const [schedules, setSchedules] = useState<any[]>(MOCK_SCHEDULES);
+    const [schedules, setSchedules] = useState<ScheduleItem[]>(MOCK_SCHEDULES);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -22,8 +31,9 @@ export default function MaintenanceSchedulesPage() {
     const fetchSchedules = async () => {
         setLoading(true);
         try {
-            const response = await EquipmentService.getMaintenanceSchedules();
-            const data = response.data?.data || response.data || [];
+            const response = await EquipmentService.getMaintenanceSchedules() as Record<string, unknown>;
+            const responseData = response?.data as Record<string, unknown> | undefined;
+            const data = responseData?.data || response?.data || [];
             if (Array.isArray(data) && data.length > 0) {
                 setSchedules(data);
             }

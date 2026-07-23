@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useState,
 } from "react";
 
@@ -56,11 +55,13 @@ export default function AiAdvancedPlanModal({
   const [validationError, setValidationError] =
     useState<string | null>(null);
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setValidationError(null);
     }
-  }, [open]);
+  }
 
   const handleSubmit = async () => {
     if (

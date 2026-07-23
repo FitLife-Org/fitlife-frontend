@@ -49,8 +49,11 @@ export function useCheckinHistory() {
 
       toast.success(`${actionName} thành công lúc ${new Date(record.checkInTime).toLocaleTimeString('vi-VN')}`);
       await fetchHistory();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Mã QR không hợp lệ hoặc lỗi kết nối.");
+    } catch (error: unknown) {
+      const msg = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : null;
+      toast.error(msg || "Mã QR không hợp lệ hoặc lỗi kết nối.");
     }
   };
 
@@ -62,6 +65,7 @@ export function useCheckinHistory() {
     setShowScanner,
     handleShowQr,
     closeQrModal,
-    handleScanSuccess
+    handleScanSuccess,
+    fetchHistory
   };
 }

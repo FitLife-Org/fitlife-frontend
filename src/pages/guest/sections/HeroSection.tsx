@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { ROUTES } from "../../../config/routes";
 import Button from "../../../components/common/Button";
 import { ArrowRight, PlayCircle, Activity } from "lucide-react";
-import { cn } from "../../../utils/cn";
 
 export default function HeroSection() {
   const containerVariants: Variants = {

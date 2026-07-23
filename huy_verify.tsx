@@ -1,4 +1,5 @@
-﻿import {
+/* eslint-disable */
+import {
     useEffect,
     useRef,
     useState,

@@ -13,25 +13,33 @@ export default function VerifyEmailPage() {
     const [message, setMessage] = useState("Đang xác thực email của bạn...");
 
     useEffect(() => {
+        let isMounted = true;
         if (!token) {
-            setStatus("error");
-            setMessage("Không tìm thấy mã xác minh. Vui lòng kiểm tra lại đường dẫn trong email.");
             return;
         }
 
         const verify = async () => {
             try {
                 const response = await authService.verifyEmail(token);
-                setStatus("success");
-                setMessage(response || "Xác thực email thành công. Bạn đã có thể đăng nhập!");
-            } catch (err: any) {
-                setStatus("error");
-                setMessage(err.message || "Mã xác minh không hợp lệ hoặc đã hết hạn.");
+                if (isMounted) {
+                    setStatus("success");
+                    setMessage(response || "Xác thực email thành công. Bạn đã có thể đăng nhập!");
+                }
+            } catch (err: unknown) {
+                if (isMounted) {
+                    setStatus("error");
+                    const errMsg = err instanceof Error ? err.message : "Mã xác minh không hợp lệ hoặc đã hết hạn.";
+                    setMessage(errMsg);
+                }
             }
         };
 
         verify();
+        return () => { isMounted = false; };
     }, [token]);
+
+    const activeStatus = !token ? "error" : status;
+    const activeMessage = !token ? "Không tìm thấy mã xác minh. Vui lòng kiểm tra lại đường dẫn trong email." : message;
 
     return (
         <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center px-4">
@@ -40,7 +48,7 @@ export default function VerifyEmailPage() {
             <section className="relative z-10 w-full max-w-md rounded-[2rem] border border-white/70 bg-white/85 p-8 text-center shadow-[0_8px_40px_-12px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
                 
                 <AnimatePresence mode="wait">
-                    {status === "loading" && (
+                    {activeStatus === "loading" && (
                         <motion.div
                             key="loading"
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -60,7 +68,7 @@ export default function VerifyEmailPage() {
                         </motion.div>
                     )}
 
-                    {status === "success" && (
+                    {activeStatus === "success" && (
                         <motion.div
                             key="success"
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -76,7 +84,7 @@ export default function VerifyEmailPage() {
                             </h1>
                             <div className="mt-5 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left text-sm text-emerald-700">
                                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
-                                <span>{message}</span>
+                                <span>{activeMessage}</span>
                             </div>
                             <Link
                                 to={ROUTES.LOGIN}
@@ -87,7 +95,7 @@ export default function VerifyEmailPage() {
                         </motion.div>
                     )}
 
-                    {status === "error" && (
+                    {activeStatus === "error" && (
                         <motion.div
                             key="error"
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -102,7 +110,7 @@ export default function VerifyEmailPage() {
                                 Xác thực thất bại
                             </h1>
                             <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-600">
-                                {message}
+                                {activeMessage}
                             </div>
                             <Link
                                 to={ROUTES.CHECK_EMAIL}

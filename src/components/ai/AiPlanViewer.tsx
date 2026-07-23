@@ -82,8 +82,10 @@ export default function AiPlanViewer({
         setApplyingNutrition,
     ] = useState(false);
 
-    const items =
-        currentSuggestion.items ?? [];
+    const items = useMemo(
+        () => currentSuggestion.items ?? [],
+        [currentSuggestion.items],
+    );
 
     const workoutDays =
         useMemo(

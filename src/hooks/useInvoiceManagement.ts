@@ -17,8 +17,8 @@ export function useInvoiceManagement() {
       setLoading(true);
       const data = await invoiceService.getAdminInvoices();
       setInvoices(data);
-    } catch (error: any) {
-      console.error("GET_ADMIN_INVOICES_ERROR:", error?.response?.data || error);
+    } catch (error: unknown) {
+      console.error("GET_ADMIN_INVOICES_ERROR:", error);
       setInvoices([]);
     } finally {
       setLoading(false);
@@ -31,12 +31,15 @@ export function useInvoiceManagement() {
 
       showAlert.success("Thành công", "Đã hủy hóa đơn");
       fetchInvoices();
-    } catch (error: any) {
-      console.error("CANCEL_INVOICE_ERROR:", error?.response?.data || error);
+    } catch (error: unknown) {
+      console.error("CANCEL_INVOICE_ERROR:", error);
+      const msg = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : null;
 
       showAlert.error(
           "Lỗi",
-          error?.response?.data?.message || "Không thể hủy hóa đơn"
+          msg || "Không thể hủy hóa đơn"
       );
     }
   };

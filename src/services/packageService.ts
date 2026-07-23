@@ -3,13 +3,13 @@ import type { ApiResponse, Status } from "../types/common.type";
 import type { GymPackage, PackageDuration, AdminPackageCreateRequest, AdminPackageUpdateRequest, AdminPackageDurationCreateRequest, AdminPackageDurationUpdateRequest } from "../types/package.type";
 
 export const packageService = {
-  async getPublicPackages(params?: any): Promise<GymPackage[]> {
-    const response = await apiClient.get<ApiResponse<any>>("/gym-packages", { params });
+  async getPublicPackages(params?: Record<string, unknown>): Promise<GymPackage[]> {
+    const response = await apiClient.get<ApiResponse<GymPackage[] | { content?: GymPackage[]; data?: GymPackage[] }>>("/gym-packages", { params });
     const responseData = response.data.data;
-    if (responseData && Array.isArray(responseData.content)) {
-      return responseData.content;
-    } else if (responseData && Array.isArray(responseData.data)) {
-      return responseData.data;
+    if (responseData && typeof responseData === 'object' && 'content' in responseData && Array.isArray((responseData as { content: GymPackage[] }).content)) {
+      return (responseData as { content: GymPackage[] }).content;
+    } else if (responseData && typeof responseData === 'object' && 'data' in responseData && Array.isArray((responseData as { data: GymPackage[] }).data)) {
+      return (responseData as { data: GymPackage[] }).data;
     } else if (Array.isArray(responseData)) {
       return responseData;
     }
@@ -21,13 +21,13 @@ export const packageService = {
     return response.data.data as GymPackage;
   },
 
-  async getAdminPackages(params?: any): Promise<GymPackage[]> {
-    const response = await apiClient.get<ApiResponse<any>>("/admin/gym-packages", { params });
+  async getAdminPackages(params?: Record<string, unknown>): Promise<GymPackage[]> {
+    const response = await apiClient.get<ApiResponse<GymPackage[] | { content?: GymPackage[]; data?: GymPackage[] }>>("/admin/gym-packages", { params });
     const responseData = response.data.data;
-    if (responseData && Array.isArray(responseData.content)) {
-      return responseData.content;
-    } else if (responseData && Array.isArray(responseData.data)) {
-      return responseData.data;
+    if (responseData && typeof responseData === 'object' && 'content' in responseData && Array.isArray((responseData as { content: GymPackage[] }).content)) {
+      return (responseData as { content: GymPackage[] }).content;
+    } else if (responseData && typeof responseData === 'object' && 'data' in responseData && Array.isArray((responseData as { data: GymPackage[] }).data)) {
+      return (responseData as { data: GymPackage[] }).data;
     } else if (Array.isArray(responseData)) {
       return responseData;
     } else if (Array.isArray(response.data)) {
@@ -64,12 +64,12 @@ export const packageService = {
   },
 
   async getPackageDurations(): Promise<PackageDuration[]> {
-    const response = await apiClient.get<ApiResponse<any>>("/package-durations");
+    const response = await apiClient.get<ApiResponse<PackageDuration[] | { content?: PackageDuration[]; data?: PackageDuration[] }>>("/package-durations");
     const responseData = response.data.data;
-    if (responseData && Array.isArray(responseData.content)) {
-      return responseData.content;
-    } else if (responseData && Array.isArray(responseData.data)) {
-      return responseData.data;
+    if (responseData && typeof responseData === 'object' && 'content' in responseData && Array.isArray((responseData as { content: PackageDuration[] }).content)) {
+      return (responseData as { content: PackageDuration[] }).content;
+    } else if (responseData && typeof responseData === 'object' && 'data' in responseData && Array.isArray((responseData as { data: PackageDuration[] }).data)) {
+      return (responseData as { data: PackageDuration[] }).data;
     } else if (Array.isArray(responseData)) {
       return responseData;
     }
@@ -77,12 +77,12 @@ export const packageService = {
   },
 
   async getAdminPackageDurations(): Promise<PackageDuration[]> {
-    const response = await apiClient.get<ApiResponse<any>>("/admin/package-durations");
+    const response = await apiClient.get<ApiResponse<PackageDuration[] | { content?: PackageDuration[]; data?: PackageDuration[] }>>("/admin/package-durations");
     const responseData = response.data.data;
-    if (responseData && Array.isArray(responseData.content)) {
-      return responseData.content;
-    } else if (responseData && Array.isArray(responseData.data)) {
-      return responseData.data;
+    if (responseData && typeof responseData === 'object' && 'content' in responseData && Array.isArray((responseData as { content: PackageDuration[] }).content)) {
+      return (responseData as { content: PackageDuration[] }).content;
+    } else if (responseData && typeof responseData === 'object' && 'data' in responseData && Array.isArray((responseData as { data: PackageDuration[] }).data)) {
+      return (responseData as { data: PackageDuration[] }).data;
     } else if (Array.isArray(responseData)) {
       return responseData;
     } else if (Array.isArray(response.data)) {

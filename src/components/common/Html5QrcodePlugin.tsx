@@ -8,7 +8,7 @@ export interface Html5QrcodePluginProps {
   qrbox?: number;
   aspectRatio?: number;
   disableFlip?: boolean;
-  qrCodeSuccessCallback: (decodedText: string, decodedResult: any) => void;
+  qrCodeSuccessCallback: (decodedText: string, decodedResult: unknown) => void;
   qrCodeErrorCallback?: (errorMessage: string) => void;
 }
 

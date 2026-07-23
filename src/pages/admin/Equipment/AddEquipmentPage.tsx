@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Upload } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
@@ -36,9 +36,12 @@ export default function AddEquipmentPage() {
             await EquipmentService.create(formData);
             showAlert.success("Thành công", "Đã thêm thiết bị mới");
             navigate("/admin/equipment");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Lỗi khi thêm thiết bị:", error);
-            showAlert.error("Lỗi", error?.response?.data?.message || "Không thể thêm thiết bị");
+            const msg = error && typeof error === 'object' && 'response' in error 
+              ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+              : null;
+            showAlert.error("Lỗi", msg || "Không thể thêm thiết bị");
         } finally {
             setLoading(false);
         }

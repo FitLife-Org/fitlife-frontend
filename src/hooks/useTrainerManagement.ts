@@ -27,7 +27,7 @@ export function useTrainerManagement() {
       setLoading(true);
       const data = await trainerService.getAdminTrainers();
       setTrainers(data);
-    } catch (error) {
+    } catch {
       toast.error("Không thể tải danh sách PT");
     } finally {
       setLoading(false);
@@ -92,7 +92,7 @@ export function useTrainerManagement() {
       }
       fetchTrainers();
       closeModal();
-    } catch (error) {
+    } catch {
       toast.error("Có lỗi xảy ra khi lưu PT.");
     } finally {
       setIsSubmitting(false);
@@ -117,7 +117,7 @@ export function useTrainerManagement() {
         await trainerService.deleteTrainer(id);
         toast.success("Đã xóa PT thành công");
         setTrainers(prev => prev.filter(t => t.id !== id));
-      } catch (error) {
+      } catch {
         toast.error("Không thể xóa PT này.");
       }
     }

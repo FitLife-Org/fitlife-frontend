@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { showAlert } from "../utils/alert";
 import { memberService } from "../services/memberService";
-import type { MemberProfile } from "../types/member.type";
+import type { MemberProfile, AdminMemberCreateRequest } from "../types/member.type";
 import type { Status } from "../types/common.type";
 import type { Subscription } from "../types/subscription.type";
 import type { CheckinRecord } from "../types/checkin.type";
@@ -57,7 +57,7 @@ const MOCK_MEMBERS: MemberProfile[] = [
   }
 ];
 
-const MOCK_SUBSCRIPTIONS: Record<number, any> = {
+const MOCK_SUBSCRIPTIONS: Record<number, unknown[]> = {
   1: [
     {
       id: 101,
@@ -146,7 +146,7 @@ export function useUserManagement() {
   });
   const [formLoading, setFormLoading] = useState(false);
 
-  const fetchMembers = async (page: number = currentPage) => {
+  const fetchMembers = useCallback(async (page: number = currentPage) => {
     try {
       setLoading(true);
       const data = await memberService.getMembers(page, 20, searchTerm, statusFilter);
@@ -163,11 +163,11 @@ export function useUserManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, statusFilter]);
 
   useEffect(() => {
     fetchMembers();
-  }, []);
+  }, [fetchMembers]);
 
   const handleOpenDetail = async (member: MemberProfile) => {
     setSelectedMember(member);
@@ -187,7 +187,7 @@ export function useUserManagement() {
       if (subscriptions.status === "fulfilled" && subscriptions.value.length > 0) {
         setMemberSubscriptions(subscriptions.value);
       } else {
-        setMemberSubscriptions(MOCK_SUBSCRIPTIONS[member.id] || []);
+        setMemberSubscriptions((MOCK_SUBSCRIPTIONS[member.id] as unknown as Subscription[]) || []);
       }
 
       if (checkins.status === "fulfilled" && checkins.value.length > 0) {
@@ -197,7 +197,7 @@ export function useUserManagement() {
       }
     } catch (error) {
       console.error("Failed to load details via API, using mock details:", error);
-      setMemberSubscriptions(MOCK_SUBSCRIPTIONS[member.id] || []);
+      setMemberSubscriptions((MOCK_SUBSCRIPTIONS[member.id] as unknown as Subscription[]) || []);
       setMemberCheckins(MOCK_CHECKINS[member.id] || []);
     } finally {
       setDetailLoading(false);
@@ -207,8 +207,6 @@ export function useUserManagement() {
   const handleOpenCreate = () => {
     setIsEditMode(false);
     setFormValues({
-      username: "",
-      password: "",
       fullName: "",
       email: "",
       phone: "",
@@ -217,7 +215,7 @@ export function useUserManagement() {
       status: "ACTIVE",
       address: "",
       fitnessGoal: "",
-    } as any);
+    });
     setShowFormView(true);
   };
 
@@ -244,16 +242,16 @@ export function useUserManagement() {
       setFormLoading(true);
 
       if (isEditMode && selectedMember) {
-        await memberService.updateMember(selectedMember.id, formValues as any);
+        await memberService.updateMember(selectedMember.id, formValues);
         showAlert.success("Thành công", "Đã cập nhật thông tin hội viên");
         
         setMembers(prev => prev.map(m => m.id === selectedMember.id ? { ...m, ...formValues } as MemberProfile : m));
       } else {
-        const payload: any = { ...formValues };
+        const payload: Record<string, unknown> = { ...formValues };
         if (payload.id) delete payload.id;
         if (payload.userId) delete payload.userId;
         
-        const newMember = await memberService.createMember(payload);
+        const newMember = await memberService.createMember(payload as unknown as AdminMemberCreateRequest);
         
         if (newMember) {
           setMembers(prev => [newMember, ...prev]);
@@ -265,13 +263,12 @@ export function useUserManagement() {
       }
 
       setShowFormView(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Form submit error:", error);
-      let errorMsg = "Vui lòng kiểm tra lại thông tin.";
-      if (error.response?.data?.message) {
-        errorMsg = error.response.data.message;
-      }
-      showAlert.error("Thao tác thất bại", errorMsg);
+      const msg = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : null;
+      showAlert.error("Thao tác thất bại", msg || "Vui lòng kiểm tra lại thông tin.");
     } finally {
       setFormLoading(false);
     }

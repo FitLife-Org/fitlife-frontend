@@ -70,7 +70,7 @@ export const bodyMetricService = {
   },
 
   // Admin/Trainer
-  getMetrics: async (params?: any): Promise<BodyMetric[]> => {
+  getMetrics: async (params?: Record<string, unknown>): Promise<BodyMetric[]> => {
     const response = await apiClient.get<ApiResponse<PageResponse<BodyMetric>>>("/admin/body-metrics", { params });
     return response.data.data.content;
   },

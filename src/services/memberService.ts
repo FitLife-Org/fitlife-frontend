@@ -1,16 +1,8 @@
 import apiClient from "./apiClient";
-import type { ApiResponse, Status, PageResult } from "../types/common.type";
+import type { ApiResponse, Status, PageResult, PageResponse } from "../types/common.type";
 import type { BodyMetric, MemberProfile, AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../types/member.type";
 import type { Subscription } from "../types/subscription.type";
 import type { CheckinRecord } from "../types/checkin.type";
-
-interface PageResponse<T> {
-  currentPage: number;
-  totalPages: number;
-  pageSize: number;
-  totalElements: number;
-  data: T[];
-}
 
 export const memberService = {
   async getMyProfile(): Promise<MemberProfile> {
@@ -43,14 +35,14 @@ export const memberService = {
         params.append('status', mappedStatus);
       }
 
-      const response = await apiClient.get<any>(`/admin/members?${params.toString()}`);
+      const response = await apiClient.get<{ content?: MemberProfile[]; totalElements?: number; totalPages?: number; page?: number; size?: number }>(`/admin/members?${params.toString()}`);
       // Backend returns PageResponse directly (not wrapped in ApiResponse)
       const pageData = response.data;
       
       return {
-        items: (pageData.content || []).map((item: any) => ({
+        items: (pageData.content || []).map((item: MemberProfile) => ({
           ...item,
-          status: item.status === 'SUSPENDED' ? 'LOCKED' : item.status
+          status: (item.status as string) === 'SUSPENDED' ? 'LOCKED' : item.status
         })),
         totalItems: pageData.totalElements || 0,
         totalPages: pageData.totalPages || 0,
@@ -74,7 +66,7 @@ export const memberService = {
   },
 
   async createMember(data: AdminMemberCreateRequest): Promise<MemberProfile> {
-    const payload: any = { ...data };
+    const payload: Record<string, unknown> = { ...data };
     if (payload.status === 'LOCKED') payload.status = 'SUSPENDED';
     if (payload.status === 'PENDING') payload.status = 'INACTIVE';
     if (payload.fitnessGoal === "") delete payload.fitnessGoal;
@@ -86,7 +78,7 @@ export const memberService = {
   },
 
   async updateMember(id: number, data: AdminMemberUpdateRequest): Promise<MemberProfile> {
-    const payload: any = { ...data };
+    const payload: Record<string, unknown> = { ...data };
     if (payload.status === 'LOCKED') payload.status = 'SUSPENDED';
     if (payload.status === 'PENDING') payload.status = 'INACTIVE';
     if (payload.fitnessGoal === "") delete payload.fitnessGoal;
@@ -98,7 +90,7 @@ export const memberService = {
   },
 
   async updateMemberStatus(id: number, status: Status): Promise<MemberProfile> {
-    let mappedStatus: any = status;
+    let mappedStatus: string = status;
     if (status === 'LOCKED') mappedStatus = 'SUSPENDED';
     if (status === 'PENDING') mappedStatus = 'INACTIVE';
     const response = await apiClient.patch<ApiResponse<MemberProfile>>(`/admin/members/${id}/status`, { status: mappedStatus });
@@ -112,13 +104,31 @@ export const memberService = {
   },
 
   async getMemberSubscriptions(id: number): Promise<Subscription[]> {
-    const response = await apiClient.get<ApiResponse<Subscription[]>>(`/admin/members/${id}/subscriptions`);
-    return response.data.data || [];
+    try {
+      const response = await apiClient.get<ApiResponse<PageResponse<Subscription> | Subscription[]>>(`/admin/subscriptions?memberId=${id}`);
+      const data = response.data?.data;
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<Subscription>).content)) {
+        return (data as PageResponse<Subscription>).content;
+      }
+      return [];
+    } catch {
+      return [];
+    }
   },
 
   async getMemberCheckins(id: number): Promise<CheckinRecord[]> {
-    const response = await apiClient.get<ApiResponse<CheckinRecord[]>>(`/admin/members/${id}/checkins`);
-    return response.data.data || [];
+    try {
+      const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>(`/check-ins?memberId=${id}`);
+      const data = response.data?.data;
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<CheckinRecord>).content)) {
+        return (data as PageResponse<CheckinRecord>).content;
+      }
+      return [];
+    } catch {
+      return [];
+    }
   },
 
   async restoreMember(id: number): Promise<MemberProfile> {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Dumbbell, Calendar, Target, Clock, CheckCircle2, ChevronRight, Activity } from "lucide-react";
 import toast from "react-hot-toast";
 import { workoutService } from "../../services/workoutService";
@@ -34,7 +34,7 @@ export default function WorkoutPlansPage() {
         ...p,
         sessions: p.sessions.map(s => s.id === sessionId ? { ...s, isCompleted: true } : s)
       })));
-    } catch (error) {
+    } catch {
       toast.error("Có lỗi xảy ra khi cập nhật tiến độ.");
     } finally {
       setCompletingSessionId(null);
@@ -54,7 +54,7 @@ export default function WorkoutPlansPage() {
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
-  const itemVariants: any = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
   };

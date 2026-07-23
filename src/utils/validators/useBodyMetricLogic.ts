@@ -57,7 +57,7 @@ export function useBodyMetricLogic(onSuccess: () => Promise<void>) {
       setFormData({ weightKg: "", heightCm: "", bodyFatPercent: "", muscleMassKg: "" });
       
       await onSuccess();
-    } catch (error) {
+    } catch {
       toast.error("Không thể cập nhật chỉ số lúc này.");
     } finally {
       setSubmitting(false);

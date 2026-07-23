@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Plus, Filter, Eye, Edit2, MoreVertical, Layers, CheckCircle2, Wrench, XCircle, CalendarClock } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../../../components/common/Button";
@@ -25,21 +25,16 @@ export default function EquipmentManagementPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const pageSize = 10;
 
-  useEffect(() => {
-    fetchEquipments();
-    fetchSummary();
-  }, [currentPage, statusFilter]);
-
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     try {
       const summaryData = await EquipmentService.getSummary();
       setSummary(summaryData);
     } catch (error) {
       console.error("Lỗi khi tải thống kê thiết bị:", error);
     }
-  };
+  }, []);
 
-  const fetchEquipments = async () => {
+  const fetchEquipments = useCallback(async () => {
     setLoading(true);
     try {
       const data = await EquipmentService.getAll(currentPage, pageSize, searchTerm, statusFilter);
@@ -53,7 +48,12 @@ export default function EquipmentManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    fetchEquipments();
+    fetchSummary();
+  }, [fetchEquipments, fetchSummary]);
 
   const renderStatusBadge = (status: Equipment["status"]) => {
     switch (status) {

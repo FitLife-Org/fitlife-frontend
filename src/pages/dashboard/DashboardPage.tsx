@@ -34,8 +34,14 @@ const quickActions = [
   { name: "Hỏi FitAI", icon: Sparkles, color: "text-fit-danger", bg: "bg-fit-dangerSoft" },
 ];
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number; dataKey: string }>;
+  label?: string;
+}
+
 // Component Tooltip tùy chỉnh cho biểu đồ
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
         <div className="rounded-xl border border-fit-border bg-white/95 p-3 shadow-lg backdrop-blur-sm">

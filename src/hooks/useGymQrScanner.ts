@@ -26,8 +26,11 @@ export function useGymQrScanner(onSuccessCallback?: () => void) {
       }
       
       setTimeout(() => setIsProcessing(false), 3000);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Điểm danh thất bại");
+    } catch (error: unknown) {
+      const msg = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : null;
+      toast.error(msg || "Điểm danh thất bại");
       setTimeout(() => setIsProcessing(false), 2000);
     }
   };

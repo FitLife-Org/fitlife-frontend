@@ -21,12 +21,12 @@ export const trainerService = {
     return response.data.data;
   },
 
-  async createTrainer(data: Partial<Trainer> | any): Promise<Trainer> {
+  async createTrainer(data: Partial<Trainer> | Record<string, unknown>): Promise<Trainer> {
     const response = await apiClient.post<ApiResponse<Trainer>>("/admin/trainers", data);
     return response.data.data;
   },
 
-  async updateTrainer(id: number | string, data: Partial<Trainer> | any): Promise<Trainer> {
+  async updateTrainer(id: number | string, data: Partial<Trainer> | Record<string, unknown>): Promise<Trainer> {
     const response = await apiClient.put<ApiResponse<Trainer>>(`/admin/trainers/${id}`, data);
     return response.data.data;
   },
@@ -41,8 +41,8 @@ export const trainerService = {
   },
 
   // Assign trainer (Not explicitly in doc but usually part of member/admin)
-  async assignTrainerToMember(trainerId: number | string, memberId: number | string): Promise<any> {
-    const response = await apiClient.post<ApiResponse<any>>(`/admin/trainers/${trainerId}/members`, { memberId });
+  async assignTrainerToMember(trainerId: number | string, memberId: number | string): Promise<unknown> {
+    const response = await apiClient.post<ApiResponse<unknown>>(`/admin/trainers/${trainerId}/members`, { memberId });
     return response.data.data;
   },
 
@@ -52,7 +52,7 @@ export const trainerService = {
     return response.data.data;
   },
 
-  async updateMe(data: any): Promise<Trainer> {
+  async updateMe(data: Partial<Trainer> | Record<string, unknown>): Promise<Trainer> {
     const response = await apiClient.put<ApiResponse<Trainer>>("/trainers/me", data);
     return response.data.data;
   },
@@ -64,9 +64,9 @@ export const trainerService = {
   },
 
   // Trainer view schedule (Assuming it's /trainers/me/schedule)
-  async getMemberWorkoutProgress(memberId: string | number): Promise<any> {
-    const response = await apiClient.get(`/trainers/members/${memberId}/progress`);
-    return response.data.data 
+  async getMemberWorkoutProgress(memberId: string | number): Promise<unknown> {
+    const response = await apiClient.get<ApiResponse<unknown>>(`/trainers/members/${memberId}/progress`);
+    return response.data.data;
   },
   async getTrainerSchedule(): Promise<TrainerSession[]> {
     const response = await apiClient.get<ApiResponse<TrainerSession[]>>("/trainers/me/schedule");

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { 
@@ -9,7 +8,6 @@ import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import { useMemberHome } from "../../hooks/useMemberHome";
-import { X } from "lucide-react";
 
 export default function MemberHomePage() {
   const { user, activeSub, loading, calculateDaysLeft } = useMemberHome();

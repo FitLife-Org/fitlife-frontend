@@ -1,17 +1,13 @@
 
-import { QrCode, Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone } from "lucide-react";
+import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Input from "../../components/common/Input";
-import Badge from "../../components/common/Badge";
-import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
 import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
 import GymQrManager from "../admin/components/GymQrManager";
 import { useState } from "react";
 
 export default function CheckinPage() {
   const {
-    activeTab,
-    setActiveTab,
     searchQuery,
     setSearchQuery,
     searchResults,

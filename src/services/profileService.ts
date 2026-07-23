@@ -20,7 +20,7 @@ export const profileService = {
       const response = await apiClient.patch<ApiResponse<ProfileResponse>>("/profile/avatar", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      return response.data.data as any;
+      return response.data.data;
     } catch (error) {
       console.warn("API /profile/avatar failed, using mock base64", error);
       // Fallback: convert file to base64
@@ -41,6 +41,6 @@ export const profileService = {
 
   async getMyMembership(): Promise<MembershipResponse> {
     const response = await apiClient.get<ApiResponse<MembershipResponse>>("/profile/membership");
-    return response.data.data as any;
+    return response.data.data;
   }
 };
