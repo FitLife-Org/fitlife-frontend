@@ -20,7 +20,6 @@ export const memberService = {
     return response.data.data || [];
   },
 
-  // Admin APIs
   async getMembers(page: number = 1, size: number = 20, keyword?: string, status?: string): Promise<PageResult<MemberProfile>> {
     const params = new URLSearchParams();
     params.append('page', page.toString());
@@ -31,12 +30,11 @@ export const memberService = {
       if (status && status !== 'ALL') {
         let mappedStatus = status;
         if (status === 'LOCKED') mappedStatus = 'SUSPENDED';
-        if (status === 'PENDING') mappedStatus = 'INACTIVE'; // Backend lacks PENDING
+        if (status === 'PENDING') mappedStatus = 'INACTIVE';
         params.append('status', mappedStatus);
       }
 
       const response = await apiClient.get<{ content?: MemberProfile[]; totalElements?: number; totalPages?: number; page?: number; size?: number }>(`/admin/members?${params.toString()}`);
-      // Backend returns PageResponse directly (not wrapped in ApiResponse)
       const pageData = response.data;
       
       return {

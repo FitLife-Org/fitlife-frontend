@@ -19,7 +19,6 @@ export default function EquipmentManagementPage() {
   const [summary, setSummary] = useState<EquipmentSummary>(INITIAL_SUMMARY);
   const [loading, setLoading] = useState(false);
   
-  // Pagination States
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("ALL");

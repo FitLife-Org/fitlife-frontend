@@ -3,15 +3,11 @@ import type { ApiResponse, PageResponse } from "../types/common.type";
 import type { BodyMetric, BodyMetricProgress } from "../types/member.type";
 
 export const bodyMetricService = {
-  // Guest / Demo
   demoBmi: async (data: { heightCm: number; weightKg: number }): Promise<number> => {
-    // Frontend calculates BMI locally for guest
     return Number((data.weightKg / ((data.heightCm / 100) ** 2)).toFixed(1));
   },
 
-  // Member
   getMyMetrics: async (page = 0, size = 10): Promise<BodyMetric[]> => {
-    // Fixed: Call GET /body-metrics/me instead of /history for pagination
     const response = await apiClient.get<ApiResponse<PageResponse<BodyMetric>>>(`/body-metrics/me?page=${page}&size=${size}`);
     return response.data.data.content;
   },
@@ -26,7 +22,7 @@ export const bodyMetricService = {
     const metrics = response.data.data.content;
     
     if (metrics.length < 2) {
-      return []; // Not enough data to calculate progress
+      return [];
     }
 
     const current = metrics[0];
@@ -69,7 +65,6 @@ export const bodyMetricService = {
     ];
   },
 
-  // Admin/Trainer
   getMetrics: async (params?: Record<string, unknown>): Promise<BodyMetric[]> => {
     const response = await apiClient.get<ApiResponse<PageResponse<BodyMetric>>>("/admin/body-metrics", { params });
     return response.data.data.content;

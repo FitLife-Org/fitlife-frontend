@@ -144,7 +144,6 @@ export const userService = {
     };
   },
 
-  // USER-09: Đổi mật khẩu
   async changePassword(data: Record<string, unknown>): Promise<void> {
     await apiClient.put<ApiResponse<void>>("/users/me/change-password", data);
   },

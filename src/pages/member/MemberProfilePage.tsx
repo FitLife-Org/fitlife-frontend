@@ -23,7 +23,6 @@ export default function MemberProfilePage() {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateProfileRequest>({});
 
-  // Change password states
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -73,7 +72,6 @@ export default function MemberProfilePage() {
     
     try {
       setSaving(true);
-      // Clean up empty strings to avoid backend validation errors and parsing errors
       const cleanData: UpdateProfileRequest = { ...formData };
       Object.keys(cleanData).forEach(key => {
         if ((cleanData as Record<string, unknown>)[key] === "") {

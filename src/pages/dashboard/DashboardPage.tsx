@@ -8,7 +8,6 @@ import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 
-// Dữ liệu mẫu cho biểu đồ
 const progressData = [
   { week: "Tuần 1", weight: 74.3, fat: 22.5 },
   { week: "Tuần 2", weight: 73.1, fat: 21.8 },
@@ -40,7 +39,6 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-// Component Tooltip tùy chỉnh cho biểu đồ
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (

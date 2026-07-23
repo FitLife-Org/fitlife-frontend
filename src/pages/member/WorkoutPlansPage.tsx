@@ -29,7 +29,6 @@ export default function WorkoutPlansPage() {
     try {
       await workoutService.completeSession(sessionId);
       toast.success("Tuyệt vời! Bạn đã hoàn thành buổi tập.");
-      // Tạm cập nhật state cục bộ để UI phản hồi ngay (Mock UI Update)
       setPlans(prev => prev.map(p => ({
         ...p,
         sessions: p.sessions.map(s => s.id === sessionId ? { ...s, isCompleted: true } : s)

@@ -44,7 +44,6 @@ export interface AuthResponsePayload {
   accessToken?: string | null;
   refreshToken?: string | null;
 
-  // Giữ token để tương thích response cũ nếu có
   token?: string | null;
   tokenType?: string;
 

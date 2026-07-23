@@ -3,19 +3,16 @@ import type { ApiResponse } from "../types/common.type";
 import type { Trainer, TrainerMember, TrainerSession } from "../types/trainer.type";
 
 export const trainerService = {
-  // Public/Member xem danh sách
   async getTrainers(): Promise<Trainer[]> {
     const response = await apiClient.get<ApiResponse<Trainer[]>>("/trainers");
     return response.data.data;
   },
 
-  // Public/Member xem chi tiết
   async getTrainerById(id: number | string): Promise<Trainer> {
     const response = await apiClient.get<ApiResponse<Trainer>>(`/trainers/${id}`);
     return response.data.data;
   },
 
-  // Admin quản lý
   async getAdminTrainers(): Promise<Trainer[]> {
     const response = await apiClient.get<ApiResponse<Trainer[]>>("/admin/trainers");
     return response.data.data;
@@ -40,13 +37,11 @@ export const trainerService = {
     return response.data.data;
   },
 
-  // Assign trainer (Not explicitly in doc but usually part of member/admin)
   async assignTrainerToMember(trainerId: number | string, memberId: number | string): Promise<unknown> {
     const response = await apiClient.post<ApiResponse<unknown>>(`/admin/trainers/${trainerId}/members`, { memberId });
     return response.data.data;
   },
 
-  // Trainer tự xem profile
   async getMe(): Promise<Trainer> {
     const response = await apiClient.get<ApiResponse<Trainer>>("/trainers/me");
     return response.data.data;
@@ -57,13 +52,11 @@ export const trainerService = {
     return response.data.data;
   },
 
-  // Trainer view members (Assuming it's /trainers/me/members based on REST)
   async getMyMembers(): Promise<TrainerMember[]> {
     const response = await apiClient.get<ApiResponse<TrainerMember[]>>("/trainers/me/members");
     return response.data.data;
   },
 
-  // Trainer view schedule (Assuming it's /trainers/me/schedule)
   async getMemberWorkoutProgress(memberId: string | number): Promise<unknown> {
     const response = await apiClient.get<ApiResponse<unknown>>(`/trainers/members/${memberId}/progress`);
     return response.data.data;

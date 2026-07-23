@@ -41,7 +41,6 @@ export default function UserManagementPage() {
     handleToggleStatus,
   } = useUserManagement();
 
-  // Render status badge
   const renderStatusBadge = (status: MemberProfile["status"]) => {
     switch (status) {
       case "ACTIVE":
@@ -59,13 +58,11 @@ export default function UserManagementPage() {
     }
   };
 
-  // Calculate statistics
   const totalCount = members.length;
   const activeCount = members.filter(m => m.status === "ACTIVE").length;
   const lockedCount = members.filter(m => m.status === "LOCKED").length;
   const pendingCount = members.filter(m => m.status === "PENDING").length;
 
-  // Filter & Search Logic
   const filteredMembers = members.filter(m => {
     const matchesSearch = 
       m.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -74,7 +74,6 @@ export function useResetPasswordLogic() {
         setSuccessMessage("");
         setFieldErrors({});
 
-        // Validate với Zod
         const validationResult = resetPasswordSchema.safeParse(form);
 
         if (!validationResult.success) {

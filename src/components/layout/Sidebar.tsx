@@ -39,7 +39,6 @@ type MenuItemType = {
 };
 
 const menuItems: MenuItemType[] = [
-    // MEMBER
     {label: "Dashboard", path: ROUTES.MEMBER_HOME, icon: Home, roles: ["ROLE_MEMBER"]},
     {label: "Giáo án", path: ROUTES.MEMBER_WORKOUTS, icon: Dumbbell, roles: ["ROLE_MEMBER"]},
     {label: "Gói tập", path: ROUTES.MEMBER_PACKAGES, icon: Package, roles: ["ROLE_MEMBER"]},
@@ -49,7 +48,6 @@ const menuItems: MenuItemType[] = [
     {label: "Thanh toán", path: ROUTES.MEMBER_PAYMENT, icon: WalletCards, roles: ["ROLE_MEMBER"]},
     {label: "Hồ sơ", path: ROUTES.MEMBER_PROFILE, icon: UserRound, roles: ["ROLE_MEMBER"]},
 
-    // ADMIN
     {label: "Tổng quan", path: ROUTES.ADMIN_DASHBOARD, icon: Gauge, roles: ["ROLE_ADMIN"]},
     {label: "Tài khoản", path: ROUTES.ADMIN_USERS, icon: ShieldCheck, roles: ["ROLE_ADMIN"]},
     {label: "Hội viên", path: ROUTES.ADMIN_MEMBERS, icon: Users, roles: ["ROLE_ADMIN"]},
@@ -60,7 +58,6 @@ const menuItems: MenuItemType[] = [
     {label: "Báo cáo", path: ROUTES.ADMIN_REPORTS, icon: BarChart, roles: ["ROLE_ADMIN"]},
 
 
-    // STAFF
     {label: "Check-in", path: ROUTES.STAFF_CHECKIN, icon: ClipboardCheck, roles: ["ROLE_STAFF", "ROLE_ADMIN"]},
     {
         label: "Hỗ trợ gói tập",
@@ -75,12 +72,10 @@ const menuItems: MenuItemType[] = [
         icon: WalletCards
     },
 
-    // PT
     {label: "Lịch PT", path: ROUTES.TRAINER_SCHEDULE, icon: CalendarDays, roles: ["ROLE_TRAINER", "ROLE_ADMIN"]},
     {label: "Hội viên của tôi", path: ROUTES.TRAINER_MEMBERS, icon: Users, roles: ["ROLE_TRAINER", "ROLE_ADMIN"]},
     {label: "Theo dõi bài tập", path: ROUTES.TRAINER_WORKOUT_TRACKING, icon: Flame, roles: ["ROLE_TRAINER", "ROLE_ADMIN"]},
 
-    // COMMON
     {
         label: "Cài đặt",
         path: ROUTES.COMMON_SETTINGS,
@@ -135,7 +130,6 @@ export default function Sidebar() {
                         const hasChildren = item.children && item.children.length > 0;
                         const isExpanded = expandedMenus[item.label];
 
-                        // Check if any child is active
                         const isChildActive = hasChildren && item.children?.some(child => location.pathname === child.path);
 
                         if (hasChildren) {

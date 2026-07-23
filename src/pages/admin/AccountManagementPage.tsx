@@ -49,7 +49,6 @@ export default function AccountManagementPage() {
     handleRoleSubmit
   } = useAccountManagement();
 
-  // Render Role badge
   const renderRoleBadge = (role: Role) => {
     switch (role) {
       case "ROLE_ADMIN":
@@ -65,7 +64,6 @@ export default function AccountManagementPage() {
     }
   };
 
-  // Render Status badge
   const renderStatusBadge = (status: Status) => {
     switch (status) {
       case "ACTIVE":
@@ -345,7 +343,7 @@ export default function AccountManagementPage() {
                 onChange={(e) => setFormValues(prev => ({ ...prev, username: e.target.value }))}
                 placeholder="Nhập tên đăng nhập"
                 required
-                disabled={isEditMode} // Usually username is immutable
+                disabled={isEditMode}
               />
             </div>
 

@@ -15,7 +15,6 @@ export default function GymQrManager({ isOpen, onClose }: GymQrManagerProps) {
 
   const handleRegenerate = async () => {
     setIsGenerating(true);
-    // Giả lập gọi API sinh mã QR cố định mới (đề phòng mã cũ bị lộ)
     setTimeout(() => {
       const randomId = Math.floor(Math.random() * 1000);
       setGymCode(`FITLIFE-HQ-${randomId}`);

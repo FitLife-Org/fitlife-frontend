@@ -8,7 +8,6 @@ export default function WorkoutTrackingPage() {
   const [progress, setProgress] = useState<WorkoutProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Hardcode memberId 101 for mock demonstration
   const MOCK_MEMBER_ID = 101;
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import { ArrowLeft, KeyRound } from "lucide-react";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { ROUTES } from "../../config/routes";
-import { useResetPasswordLogic } from "../../utils/validators/resetPasswordValidator"; // <-- Import Hook vào đây
+import { useResetPasswordLogic } from "../../utils/validators/resetPasswordValidator";
 
 export default function ResetPasswordPage() {
     const {

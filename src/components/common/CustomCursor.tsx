@@ -60,7 +60,6 @@ export default function CustomCursor() {
     window.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
     
-    // Use capture phase to ensure we catch hover events on all elements
     document.addEventListener("mouseover", onMouseEnter, true);
     document.addEventListener("mouseout", onMouseLeave, true);
 

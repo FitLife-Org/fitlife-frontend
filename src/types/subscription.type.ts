@@ -44,7 +44,6 @@ export interface Subscription {
   createdAt?: string;
   updatedAt?: string;
 
-  // Giữ tạm field cũ nếu UI cũ còn dùng
   package?: {
     id: number;
     name?: string;

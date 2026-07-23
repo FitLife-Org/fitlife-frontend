@@ -21,7 +21,6 @@ import {
   saveCheckinHistoryToStorage
 } from "../utils/validators/checkinStorageUtil";
 
-// ==========================================
 export const adminQrService = {
   async getAllGymQrs(): Promise<AdminCheckInQrResponse[]> {
     try {
@@ -59,7 +58,6 @@ export const adminQrService = {
   }
 };
 
-// ==========================================
 export const staffCheckinService = {
   async lookupMember(query: string): Promise<MemberLookupResult> {
     try {
@@ -194,7 +192,6 @@ export const staffCheckinService = {
   }
 };
 
-// ==========================================
 export const memberCheckinService = {
   async selfCheckin(data: MemberCheckInRequest): Promise<CheckinRecord> {
     try {
