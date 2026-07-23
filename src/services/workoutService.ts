@@ -1,41 +1,155 @@
 import apiClient from "./apiClient";
-import type { ApiResponse } from "../types/common.type";
-import type { WorkoutPlan, WorkoutSession } from "../types/workout.type";
+
+import type {
+  SpringPage,
+} from "../types/common.type";
+
+import type {
+  WorkoutPlan,
+  WorkoutSession,
+} from "../types/workout.type";
+
+type WorkoutPlansResponse =
+    | WorkoutPlan[]
+    | SpringPage<WorkoutPlan>;
+
+function normalizePlan(
+    plan: WorkoutPlan,
+): WorkoutPlan {
+  return {
+    ...plan,
+    sessions: plan.sessions ?? [],
+  };
+}
+
+function extractPlans(
+    response: WorkoutPlansResponse,
+): WorkoutPlan[] {
+  if (Array.isArray(response)) {
+    return response.map(normalizePlan);
+  }
+
+  return (
+      response.content?.map(
+          normalizePlan,
+      ) ?? []
+  );
+}
+
+function validateId(
+    id: string | number,
+    fieldName: string,
+): void {
+  const numericId = Number(id);
+
+  if (
+      !Number.isInteger(numericId) ||
+      numericId <= 0
+  ) {
+    throw new Error(
+        `${fieldName} không hợp lệ.`,
+    );
+  }
+}
 
 export const workoutService = {
-  // Lấy danh sách kế hoạch tập (Trainer/Admin)
-  getWorkoutPlans: async (): Promise<WorkoutPlan[]> => {
-    const response = await apiClient.get<ApiResponse<WorkoutPlan[]>>("/workout-plans");
-    return response.data.data;
+  async getWorkoutPlans():
+      Promise<WorkoutPlan[]> {
+    const response =
+        await apiClient.get<
+            WorkoutPlansResponse
+        >("/workout-plans");
+
+    return extractPlans(
+        response.data,
+    );
   },
 
-  // Chi tiết kế hoạch tập
-  getWorkoutPlanDetails: async (id: string): Promise<WorkoutPlan> => {
-    const response = await apiClient.get<ApiResponse<WorkoutPlan>>(`/workout-plans/${id}`);
-    return response.data.data;
+  async getWorkoutPlanDetails(
+      id: string | number,
+  ): Promise<WorkoutPlan> {
+    validateId(
+        id,
+        "Workout Plan ID",
+    );
+
+    const response =
+        await apiClient.get<WorkoutPlan>(
+            `/workout-plans/${id}`,
+        );
+
+    return normalizePlan(
+        response.data,
+    );
   },
 
-  // Trainer tạo kế hoạch tập
-  createWorkoutPlan: async (data: Partial<WorkoutPlan>): Promise<WorkoutPlan> => {
-    const response = await apiClient.post<ApiResponse<WorkoutPlan>>("/trainers/workout-plans", data);
-    return response.data.data;
+  async createWorkoutPlan(
+      data: Partial<WorkoutPlan>,
+  ): Promise<WorkoutPlan> {
+    const response =
+        await apiClient.post<WorkoutPlan>(
+            "/trainers/workout-plans",
+            data,
+        );
+
+    return normalizePlan(
+        response.data,
+    );
   },
 
-  // Trainer cập nhật kế hoạch
-  updateWorkoutPlan: async (id: string, data: Partial<WorkoutPlan>): Promise<WorkoutPlan> => {
-    const response = await apiClient.put<ApiResponse<WorkoutPlan>>(`/trainers/workout-plans/${id}`, data);
-    return response.data.data;
+  async updateWorkoutPlan(
+      id: string | number,
+      data: Partial<WorkoutPlan>,
+  ): Promise<WorkoutPlan> {
+    validateId(
+        id,
+        "Workout Plan ID",
+    );
+
+    const response =
+        await apiClient.put<WorkoutPlan>(
+            `/trainers/workout-plans/${id}`,
+            data,
+        );
+
+    return normalizePlan(
+        response.data,
+    );
   },
 
-  // Lấy danh sách kế hoạch của member hiện tại
-  getMyWorkoutPlans: async (): Promise<WorkoutPlan[]> => {
-    const response = await apiClient.get<ApiResponse<WorkoutPlan[]>>("/members/me/workout-plans");
-    return response.data.data;
+  async getMyWorkoutPlans():
+      Promise<WorkoutPlan[]> {
+    const response =
+        await apiClient.get<
+            WorkoutPlansResponse
+        >("/workout-plans/me", {
+          params: {
+            page: 0,
+            size: 20,
+            sort: "createdAt,desc",
+          },
+        });
+
+    return extractPlans(
+        response.data,
+    );
   },
 
-  // Đánh dấu hoàn thành buổi tập
-  completeSession: async (sessionId: string, data?: any): Promise<WorkoutSession> => {
-    const response = await apiClient.patch<ApiResponse<WorkoutSession>>(`/workout-sessions/${sessionId}/complete`, data);
-    return response.data.data;
-  }
+  async completeSession(
+      sessionId: string | number,
+      data?: unknown,
+  ): Promise<WorkoutSession> {
+    validateId(
+        sessionId,
+        "Workout Session ID",
+    );
+
+    const response =
+        await apiClient.patch<WorkoutSession>(
+            `/workout-sessions/${sessionId}/complete`,
+            data,
+        );
+
+    return response.data;
+  },
 };

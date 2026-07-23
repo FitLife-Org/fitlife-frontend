@@ -19,63 +19,92 @@ import type {
     AiWorkoutPlanRequest,
 } from "../types/ai.type";
 
-const AI_BASE_URL = "/ai/suggestions";
-const AI_GENERATE_TIMEOUT_MS = 60_000;
+import {
+    requireApiData,
+} from "../utils/apiResponse";
 
-function requireData<T>(
-    response: ApiResponse<T>,
-    fallbackMessage: string,
-): T {
-    if (response.data === null || response.data === undefined) {
-        throw new Error(response.message || fallbackMessage);
-    }
+const AI_BASE_URL =
+    "/ai/suggestions";
 
-    return response.data;
-}
+const AI_STANDARD_TIMEOUT_MS =
+    30_000;
 
-function validateSuggestionId(suggestionId: number): void {
-    if (!Number.isInteger(suggestionId) || suggestionId <= 0) {
-        throw new Error("AI suggestion ID không hợp lệ.");
+const AI_GENERATE_TIMEOUT_MS =
+    120_000;
+
+const AI_FULL_PLAN_TIMEOUT_MS =
+    180_000;
+
+function validateSuggestionId(
+    suggestionId: number,
+): void {
+    if (
+        !Number.isInteger(suggestionId) ||
+        suggestionId <= 0
+    ) {
+        throw new Error(
+            "AI suggestion ID không hợp lệ.",
+        );
     }
 }
 
 export const aiService = {
-    async getTodayUsage(): Promise<AiUsageTodayResponse> {
-        const response = await apiClient.get<ApiResponse<AiUsageTodayResponse>>(
-            `${AI_BASE_URL}/usage/today`,
-        );
+    async getTodayUsage():
+        Promise<AiUsageTodayResponse> {
+        const response =
+            await apiClient.get<
+                ApiResponse<AiUsageTodayResponse>
+            >(
+                `${AI_BASE_URL}/usage/today`,
+                {
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
 
-        return requireData(
+        return requireApiData(
             response.data,
-            "Không thể lấy lượt sử dụng AI hôm nay.",
+            "Không thể tải lượt sử dụng AI.",
         );
     },
 
     async generateFullPlan(
         request: AiFullPlanRequest,
     ): Promise<AiSuggestionResponse> {
-        const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
-            `${AI_BASE_URL}/full-plan`,
-            request,
-            { timeout: AI_GENERATE_TIMEOUT_MS },
-        );
+        const response =
+            await apiClient.post<
+                ApiResponse<AiSuggestionResponse>
+            >(
+                `${AI_BASE_URL}/full-plan`,
+                request,
+                {
+                    timeout:
+                    AI_FULL_PLAN_TIMEOUT_MS,
+                },
+            );
 
-        return requireData(
+        return requireApiData(
             response.data,
-            "Máy chủ không trả về kế hoạch AI.",
+            "Máy chủ không trả về kế hoạch toàn diện.",
         );
     },
 
     async generateWorkoutPlan(
         request: AiWorkoutPlanRequest,
     ): Promise<AiSuggestionResponse> {
-        const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
-            `${AI_BASE_URL}/workout-plan`,
-            request,
-            { timeout: AI_GENERATE_TIMEOUT_MS },
-        );
+        const response =
+            await apiClient.post<
+                ApiResponse<AiSuggestionResponse>
+            >(
+                `${AI_BASE_URL}/workout-plan`,
+                request,
+                {
+                    timeout:
+                    AI_GENERATE_TIMEOUT_MS,
+                },
+            );
 
-        return requireData(
+        return requireApiData(
             response.data,
             "Máy chủ không trả về kế hoạch tập luyện.",
         );
@@ -84,13 +113,19 @@ export const aiService = {
     async generateNutritionPlan(
         request: AiNutritionPlanRequest,
     ): Promise<AiSuggestionResponse> {
-        const response = await apiClient.post<ApiResponse<AiSuggestionResponse>>(
-            `${AI_BASE_URL}/nutrition-plan`,
-            request,
-            { timeout: AI_GENERATE_TIMEOUT_MS },
-        );
+        const response =
+            await apiClient.post<
+                ApiResponse<AiSuggestionResponse>
+            >(
+                `${AI_BASE_URL}/nutrition-plan`,
+                request,
+                {
+                    timeout:
+                    AI_GENERATE_TIMEOUT_MS,
+                },
+            );
 
-        return requireData(
+        return requireApiData(
             response.data,
             "Máy chủ không trả về kế hoạch dinh dưỡng.",
         );
@@ -98,14 +133,20 @@ export const aiService = {
 
     async analyzeBody(
         request: AiBodyAnalysisRequest,
-    ): Promise<AiSuggestionDetailResponse> {
-        const response = await apiClient.post<ApiResponse<AiSuggestionDetailResponse>>(
-            `${AI_BASE_URL}/body-analysis`,
-            request,
-            { timeout: AI_GENERATE_TIMEOUT_MS },
-        );
+    ): Promise<AiSuggestionResponse> {
+        const response =
+            await apiClient.post<
+                ApiResponse<AiSuggestionResponse>
+            >(
+                `${AI_BASE_URL}/body-analysis`,
+                request,
+                {
+                    timeout:
+                    AI_GENERATE_TIMEOUT_MS,
+                },
+            );
 
-        return requireData(
+        return requireApiData(
             response.data,
             "Máy chủ không trả về kết quả phân tích cơ thể.",
         );
@@ -114,14 +155,27 @@ export const aiService = {
     async getAiHistory(
         page = 0,
         size = 10,
-    ): Promise<PageResponse<AiSuggestionResponse>> {
-        const response = await apiClient.get<
-            ApiResponse<PageResponse<AiSuggestionResponse>>
-        >(`${AI_BASE_URL}/my`, {
-            params: { page, size },
-        });
+    ): Promise<
+        PageResponse<AiSuggestionResponse>
+    > {
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    PageResponse<AiSuggestionResponse>
+                >
+            >(
+                `${AI_BASE_URL}/my`,
+                {
+                    params: {
+                        page,
+                        size,
+                    },
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
 
-        return requireData(
+        return requireApiData(
             response.data,
             "Không thể tải lịch sử AI.",
         );
@@ -129,19 +183,36 @@ export const aiService = {
 
     async getFilteredHistory(
         filter: AiHistoryFilter,
-    ): Promise<PageResponse<AiSuggestionResponse>> {
-        const response = await apiClient.get<
-            ApiResponse<PageResponse<AiSuggestionResponse>>
-        >(`${AI_BASE_URL}/my/filter`, {
-            params: {
-                suggestionType: filter.suggestionType,
-                status: filter.status,
-                page: filter.page ?? 0,
-                size: filter.size ?? 10,
-            },
-        });
+    ): Promise<
+        PageResponse<AiSuggestionResponse>
+    > {
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    PageResponse<AiSuggestionResponse>
+                >
+            >(
+                `${AI_BASE_URL}/my/filter`,
+                {
+                    params: {
+                        suggestionType:
+                        filter.suggestionType,
 
-        return requireData(
+                        status:
+                        filter.status,
+
+                        page:
+                            filter.page ?? 0,
+
+                        size:
+                            filter.size ?? 10,
+                    },
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
             response.data,
             "Không thể tải lịch sử AI.",
         );
@@ -150,28 +221,56 @@ export const aiService = {
     async getAiSuggestionDetail(
         suggestionId: number,
     ): Promise<AiSuggestionDetailResponse> {
-        validateSuggestionId(suggestionId);
-
-        const response = await apiClient.get<
-            ApiResponse<AiSuggestionDetailResponse>
-        >(`${AI_BASE_URL}/${suggestionId}`);
-
-        return requireData(
-            response.data,
-            "Không thể tải chi tiết kế hoạch AI.",
+        validateSuggestionId(
+            suggestionId,
         );
+
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    AiSuggestionDetailResponse
+                >
+            >(
+                `${AI_BASE_URL}/${suggestionId}`,
+                {
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        const detail =
+            requireApiData(
+                response.data,
+                "Không thể tải chi tiết kế hoạch AI.",
+            );
+
+        return {
+            ...detail,
+            items:
+                detail.items ?? [],
+        };
     },
 
     async applyWorkoutPlan(
         suggestionId: number,
     ): Promise<AiApplyPlanResponse> {
-        validateSuggestionId(suggestionId);
-
-        const response = await apiClient.post<ApiResponse<AiApplyPlanResponse>>(
-            `${AI_BASE_URL}/${suggestionId}/apply-workout-plan`,
+        validateSuggestionId(
+            suggestionId,
         );
 
-        return requireData(
+        const response =
+            await apiClient.post<
+                ApiResponse<AiApplyPlanResponse>
+            >(
+                `${AI_BASE_URL}/${suggestionId}/apply-workout-plan`,
+                undefined,
+                {
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
             response.data,
             "Không thể áp dụng kế hoạch tập luyện.",
         );
@@ -180,13 +279,23 @@ export const aiService = {
     async applyNutritionPlan(
         suggestionId: number,
     ): Promise<AiApplyPlanResponse> {
-        validateSuggestionId(suggestionId);
-
-        const response = await apiClient.post<ApiResponse<AiApplyPlanResponse>>(
-            `${AI_BASE_URL}/${suggestionId}/apply-nutrition-plan`,
+        validateSuggestionId(
+            suggestionId,
         );
 
-        return requireData(
+        const response =
+            await apiClient.post<
+                ApiResponse<AiApplyPlanResponse>
+            >(
+                `${AI_BASE_URL}/${suggestionId}/apply-nutrition-plan`,
+                undefined,
+                {
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
             response.data,
             "Không thể áp dụng kế hoạch dinh dưỡng.",
         );
@@ -196,14 +305,23 @@ export const aiService = {
         suggestionId: number,
         request: AiFeedbackRequest,
     ): Promise<AiFeedbackResponse> {
-        validateSuggestionId(suggestionId);
-
-        const response = await apiClient.post<ApiResponse<AiFeedbackResponse>>(
-            `${AI_BASE_URL}/${suggestionId}/feedback`,
-            request,
+        validateSuggestionId(
+            suggestionId,
         );
 
-        return requireData(
+        const response =
+            await apiClient.post<
+                ApiResponse<AiFeedbackResponse>
+            >(
+                `${AI_BASE_URL}/${suggestionId}/feedback`,
+                request,
+                {
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
             response.data,
             "Không thể gửi đánh giá AI.",
         );
