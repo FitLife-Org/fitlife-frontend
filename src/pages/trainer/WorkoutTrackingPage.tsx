@@ -37,13 +37,13 @@ export default function WorkoutTrackingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-gradient-to-r from-fit-primary/10 to-blue-600/10 rounded-2xl border border-fit-primary/20 shadow-sm backdrop-blur-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-gradient-to-r from-fit-trainerSoft to-amber-500/10 rounded-3xl border border-fit-trainer/20 shadow-card backdrop-blur-sm">
         <div>
-          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fit-primary to-blue-600">Theo dõi Tiến độ</h2>
-          <p className="text-slate-600 text-sm mt-1 font-medium">Hội viên: Nguyễn Văn A (ID: {progress.memberId})</p>
+          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fit-trainer to-amber-600">Theo dõi Tiến độ</h2>
+          <p className="text-fit-muted text-sm mt-1 font-medium">Hội viên: Nguyễn Văn A (ID: {progress.memberId})</p>
         </div>
         <div className="mt-4 sm:mt-0 flex items-center gap-2">
-          <button className="px-6 py-2.5 bg-gradient-to-r from-fit-primary to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-fit-primary/30 hover:-translate-y-0.5 transition-all duration-300">
+          <button className="px-6 py-3 bg-fit-trainer text-white font-black rounded-2xl shadow-lg shadow-orange-500/20 hover:bg-fit-trainerHover hover:shadow-xl active:scale-[0.98] transition-all">
             Cập nhật chỉ số
           </button>
         </div>
