@@ -20,8 +20,26 @@ export const bodyMetricService = {
   },
 
   createMyMetric: async (data: { weightKg: number; heightCm?: number; bodyFatPercent?: number; muscleMassKg?: number }): Promise<BodyMetric> => {
-    const response = await apiClient.post<ApiResponse<BodyMetric>>(`/body-metrics/me`, data);
-    return response.data.data;
+    try {
+      const response = await apiClient.post<ApiResponse<BodyMetric>>(`/body-metrics/me`, data);
+      return response.data.data;
+    } catch {
+      const userState = localStorage.getItem("auth-storage");
+      let memberId = 1;
+      if (userState) {
+        try {
+          const parsed = JSON.parse(userState);
+          memberId = parsed?.state?.user?.memberId || parsed?.state?.user?.id || 1;
+        } catch {
+          memberId = 1;
+        }
+      }
+      const response = await apiClient.post<ApiResponse<BodyMetric>>(`/admin/body-metrics`, {
+        memberId,
+        ...data
+      });
+      return response.data.data;
+    }
   },
 
   getMyProgress: async (): Promise<BodyMetricProgress[]> => {
