@@ -7,115 +7,6 @@ import type { Status } from "../types/common.type";
 import type { Subscription } from "../types/subscription.type";
 import type { CheckinRecord } from "../types/checkin.type";
 
-const MOCK_MEMBERS: MemberProfile[] = [
-  {
-    id: 1,
-    memberCode: "MEM0001",
-    fullName: "Nguyễn Minh Anh",
-    email: "minhanh@gmail.com",
-    phone: "0987654321",
-    gender: "FEMALE",
-    dateOfBirth: "1998-05-20",
-    status: "ACTIVE",
-    address: "123 Cầu Giấy, Hà Nội",
-    fitnessGoal: "Giảm mỡ, săn chắc cơ thể",
-  },
-  {
-    id: 2,
-    memberCode: "MEM0002",
-    fullName: "Trần Quang Huy",
-    email: "quanghuy@gmail.com",
-    phone: "0978161320",
-    gender: "MALE",
-    dateOfBirth: "1995-10-12",
-    status: "ACTIVE",
-    address: "456 Nguyễn Lương Bằng, Đà Nẵng",
-    fitnessGoal: "Tăng cơ, cải thiện sức mạnh",
-  },
-  {
-    id: 3,
-    memberCode: "MEM0003",
-    fullName: "Lê Thị Thu Trang",
-    email: "thutrang@gmail.com",
-    phone: "0966482109",
-    gender: "FEMALE",
-    dateOfBirth: "2000-08-15",
-    status: "PENDING",
-    address: "789 Nguyễn Thị Minh Khai, TP. Hồ Chí Minh",
-    fitnessGoal: "Duy trì cân nặng, tăng dẻo dai",
-  },
-  {
-    id: 4,
-    memberCode: "MEM0004",
-    fullName: "Phạm Văn Nam",
-    email: "nampham@gmail.com",
-    phone: "0912345678",
-    gender: "MALE",
-    dateOfBirth: "1990-03-05",
-    status: "LOCKED",
-    address: "101 Lạch Tray, Hải Phòng",
-    fitnessGoal: "Tăng thể lực, cải thiện tim mạch",
-  }
-];
-
-const MOCK_SUBSCRIPTIONS: Record<number, unknown[]> = {
-  1: [
-    {
-      id: 101,
-      gymPackageId: 1,
-      package: { id: 1, code: "PKG01", packageType: "BASIC", name: "Gói Standard 3 Tháng", basePrice: 599000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-01-15",
-      endDate: "2026-04-15",
-      status: "EXPIRED"
-    },
-    {
-      id: 102,
-      gymPackageId: 2,
-      package: { id: 2, code: "PKG02", packageType: "VIP", name: "Gói VIP Pro 6 Tháng", basePrice: 999000, hasAiWorkoutPlan: true, hasNutritionPlan: true, ptSessionsPerMonth: 4, status: "ACTIVE" },
-      startDate: "2026-04-16",
-      endDate: "2026-10-16",
-      status: "ACTIVE"
-    }
-  ],
-  2: [
-    {
-      id: 201,
-      gymPackageId: 3,
-      package: { id: 3, code: "PKG03", packageType: "BASIC", name: "Gói Basic 6 Tháng", basePrice: 599000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-02-10",
-      endDate: "2026-08-10",
-      status: "ACTIVE"
-    }
-  ],
-  3: [],
-  4: [
-    {
-      id: 401,
-      gymPackageId: 4,
-      package: { id: 4, code: "PKG04", packageType: "BASIC", name: "Gói Basic 1 Tháng", basePrice: 199000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-05-01",
-      endDate: "2026-06-01",
-      status: "EXPIRED"
-    }
-  ]
-};
-
-const MOCK_CHECKINS: Record<number, CheckinRecord[]> = {
-  1: [
-    { id: 1001, memberId: 1, checkInTime: "2026-06-28T08:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 1002, memberId: 1, checkInTime: "2026-06-26T17:15:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 1003, memberId: 1, checkInTime: "2026-06-25T08:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
-  ],
-  2: [
-    { id: 2001, memberId: 2, checkInTime: "2026-06-28T09:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 2002, memberId: 2, checkInTime: "2026-06-27T18:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
-  ],
-  3: [],
-  4: [
-    { id: 4001, memberId: 4, checkInTime: "2026-05-25T19:00:00Z", note: "Tài khoản bị khóa - Check-in thất bại", status: "FAILED" }
-  ]
-};
-
 export function useUserManagement() {
   const [members, setMembers] = useState<MemberProfile[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -185,21 +76,21 @@ export function useUserManagement() {
 
       if (detailedProfile.status === "fulfilled") setSelectedMember(detailedProfile.value);
 
-      if (subscriptions.status === "fulfilled" && subscriptions.value.length > 0) {
+      if (subscriptions.status === "fulfilled") {
         setMemberSubscriptions(subscriptions.value);
       } else {
-        setMemberSubscriptions((MOCK_SUBSCRIPTIONS[member.id] as unknown as Subscription[]) || []);
+        setMemberSubscriptions([]);
       }
 
-      if (checkins.status === "fulfilled" && checkins.value.length > 0) {
+      if (checkins.status === "fulfilled") {
         setMemberCheckins(checkins.value);
       } else {
-        setMemberCheckins(MOCK_CHECKINS[member.id] || []);
+        setMemberCheckins([]);
       }
     } catch (error) {
       console.error("Failed to load details via API:", error);
-      setMemberSubscriptions((MOCK_SUBSCRIPTIONS[member.id] as unknown as Subscription[]) || []);
-      setMemberCheckins(MOCK_CHECKINS[member.id] || []);
+      setMemberSubscriptions([]);
+      setMemberCheckins([]);
     } finally {
       setDetailLoading(false);
     }
