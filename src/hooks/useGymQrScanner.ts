@@ -1,8 +1,6 @@
 import { useState } from "react";
-import toast from "react-hot-toast";
-import { memberCheckinService } from "../services/checkinService";
 
-export function useGymQrScanner(onSuccessCallback?: () => void) {
+export function useGymQrScanner(onSuccessCallback?: (token: string) => void) {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleScanSuccess = async (decodedText: string) => {
@@ -18,17 +16,14 @@ export function useGymQrScanner(onSuccessCallback?: () => void) {
         console.error("Audio play failed", e);
       }
 
-      await memberCheckinService.selfCheckin({ qrToken: decodedText });
-      toast.success("Điểm danh thành công!");
-      
       if (onSuccessCallback) {
-        onSuccessCallback();
+        onSuccessCallback(decodedText);
       }
       
       setTimeout(() => setIsProcessing(false), 3000);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Điểm danh thất bại");
-      setTimeout(() => setIsProcessing(false), 2000);
+      console.error("QR scanning failed", error);
+      setIsProcessing(false);
     }
   };
 

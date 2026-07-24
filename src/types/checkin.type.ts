@@ -8,6 +8,7 @@ export interface CheckinRecord {
   note?: string;
   status: "SUCCESS" | "CANCELLED" | "FAILED";
   type?: "CHECK_IN" | "CHECK_OUT";
+  isInside?: boolean;
 }
 
 export interface AdminCheckInQrResponse {
@@ -15,7 +16,8 @@ export interface AdminCheckInQrResponse {
   name: string;
   token: string;
   location?: string;
-  isActive: boolean;
+  isActive?: boolean;
+  active?: boolean;
   createdAt: string;
   regeneratedAt?: string;
 }

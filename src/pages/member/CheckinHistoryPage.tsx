@@ -102,9 +102,9 @@ export default function CheckinHistoryPage() {
                 <ScanLine className="w-5 h-5 text-emerald-600" /> Quét mã QR Phòng tập
               </h2>
               <div className="rounded-xl overflow-hidden bg-slate-50 border border-slate-100 min-h-[300px]">
-                <GymQrScanner onSuccess={() => {
+                <GymQrScanner onSuccess={(token) => {
                    setShowScanner(false);
-                   handleScanSuccess("SUCCESS");
+                   handleScanSuccess(token);
                 }} />
               </div>
               <p className="text-center text-sm font-medium text-slate-500 mt-4">
