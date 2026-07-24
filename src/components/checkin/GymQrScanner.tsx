@@ -3,7 +3,7 @@ import Html5QrcodePlugin from "../common/Html5QrcodePlugin";
 import { useGymQrScanner } from "../../hooks/useGymQrScanner";
 
 interface GymQrScannerProps {
-  onSuccess?: () => void;
+  onSuccess?: (token: string) => void;
 }
 
 export default function GymQrScanner({ onSuccess }: GymQrScannerProps) {

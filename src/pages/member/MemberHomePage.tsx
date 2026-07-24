@@ -212,7 +212,7 @@ export default function MemberHomePage() {
                 ))}
               </div>
               <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
-                <Link to="/member/checkin" className="text-sm font-medium text-fit-primary hover:underline">
+                <Link to="/member/checkins" className="text-sm font-medium text-fit-primary hover:underline">
                   Xem tất cả lịch sử
                 </Link>
               </div>
