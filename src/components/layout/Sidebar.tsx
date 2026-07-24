@@ -9,6 +9,7 @@ import {
     Flame,
     Gauge,
     HeartPulse,
+    History,
     Home,
     Package,
     QrCode,
@@ -65,6 +66,7 @@ const menuItems: MenuItemType[] = [
 
     // STAFF
     { label: "Điểm danh Quầy", path: ROUTES.STAFF_CHECKIN, icon: ClipboardCheck, roles: ["ROLE_STAFF", "ROLE_ADMIN"] },
+    { label: "Lịch sử Check-in", path: ROUTES.STAFF_CHECKIN_HISTORY, icon: History, roles: ["ROLE_STAFF", "ROLE_ADMIN"] },
     { label: "Hỗ trợ gói tập", path: ROUTES.STAFF_SUBSCRIPTION_SUPPORT, icon: ShieldCheck, roles: ["ROLE_STAFF", "ROLE_ADMIN"] },
     { label: "Quản lý thanh toán", path: ROUTES.ADMIN_PAYMENTS, icon: WalletCards, roles: ["ROLE_ADMIN", "ROLE_STAFF"] },
 

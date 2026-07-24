@@ -1,10 +1,12 @@
 
+import { Link } from "react-router-dom";
 import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Input from "../../components/common/Input";
 import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
 import GymQrManager from "../admin/components/GymQrManager";
 import { useState } from "react";
+import { ROUTES } from "../../config/routes";
 
 export default function CheckinPage() {
   const {
@@ -165,72 +167,90 @@ export default function CheckinPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Lịch sử Check-in */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative">
-            <button
-              onClick={() => setShowGymQr(true)}
-              className="absolute top-6 right-6 p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors tooltip"
-              title="Mở mã QR Phòng Tập"
-            >
-              <Smartphone className="w-5 h-5" />
-            </button>
-            <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
-              <History className="w-5 h-5 text-slate-400" /> Lượt check-in gần nhất
-            </h3>
-            {recentCheckins.length > 0 ? (
-              <div className="space-y-3">
-                {recentCheckins.map(record => (
-                  <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
-                        {record.memberName?.charAt(0) || 'U'}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
-                        <p className="text-xs text-slate-500">{new Date(record.checkInTime).toLocaleTimeString('vi-VN')}</p>
-                      </div>
-                    </div>
-                    {record.type === "CHECK_OUT" ? (
-                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">OUT</span>
-                    ) : record.status === "SUCCESS" ? (
-                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">IN</span>
-                    ) : (
-                      <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">FAIL</span>
-                    )}
-                  </div>
-                ))}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <History className="w-5 h-5 text-slate-400" /> 5 Lượt check-in mới nhất
+                </h3>
+                <button
+                  onClick={() => setShowGymQr(true)}
+                  className="px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors flex items-center gap-1.5 shadow-sm"
+                >
+                  <Smartphone className="w-4 h-4 text-emerald-400" /> Mở Mã QR Phòng
+                </button>
               </div>
-            ) : (
-              <p className="text-sm text-slate-500 text-center py-4">Chưa có lượt check-in nào.</p>
-            )}
+
+              {recentCheckins.length > 0 ? (
+                <div className="space-y-3">
+                  {recentCheckins.slice(0, 4).map(record => (
+                    <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
+                          {record.memberName?.charAt(0) || 'U'}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
+                          <p className="text-xs text-slate-500">{new Date(record.checkInTime).toLocaleTimeString('vi-VN')}</p>
+                        </div>
+                      </div>
+                      {record.type === "CHECK_OUT" ? (
+                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">OUT</span>
+                      ) : record.status === "SUCCESS" ? (
+                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">IN</span>
+                      ) : (
+                        <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">FAIL</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 text-center py-4">Chưa có lượt check-in nào.</p>
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 text-right">
+              <Link to={ROUTES.STAFF_CHECKIN_HISTORY} className="text-xs font-bold text-fit-staff hover:underline inline-flex items-center gap-1">
+                Xem toàn bộ nhật ký &rarr;
+              </Link>
+            </div>
           </div>
 
           {/* Đang trong phòng tập */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h3 className="font-bold text-emerald-700 flex items-center gap-2 mb-4">
-              <Activity className="w-5 h-5 text-emerald-500" /> Hội viên đang trong phòng tập
-            </h3>
-            {activeMembers.length > 0 ? (
-              <div className="space-y-3 overflow-y-auto max-h-60 pr-2">
-                {activeMembers.map(record => (
-                  <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs shadow-sm">
-                        <User className="w-4 h-4" />
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+            <div>
+              <h3 className="font-bold text-emerald-700 flex items-center gap-2 mb-4">
+                <Activity className="w-5 h-5 text-emerald-500" /> Đang trong phòng tập ({activeMembers.length})
+              </h3>
+              {activeMembers.length > 0 ? (
+                <div className="space-y-3 overflow-y-auto max-h-48 pr-2">
+                  {activeMembers.slice(0, 4).map(record => (
+                    <div key={record.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs shadow-sm">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
+                          <p className="text-xs text-slate-500">Vào lúc: {new Date(record.checkInTime).toLocaleTimeString('vi-VN')}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{record.memberName || `ID: ${record.memberId}`}</p>
-                        <p className="text-xs text-slate-500">Vào lúc: {new Date(record.checkInTime).toLocaleTimeString('vi-VN')}</p>
-                      </div>
+                      <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                      </span>
                     </div>
-                    <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 text-center py-4">Hiện không có hội viên nào.</p>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 text-center py-4">Hiện không có hội viên nào.</p>
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 text-right">
+              <Link to={ROUTES.STAFF_CHECKIN_HISTORY} className="text-xs font-bold text-emerald-600 hover:underline inline-flex items-center gap-1">
+                Xem danh sách chi tiết &rarr;
+              </Link>
+            </div>
           </div>
         </div>
       </div>

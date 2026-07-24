@@ -57,6 +57,7 @@ export const ROUTES = {
 
   // Staff
   STAFF_CHECKIN: "/staff/checkin",
+  STAFF_CHECKIN_HISTORY: "/staff/checkin-history",
   STAFF_SUBSCRIPTION_SUPPORT: "/staff/subscriptions",
 
   // Trainer

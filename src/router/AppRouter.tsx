@@ -40,6 +40,7 @@ import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import PaymentResultPage from "../pages/member/PaymentResultPage";
 import SettingsPage from "../pages/settings/SettingsPage";
 import CheckinPage from "../pages/staff/CheckinPage";
+import StaffCheckinHistoryPage from "../pages/staff/StaffCheckinHistoryPage";
 import SubscriptionSupportPage from "../pages/staff/SubscriptionSupportPage";
 import MyMembersPage from "../pages/trainer/MyMembersPage";
 import TrainerSchedulePage from "../pages/trainer/TrainerSchedulePage";
@@ -348,6 +349,15 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_STAFF", "ROLE_ADMIN"]}>
                                     <CheckinPage/>
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.STAFF_CHECKIN_HISTORY}
+                            element={
+                                <RoleGuard roles={["ROLE_STAFF", "ROLE_ADMIN"]}>
+                                    <StaffCheckinHistoryPage/>
                                 </RoleGuard>
                             }
                         />
