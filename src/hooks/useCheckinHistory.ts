@@ -5,6 +5,7 @@ import type { CheckinRecord } from "../types/checkin.type";
 
 export function useCheckinHistory() {
   const [history, setHistory] = useState<CheckinRecord[]>([]);
+  const [currentStatus, setCurrentStatus] = useState<CheckinRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [showQrModal, setShowQrModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -15,8 +16,14 @@ export function useCheckinHistory() {
 
   const fetchHistory = async () => {
     try {
-      const data = await memberCheckinService.getMyHistory({ page: 0, size: 50 });
-      setHistory(data.sort((a, b) => new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime()));
+      const [historyData, currentData] = await Promise.all([
+        memberCheckinService.getMyHistory({ page: 0, size: 50 }),
+        memberCheckinService.getMyCurrentStatus()
+      ]);
+      setHistory(historyData.sort((a, b) => new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime()));
+      setCurrentStatus(currentData);
+    } catch (err) {
+      console.error("Failed to fetch check-in info:", err);
     } finally {
       setLoading(false);
     }
@@ -33,8 +40,7 @@ export function useCheckinHistory() {
   const handleScanSuccess = async (decodedText: string) => {
     setShowScanner(false);
     try {
-      const latestRecord = history.length > 0 ? history[0] : null;
-      const isInside = latestRecord && latestRecord.status === "SUCCESS" && !latestRecord.checkOutTime;
+      const isInside = currentStatus && currentStatus.isInside;
 
       let record;
       let actionName = "";

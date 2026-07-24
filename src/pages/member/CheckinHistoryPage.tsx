@@ -3,15 +3,17 @@ import { CheckCircle2, History, X, ScanLine, XCircle } from "lucide-react";
 import Button from "../../components/common/Button";
 import GymQrScanner from "../../components/checkin/GymQrScanner";
 import { useCheckinHistory } from "../../hooks/useCheckinHistory";
+import { useAuthStore } from "../../store/authStore";
 
 export default function CheckinHistoryPage() {
+  const user = useAuthStore(state => state.user);
   
   const {
     history,
     loading,
     showScanner,
     setShowScanner,
-    fetchHistory
+    handleScanSuccess
   } = useCheckinHistory();
 
   if (loading) {
@@ -100,9 +102,9 @@ export default function CheckinHistoryPage() {
                 <ScanLine className="w-5 h-5 text-emerald-600" /> Quét mã QR Phòng tập
               </h2>
               <div className="rounded-xl overflow-hidden bg-slate-50 border border-slate-100 min-h-[300px]">
-                <GymQrScanner onSuccess={() => {
+                <GymQrScanner onSuccess={(token) => {
                    setShowScanner(false);
-                   fetchHistory();
+                   handleScanSuccess(token);
                 }} />
               </div>
               <p className="text-center text-sm font-medium text-slate-500 mt-4">
