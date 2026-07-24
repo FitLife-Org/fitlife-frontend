@@ -224,9 +224,9 @@ export function useLoginLogic() {
           validationResult.data;
 
       const normalizedIdentifier =
-          validData.identifier
-              .trim()
-              .toLowerCase();
+          validData.identifier.includes("@")
+              ? validData.identifier.trim().toLowerCase()
+              : validData.identifier.trim();
 
       const session =
           await authService.login({
