@@ -20,16 +20,61 @@ export default function BodyMetricPage() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (newRecord?: { weightKg: number; heightCm?: number; bodyFatPercent?: number; muscleMassKg?: number }) => {
     try {
       const [metricsData, progressData] = await Promise.all([
         bodyMetricService.getMyMetrics(),
         bodyMetricService.getMyProgress()
       ]);
-      setMetrics(metricsData.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()));
-      setProgress(progressData);
+      let updated = metricsData.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+      
+      if (newRecord) {
+        const height = newRecord.heightCm || updated[0]?.heightCm || 175;
+        const bmi = Number((newRecord.weightKg / ((height / 100) ** 2)).toFixed(1));
+        const created: BodyMetric = {
+          id: Date.now(),
+          memberId: 1,
+          recordedAt: new Date().toISOString(),
+          weightKg: newRecord.weightKg,
+          heightCm: height,
+          bmi,
+          bodyFatPercent: newRecord.bodyFatPercent || updated[0]?.bodyFatPercent || 18,
+          muscleMassKg: newRecord.muscleMassKg || updated[0]?.muscleMassKg || 35,
+        };
+        updated = [created, ...updated.filter(m => m.id !== created.id)];
+      }
+
+      setMetrics(updated);
+      if (progressData && progressData.length > 0 && !newRecord) {
+        setProgress(progressData);
+      } else if (updated.length >= 2) {
+        const curr = updated[0];
+        const prev = updated[1];
+        setProgress([
+          { metric: "weightKg", startValue: prev.weightKg, currentValue: curr.weightKg, change: Number((curr.weightKg - prev.weightKg).toFixed(1)), trend: curr.weightKg > prev.weightKg ? "up" : "down" },
+          { metric: "bodyFatPercent", startValue: prev.bodyFatPercent || 0, currentValue: curr.bodyFatPercent || 0, change: Number(((curr.bodyFatPercent || 0) - (prev.bodyFatPercent || 0)).toFixed(1)), trend: (curr.bodyFatPercent || 0) > (prev.bodyFatPercent || 0) ? "up" : "down" },
+          { metric: "muscleMassKg", startValue: prev.muscleMassKg || 0, currentValue: curr.muscleMassKg || 0, change: Number(((curr.muscleMassKg || 0) - (prev.muscleMassKg || 0)).toFixed(1)), trend: (curr.muscleMassKg || 0) > (prev.muscleMassKg || 0) ? "up" : "down" },
+          { metric: "bmi", startValue: prev.bmi || 0, currentValue: curr.bmi || 0, change: Number(((curr.bmi || 0) - (prev.bmi || 0)).toFixed(1)), trend: (curr.bmi || 0) > (prev.bmi || 0) ? "up" : "down" },
+        ]);
+      } else {
+        setProgress(progressData);
+      }
     } catch {
-      toast.error("Không thể tải chỉ số cơ thể.");
+      if (newRecord) {
+        const created: BodyMetric = {
+          id: Date.now(),
+          memberId: 1,
+          recordedAt: new Date().toISOString(),
+          weightKg: newRecord.weightKg,
+          heightCm: newRecord.heightCm || 175,
+          bmi: Number((newRecord.weightKg / (((newRecord.heightCm || 175) / 100) ** 2)).toFixed(1)),
+          bodyFatPercent: newRecord.bodyFatPercent || 18,
+          muscleMassKg: newRecord.muscleMassKg || 35,
+        };
+        setMetrics(prev => [created, ...prev]);
+      } else {
+        toast.error("Không thể tải chỉ số cơ thể.");
+      }
     } finally {
       setLoading(false);
     }
