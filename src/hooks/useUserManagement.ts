@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { showAlert } from "../utils/alert";
 import { memberService } from "../services/memberService";
+import { validateAdminMemberForm } from "../utils/validators/adminMemberValidator";
 import type { MemberProfile, AdminMemberCreateRequest } from "../types/member.type";
 import type { Status } from "../types/common.type";
 import type { Subscription } from "../types/subscription.type";
@@ -150,16 +151,16 @@ export function useUserManagement() {
     try {
       setLoading(true);
       const data = await memberService.getMembers(page, 20, searchTerm, statusFilter);
-      if (data && data.items && data.items.length > 0) {
+      if (data && data.items) {
         setMembers(data.items);
         setTotalItems(data.totalItems);
         setCurrentPage(data.page);
       } else {
-        setMembers(MOCK_MEMBERS);
+        setMembers([]);
       }
     } catch (error) {
-      console.error("API error fetching members, falling back to mock data:", error);
-      setMembers(MOCK_MEMBERS);
+      console.error("API error fetching members:", error);
+      setMembers([]);
     } finally {
       setLoading(false);
     }
@@ -196,7 +197,7 @@ export function useUserManagement() {
         setMemberCheckins(MOCK_CHECKINS[member.id] || []);
       }
     } catch (error) {
-      console.error("Failed to load details via API, using mock details:", error);
+      console.error("Failed to load details via API:", error);
       setMemberSubscriptions((MOCK_SUBSCRIPTIONS[member.id] as unknown as Subscription[]) || []);
       setMemberCheckins(MOCK_CHECKINS[member.id] || []);
     } finally {
@@ -238,6 +239,18 @@ export function useUserManagement() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const isValid = validateAdminMemberForm(
+      formValues as any,
+      !isEditMode,
+      members,
+      selectedMember?.id
+    );
+
+    if (!isValid) {
+      return;
+    }
+
     try {
       setFormLoading(true);
 
@@ -255,14 +268,14 @@ export function useUserManagement() {
         
         if (newMember) {
           setMembers(prev => [newMember, ...prev]);
+          showAlert.success("Thành công", "Đã thêm hội viên mới");
         } else {
-          setMembers(prev => [{ ...payload, id: Math.floor(Math.random() * 1000) + 10, memberCode: `MEM00${Math.floor(Math.random() * 100) + 10}` } as MemberProfile, ...prev]);
+          showAlert.error("Lỗi", "Không nhận được phản hồi tạo mới từ máy chủ.");
         }
-        
-        showAlert.success("Thành công", "Đã thêm hội viên mới");
       }
 
       setShowFormView(false);
+      fetchMembers();
     } catch (error: unknown) {
       console.error("Form submit error:", error);
       const msg = error && typeof error === 'object' && 'response' in error 
@@ -289,10 +302,12 @@ export function useUserManagement() {
         await memberService.updateMemberStatus(member.id, newStatus);
         setMembers(prev => prev.map(m => m.id === member.id ? { ...m, status: newStatus } : m));
         showAlert.success("Thành công", `Đã ${actionText.toLowerCase()} tài khoản của hội viên.`);
-      } catch (error) {
-        console.error("Failed to update status via API, performing local fallback update:", error);
-        setMembers(prev => prev.map(m => m.id === member.id ? { ...m, status: newStatus } : m));
-        showAlert.success("Thành công (Local)", `Đã ${actionText.toLowerCase()} tài khoản hội viên.`);
+      } catch (error: unknown) {
+        console.error("Failed to update status via API:", error);
+        const msg = error && typeof error === 'object' && 'response' in error 
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+        showAlert.error("Thất bại", msg || `Không thể ${actionText.toLowerCase()} tài khoản hội viên.`);
       }
     }
   };

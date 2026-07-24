@@ -1,41 +1,33 @@
-import { Navigate, Outlet } from "react-router-dom";
+import {
+    Navigate,
+    Outlet,
+    useLocation,
+} from "react-router-dom";
+
 import { ROUTES } from "../../config/routes";
 import { useAuthStore } from "../../store/authStore";
 import { tokenStorage } from "../../utils/token";
 
-type StoredAuthUser = {
-    id?: number;
-    username?: string;
-    email?: string;
-    fullName?: string;
-    role?: string;
-    roles?: string[];
-};
-
-const getStoredUser = (): StoredAuthUser | null => {
-    const rawUser = localStorage.getItem("authUser");
-
-    if (!rawUser) {
-        return null;
-    }
-
-    try {
-        return JSON.parse(rawUser) as StoredAuthUser;
-    } catch {
-        localStorage.removeItem("authUser");
-        return null;
-    }
-};
-
 export default function ProtectedRoute() {
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    const storeUser = useAuthStore((state) => state.user) as StoredAuthUser | null;
+    const location = useLocation();
 
-    const token = tokenStorage.get();
-    const user = storeUser || getStoredUser();
+    const user = useAuthStore(
+        (state) => state.user,
+    );
 
-    if (!token || (!isAuthenticated && !user)) {
-        return <Navigate to={ROUTES.LOGIN} replace />;
+    const accessToken =
+        tokenStorage.getAccessToken();
+
+    if (!accessToken || !user) {
+        return (
+            <Navigate
+                to={ROUTES.LOGIN}
+                replace
+                state={{
+                    from: location.pathname,
+                }}
+            />
+        );
     }
 
     return <Outlet />;

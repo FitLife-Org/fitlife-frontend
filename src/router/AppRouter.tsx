@@ -44,6 +44,8 @@ import SubscriptionSupportPage from "../pages/staff/SubscriptionSupportPage";
 import MyMembersPage from "../pages/trainer/MyMembersPage";
 import TrainerSchedulePage from "../pages/trainer/TrainerSchedulePage";
 import WorkoutTrackingPage from "../pages/trainer/WorkoutTrackingPage";
+import NutritionPlanDetailPage from "../pages/member/NutritionPlanDetailPage";
+import WorkoutPlanDetailPage from "../pages/member/WorkoutPlanDetailPage";
 import type {Role} from "../types/common.type";
 import ScrollToTop from "../components/common/ScrollToTop";
 
@@ -111,19 +113,69 @@ export default function AppRouter() {
                         <Route path={ROUTES.COMMON_SETTINGS} element={<SettingsPage/>}/>
 
                         {/* Member Routes */}
-                        <Route path={ROUTES.MEMBER_HOME}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><MemberHomePage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_PROFILE}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><MemberProfilePage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_BODY_METRICS}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><BodyMetricPage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_PACKAGES}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><PackageListPage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_SUBSCRIPTION}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><MySubscriptionPage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_PAYMENT_DETAIL} element={<RoleGuard roles={["ROLE_MEMBER"]}><PaymentDetailPage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_PAYMENT}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><PaymentHistoryPage/></RoleGuard>}/>
+                        <Route
+                            path={ROUTES.MEMBER_HOME}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MemberHomePage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_PROFILE}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MemberProfilePage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_BODY_METRICS}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <BodyMetricPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_PACKAGES}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <PackageListPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_SUBSCRIPTION}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MySubscriptionPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_PAYMENT_DETAIL}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <PaymentDetailPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_PAYMENT}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <PaymentHistoryPage />
+                                </RoleGuard>
+                            }
+                        />
+
                         <Route
                             path={ROUTES.MEMBER_PAYMENT_RESULT}
                             element={
@@ -132,17 +184,69 @@ export default function AppRouter() {
                                 </RoleGuard>
                             }
                         />
-                        <Route path={ROUTES.MEMBER_CHECKINS}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><CheckinHistoryPage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_BOOKING}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><BookingPage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_WORKOUTS}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><WorkoutPlansPage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_AI}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><AiFitnessPage/></RoleGuard>}/>
-                        <Route path={ROUTES.MEMBER_NUTRITION}
-                               element={<RoleGuard roles={["ROLE_MEMBER"]}><NutritionPage/></RoleGuard>}/>
 
+                        <Route
+                            path={ROUTES.MEMBER_CHECKINS}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <CheckinHistoryPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_BOOKING}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <BookingPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_WORKOUTS}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <WorkoutPlansPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_WORKOUT_DETAIL}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <WorkoutPlanDetailPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_AI}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <AiFitnessPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_NUTRITION}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <NutritionPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_NUTRITION_DETAIL}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <NutritionPlanDetailPage />
+                                </RoleGuard>
+                            }
+                        />
                         {/* Admin Routes */}
                         <Route
                             path={ROUTES.ADMIN_DASHBOARD}

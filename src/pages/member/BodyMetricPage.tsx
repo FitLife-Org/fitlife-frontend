@@ -3,7 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Activity, TrendingDown, TrendingUp, Scale, HeartPulse, Dumbbell, X, Plus, Save } from "lucide-react";
 import toast from "react-hot-toast";
 import { bodyMetricService } from "../../services/bodyMetricService";
-import type { BodyMetric, BodyMetricProgress } from "../../types/member.type";
+import type {
+  BodyMetric,
+  BodyMetricProgress,
+} from "../../types/bodyMetric.type";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { useBodyMetricLogic } from "../../utils/validators/useBodyMetricLogic";

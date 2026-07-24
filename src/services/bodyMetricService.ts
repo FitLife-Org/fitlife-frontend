@@ -1,6 +1,13 @@
 import apiClient from "./apiClient";
 import type { ApiResponse, PageResponse } from "../types/common.type";
-import type { BodyMetric, BodyMetricProgress } from "../types/member.type";
+import type {
+  BodyMetric,
+  BodyMetricCreateRequest,
+  BodyMetricProgress,
+  BodyMetricSearchParams,
+  BodyMetricUpdateRequest,
+  MyBodyMetricCreateRequest,
+} from "../types/bodyMetric.type";
 
 export const bodyMetricService = {
   demoBmi: async (data: { heightCm: number; weightKg: number }): Promise<number> => {

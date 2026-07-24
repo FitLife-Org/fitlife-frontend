@@ -40,6 +40,36 @@ export interface PageResult<T> {
   size: number;
 }
 
+export interface SpringPage<T> {
+  content: T[];
+
+  pageable?: {
+    pageNumber: number;
+    pageSize: number;
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+
+  totalElements: number;
+  totalPages: number;
+
+  size: number;
+  number: number;
+
+  numberOfElements: number;
+
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+
+  sort?: {
+    empty: boolean;
+    sorted: boolean;
+    unsorted: boolean;
+  };
+}
+
 export type Role =
     | "ROLE_ADMIN"
     | "ROLE_STAFF"
