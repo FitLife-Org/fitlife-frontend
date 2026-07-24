@@ -237,41 +237,6 @@ export default function Sidebar() {
             <div className="relative mt-auto shrink-0 p-5">
                 <div className="pointer-events-none absolute -top-6 left-0 h-6 w-full bg-gradient-to-t from-slate-950 to-transparent" />
 
-                <div className="group relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-b from-slate-900 to-slate-950 p-5 shadow-[0_8px_30px_rgb(0,0,0,0.5)] transition-all duration-500 hover:border-amber-500/50 hover:shadow-[0_8px_30px_rgba(245,158,11,0.15)]">
-                    <div className="relative z-10 flex items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)]">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
-                            </svg>
-                        </div>
-
-                        <div>
-                            <p className="bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-sm font-black uppercase tracking-tight text-transparent">
-                                Gói Premium
-                            </p>
-                            <p className="mt-0.5 text-[11px] font-semibold tracking-wide text-slate-400">
-                                Mở khóa toàn bộ tính năng
-                            </p>
-                        </div>
-                    </div>
-
-                    <button
-                        type="button"
-                        className="relative z-10 mt-5 w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-sm font-black uppercase tracking-wider text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95"
-                    >
-                        Nâng cấp ngay
-                    </button>
-                </div>
             </div>
         </aside>
     );
