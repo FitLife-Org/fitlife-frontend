@@ -86,13 +86,13 @@ export const subscriptionService = {
     return response.data.data;
   },
 
-  async expireSubscription(id: number, reason: string): Promise<Subscription> {
-    const response = await apiClient.patch<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/expire`, { reason });
+  async expireSubscription(id: number): Promise<Subscription> {
+    const response = await apiClient.patch<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/expire`);
     return response.data.data;
   },
 
-  async cancelSubscriptionAdmin(id: number, reason: string): Promise<Subscription> {
-    const response = await apiClient.patch<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/cancel`, { reason });
+  async cancelSubscriptionAdmin(id: number): Promise<Subscription> {
+    const response = await apiClient.patch<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/cancel`);
     return response.data.data;
   }
 };

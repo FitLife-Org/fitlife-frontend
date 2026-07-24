@@ -41,7 +41,7 @@ export function useSubscriptionSupport() {
 
     if (result.isConfirmed) {
       try {
-        await subscriptionService.cancelSubscriptionAdmin(id, "Staff/Admin hủy gói tập");
+        await subscriptionService.cancelSubscriptionAdmin(id);
         showAlert.success("Thành công", "Đã hủy gói tập");
         fetchSubscriptions();
       } catch (error: unknown) {
@@ -63,7 +63,7 @@ export function useSubscriptionSupport() {
 
     if (result.isConfirmed) {
       try {
-        await subscriptionService.expireSubscription(id, "Hết hạn do Staff/Admin thực hiện");
+        await subscriptionService.expireSubscription(id);
         showAlert.success("Thành công", "Đã đánh dấu gói tập hết hạn");
         fetchSubscriptions();
       } catch (error: unknown) {

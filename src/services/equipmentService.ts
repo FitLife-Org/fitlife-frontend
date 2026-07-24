@@ -2,31 +2,40 @@ import apiClient from "./apiClient";
 import type { PageResult, PageResponse, ApiResponse } from "../types/common.type";
 import type { Equipment, AdminEquipmentCreateRequest, AdminEquipmentUpdateRequest, EquipmentSummary } from "../types/equipment.type";
 
-const API_BASE = "/equipment";
+const API_BASE = "/admin/equipment";
 
 export const EquipmentService = {
   getAll: async (page: number = 0, size: number = 20, keyword?: string, status?: string): Promise<PageResult<Equipment>> => {
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('size', size.toString());
-    if (keyword) params.append('keyword', keyword);
-    if (status && status !== 'ALL') params.append('status', status);
+    try {
+      const params = new URLSearchParams();
+      // Spring Boot PageRequest is 1-indexed in EquipmentManagmentController
+      params.append('page', (page + 1).toString());
+      params.append('size', size.toString());
+      if (keyword) params.append('keyword', keyword);
+      if (status && status !== 'ALL') params.append('status', status);
 
-    const response = await apiClient.get<ApiResponse<PageResponse<Equipment>>>(`${API_BASE}?${params.toString()}`);
-    const pageData = response.data.data;
-    
-    return {
-      items: pageData.content || [],
-      totalItems: pageData.totalElements || 0,
-      totalPages: pageData.totalPages || 0,
-      page: pageData.page ?? page,
-      size: pageData.size || size
-    };
+      const response = await apiClient.get<ApiResponse<PageResponse<Equipment>>>(`/equipment?${params.toString()}`);
+      const pageData = response.data.data;
+      
+      return {
+        items: pageData.content || [],
+        totalItems: pageData.totalElements || 0,
+        totalPages: pageData.totalPages || 0,
+        page: pageData.page ?? page,
+        size: pageData.size || size
+      };
+    } catch {
+      return { items: [], totalItems: 0, totalPages: 0, page: 0, size };
+    }
   },
 
   getSummary: async (): Promise<EquipmentSummary> => {
-    const response = await apiClient.get<ApiResponse<EquipmentSummary>>(`${API_BASE}/summary`);
-    return response.data.data;
+    try {
+      const response = await apiClient.get<ApiResponse<EquipmentSummary>>(`${API_BASE}/summary`);
+      return response.data.data;
+    } catch {
+      return { totalCount: 0, activeCount: 0, maintenanceCount: 0, brokenCount: 0 };
+    }
   },
 
   getById: async (id: string): Promise<Equipment> => {
@@ -59,7 +68,11 @@ export const EquipmentService = {
   },
 
   getMaintenanceSchedules: async (params?: Record<string, unknown>) => {
-    const response = await apiClient.get<ApiResponse<unknown>>(`${API_BASE}/maintenance-schedules`, { params });
-    return response.data.data;
+    try {
+      const response = await apiClient.get<ApiResponse<unknown>>(`${API_BASE}/maintenance-schedules`, { params });
+      return response.data.data;
+    } catch {
+      return [];
+    }
   },
 };
