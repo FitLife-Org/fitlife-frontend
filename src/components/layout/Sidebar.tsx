@@ -11,6 +11,7 @@ import {
     HeartPulse,
     Home,
     Package,
+    QrCode,
     Receipt,
     Settings,
     ShieldCheck,
@@ -42,6 +43,7 @@ type MenuItemType = {
 const menuItems: MenuItemType[] = [
     // MEMBER
     { label: "Dashboard", path: ROUTES.MEMBER_HOME, icon: Home, roles: ["ROLE_MEMBER"] },
+    { label: "Check-in QR", path: ROUTES.MEMBER_CHECKINS, icon: QrCode, roles: ["ROLE_MEMBER"] },
     { label: "Giáo án", path: ROUTES.MEMBER_WORKOUTS, icon: Dumbbell, roles: ["ROLE_MEMBER"] },
     { label: "Dinh dưỡng", path: ROUTES.MEMBER_NUTRITION, icon: Utensils, roles: ["ROLE_MEMBER"] },
     { label: "Gói tập", path: ROUTES.MEMBER_PACKAGES, icon: Package, roles: ["ROLE_MEMBER"] },
@@ -62,7 +64,7 @@ const menuItems: MenuItemType[] = [
     { label: "Báo cáo", path: ROUTES.ADMIN_REPORTS, icon: BarChart, roles: ["ROLE_ADMIN"] },
 
     // STAFF
-    { label: "Check-in", path: ROUTES.STAFF_CHECKIN, icon: ClipboardCheck, roles: ["ROLE_STAFF", "ROLE_ADMIN"] },
+    { label: "Điểm danh Quầy", path: ROUTES.STAFF_CHECKIN, icon: ClipboardCheck, roles: ["ROLE_STAFF", "ROLE_ADMIN"] },
     { label: "Hỗ trợ gói tập", path: ROUTES.STAFF_SUBSCRIPTION_SUPPORT, icon: ShieldCheck, roles: ["ROLE_STAFF", "ROLE_ADMIN"] },
     { label: "Quản lý thanh toán", path: ROUTES.ADMIN_PAYMENTS, icon: WalletCards, roles: ["ROLE_ADMIN", "ROLE_STAFF"] },
 
