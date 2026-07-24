@@ -128,7 +128,7 @@ export default function AdminDashboardPage() {
                   />
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                    formatter={(value: any) => [formatCurrency(value as number), "Doanh thu"]}
+                    formatter={(value: unknown) => [formatCurrency(value as number), "Doanh thu"]}
                   />
                   <Area 
                     type="monotone" 
@@ -169,7 +169,7 @@ export default function AdminDashboardPage() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: any) => [`${value}%`, "Tỷ lệ"]}
+                    formatter={(value: unknown) => [`${value}%`, "Tỷ lệ"]}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend 
@@ -240,7 +240,14 @@ function AdminMetric({ icon, label, value, growth, tone = "green" }: AdminMetric
   );
 }
 
-function ListCard({ title, items }: { title: string; items: any[] }) {
+interface ListCardItem {
+  id: number | string;
+  description: string;
+  time: string;
+  status?: string;
+}
+
+function ListCard({ title, items }: { title: string; items: ListCardItem[] }) {
   return (
     <Card className="p-6">
       <div className="mb-6 flex items-center justify-between">

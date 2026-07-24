@@ -48,7 +48,6 @@ export function useForgotPasswordLogic() {
         setSuccessMessage("");
         setFieldErrors({});
 
-        // Validate với Zod
         const validationResult = forgotPasswordSchema.safeParse(form);
 
         if (!validationResult.success) {

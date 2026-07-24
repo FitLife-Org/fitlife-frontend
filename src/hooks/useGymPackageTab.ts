@@ -34,7 +34,8 @@ export function useGymPackageTab() {
       setLoading(true);
       const data = await packageService.getAdminPackages();
       setPackages(data);
-    } catch (_error) {
+    } catch {
+      console.error("Failed to fetch packages");
     } finally {
       setLoading(false);
     }
@@ -95,16 +96,16 @@ export function useGymPackageTab() {
       }
 
       if (editingPackage) {
-        const { code, ...updatePayload } = payload;
-        await packageService.updatePackage(editingPackage.id, updatePayload as any);
+        const { code: _code, ...updatePayload } = payload;
+        await packageService.updatePackage(editingPackage.id, updatePayload);
         showAlert.success("Thành công", "Đã cập nhật gói tập");
       } else {
-        await packageService.createPackage(payload as any);
+        await packageService.createPackage(payload);
         showAlert.success("Thành công", "Đã tạo gói tập mới");
       }
       setIsModalOpen(false);
       fetchPackages();
-    } catch (_error) {
+    } catch {
       showAlert.error("Lỗi", "Không thể lưu thông tin gói tập");
     }
   };
@@ -115,7 +116,7 @@ export function useGymPackageTab() {
       await packageService.deletePackage(deleteId);
       showAlert.success("Thành công", "Đã xóa gói tập");
       fetchPackages();
-    } catch (_error) {
+    } catch {
       showAlert.error("Lỗi", "Không thể xóa gói tập");
     } finally {
       setDeleteId(null);
@@ -128,7 +129,7 @@ export function useGymPackageTab() {
       await packageService.updatePackageStatus(pkg.id, newStatus);
       showAlert.success("Thành công", `Đã ${newStatus === 'ACTIVE' ? 'kích hoạt' : 'khóa'} gói tập`);
       fetchPackages();
-    } catch (_error) {
+    } catch {
       showAlert.error("Lỗi", "Không thể thay đổi trạng thái");
     }
   };

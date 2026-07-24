@@ -1,343 +1,46 @@
-import { useState, useEffect } from "react";
 import { 
-  Search, Plus, Eye, Edit2, ShieldAlert, Lock, Unlock, 
-  User, Mail, Phone, Calendar, MapPin, Ruler, Weight, 
-  Activity, Dumbbell, Clock, Users, UserCheck, UserX, AlertTriangle, ChevronRight, X
+  Search, Plus, Eye, Edit2, Lock, Unlock, 
+  Users, UserCheck, UserX, Clock, Calendar
 } from "lucide-react";
-import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 import Loading from "../../components/common/Loading";
-import { memberService } from "../../services/memberService";
-import { showAlert } from "../../utils/alert";
-import { validateAdminMemberForm } from "../../utils/validators/adminMemberValidator";
-import type { MemberProfile, AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../../types/member.type";
+import { useUserManagement } from "../../hooks/useUserManagement";
+import type { MemberProfile } from "../../types/member.type";
 import type { Status } from "../../types/common.type";
-import type { Subscription } from "../../types/subscription.type";
-import type { CheckinRecord } from "../../types/checkin.type";
-
-// Dữ liệu mock phục vụ fallback khi không kết nối được backend
-const MOCK_MEMBERS: MemberProfile[] = [
-  {
-    id: 1,
-    memberCode: "MEM0001",
-    fullName: "Nguyễn Minh Anh",
-    email: "minhanh@gmail.com",
-    phone: "0987654321",
-    gender: "FEMALE",
-    dateOfBirth: "1998-05-20",
-    status: "ACTIVE",
-    address: "123 Cầu Giấy, Hà Nội",
-    fitnessGoal: "Giảm mỡ, săn chắc cơ thể",
-  },
-  {
-    id: 2,
-    memberCode: "MEM0002",
-    fullName: "Trần Quang Huy",
-    email: "quanghuy@gmail.com",
-    phone: "0978161320",
-    gender: "MALE",
-    dateOfBirth: "1995-10-12",
-    status: "ACTIVE",
-    address: "456 Nguyễn Lương Bằng, Đà Nẵng",
-    fitnessGoal: "Tăng cơ, cải thiện sức mạnh",
-  },
-  {
-    id: 3,
-    memberCode: "MEM0003",
-    fullName: "Lê Thị Thu Trang",
-    email: "thutrang@gmail.com",
-    phone: "0966482109",
-    gender: "FEMALE",
-    dateOfBirth: "2000-08-15",
-    status: "PENDING",
-    address: "789 Nguyễn Thị Minh Khai, TP. Hồ Chí Minh",
-    fitnessGoal: "Duy trì cân nặng, tăng dẻo dai",
-  },
-  {
-    id: 4,
-    memberCode: "MEM0004",
-    fullName: "Phạm Văn Nam",
-    email: "nampham@gmail.com",
-    phone: "0912345678",
-    gender: "MALE",
-    dateOfBirth: "1990-03-05",
-    status: "LOCKED",
-    address: "101 Lạch Tray, Hải Phòng",
-    fitnessGoal: "Tăng thể lực, cải thiện tim mạch",
-  }
-];
-
-const MOCK_SUBSCRIPTIONS: Record<number, any> = {
-  1: [
-    {
-      id: 101,
-      gymPackageId: 1,
-      package: { id: 1, code: "PKG01", packageType: "BASIC", name: "Gói Standard 3 Tháng", basePrice: 599000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-01-15",
-      endDate: "2026-04-15",
-      status: "EXPIRED"
-    },
-    {
-      id: 102,
-      gymPackageId: 2,
-      package: { id: 2, code: "PKG02", packageType: "VIP", name: "Gói VIP Pro 6 Tháng", basePrice: 999000, hasAiWorkoutPlan: true, hasNutritionPlan: true, ptSessionsPerMonth: 4, status: "ACTIVE" },
-      startDate: "2026-04-16",
-      endDate: "2026-10-16",
-      status: "ACTIVE"
-    }
-  ],
-  2: [
-    {
-      id: 201,
-      gymPackageId: 3,
-      package: { id: 3, code: "PKG03", packageType: "BASIC", name: "Gói Basic 6 Tháng", basePrice: 599000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-02-10",
-      endDate: "2026-08-10",
-      status: "ACTIVE"
-    }
-  ],
-  3: [],
-  4: [
-    {
-      id: 401,
-      gymPackageId: 4,
-      package: { id: 4, code: "PKG04", packageType: "BASIC", name: "Gói Basic 1 Tháng", basePrice: 199000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-05-01",
-      endDate: "2026-06-01",
-      status: "EXPIRED" // Changed to EXPIRED, Subscription type usually has ACTIVE/EXPIRED/PENDING/CANCELED
-    }
-  ]
-};
-
-const MOCK_CHECKINS: Record<number, CheckinRecord[]> = {
-  1: [
-    { id: 1001, memberId: 1, checkInTime: "2026-06-28T08:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 1002, memberId: 1, checkInTime: "2026-06-26T17:15:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 1003, memberId: 1, checkInTime: "2026-06-25T08:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
-  ],
-  2: [
-    { id: 2001, memberId: 2, checkInTime: "2026-06-28T09:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 2002, memberId: 2, checkInTime: "2026-06-27T18:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
-  ],
-  3: [],
-  4: [
-    { id: 4001, memberId: 4, checkInTime: "2026-05-25T19:00:00Z", note: "Tài khoản bị khóa - Check-in thất bại", status: "FAILED" }
-  ]
-};
 
 export default function UserManagementPage() {
-  const [members, setMembers] = useState<MemberProfile[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const {
+    members,
+    loading,
+    searchTerm,
+    statusFilter,
+    setSearchTerm,
+    setStatusFilter,
+    detailModalOpen,
+    setDetailModalOpen,
+    showFormView,
+    setShowFormView,
+    selectedMember,
+    detailTab,
+    setDetailTab,
+    memberSubscriptions,
+    memberCheckins,
+    detailLoading,
+    isEditMode,
+    formValues,
+    setFormValues,
+    formLoading,
+    handleOpenDetail,
+    handleOpenCreate,
+    handleOpenEdit,
+    handleFormSubmit,
+    handleToggleStatus,
+  } = useUserManagement();
 
-  // Modal states
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [showFormView, setShowFormView] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null);
-  const [detailTab, setDetailTab] = useState<"profile" | "subscription" | "checkin">("profile");
-
-  // Detail Modal Sub-data states
-  const [memberSubscriptions, setMemberSubscriptions] = useState<Subscription[]>([]);
-  const [memberCheckins, setMemberCheckins] = useState<CheckinRecord[]>([]);
-  const [detailLoading, setDetailLoading] = useState(false);
-
-  // Form states
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [formValues, setFormValues] = useState<Partial<MemberProfile>>({
-    userId: undefined,
-    fullName: "",
-    email: "",
-    phone: "",
-    gender: "MALE",
-    dateOfBirth: "",
-    status: "ACTIVE",
-    address: "",
-    fitnessGoal: "",
-  });
-  const [formLoading, setFormLoading] = useState(false);
-
-  // Fetch Member List
-  const fetchMembers = async (page: number = currentPage) => {
-    try {
-      setLoading(true);
-      const data = await memberService.getMembers(page, 20, searchTerm, statusFilter);
-      if (data && data.items && data.items.length > 0) {
-        setMembers(data.items);
-        setTotalItems(data.totalItems);
-        setCurrentPage(data.page);
-      } else {
-        // Fallback sang dữ liệu mẫu
-        setMembers(MOCK_MEMBERS);
-      }
-    } catch (error) {
-      console.error("API error fetching members, falling back to mock data:", error);
-      setMembers(MOCK_MEMBERS);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  // Fetch detailed info
-  const handleOpenDetail = async (member: MemberProfile) => {
-    setSelectedMember(member);
-    setDetailTab("profile");
-    setDetailModalOpen(true);
-    setDetailLoading(true);
-
-    try {
-      // Gọi song song các API chi tiết hội viên (MEM-02, MEM-06, MEM-07)
-      const [detailedProfile, subscriptions, checkins] = await Promise.allSettled([
-        memberService.getMemberById(member.id),
-        memberService.getMemberSubscriptions(member.id),
-        memberService.getMemberCheckins(member.id)
-      ]);
-
-      if (detailedProfile.status === "fulfilled") {
-        setSelectedMember(detailedProfile.value);
-      }
-
-      if (subscriptions.status === "fulfilled" && subscriptions.value.length > 0) {
-        setMemberSubscriptions(subscriptions.value);
-      } else {
-        setMemberSubscriptions(MOCK_SUBSCRIPTIONS[member.id] || []);
-      }
-
-      if (checkins.status === "fulfilled" && checkins.value.length > 0) {
-        setMemberCheckins(checkins.value);
-      } else {
-        setMemberCheckins(MOCK_CHECKINS[member.id] || []);
-      }
-    } catch (error) {
-      console.error("Failed to load details via API, using mock details:", error);
-      setMemberSubscriptions(MOCK_SUBSCRIPTIONS[member.id] || []);
-      setMemberCheckins(MOCK_CHECKINS[member.id] || []);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  const handleOpenCreate = () => {
-    setIsEditMode(false);
-    setFormValues({
-      username: "",
-      password: "",
-      fullName: "",
-      email: "",
-      phone: "",
-      gender: "MALE",
-      dateOfBirth: "",
-      status: "ACTIVE",
-      address: "",
-      fitnessGoal: "",
-    } as any);
-    setShowFormView(true);
-  };
-
-  const handleOpenEdit = (member: MemberProfile) => {
-    setIsEditMode(true);
-    setSelectedMember(member);
-    setFormValues({
-      fullName: member.fullName,
-      email: member.email,
-      phone: member.phone,
-      gender: member.gender || "MALE",
-      dateOfBirth: member.dateOfBirth || "",
-      status: member.status,
-      address: member.address || "",
-      fitnessGoal: member.fitnessGoal || "",
-    });
-    setShowFormView(true);
-  };
-
-  // Form Submit
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateAdminMemberForm(formValues as any, !isEditMode, members, isEditMode && selectedMember ? selectedMember.id : undefined)) {
-      return;
-    }
-
-    try {
-      setFormLoading(true);
-      if (isEditMode && selectedMember) {
-        // MEM-04
-        await memberService.updateMember(selectedMember.id, formValues as AdminMemberUpdateRequest);
-        showAlert.success("Cập nhật thành công", `Hồ sơ hội viên ${formValues.fullName} đã được cập nhật.`);
-        
-        // Update local state
-        setMembers(prev => prev.map(m => m.id === selectedMember.id ? { ...m, ...formValues } as MemberProfile : m));
-      } else {
-        // MEM-03
-        try {
-          const created = await memberService.createMember(formValues as AdminMemberCreateRequest);
-          setMembers(prev => [created, ...prev]);
-        } catch {
-          // Fallback local update
-          const fallbackCreated: MemberProfile = {
-            id: Date.now(),
-            ...formValues,
-            memberCode: "MEM9999"
-          } as MemberProfile;
-          setMembers(prev => [fallbackCreated, ...prev]);
-        }
-        
-        if (isEditMode) {
-          showAlert.success("Cập nhật thành công", `Đã lưu thay đổi cho ${formValues.fullName}.`);
-        } else {
-          showAlert.success("Thêm mới thành công", `Đã tạo tài khoản hội viên cho ${formValues.fullName}.`);
-        }
-        setShowFormView(false);
-      }
-    } catch (error: any) {
-      console.error("Form submit failed:", error);
-      let errorMsg = "Có lỗi xảy ra trong quá trình lưu dữ liệu.";
-      if (error.response?.data?.message) {
-        // Remove exception class name if present (e.g., "RuntimeException: Tên đăng nhập đã tồn tại")
-        errorMsg = error.response.data.message.replace(/^[a-zA-Z0-9_]+Exception:\s*/, "");
-      }
-      showAlert.error("Thao tác thất bại", errorMsg);
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  // Quick Toggle Lock/Unlock Status
-  const handleToggleStatus = async (member: MemberProfile) => {
-    const isCurrentlyLocked = member.status === "LOCKED";
-    const newStatus: Status = isCurrentlyLocked ? "ACTIVE" : "LOCKED";
-    const actionText = isCurrentlyLocked ? "Mở khóa" : "Khóa";
-
-    const result = await showAlert.confirm(
-      `${actionText} tài khoản?`,
-      `Bạn có chắc chắn muốn ${actionText.toLowerCase()} tài khoản của hội viên ${member.fullName}?`
-    );
-
-    if (result.isConfirmed) {
-      try {
-        await memberService.updateMemberStatus(member.id, newStatus);
-        
-        // Cập nhật local state
-        setMembers(prev => prev.map(m => m.id === member.id ? { ...m, status: newStatus } : m));
-        showAlert.success("Thành công", `Đã ${actionText.toLowerCase()} tài khoản của hội viên.`);
-      } catch (error) {
-        console.error("Failed to update status via API, performing local fallback update:", error);
-        setMembers(prev => prev.map(m => m.id === member.id ? { ...m, status: newStatus } : m));
-        showAlert.success("Thành công (Local)", `Đã ${actionText.toLowerCase()} tài khoản hội viên.`);
-      }
-    }
-  };
-
-  // Render status badge
   const renderStatusBadge = (status: MemberProfile["status"]) => {
     switch (status) {
       case "ACTIVE":
@@ -355,13 +58,11 @@ export default function UserManagementPage() {
     }
   };
 
-  // Calculate statistics
   const totalCount = members.length;
   const activeCount = members.filter(m => m.status === "ACTIVE").length;
   const lockedCount = members.filter(m => m.status === "LOCKED").length;
   const pendingCount = members.filter(m => m.status === "PENDING").length;
 
-  // Filter & Search Logic
   const filteredMembers = members.filter(m => {
     const matchesSearch = 
       m.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -373,21 +74,6 @@ export default function UserManagementPage() {
 
     return matchesSearch && matchesStatus;
   });
-
-  // Calculate BMI
-  const getBmiInfo = (h?: number, w?: number, providedBmi?: number) => {
-    let bmiValue = providedBmi;
-    if (!bmiValue) {
-      if (!h || !w) return { value: "-", label: "Chưa có chỉ số", color: "text-slate-400" };
-      const heightInMeters = h / 100;
-      bmiValue = Number((w / (heightInMeters * heightInMeters)).toFixed(1));
-    }
-    
-    if (bmiValue < 18.5) return { value: bmiValue, label: "Gầy", color: "text-blue-500 bg-blue-50" };
-    if (bmiValue < 24.9) return { value: bmiValue, label: "Bình thường", color: "text-emerald-500 bg-emerald-50" };
-    if (bmiValue < 29.9) return { value: bmiValue, label: "Tiền béo phì", color: "text-amber-500 bg-amber-50" };
-    return { value: bmiValue, label: "Béo phì", color: "text-rose-500 bg-rose-50" };
-  };
 
   if (showFormView) {
     return (
@@ -412,7 +98,7 @@ export default function UserManagementPage() {
                     <Input 
                       label="Tên đăng nhập *" 
                       name="username"
-                      value={(formValues as any).username || ""} 
+                      value={(formValues as Record<string, unknown>).username as string || ""} 
                       onChange={(e) => setFormValues(prev => ({ ...prev, username: e.target.value }))}
                       placeholder="Tên đăng nhập (từ 4 ký tự)"
                       required
@@ -423,7 +109,7 @@ export default function UserManagementPage() {
                       label="Mật khẩu *" 
                       name="password"
                       type="password"
-                      value={(formValues as any).password || ""} 
+                      value={(formValues as Record<string, unknown>).password as string || ""} 
                       onChange={(e) => setFormValues(prev => ({ ...prev, password: e.target.value }))}
                       placeholder="Mật khẩu (từ 6 ký tự)"
                       required
@@ -860,7 +546,7 @@ export default function UserManagementPage() {
                             </div>
                             <div className="flex flex-col items-end gap-1.5">
                               <span className="font-semibold text-fit-primary">
-                                {((sub.package as any)?.basePrice || sub.basePrice || 0).toLocaleString("vi-VN")} ₫
+                                {((sub.package as unknown as Record<string, number>)?.basePrice || sub.basePrice || 0).toLocaleString("vi-VN")} ₫
                               </span>
                               {sub.status === "ACTIVE" ? (
                                 <Badge variant="success">Hoạt động</Badge>

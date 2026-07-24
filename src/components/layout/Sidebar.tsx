@@ -71,7 +71,6 @@ const menuItems: MenuItemType[] = [
     { label: "Hội viên của tôi", path: ROUTES.TRAINER_MEMBERS, icon: Users, roles: ["ROLE_TRAINER", "ROLE_ADMIN"] },
     { label: "Theo dõi bài tập", path: ROUTES.TRAINER_WORKOUT_TRACKING, icon: Flame, roles: ["ROLE_TRAINER", "ROLE_ADMIN"] },
 
-    // COMMON
     {
         label: "Cài đặt",
         path: ROUTES.COMMON_SETTINGS,

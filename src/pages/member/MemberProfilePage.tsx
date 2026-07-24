@@ -2,7 +2,7 @@ import { useState, useEffect, ChangeEvent } from "react";
 import toast from "react-hot-toast";
 import {
   Camera, User, Calendar, Activity, Lock, ChevronRight, CheckCircle2
- , ShieldCheck, Info as InfoIcon, Crown, Mail, Phone
+ , ShieldCheck, Crown, Mail, Phone
 } from "lucide-react";
 import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
@@ -23,7 +23,6 @@ export default function MemberProfilePage() {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateProfileRequest>({});
 
-  // Change password states
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -73,11 +72,10 @@ export default function MemberProfilePage() {
     
     try {
       setSaving(true);
-      // Clean up empty strings to avoid backend validation errors and parsing errors
       const cleanData: UpdateProfileRequest = { ...formData };
       Object.keys(cleanData).forEach(key => {
-        if ((cleanData as any)[key] === "") {
-          (cleanData as any)[key] = undefined;
+        if ((cleanData as Record<string, unknown>)[key] === "") {
+          (cleanData as Record<string, unknown>)[key] = undefined;
         }
       });
       
@@ -109,10 +107,12 @@ export default function MemberProfilePage() {
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to change password:", error);
-      const errorMsg = error?.response?.data?.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.";
-      showAlert.error("Lỗi", errorMsg);
+      const errorMsg = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : "Đổi mật khẩu thất bại. Vui lòng thử lại.";
+      showAlert.error("Lỗi", errorMsg || "Đổi mật khẩu thất bại. Vui lòng thử lại.");
     } finally {
       setPasswordSaving(false);
     }
@@ -132,7 +132,7 @@ export default function MemberProfilePage() {
       const response = await profileService.updateAvatar(file);
       setProfile(prev => prev ? { ...prev, avatarUrl: response.avatarUrl } : null);
       toast.success("Cập nhật ảnh đại diện thành công!");
-    } catch (error) {
+    } catch {
       toast.error("Có lỗi xảy ra khi cập nhật ảnh đại diện.");
     } finally {
       setUploadingAvatar(false);

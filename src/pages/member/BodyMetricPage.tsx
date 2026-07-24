@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, TrendingDown, TrendingUp, Scale, Ruler, HeartPulse, Dumbbell, X, Plus, Save } from "lucide-react";
+import { Activity, TrendingDown, TrendingUp, Scale, HeartPulse, Dumbbell, X, Plus, Save } from "lucide-react";
 import toast from "react-hot-toast";
 import { bodyMetricService } from "../../services/bodyMetricService";
 import type {
@@ -28,7 +28,7 @@ export default function BodyMetricPage() {
       ]);
       setMetrics(metricsData.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()));
       setProgress(progressData);
-    } catch (error) {
+    } catch {
       toast.error("Không thể tải chỉ số cơ thể.");
     } finally {
       setLoading(false);

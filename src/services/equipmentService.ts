@@ -1,5 +1,5 @@
 import apiClient from "./apiClient";
-import type { PageResult, ApiResponse } from "../types/common.type";
+import type { PageResult, PageResponse, ApiResponse } from "../types/common.type";
 import type { Equipment, AdminEquipmentCreateRequest, AdminEquipmentUpdateRequest, EquipmentSummary } from "../types/equipment.type";
 
 const API_BASE = "/equipment";
@@ -12,14 +12,14 @@ export const EquipmentService = {
     if (keyword) params.append('keyword', keyword);
     if (status && status !== 'ALL') params.append('status', status);
 
-    const response = await apiClient.get<ApiResponse<any>>(`${API_BASE}?${params.toString()}`);
+    const response = await apiClient.get<ApiResponse<PageResponse<Equipment>>>(`${API_BASE}?${params.toString()}`);
     const pageData = response.data.data;
     
     return {
       items: pageData.content || [],
       totalItems: pageData.totalElements || 0,
       totalPages: pageData.totalPages || 0,
-      page: pageData.number || page,
+      page: pageData.page ?? page,
       size: pageData.size || size
     };
   },
@@ -54,12 +54,12 @@ export const EquipmentService = {
   },
 
   createMaintenance: async (id: string, data: object) => {
-    const response = await apiClient.post<ApiResponse<any>>(`${API_BASE}/${id}/maintenance`, data);
+    const response = await apiClient.post<ApiResponse<unknown>>(`${API_BASE}/${id}/maintenance`, data);
     return response.data.data;
   },
 
-  getMaintenanceSchedules: async (params?: any) => {
-    const response = await apiClient.get<ApiResponse<any>>(`${API_BASE}/maintenance-schedules`, { params });
+  getMaintenanceSchedules: async (params?: Record<string, unknown>) => {
+    const response = await apiClient.get<ApiResponse<unknown>>(`${API_BASE}/maintenance-schedules`, { params });
     return response.data.data;
   },
 };

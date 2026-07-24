@@ -6,11 +6,11 @@ import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
 export default function CreateMaintenancePage() {
     const navigate = useNavigate();
-    const { id } = useParams(); // Lấy ID của thiết bị từ URL
+    const { id } = useParams();
 
     const [formData, setFormData] = useState({
         date: "",
-        type: "MAINTENANCE", // MAINTENANCE (Bảo trì) hoặc REPAIR (Sửa chữa)
+        type: "MAINTENANCE",
         description: "",
         estimatedCost: "",
     });

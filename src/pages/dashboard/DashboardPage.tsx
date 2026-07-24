@@ -8,7 +8,6 @@ import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 
-// Dữ liệu mẫu cho biểu đồ
 const progressData = [
   { week: "Tuần 1", weight: 74.3, fat: 22.5 },
   { week: "Tuần 2", weight: 73.1, fat: 21.8 },
@@ -34,8 +33,13 @@ const quickActions = [
   { name: "Hỏi FitAI", icon: Sparkles, color: "text-fit-danger", bg: "bg-fit-dangerSoft" },
 ];
 
-// Component Tooltip tùy chỉnh cho biểu đồ
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number; dataKey: string }>;
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
         <div className="rounded-xl border border-fit-border bg-white/95 p-3 shadow-lg backdrop-blur-sm">

@@ -80,7 +80,6 @@ export const validateAdminMemberForm = (
       return false;
     }
     
-    // Validate age >= 10
     let age = today.getFullYear() - dob.getFullYear();
     const monthDiff = today.getMonth() - dob.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
@@ -92,9 +91,7 @@ export const validateAdminMemberForm = (
     }
   }
 
-  // Duplicate checks
   if (existingMembers && existingMembers.length > 0) {
-    // Exclude current member if edit mode
     const others = existingMembers.filter(m => m.id !== currentMemberId);
     
     if (isCreate) {

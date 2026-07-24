@@ -23,9 +23,9 @@ export interface TrainerSession {
   id: number;
   memberId: number;
   memberName: string;
-  date: string; // YYYY-MM-DD
-  startTime: string; // HH:mm
-  endTime: string; // HH:mm
+  date: string;
+  startTime: string;
+  endTime: string;
   status: "SCHEDULED" | "COMPLETED" | "CANCELLED";
   notes?: string;
 }

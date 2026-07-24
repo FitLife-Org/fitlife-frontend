@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
                             />
                         </div>
 
-                        <span className="bg-gradient-to-r from-green-500 to-cyan-500 bg-clip-text text-5xl tracking-tight text-transparent">
+                        <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-5xl tracking-tight text-transparent">
                             FitLife
                         </span>
                     </div>
@@ -41,45 +41,45 @@ export default function ForgotPasswordPage() {
                         <h1 className="mb-6 text-5xl font-black leading-[1.15] text-slate-900">
                             Khôi phục tài khoản
                             <br />
-                            <span className="bg-gradient-to-r from-sky-600 to-cyan-500 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
                                 nhanh – an toàn
                             </span>
                         </h1>
 
-                        <p className="rounded-r-xl border-y border-r border-white/60 border-l-4 border-sky-500 bg-white/50 py-3 pl-6 pr-4 text-lg leading-relaxed text-slate-700 shadow-sm backdrop-blur-sm">
+                        <p className="rounded-r-xl border-y border-r border-white/60 border-l-4 border-fit-primary bg-white/50 py-3 pl-6 pr-4 text-lg leading-relaxed text-slate-700 shadow-sm backdrop-blur-sm">
                             Nhập email đã đăng ký. FitLife sẽ gửi mã OTP để bạn xác nhận và đặt lại mật khẩu mới.
                         </p>
                     </div>
                 </section>
 
                 <section className="flex items-center justify-center p-4 lg:p-12">
-                    <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/60 bg-white/80 p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.15)] backdrop-blur-2xl lg:p-10">
-                        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-sky-300/20 blur-3xl" />
-                        <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-300/20 blur-3xl" />
+                    <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-fit-border bg-white/90 p-8 shadow-auth backdrop-blur-2xl lg:p-10">
+                        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+                        <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
 
                         <div className="relative z-10">
                             <header className="mb-8 text-center">
-                                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-fit-primarySoft text-fit-primary">
                                     <Mail className="h-7 w-7" />
                                 </div>
 
-                                <h2 className="text-3xl font-black tracking-tight text-slate-900">
+                                <h2 className="fit-title">
                                     Quên mật khẩu?
                                 </h2>
 
-                                <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
+                                <p className="fit-subtitle">
                                     Nhập email tài khoản của bạn để nhận mã OTP đặt lại mật khẩu.
                                 </p>
                             </header>
 
                             {error && (
-                                <div className="mb-6 rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-600">
+                                <div className="mb-6 rounded-2xl border border-fit-danger/20 bg-fit-dangerSoft px-4 py-3 text-sm text-fit-danger">
                                     {error}
                                 </div>
                             )}
 
                             {successMessage && (
-                                <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                                <div className="mb-6 rounded-2xl border border-emerald-200 bg-fit-primarySoft px-4 py-3 text-sm text-fit-primary font-medium">
                                     {successMessage}
                                 </div>
                             )}
@@ -96,7 +96,7 @@ export default function ForgotPasswordPage() {
                                 />
 
                                 <Button
-                                    className="w-full rounded-2xl bg-slate-900 py-3.5 text-base font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl active:translate-y-0"
+                                    className="fit-auth-button"
                                     type="submit"
                                     isLoading={loading}
                                 >
@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
 
                                 <Link
                                     to={ROUTES.LOGIN}
-                                    className="mt-6 flex items-center justify-center gap-2 text-sm font-bold text-sky-600 transition-colors hover:text-sky-500"
+                                    className="mt-6 flex items-center justify-center gap-2 fit-auth-link"
                                 >
                                     <ArrowLeft className="h-4 w-4" />
                                     Quay lại đăng nhập

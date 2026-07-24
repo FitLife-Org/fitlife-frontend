@@ -1,119 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { showAlert } from "../utils/alert";
 import { memberService } from "../services/memberService";
-import type { MemberProfile } from "../types/member.type";
+import { validateAdminMemberForm } from "../utils/validators/adminMemberValidator";
+import type { MemberProfile, AdminMemberCreateRequest } from "../types/member.type";
 import type { Status } from "../types/common.type";
 import type { Subscription } from "../types/subscription.type";
 import type { CheckinRecord } from "../types/checkin.type";
-
-const MOCK_MEMBERS: MemberProfile[] = [
-  {
-    id: 1,
-    memberCode: "MEM0001",
-    fullName: "Nguyễn Minh Anh",
-    email: "minhanh@gmail.com",
-    phone: "0987654321",
-    gender: "FEMALE",
-    dateOfBirth: "1998-05-20",
-    status: "ACTIVE",
-    address: "123 Cầu Giấy, Hà Nội",
-    fitnessGoal: "Giảm mỡ, săn chắc cơ thể",
-  },
-  {
-    id: 2,
-    memberCode: "MEM0002",
-    fullName: "Trần Quang Huy",
-    email: "quanghuy@gmail.com",
-    phone: "0978161320",
-    gender: "MALE",
-    dateOfBirth: "1995-10-12",
-    status: "ACTIVE",
-    address: "456 Nguyễn Lương Bằng, Đà Nẵng",
-    fitnessGoal: "Tăng cơ, cải thiện sức mạnh",
-  },
-  {
-    id: 3,
-    memberCode: "MEM0003",
-    fullName: "Lê Thị Thu Trang",
-    email: "thutrang@gmail.com",
-    phone: "0966482109",
-    gender: "FEMALE",
-    dateOfBirth: "2000-08-15",
-    status: "PENDING",
-    address: "789 Nguyễn Thị Minh Khai, TP. Hồ Chí Minh",
-    fitnessGoal: "Duy trì cân nặng, tăng dẻo dai",
-  },
-  {
-    id: 4,
-    memberCode: "MEM0004",
-    fullName: "Phạm Văn Nam",
-    email: "nampham@gmail.com",
-    phone: "0912345678",
-    gender: "MALE",
-    dateOfBirth: "1990-03-05",
-    status: "LOCKED",
-    address: "101 Lạch Tray, Hải Phòng",
-    fitnessGoal: "Tăng thể lực, cải thiện tim mạch",
-  }
-];
-
-const MOCK_SUBSCRIPTIONS: Record<number, any> = {
-  1: [
-    {
-      id: 101,
-      gymPackageId: 1,
-      package: { id: 1, code: "PKG01", packageType: "BASIC", name: "Gói Standard 3 Tháng", basePrice: 599000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-01-15",
-      endDate: "2026-04-15",
-      status: "EXPIRED"
-    },
-    {
-      id: 102,
-      gymPackageId: 2,
-      package: { id: 2, code: "PKG02", packageType: "VIP", name: "Gói VIP Pro 6 Tháng", basePrice: 999000, hasAiWorkoutPlan: true, hasNutritionPlan: true, ptSessionsPerMonth: 4, status: "ACTIVE" },
-      startDate: "2026-04-16",
-      endDate: "2026-10-16",
-      status: "ACTIVE"
-    }
-  ],
-  2: [
-    {
-      id: 201,
-      gymPackageId: 3,
-      package: { id: 3, code: "PKG03", packageType: "BASIC", name: "Gói Basic 6 Tháng", basePrice: 599000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-02-10",
-      endDate: "2026-08-10",
-      status: "ACTIVE"
-    }
-  ],
-  3: [],
-  4: [
-    {
-      id: 401,
-      gymPackageId: 4,
-      package: { id: 4, code: "PKG04", packageType: "BASIC", name: "Gói Basic 1 Tháng", basePrice: 199000, hasAiWorkoutPlan: false, hasNutritionPlan: false, ptSessionsPerMonth: 0, status: "ACTIVE" },
-      startDate: "2026-05-01",
-      endDate: "2026-06-01",
-      status: "EXPIRED"
-    }
-  ]
-};
-
-const MOCK_CHECKINS: Record<number, CheckinRecord[]> = {
-  1: [
-    { id: 1001, memberId: 1, checkInTime: "2026-06-28T08:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 1002, memberId: 1, checkInTime: "2026-06-26T17:15:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 1003, memberId: 1, checkInTime: "2026-06-25T08:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
-  ],
-  2: [
-    { id: 2001, memberId: 2, checkInTime: "2026-06-28T09:00:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" },
-    { id: 2002, memberId: 2, checkInTime: "2026-06-27T18:30:00Z", note: "Thẻ hợp lệ - Đã check-in", status: "SUCCESS" }
-  ],
-  3: [],
-  4: [
-    { id: 4001, memberId: 4, checkInTime: "2026-05-25T19:00:00Z", note: "Tài khoản bị khóa - Check-in thất bại", status: "FAILED" }
-  ]
-};
 
 export function useUserManagement() {
   const [members, setMembers] = useState<MemberProfile[]>([]);
@@ -146,28 +38,28 @@ export function useUserManagement() {
   });
   const [formLoading, setFormLoading] = useState(false);
 
-  const fetchMembers = async (page: number = currentPage) => {
+  const fetchMembers = useCallback(async (page: number = currentPage) => {
     try {
       setLoading(true);
       const data = await memberService.getMembers(page, 20, searchTerm, statusFilter);
-      if (data && data.items && data.items.length > 0) {
+      if (data && data.items) {
         setMembers(data.items);
         setTotalItems(data.totalItems);
         setCurrentPage(data.page);
       } else {
-        setMembers(MOCK_MEMBERS);
+        setMembers([]);
       }
     } catch (error) {
-      console.error("API error fetching members, falling back to mock data:", error);
-      setMembers(MOCK_MEMBERS);
+      console.error("API error fetching members:", error);
+      setMembers([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, statusFilter]);
 
   useEffect(() => {
     fetchMembers();
-  }, []);
+  }, [fetchMembers]);
 
   const handleOpenDetail = async (member: MemberProfile) => {
     setSelectedMember(member);
@@ -184,21 +76,21 @@ export function useUserManagement() {
 
       if (detailedProfile.status === "fulfilled") setSelectedMember(detailedProfile.value);
 
-      if (subscriptions.status === "fulfilled" && subscriptions.value.length > 0) {
+      if (subscriptions.status === "fulfilled") {
         setMemberSubscriptions(subscriptions.value);
       } else {
-        setMemberSubscriptions(MOCK_SUBSCRIPTIONS[member.id] || []);
+        setMemberSubscriptions([]);
       }
 
-      if (checkins.status === "fulfilled" && checkins.value.length > 0) {
+      if (checkins.status === "fulfilled") {
         setMemberCheckins(checkins.value);
       } else {
-        setMemberCheckins(MOCK_CHECKINS[member.id] || []);
+        setMemberCheckins([]);
       }
     } catch (error) {
-      console.error("Failed to load details via API, using mock details:", error);
-      setMemberSubscriptions(MOCK_SUBSCRIPTIONS[member.id] || []);
-      setMemberCheckins(MOCK_CHECKINS[member.id] || []);
+      console.error("Failed to load details via API:", error);
+      setMemberSubscriptions([]);
+      setMemberCheckins([]);
     } finally {
       setDetailLoading(false);
     }
@@ -207,8 +99,6 @@ export function useUserManagement() {
   const handleOpenCreate = () => {
     setIsEditMode(false);
     setFormValues({
-      username: "",
-      password: "",
       fullName: "",
       email: "",
       phone: "",
@@ -217,7 +107,7 @@ export function useUserManagement() {
       status: "ACTIVE",
       address: "",
       fitnessGoal: "",
-    } as any);
+    });
     setShowFormView(true);
   };
 
@@ -240,38 +130,49 @@ export function useUserManagement() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const isValid = validateAdminMemberForm(
+      formValues as any,
+      !isEditMode,
+      members,
+      selectedMember?.id
+    );
+
+    if (!isValid) {
+      return;
+    }
+
     try {
       setFormLoading(true);
 
       if (isEditMode && selectedMember) {
-        await memberService.updateMember(selectedMember.id, formValues as any);
+        await memberService.updateMember(selectedMember.id, formValues);
         showAlert.success("Thành công", "Đã cập nhật thông tin hội viên");
         
         setMembers(prev => prev.map(m => m.id === selectedMember.id ? { ...m, ...formValues } as MemberProfile : m));
       } else {
-        const payload: any = { ...formValues };
+        const payload: Record<string, unknown> = { ...formValues };
         if (payload.id) delete payload.id;
         if (payload.userId) delete payload.userId;
         
-        const newMember = await memberService.createMember(payload);
+        const newMember = await memberService.createMember(payload as unknown as AdminMemberCreateRequest);
         
         if (newMember) {
           setMembers(prev => [newMember, ...prev]);
+          showAlert.success("Thành công", "Đã thêm hội viên mới");
         } else {
-          setMembers(prev => [{ ...payload, id: Math.floor(Math.random() * 1000) + 10, memberCode: `MEM00${Math.floor(Math.random() * 100) + 10}` } as MemberProfile, ...prev]);
+          showAlert.error("Lỗi", "Không nhận được phản hồi tạo mới từ máy chủ.");
         }
-        
-        showAlert.success("Thành công", "Đã thêm hội viên mới");
       }
 
       setShowFormView(false);
-    } catch (error: any) {
+      fetchMembers();
+    } catch (error: unknown) {
       console.error("Form submit error:", error);
-      let errorMsg = "Vui lòng kiểm tra lại thông tin.";
-      if (error.response?.data?.message) {
-        errorMsg = error.response.data.message;
-      }
-      showAlert.error("Thao tác thất bại", errorMsg);
+      const msg = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : null;
+      showAlert.error("Thao tác thất bại", msg || "Vui lòng kiểm tra lại thông tin.");
     } finally {
       setFormLoading(false);
     }
@@ -292,10 +193,12 @@ export function useUserManagement() {
         await memberService.updateMemberStatus(member.id, newStatus);
         setMembers(prev => prev.map(m => m.id === member.id ? { ...m, status: newStatus } : m));
         showAlert.success("Thành công", `Đã ${actionText.toLowerCase()} tài khoản của hội viên.`);
-      } catch (error) {
-        console.error("Failed to update status via API, performing local fallback update:", error);
-        setMembers(prev => prev.map(m => m.id === member.id ? { ...m, status: newStatus } : m));
-        showAlert.success("Thành công (Local)", `Đã ${actionText.toLowerCase()} tài khoản hội viên.`);
+      } catch (error: unknown) {
+        console.error("Failed to update status via API:", error);
+        const msg = error && typeof error === 'object' && 'response' in error 
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+        showAlert.error("Thất bại", msg || `Không thể ${actionText.toLowerCase()} tài khoản hội viên.`);
       }
     }
   };

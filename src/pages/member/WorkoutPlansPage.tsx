@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   Calendar,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Dumbbell,
   Target,
 } from "lucide-react";
@@ -57,7 +58,6 @@ export default function WorkoutPlansPage() {
       await workoutService.completeSession(sessionId);
 
       toast.success("Tuyệt vời! Bạn đã hoàn thành buổi tập.");
-
       setPlans((previousPlans) =>
           previousPlans.map((plan) => ({
             ...plan,

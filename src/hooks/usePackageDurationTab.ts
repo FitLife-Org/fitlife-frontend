@@ -28,7 +28,8 @@ export function usePackageDurationTab() {
       setLoading(true);
       const data = await packageService.getAdminPackageDurations();
       setDurations(data);
-    } catch (_error) {
+    } catch {
+      console.error("Failed to fetch durations");
     } finally {
       setLoading(false);
     }
@@ -68,22 +69,24 @@ export function usePackageDurationTab() {
 
       const validationResult = validateAdminDurationForm(payload);
       if (!validationResult.success) {
-        const errorMsg = (validationResult as any).error?.errors?.[0]?.message || "Dữ liệu không hợp lệ";
+        const errorMsg = 'error' in validationResult && validationResult.error?.issues?.[0]?.message 
+          ? validationResult.error.issues[0].message 
+          : "Dữ liệu không hợp lệ";
         showAlert.error("Lỗi", errorMsg);
         return;
       }
 
       if (editingDuration) {
-        const { code, ...updatePayload } = payload;
-        await packageService.updatePackageDuration(editingDuration.id, updatePayload as any);
+        const { code: _code, ...updatePayload } = payload;
+        await packageService.updatePackageDuration(editingDuration.id, updatePayload);
         showAlert.success("Thành công", "Đã cập nhật thời hạn");
       } else {
-        await packageService.createPackageDuration(payload as any);
+        await packageService.createPackageDuration(payload);
         showAlert.success("Thành công", "Đã tạo thời hạn mới");
       }
       setIsModalOpen(false);
       fetchDurations();
-    } catch (_error) {
+    } catch {
       showAlert.error("Lỗi", "Không thể lưu thông tin thời hạn");
     }
   };
@@ -94,7 +97,7 @@ export function usePackageDurationTab() {
       await packageService.deletePackageDuration(deleteId);
       showAlert.success("Thành công", "Đã xóa thời hạn");
       fetchDurations();
-    } catch (_error) {
+    } catch {
       showAlert.error("Lỗi", "Không thể xóa thời hạn");
     } finally {
       setDeleteId(null);
@@ -104,10 +107,10 @@ export function usePackageDurationTab() {
   const handleToggleStatus = async (duration: PackageDuration) => {
     try {
       const newStatus = duration.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-      await packageService.updatePackageDurationStatus(duration.id, newStatus as any);
+      await packageService.updatePackageDurationStatus(duration.id, newStatus);
       showAlert.success("Thành công", `Đã ${newStatus === 'ACTIVE' ? 'kích hoạt' : 'khóa'} thời hạn`);
       fetchDurations();
-    } catch (_error) {
+    } catch {
       showAlert.error("Lỗi", "Không thể thay đổi trạng thái");
     }
   };

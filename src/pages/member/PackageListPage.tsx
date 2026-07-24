@@ -262,7 +262,7 @@ export default function PackageListPage() {
               <div className="relative flex w-full max-w-4xl flex-wrap justify-center gap-2 rounded-3xl bg-slate-100/80 p-2 shadow-inner backdrop-blur sm:flex-nowrap sm:rounded-full">
                 {durations.map((duration) => {
                   const active = selectedDurationId === duration.id;
-                  const isRecommended = duration.months >= 6; // Đề xuất gói từ 6 tháng trở lên
+                  const isRecommended = duration.months >= 6;
 
                   return (
                       <button

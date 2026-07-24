@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useState,
 } from "react";
 
@@ -112,11 +111,13 @@ export default function AiAdvancedPlanModal({
       mode === "FULL_PLAN" ||
       mode === "NUTRITION_PLAN";
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setValidationError(null);
     }
-  }, [open, mode]);
+  }
 
   const validateForm =
       (): boolean => {

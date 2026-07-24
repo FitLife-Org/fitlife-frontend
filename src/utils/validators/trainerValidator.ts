@@ -16,7 +16,7 @@ export const validateTrainerForm = (data: TrainerFormData) => {
     errors.phone = "Số điện thoại không hợp lệ (VD: 0912345678).";
   }
 
-  if (data.email && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(data.email.trim())) {
+  if (data.email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(data.email.trim())) {
     errors.email = "Email không hợp lệ.";
   }
 

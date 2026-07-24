@@ -8,13 +8,12 @@ export interface Html5QrcodePluginProps {
   qrbox?: number;
   aspectRatio?: number;
   disableFlip?: boolean;
-  qrCodeSuccessCallback: (decodedText: string, decodedResult: any) => void;
+  qrCodeSuccessCallback: (decodedText: string, decodedResult: unknown) => void;
   qrCodeErrorCallback?: (errorMessage: string) => void;
 }
 
 export default function Html5QrcodePlugin(props: Html5QrcodePluginProps) {
   useEffect(() => {
-    // create configuration
     const config = {
       fps: props.fps || 10,
       qrbox: props.qrbox || 250,
@@ -33,7 +32,6 @@ export default function Html5QrcodePlugin(props: Html5QrcodePluginProps) {
       props.qrCodeErrorCallback
     );
 
-    // cleanup function when component unmounts
     return () => {
       html5QrcodeScanner.clear().catch((error) => {
         console.error("Failed to clear html5QrcodeScanner. ", error);

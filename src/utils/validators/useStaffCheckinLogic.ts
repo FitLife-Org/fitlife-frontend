@@ -49,7 +49,7 @@ export function useStaffCheckinLogic() {
       
       setSearchResults([result]);
       setSelectedMember(result);
-    } catch (error) {
+    } catch {
       toast.error("Không tìm thấy hội viên nào.");
       setSearchResults([]);
       setSelectedMember(null);
@@ -82,8 +82,11 @@ export function useStaffCheckinLogic() {
       setSearchResults([]);
       await fetchRecentCheckins();
       await fetchActiveMembers();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Check-in thất bại.");
+    } catch (error: unknown) {
+      const msg = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : null;
+      toast.error(msg || "Check-in thất bại.");
     } finally {
       setIsCheckingIn(false);
     }

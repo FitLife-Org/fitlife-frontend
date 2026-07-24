@@ -26,11 +26,12 @@ export const validateAdminAccountForm = (
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if ((formData as any).email && !emailRegex.test((formData as any).email)) {
+  const email = (formData as { email?: string }).email;
+  if (email && !emailRegex.test(email)) {
     showAlert.error("Lỗi", "Email không hợp lệ");
     return false;
   }
-  if ((formData as any).email && (formData as any).email.length > 100) {
+  if (email && email.length > 100) {
     showAlert.error("Lỗi", "Email không được vượt quá 100 ký tự");
     return false;
   }

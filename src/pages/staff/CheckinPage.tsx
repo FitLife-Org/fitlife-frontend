@@ -1,17 +1,13 @@
 
-import { QrCode, Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone } from "lucide-react";
+import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Input from "../../components/common/Input";
-import Badge from "../../components/common/Badge";
-import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
 import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
 import GymQrManager from "../admin/components/GymQrManager";
 import { useState } from "react";
 
 export default function CheckinPage() {
   const {
-    activeTab,
-    setActiveTab,
     searchQuery,
     setSearchQuery,
     searchResults,
@@ -52,7 +48,7 @@ export default function CheckinPage() {
                   <button 
                     type="submit"
                     disabled={isSearching}
-                    className="px-4 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+                    className="px-4 bg-fit-staff text-white rounded-xl hover:bg-fit-staffHover transition-colors disabled:opacity-50 font-bold"
                   >
                     {isSearching ? <Activity className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
                   </button>
@@ -63,14 +59,14 @@ export default function CheckinPage() {
                     <div 
                       key={member.memberId}
                       onClick={() => setSelectedMember(member)}
-                      className={`p-4 rounded-xl cursor-pointer transition-all ${selectedMember?.memberId === member.memberId ? 'bg-slate-950 text-white shadow-md' : 'bg-slate-50 hover:bg-slate-100'}`}
+                      className={`p-4 rounded-xl cursor-pointer transition-all ${selectedMember?.memberId === member.memberId ? 'bg-fit-staff text-white shadow-md' : 'bg-slate-50 hover:bg-slate-100'}`}
                     >
                       <h4 className="font-bold">{member.fullName}</h4>
                       <p className="text-xs opacity-75 mt-1">{member.phone}</p>
                     </div>
                   ))}
                   {searchResults.length === 0 && !isSearching && searchQuery && (
-                    <p className="text-center text-sm text-slate-500 mt-10">Không có kết quả trùng khớp.</p>
+                    <p className="text-center text-sm text-fit-muted mt-10">Không có kết quả trùng khớp.</p>
                   )}
                 </div>
               </motion.div>
@@ -81,8 +77,8 @@ export default function CheckinPage() {
       {/* PHẢI: Thẻ Thông tin Hội viên */}
       <div className="w-full md:w-7/12 lg:w-2/3 flex flex-col gap-6">
         
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col items-center justify-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-slate-950/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="fit-card p-8 flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-fit-staffSoft rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
           
           <AnimatePresence mode="wait">
             {selectedMember ? (
@@ -95,12 +91,12 @@ export default function CheckinPage() {
               >
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden ring-4 ring-white shadow-lg flex items-center justify-center font-bold text-slate-500 text-2xl">
+                    <div className="w-16 h-16 rounded-2xl bg-fit-staffSoft text-fit-staff overflow-hidden ring-4 ring-white shadow-lg flex items-center justify-center font-black text-2xl">
                       {selectedMember.fullName.charAt(0)}
                     </div>
                     <div>
                       <h2 className="text-2xl font-black text-slate-900">{selectedMember.fullName}</h2>
-                      <p className="text-slate-500 flex items-center gap-1 mt-1 font-medium">
+                      <p className="text-fit-muted flex items-center gap-1 mt-1 font-medium">
                         <User className="w-4 h-4" /> ID: {selectedMember.memberCode}
                       </p>
                     </div>
@@ -110,8 +106,8 @@ export default function CheckinPage() {
                   <div className="text-right">
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm ${
                       selectedMember.currentSubscription?.status === 'ACTIVE' 
-                        ? 'bg-emerald-100 text-emerald-700' 
-                        : 'bg-rose-100 text-rose-700'
+                        ? 'bg-fit-primarySoft text-fit-primary' 
+                        : 'bg-fit-dangerSoft text-fit-danger'
                     }`}>
                       {selectedMember.currentSubscription?.status === 'ACTIVE' ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                       {selectedMember.currentSubscription?.status === 'ACTIVE' ? 'Đang hoạt động' : 'Hết hạn'}
@@ -120,12 +116,12 @@ export default function CheckinPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8 flex-1">
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Số điện thoại</p>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-fit-border">
+                    <p className="text-xs font-bold text-fit-muted uppercase tracking-wider mb-1">Số điện thoại</p>
                     <p className="font-semibold text-slate-700">{selectedMember.phone}</p>
                   </div>
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Gói hiện tại</p>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-fit-border">
+                    <p className="text-xs font-bold text-fit-muted uppercase tracking-wider mb-1">Gói hiện tại</p>
                     <p className="font-semibold text-slate-700">{selectedMember.currentSubscription?.packageName || 'Không có'}</p>
                   </div>
                 </div>
@@ -133,7 +129,7 @@ export default function CheckinPage() {
                 <button
                   onClick={handleManualConfirm}
                   disabled={isCheckingIn || selectedMember.currentSubscription?.status !== 'ACTIVE'}
-                  className="w-full py-4 bg-slate-950 text-white font-bold rounded-xl shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
+                  className="w-full py-4 bg-fit-staff text-white font-bold rounded-2xl shadow-lg hover:bg-fit-staffHover transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
                 >
                   {isCheckingIn ? (
                     <span className="flex items-center justify-center gap-2">

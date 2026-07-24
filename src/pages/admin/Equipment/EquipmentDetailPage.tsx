@@ -9,7 +9,7 @@ export default function EquipmentDetailPage() {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    const [equipment, setEquipment] = useState<any>(null);
+    const [equipment, setEquipment] = useState<Equipment | null>(null);
     const [loading, setLoading] = useState(true);
     const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -34,7 +34,7 @@ export default function EquipmentDetailPage() {
         setUpdatingStatus(true);
         try {
             await EquipmentService.updateStatus(id, newStatus);
-            setEquipment((prev: any) => ({ ...prev, status: newStatus }));
+            setEquipment((prev) => prev ? ({ ...prev, status: newStatus as Equipment["status"] }) : null);
         } catch (error) {
             console.error("Lỗi khi cập nhật trạng thái:", error);
         } finally {

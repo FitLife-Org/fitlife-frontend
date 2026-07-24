@@ -11,8 +11,8 @@ export default function StatsSection() {
       try {
         const data = await publicService.getHomeData();
         setHomeData(data);
-      } catch (error) {
-        // Fallback is handled in publicService
+      } catch {
+        console.error("Failed to load home data");
       }
     };
     fetchData();

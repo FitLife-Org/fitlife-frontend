@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import Button from "../../../components/common/Button";
@@ -26,15 +26,10 @@ export default function EditEquipmentPage() {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
 
-    useEffect(() => {
-        if (id) {
-            fetchEquipmentDetails();
-        }
-    }, [id]);
-
-    const fetchEquipmentDetails = async () => {
+    const fetchEquipmentDetails = useCallback(async () => {
+        if (!id) return;
         try {
-            const data = await EquipmentService.getById(id as string);
+            const data = await EquipmentService.getById(id);
             setFormData({
                 name: data.name || "",
                 category: data.category || "Cardio",
@@ -52,7 +47,11 @@ export default function EditEquipmentPage() {
         } finally {
             setFetching(false);
         }
-    };
+    }, [id, navigate]);
+
+    useEffect(() => {
+        fetchEquipmentDetails();
+    }, [fetchEquipmentDetails]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -66,9 +65,12 @@ export default function EditEquipmentPage() {
             await EquipmentService.update(id as string, formData);
             showAlert.success("Thành công", "Đã cập nhật thiết bị");
             navigate("/admin/equipment");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Lỗi khi cập nhật:", error);
-            showAlert.error("Lỗi", error?.response?.data?.message || "Không thể cập nhật thiết bị");
+            const msg = error && typeof error === 'object' && 'response' in error 
+              ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+              : null;
+            showAlert.error("Lỗi", msg || "Không thể cập nhật thiết bị");
         } finally {
             setLoading(false);
         }

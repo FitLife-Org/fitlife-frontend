@@ -3,7 +3,6 @@ import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
-import { formatCurrency } from "../../utils/formatCurrency";
 import type { Subscription } from "../../types/subscription.type";
 import { useSubscriptionSupport } from "../../hooks/useSubscriptionSupport";
 import { useState } from "react";

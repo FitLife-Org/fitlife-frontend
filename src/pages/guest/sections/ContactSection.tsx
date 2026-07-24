@@ -28,7 +28,7 @@ export default function ContactSection() {
       await publicService.submitContactRequest(formData);
       toast.success("Gửi yêu cầu thành công! Chúng tôi sẽ liên hệ sớm nhất.");
       setFormData({ fullName: "", phoneNumber: "", email: "", message: "" });
-    } catch (error) {
+    } catch {
       toast.error("Có lỗi xảy ra, vui lòng thử lại sau.");
     } finally {
       setLoading(false);

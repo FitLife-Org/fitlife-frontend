@@ -1,222 +1,54 @@
-import { useState, useEffect } from "react";
 import { 
-  Search, Plus, Eye, Edit2, ShieldAlert, Lock, Unlock, 
-  User as UserIcon, Mail, Phone, Shield, Users, UserCheck, UserX, Clock, Key
+  Search, Plus, Eye, Edit2, Lock, Unlock, 
+  Shield
 } from "lucide-react";
-import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 import Loading from "../../components/common/Loading";
-import { userService } from "../../services/userService";
-import { showAlert } from "../../utils/alert";
-import { validateAdminAccountForm } from "../../utils/validators/adminAccountValidator";
-import type { User, AdminUserCreateRequest, AdminUserUpdateRequest } from "../../types/user.type";
+import { useAccountManagement } from "../../hooks/useAccountManagement";
 import type { Role, Status } from "../../types/common.type";
 
 export default function AccountManagementPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [roleFilter, setRoleFilter] = useState<string>("ALL");
-  
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const pageSize = 10;
+  const {
+    users,
+    loading,
+    searchTerm,
+    statusFilter,
+    roleFilter,
+    setSearchTerm,
+    setStatusFilter,
+    setRoleFilter,
+    currentPage,
+    totalPages,
+    totalItems,
+    setCurrentPage,
+    detailModalOpen,
+    formModalOpen,
+    roleModalOpen,
+    setDetailModalOpen,
+    setFormModalOpen,
+    setRoleModalOpen,
+    selectedUser,
+    isEditMode,
+    formValues,
+    setFormValues,
+    formLoading,
+    selectedRoles,
+    setSelectedRoles,
+    roleLoading,
+    handleSearchSubmit,
+    handleOpenDetail,
+    handleOpenCreate,
+    handleOpenEdit,
+    handleOpenRoleEdit,
+    handleFormSubmit,
+    handleToggleStatus,
+    handleRoleSubmit
+  } = useAccountManagement();
 
-  // Modals
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [formModalOpen, setFormModalOpen] = useState(false);
-  const [roleModalOpen, setRoleModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
-  // Form states
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [formValues, setFormValues] = useState({
-    username: "",
-    email: "",
-    password: "",
-    fullName: "",
-    phone: "",
-    roleCode: "ROLE_STAFF",
-    status: "ACTIVE"
-  });
-  const [formLoading, setFormLoading] = useState(false);
-  
-  // Role assignment state
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [roleLoading, setRoleLoading] = useState(false);
-
-  // Fetch Users
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const params: Record<string, string | number> = {
-        page: currentPage,
-        size: pageSize,
-      };
-
-      if (searchTerm.trim()) {
-        params.keyword = searchTerm.trim();
-      }
-      if (statusFilter !== "ALL") {
-        params.status = statusFilter;
-      }
-      if (roleFilter !== "ALL") {
-        params.roleCode = roleFilter;
-      }
-
-      const result = await userService.getUsers(params);
-      setUsers(result.items);
-      setTotalPages(result.totalPages);
-      setTotalItems(result.totalItems);
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
-      showAlert.error("Lỗi", "Không thể tải danh sách tài khoản.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, statusFilter, roleFilter]);
-
-  // Handle Search submit
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    fetchUsers();
-  };
-
-  // Open Detail Modal
-  const handleOpenDetail = (user: User) => {
-    setSelectedUser(user);
-    setDetailModalOpen(true);
-  };
-
-  // Open Create Modal
-  const handleOpenCreate = () => {
-    setIsEditMode(false);
-    setFormValues({
-      username: "",
-      email: "",
-      password: "",
-      fullName: "",
-      phone: "",
-      roleCode: "ROLE_STAFF",
-      status: "ACTIVE"
-    });
-    setFormModalOpen(true);
-  };
-
-  // Open Edit Modal
-  const handleOpenEdit = (user: User) => {
-    setIsEditMode(true);
-    setSelectedUser(user);
-    setFormValues({
-      username: user.username,
-      email: user.email,
-      password: "", // Not used in edit mode
-      fullName: user.fullName,
-      phone: user.phone || "",
-      roleCode: (user.roles && user.roles.length > 0) ? user.roles[0] : "ROLE_MEMBER",
-      status: user.status
-    });
-    setFormModalOpen(true);
-  };
-
-  // Open Role Edit Modal
-  const handleOpenRoleEdit = (user: User) => {
-    setSelectedUser(user);
-    setSelectedRoles(user.roles || ["ROLE_MEMBER"]);
-    setRoleModalOpen(true);
-  };
-
-  // Submit User form (Create / Update)
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateAdminAccountForm(formValues as any, !isEditMode)) {
-      return;
-    }
-
-    try {
-      setFormLoading(true);
-      if (isEditMode && selectedUser) {
-        // Update user
-        const updateData: AdminUserUpdateRequest = {
-          fullName: formValues.fullName,
-          phone: formValues.phone,
-          status: formValues.status
-        };
-        await userService.updateUser(selectedUser.id, updateData);
-        showAlert.success("Thành công", `Đã cập nhật thông tin tài khoản ${formValues.username}.`);
-      } else {
-        // Create user
-        await userService.createUser(formValues as AdminUserCreateRequest);
-        showAlert.success("Thành công", `Đã tạo tài khoản ${formValues.username}.`);
-      }
-      setFormModalOpen(false);
-      fetchUsers();
-    } catch (error: any) {
-      console.error("Failed to submit form:", error);
-      const errorMsg = error?.response?.data?.message || "Có lỗi xảy ra trong quá trình lưu dữ liệu.";
-      showAlert.error("Thao tác thất bại", errorMsg);
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  // Quick Lock/Unlock Status
-  const handleToggleStatus = async (user: User) => {
-    const isCurrentlyLocked = user.status === "LOCKED";
-    const newStatus = isCurrentlyLocked ? "ACTIVE" : "LOCKED";
-    const actionText = isCurrentlyLocked ? "Mở khóa" : "Khóa";
-
-    const result = await showAlert.confirm(
-      `${actionText} tài khoản?`,
-      `Bạn có chắc chắn muốn ${actionText.toLowerCase()} tài khoản của ${user.fullName}?`
-    );
-
-    if (result.isConfirmed) {
-      try {
-        await userService.updateUserStatus(user.id, newStatus);
-        
-        // Update local state directly to be fast
-        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus as Status } : u));
-        showAlert.success("Thành công", `Đã ${actionText.toLowerCase()} tài khoản.`);
-      } catch (error: any) {
-        console.error("Failed to update status:", error);
-        showAlert.error("Thất bại", "Không thể cập nhật trạng thái tài khoản.");
-      }
-    }
-  };
-
-  // Submit Role Assignment
-  const handleRoleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedUser || selectedRoles.length === 0) return;
-
-    try {
-      setRoleLoading(true);
-      await userService.updateUserRoles(selectedUser.id, selectedRoles);
-      showAlert.success("Thành công", "Đã cập nhật vai trò của người dùng.");
-      setRoleModalOpen(false);
-      fetchUsers();
-    } catch (error: any) {
-      console.error("Failed to update roles:", error);
-      showAlert.error("Thất bại", "Không thể cập nhật vai trò tài khoản.");
-    } finally {
-      setRoleLoading(false);
-    }
-  };
-
-  // Render Role badge
   const renderRoleBadge = (role: Role) => {
     switch (role) {
       case "ROLE_ADMIN":
@@ -232,7 +64,6 @@ export default function AccountManagementPage() {
     }
   };
 
-  // Render Status badge
   const renderStatusBadge = (status: Status) => {
     switch (status) {
       case "ACTIVE":
@@ -361,7 +192,7 @@ export default function AccountManagementPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-xs font-semibold">
-                        {user.roles && user.roles.length > 0 ? user.roles.map(r => <span key={r} className="mr-1">{renderRoleBadge(r as any)}</span>) : renderRoleBadge("ROLE_MEMBER")}
+                        {user.roles && user.roles.length > 0 ? user.roles.map(r => <span key={r} className="mr-1">{renderRoleBadge(r as Role)}</span>) : renderRoleBadge("ROLE_MEMBER")}
                       </td>
                       <td className="px-6 py-4">
                         {renderStatusBadge(user.status)}
@@ -455,7 +286,7 @@ export default function AccountManagementPage() {
                 <h4 className="font-bold text-slate-900 text-base">{selectedUser.fullName}</h4>
                 <p className="text-xs text-slate-500 mt-0.5">Username: {selectedUser.username}</p>
                 <div className="mt-1.5 flex gap-1.5">
-                  {selectedUser.roles && selectedUser.roles.length > 0 ? selectedUser.roles.map((r: string) => <span key={r} className="mr-1">{renderRoleBadge(r as any)}</span>) : renderRoleBadge("ROLE_MEMBER")}
+                  {selectedUser.roles && selectedUser.roles.length > 0 ? selectedUser.roles.map((r: string) => <span key={r} className="mr-1">{renderRoleBadge(r as Role)}</span>) : renderRoleBadge("ROLE_MEMBER")}
                   {renderStatusBadge(selectedUser.status)}
                 </div>
               </div>
@@ -512,7 +343,7 @@ export default function AccountManagementPage() {
                 onChange={(e) => setFormValues(prev => ({ ...prev, username: e.target.value }))}
                 placeholder="Nhập tên đăng nhập"
                 required
-                disabled={isEditMode} // Usually username is immutable
+                disabled={isEditMode}
               />
             </div>
 

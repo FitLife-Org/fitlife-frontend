@@ -12,7 +12,6 @@ import type {
   CheckInTodayStatisticsResponse
 } from "../types/checkin.type";
 
-// ==========================================
 export const adminQrService = {
   async getAllGymQrs(): Promise<AdminCheckInQrResponse[]> {
     const response = await apiClient.get<ApiResponse<AdminCheckInQrResponse[]>>("/admin/check-in-qrs");
@@ -25,10 +24,9 @@ export const adminQrService = {
   }
 };
 
-// ==========================================
 export const staffCheckinService = {
   async lookupMember(query: string): Promise<MemberLookupResult> {
-    const response = await apiClient.get<ApiResponse<MemberLookupResult>>(`/check-ins/lookup?keyword=${query}`);
+    const response = await apiClient.get<ApiResponse<MemberLookupResult>>(`/check-ins/lookup?keyword=${encodeURIComponent(query)}`);
     return response.data.data;
   },
 
@@ -48,13 +46,23 @@ export const staffCheckinService = {
   },
 
   async getMembersCurrentlyInside(page = 0, size = 10): Promise<CheckinRecord[]> {
-    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord>>>(`/check-ins/current?page=${page}&size=${size}`);
-    return response.data.data.content;
+    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>(`/check-ins/current?page=${page}&size=${size}`);
+    const data = response.data?.data;
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<CheckinRecord>).content)) {
+      return (data as PageResponse<CheckinRecord>).content;
+    }
+    return [];
   },
 
-  async getCheckinHistory(params?: any): Promise<CheckinRecord[]> {
-    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord>>>("/check-ins", { params });
-    return response.data.data.content;
+  async getCheckinHistory(params?: Record<string, unknown>): Promise<CheckinRecord[]> {
+    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>("/check-ins", { params });
+    const data = response.data?.data;
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<CheckinRecord>).content)) {
+      return (data as PageResponse<CheckinRecord>).content;
+    }
+    return [];
   },
 
   async cancelCheckin(id: number, data: CheckInCancelRequest): Promise<CheckinRecord> {
@@ -68,7 +76,6 @@ export const staffCheckinService = {
   }
 };
 
-// ==========================================
 export const memberCheckinService = {
   async selfCheckin(data: MemberCheckInRequest): Promise<CheckinRecord> {
     const response = await apiClient.post<ApiResponse<CheckinRecord>>("/member/check-ins/qr", data);
@@ -85,9 +92,14 @@ export const memberCheckinService = {
     return response.data.data;
   },
 
-  async getMyHistory(params?: any): Promise<CheckinRecord[]> {
-    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord>>>("/member/check-ins/history", { params });
-    return response.data.data.content;
+  async getMyHistory(params?: Record<string, unknown>): Promise<CheckinRecord[]> {
+    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>("/member/check-ins/history", { params });
+    const data = response.data?.data;
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<CheckinRecord>).content)) {
+      return (data as PageResponse<CheckinRecord>).content;
+    }
+    return [];
   }
 };
 
@@ -96,3 +108,5 @@ export const checkinService = {
   ...memberCheckinService,
   ...adminQrService
 };
+
+export default checkinService;

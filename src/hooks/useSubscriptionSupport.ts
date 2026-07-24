@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { subscriptionService } from "../services/subscriptionService";
 import type { Subscription } from "../types/subscription.type";
 import { showAlert } from "../utils/alert";
@@ -9,14 +9,10 @@ export function useSubscriptionSupport() {
   
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
-  useEffect(() => {
-    fetchSubscriptions();
-  }, [statusFilter]);
-
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async () => {
     try {
       setLoading(true);
-      const params: Record<string, any> = {};
+      const params: Record<string, string> = {};
       
       if (statusFilter !== "ALL") {
         params.status = statusFilter;
@@ -30,7 +26,11 @@ export function useSubscriptionSupport() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [fetchSubscriptions]);
 
   const handleCancel = async (id: number) => {
     const result = await showAlert.confirm(
@@ -44,9 +44,12 @@ export function useSubscriptionSupport() {
         await subscriptionService.cancelSubscriptionAdmin(id, "Staff/Admin hủy gói tập");
         showAlert.success("Thành công", "Đã hủy gói tập");
         fetchSubscriptions();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Failed to cancel subscription:", error);
-        showAlert.error("Lỗi", error?.response?.data?.message || "Không thể hủy gói tập");
+        const msg = error && typeof error === 'object' && 'response' in error 
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+        showAlert.error("Lỗi", msg || "Không thể hủy gói tập");
       }
     }
   };
@@ -63,9 +66,12 @@ export function useSubscriptionSupport() {
         await subscriptionService.expireSubscription(id, "Hết hạn do Staff/Admin thực hiện");
         showAlert.success("Thành công", "Đã đánh dấu gói tập hết hạn");
         fetchSubscriptions();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Failed to expire subscription:", error);
-        showAlert.error("Lỗi", error?.response?.data?.message || "Không thể cập nhật trạng thái");
+        const msg = error && typeof error === 'object' && 'response' in error 
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+        showAlert.error("Lỗi", msg || "Không thể cập nhật trạng thái");
       }
     }
   };
