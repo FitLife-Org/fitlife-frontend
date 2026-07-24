@@ -1,12 +1,13 @@
 
 import { Link } from "react-router-dom";
-import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone } from "lucide-react";
+import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone, QrCode, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Input from "../../components/common/Input";
 import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
 import GymQrManager from "../admin/components/GymQrManager";
 import { useState } from "react";
 import { ROUTES } from "../../config/routes";
+import PageHeader from "../../components/common/PageHeader";
 
 export default function CheckinPage() {
   const {
@@ -26,7 +27,26 @@ export default function CheckinPage() {
   const [showGymQr, setShowGymQr] = useState(false);
 
   return (
-    <div className="h-full flex flex-col md:flex-row gap-6">
+    <div className="space-y-6 pb-10">
+      {/* HEADER TOOLBAR NỔI BẬT DÀNH CHO STAFF */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <PageHeader 
+          title="Điểm danh & Quét thẻ Quầy" 
+          description="Tra cứu nhanh thông tin hội viên, xác nhận điểm danh và hiển thị mã QR phòng tập" 
+        />
+        
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={() => setShowGymQr(true)}
+            className="px-5 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold flex items-center gap-2 shadow-lg shadow-slate-900/20 active:scale-95 text-sm"
+          >
+            <QrCode className="w-5 h-5 text-emerald-400" />
+            <span>Mở Mã QR Phòng Tập</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="h-full flex flex-col md:flex-row gap-6">
       
 
       <div className="w-full md:w-5/12 lg:w-1/3 flex flex-col gap-6">
