@@ -159,9 +159,9 @@ export default function SubscriptionSupportPage() {
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
               <SearchX className="w-8 h-8 text-slate-400" />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-1">Không tìm thấy dữ liệu</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">Chưa có dữ liệu gói tập</h3>
             <p className="text-slate-500 max-w-sm">
-              Không có gói tập nào phù hợp với bộ lọc hiện tại. Vui lòng thử tìm kiếm với từ khóa khác.
+              Hiện tại chưa có dữ liệu đăng ký gói tập từ hội viên. Khi hội viên đăng ký thành công, thông tin sẽ tự động xuất hiện tại đây.
             </p>
           </div>
         ) : (
