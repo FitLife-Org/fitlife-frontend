@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { Loader2, ArrowRight } from "lucide-react";
@@ -7,6 +7,15 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { ROUTES } from "../../config/routes";
 import { useLoginLogic } from "../../utils/validators/useLoginLogic";
+
+const MemoizedGoogleLogin = memo(({ onSuccess, onError }: { onSuccess: any, onError: any }) => (
+    <GoogleLogin
+        onSuccess={onSuccess}
+        onError={onError}
+        useOneTap={false}
+        width="400"
+    />
+));
 
 function AnimatedText() {
     const [activeStep, setActiveStep] = useState(0);
@@ -206,11 +215,9 @@ export default
                                             Tiếp tục với Google
                                         </div>
                                         <div className="absolute inset-0 z-10 w-full h-full opacity-[0.01] overflow-hidden flex items-center justify-center cursor-pointer">
-                                            <GoogleLogin
+                                            <MemoizedGoogleLogin
                                                 onSuccess={handleGoogleSuccess}
                                                 onError={handleGoogleError}
-                                                useOneTap={false}
-                                                width="400"
                                             />
                                         </div>
                                     </div>
