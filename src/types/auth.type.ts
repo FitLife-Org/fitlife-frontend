@@ -11,6 +11,7 @@ export interface RegisterRequest {
   email: string;
   phone?: string;
   password: string;
+  confirmPassword: string;
 }
 
 export interface GoogleLoginRequest {
@@ -43,17 +44,13 @@ export interface ResendVerificationEmailRequest {
 export interface AuthResponsePayload {
   accessToken?: string | null;
   refreshToken?: string | null;
-
   token?: string | null;
   tokenType?: string;
-
   userId?: number;
   id?: number;
-
   username?: string;
   email?: string;
   fullName?: string;
-
   role?: Role;
   roles?: Role[];
   authorities?: Role[];
