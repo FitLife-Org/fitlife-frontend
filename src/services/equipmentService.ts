@@ -34,7 +34,13 @@ export const EquipmentService = {
       const response = await apiClient.get<ApiResponse<EquipmentSummary>>(`${API_BASE}/summary`);
       return response.data.data;
     } catch {
-      return { totalCount: 0, activeCount: 0, maintenanceCount: 0, brokenCount: 0 };
+      return {
+        total: 0,
+        active: { count: 0, percentage: 0 },
+        maintenance: { count: 0, percentage: 0 },
+        inactive: { count: 0, percentage: 0 },
+        upcomingMaintenance: { count: 0, timeFrame: "30 days" }
+      };
     }
   },
 
