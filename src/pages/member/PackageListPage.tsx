@@ -443,7 +443,7 @@ export default function PackageListPage() {
             <div className="mx-auto mt-24 max-w-5xl px-4">
               <div className="mb-10 text-center">
                 <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">
-                  So sánh quyền lợi
+                  So sánh quyền lợi chi tiết
                 </h2>
                 <p className="mt-3 text-slate-500">
                   Bảng giá tính theo thời hạn: <span className="font-bold text-fit-primary">{selectedDuration?.name || "Chưa chọn"}</span>
@@ -473,6 +473,15 @@ export default function PackageListPage() {
                 </div>
 
                 <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
+                  <div className="p-5 font-semibold text-slate-600">Truy cập phòng tập</div>
+                  {packages.map((pkg) => (
+                      <div key={pkg.id} className="p-5 text-center font-medium text-slate-700">
+                        24/7 Không giới hạn
+                      </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
                   <div className="p-5 font-semibold text-slate-600">Phân tích AI</div>
                   {packages.map((pkg) => (
                       <div key={pkg.id} className="p-5 text-center flex justify-center">
@@ -482,7 +491,7 @@ export default function PackageListPage() {
                 </div>
 
                 <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">Dinh dưỡng</div>
+                  <div className="p-5 font-semibold text-slate-600">Gợi ý dinh dưỡng</div>
                   {packages.map((pkg) => (
                       <div key={pkg.id} className="p-5 text-center flex justify-center">
                         {pkg.hasNutritionPlan ? <Check className="w-5 h-5 text-fit-primary" /> : <span className="text-slate-300">-</span>}
@@ -490,7 +499,7 @@ export default function PackageListPage() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-4 text-sm hover:bg-slate-50 transition-colors">
+                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
                   <div className="p-5 font-semibold text-slate-600">PT Kèm riêng</div>
                   {packages.map((pkg) => (
                       <div key={pkg.id} className="p-5 text-center font-medium text-slate-700">
@@ -498,35 +507,27 @@ export default function PackageListPage() {
                       </div>
                   ))}
                 </div>
+
+                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
+                  <div className="p-5 font-semibold text-slate-600">Tủ đồ cá nhân</div>
+                  {packages.map((pkg) => (
+                      <div key={pkg.id} className="p-5 text-center flex justify-center">
+                        <Check className="w-5 h-5 text-fit-primary" />
+                      </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-4 text-sm hover:bg-slate-50 transition-colors">
+                  <div className="p-5 font-semibold text-slate-600">Tiện ích (Tắm, Xông hơi)</div>
+                  {packages.map((pkg) => (
+                      <div key={pkg.id} className="p-5 text-center flex justify-center">
+                        <Check className="w-5 h-5 text-fit-primary" />
+                      </div>
+                  ))}
+                </div>
               </div>
             </div>
         )}
-
-        {/* PROMO SECTION */}
-        <div className="max-w-5xl mx-auto px-4 mt-24">
-          <div className="rounded-[2rem] bg-zinc-900 p-10 md:p-14 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl">
-            <div className="absolute -right-20 -top-20 w-64 h-64 bg-fit-primary rounded-full blur-[100px] opacity-20"></div>
-            <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-yellow-500 rounded-full blur-[100px] opacity-10"></div>
-            
-            <div className="relative z-10 text-center md:text-left max-w-xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-yellow-500 text-xs font-bold uppercase tracking-wider mb-6 border border-white/5">
-                <ShieldCheck className="w-4 h-4" /> Cam kết chất lượng
-              </span>
-              <h3 className="text-3xl md:text-4xl font-black text-white uppercase leading-tight tracking-tight mb-4">
-                Trải nghiệm chuẩn mực <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">thượng lưu</span>
-              </h3>
-              <p className="text-zinc-400 text-lg">
-                Đội ngũ chuyên gia, trang thiết bị đẳng cấp thế giới và không gian tập luyện truyền cảm hứng.
-              </p>
-            </div>
-            
-            <div className="relative z-10 w-full md:w-auto flex-shrink-0">
-               <Button className="w-full md:w-auto px-8 py-4 rounded-xl bg-white text-black font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
-                 Khám phá Câu Lạc Bộ <ChevronRight className="w-5 h-5" />
-               </Button>
-            </div>
-          </div>
-        </div>
 
       </div>
   );
