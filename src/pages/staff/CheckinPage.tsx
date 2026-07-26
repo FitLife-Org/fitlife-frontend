@@ -277,5 +277,6 @@ export default function CheckinPage() {
 
       <GymQrManager isOpen={showGymQr} onClose={() => setShowGymQr(false)} />
     </div>
+    </div>
   );
 }

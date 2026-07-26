@@ -1,5 +1,7 @@
 export interface Trainer {
   id: number;
+  userId?: number;
+  trainerCode?: string;
   fullName: string;
   specialty?: string;
   phone?: string;

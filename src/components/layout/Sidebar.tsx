@@ -71,9 +71,9 @@ const menuItems: MenuItemType[] = [
     { label: "Quản lý thanh toán", path: ROUTES.ADMIN_PAYMENTS, icon: WalletCards, roles: ["ROLE_ADMIN", "ROLE_STAFF"] },
 
     // TRAINER
-    { label: "Lịch PT", path: ROUTES.TRAINER_SCHEDULE, icon: CalendarDays, roles: ["ROLE_TRAINER", "ROLE_ADMIN"] },
-    { label: "Hội viên của tôi", path: ROUTES.TRAINER_MEMBERS, icon: Users, roles: ["ROLE_TRAINER", "ROLE_ADMIN"] },
-    { label: "Theo dõi bài tập", path: ROUTES.TRAINER_WORKOUT_TRACKING, icon: Flame, roles: ["ROLE_TRAINER", "ROLE_ADMIN"] },
+    { label: "Lịch dạy của tôi", path: ROUTES.TRAINER_SCHEDULE, icon: CalendarDays, roles: ["ROLE_TRAINER"] },
+    { label: "Học viên phụ trách", path: ROUTES.TRAINER_MEMBERS, icon: Users, roles: ["ROLE_TRAINER"] },
+    { label: "Nhật ký luyện tập", path: ROUTES.TRAINER_WORKOUT_TRACKING, icon: Flame, roles: ["ROLE_TRAINER"] },
 
     {
         label: "Cài đặt",

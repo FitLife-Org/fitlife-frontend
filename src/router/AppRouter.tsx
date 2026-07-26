@@ -8,6 +8,9 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import EquipmentManagementPage from "../pages/admin/Equipment/EquipmentManagementPage";
 import AddEquipmentPage from "../pages/admin/Equipment/AddEquipmentPage";
 import EditEquipmentPage from "../pages/admin/Equipment/EditEquipmentPage";
+import EquipmentDetailPage from "../pages/admin/Equipment/EquipmentDetailPage";
+import CreateMaintenancePage from "../pages/admin/Equipment/CreateMaintenancePage";
+import MaintenanceSchedulesPage from "../pages/admin/Equipment/MaintenanceSchedulesPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import ReportPage from "../pages/admin/ReportPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
@@ -306,6 +309,30 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
                                     <EditEquipmentPage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/:id`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <EquipmentDetailPage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/:id/maintenance`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <CreateMaintenancePage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/maintenance-schedules`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <MaintenanceSchedulesPage/>
                                 </RoleGuard>
                             }
                         />
