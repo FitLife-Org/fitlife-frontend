@@ -231,22 +231,28 @@ export default function PackageListPage() {
 
   return (
       <div className="bg-slate-50 min-h-screen pb-16 font-sans">
-        {/* PREMIUM HERO SECTION */}
-        <div className="relative bg-black text-white pt-16 pb-24 overflow-hidden">
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-700 via-black to-black"></div>
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
+
+        <div className="relative bg-slate-900 text-white pt-20 pb-28 mb-12 rounded-[2rem] mx-4 mt-4 overflow-hidden shadow-2xl border border-slate-800">
+          {/* Subtle luxury glows */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-fit-primary/20 rounded-full blur-[120px] mix-blend-screen translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] mix-blend-screen -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
           
-          <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+          <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-4">
-                Nâng tầm <span className="text-transparent bg-clip-text bg-gradient-to-r from-fit-primary to-emerald-300">Thể Hình</span>
+              <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                  Thẻ Hội Viên Cao Cấp
+                </span>
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-6 text-white leading-tight">
+                Nâng Tầm <span className="text-fit-primary">Đẳng Cấp</span>
               </h1>
-              <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-medium">
-                Khẳng định phong cách sống với hệ thống phòng tập đẳng cấp 5 sao. Trải nghiệm dịch vụ thượng lưu.
+              <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
+                Đặc quyền thượng lưu tại hệ thống phòng tập 5 sao. Không gian sang trọng, thiết bị tối tân và dịch vụ chuyên nghiệp.
               </p>
             </motion.div>
           </div>
