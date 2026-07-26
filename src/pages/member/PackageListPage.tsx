@@ -443,7 +443,7 @@ export default function PackageListPage() {
             <div className="mx-auto mt-24 max-w-5xl px-4">
               <div className="mb-10 text-center">
                 <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">
-                  So sánh quyền lợi chi tiết
+                  So sánh quyền lợi
                 </h2>
                 <p className="mt-3 text-slate-500">
                   Bảng giá tính theo thời hạn: <span className="font-bold text-fit-primary">{selectedDuration?.name || "Chưa chọn"}</span>
@@ -473,15 +473,6 @@ export default function PackageListPage() {
                 </div>
 
                 <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">Truy cập phòng tập</div>
-                  {packages.map((pkg) => (
-                      <div key={pkg.id} className="p-5 text-center font-medium text-slate-700">
-                        24/7 Không giới hạn
-                      </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
                   <div className="p-5 font-semibold text-slate-600">Phân tích AI</div>
                   {packages.map((pkg) => (
                       <div key={pkg.id} className="p-5 text-center flex justify-center">
@@ -491,7 +482,7 @@ export default function PackageListPage() {
                 </div>
 
                 <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">Gợi ý dinh dưỡng</div>
+                  <div className="p-5 font-semibold text-slate-600">Dinh dưỡng</div>
                   {packages.map((pkg) => (
                       <div key={pkg.id} className="p-5 text-center flex justify-center">
                         {pkg.hasNutritionPlan ? <Check className="w-5 h-5 text-fit-primary" /> : <span className="text-slate-300">-</span>}
@@ -499,29 +490,11 @@ export default function PackageListPage() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
+                <div className="grid grid-cols-4 text-sm hover:bg-slate-50 transition-colors">
                   <div className="p-5 font-semibold text-slate-600">PT Kèm riêng</div>
                   {packages.map((pkg) => (
                       <div key={pkg.id} className="p-5 text-center font-medium text-slate-700">
                         {pkg.ptSessionsPerMonth > 0 ? `${pkg.ptSessionsPerMonth} buổi/tháng` : <span className="text-slate-300">-</span>}
-                      </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">Tủ đồ cá nhân</div>
-                  {packages.map((pkg) => (
-                      <div key={pkg.id} className="p-5 text-center flex justify-center">
-                        <Check className="w-5 h-5 text-fit-primary" />
-                      </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-4 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">Tiện ích (Tắm, Xông hơi)</div>
-                  {packages.map((pkg) => (
-                      <div key={pkg.id} className="p-5 text-center flex justify-center">
-                        <Check className="w-5 h-5 text-fit-primary" />
                       </div>
                   ))}
                 </div>
