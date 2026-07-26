@@ -232,10 +232,10 @@ export default function PackageListPage() {
   return (
       <div className="bg-slate-50 min-h-screen pb-16 font-sans">
 
-        <div className="relative bg-slate-900 text-white pt-20 pb-28 mb-12 rounded-[2rem] mx-4 mt-4 overflow-hidden shadow-2xl border border-slate-800">
+        <div className="relative bg-slate-950 text-white pt-20 pb-28 mb-12 rounded-[2rem] mx-4 mt-4 overflow-hidden shadow-2xl border border-slate-800">
           {/* Subtle luxury glows */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-fit-primary/20 rounded-full blur-[120px] mix-blend-screen translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] mix-blend-screen -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-fit-primary/30 rounded-full blur-[120px] mix-blend-screen translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-[120px] mix-blend-screen -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
           
           <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
             <motion.div
@@ -243,15 +243,15 @@ export default function PackageListPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-slate-700 bg-slate-800/50 backdrop-blur-sm">
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+              <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-slate-600 bg-slate-800/80 backdrop-blur-sm">
+                <span className="text-xs font-bold uppercase tracking-widest text-white">
                   Thẻ Hội Viên Cao Cấp
                 </span>
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-6 text-white leading-tight">
-                Nâng Tầm <span className="text-fit-primary">Đẳng Cấp</span>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-6 text-white leading-tight drop-shadow-md">
+                Nâng Tầm <span className="text-fit-primary drop-shadow-[0_0_15px_rgba(5,150,105,0.4)]">Đẳng Cấp</span>
               </h1>
-              <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
+              <p className="text-slate-200 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed drop-shadow-sm">
                 Đặc quyền thượng lưu tại hệ thống phòng tập 5 sao. Không gian sang trọng, thiết bị tối tân và dịch vụ chuyên nghiệp.
               </p>
             </motion.div>
