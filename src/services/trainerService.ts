@@ -33,7 +33,7 @@ export const trainerService = {
   },
 
   async updateTrainerStatus(id: number | string, status: string): Promise<Trainer> {
-    const response = await apiClient.patch<ApiResponse<Trainer>>(`/admin/trainers/${id}/status`, { status });
+    const response = await apiClient.patch<ApiResponse<Trainer>>(`/admin/trainers/${id}/status?status=${status}`);
     return response.data.data;
   },
 

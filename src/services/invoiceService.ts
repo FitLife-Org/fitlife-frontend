@@ -45,14 +45,15 @@ export const invoiceService = {
   async cancelInvoice(id: number, reason: string): Promise<Invoice> {
     const response = await apiClient.patch<ApiResponse<Invoice>>(
         `/admin/invoices/${id}/cancel`,
-        { reason }
+        { cancelReason: reason }
     );
 
     return response.data.data as Invoice;
   },
 
-  async generateInvoice(): Promise<void> {
-    await apiClient.post<ApiResponse<void>>("/admin/invoices/generate");
+  async generateInvoice(subscriptionId: number, note?: string): Promise<Invoice> {
+    const response = await apiClient.post<ApiResponse<Invoice>>("/admin/invoices/generate", { subscriptionId, note });
+    return response.data.data as Invoice;
   },
 
   async getInvoicePayments(id: number): Promise<unknown[]> {

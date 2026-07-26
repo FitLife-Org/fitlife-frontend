@@ -133,10 +133,10 @@ export const aiService = {
 
     async analyzeBody(
         request: AiBodyAnalysisRequest,
-    ): Promise<AiSuggestionResponse> {
+    ): Promise<AiSuggestionDetailResponse> {
         const response =
             await apiClient.post<
-                ApiResponse<AiSuggestionResponse>
+                ApiResponse<AiSuggestionDetailResponse>
             >(
                 `${AI_BASE_URL}/body-analysis`,
                 request,
