@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
+import { uploadService } from "../../../services/uploadService";
 import { validateAdminEquipmentForm } from "../../../utils/validators/adminEquipmentValidator";
 import type { AdminEquipmentUpdateRequest } from "../../../types/equipment.type";
 import { showAlert } from "../../../utils/alert";
@@ -25,6 +26,30 @@ export default function EditEquipmentPage() {
 
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
+    const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
+    const [uploadingImage, setUploadingImage] = useState(false);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            showAlert.error("Lỗi", "Vui lòng chọn file hình ảnh hợp lệ.");
+            return;
+        }
+
+        setUploadingImage(true);
+        try {
+            const res = await uploadService.upload(file);
+            setFormData(prev => ({ ...prev, image: res.url }));
+            showAlert.success("Thành công", "Tải ảnh lên thành công");
+        } catch (error) {
+            console.error("Lỗi khi tải ảnh lên:", error);
+            showAlert.error("Lỗi", "Không thể tải ảnh lên máy chủ");
+        } finally {
+            setUploadingImage(false);
+        }
+    };
 
     const fetchEquipmentDetails = useCallback(async () => {
         if (!id) return;
@@ -175,15 +200,73 @@ export default function EditEquipmentPage() {
                         />
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-slate-700">Đường dẫn hình ảnh (URL)</label>
-                        <input
-                            type="text"
-                            value={formData.image}
-                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
-                            placeholder="https://example.com/image.jpg"
-                        />
+                     <div className="space-y-3">
+                        <label className="text-sm font-medium text-slate-700">Hình ảnh thiết bị</label>
+                        <div className="flex gap-4 border-b border-slate-100 pb-2">
+                            <button
+                                type="button"
+                                onClick={() => setImageMode("upload")}
+                                className={`text-xs font-semibold pb-1 border-b-2 transition-colors ${imageMode === "upload" ? "border-fit-primary text-fit-primary" : "border-transparent text-slate-400 hover:text-slate-600"}`}
+                            >
+                                Tải ảnh lên (File)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setImageMode("url")}
+                                className={`text-xs font-semibold pb-1 border-b-2 transition-colors ${imageMode === "url" ? "border-fit-primary text-fit-primary" : "border-transparent text-slate-400 hover:text-slate-600"}`}
+                            >
+                                Nhập đường dẫn (URL)
+                            </button>
+                        </div>
+
+                        {imageMode === "url" ? (
+                            <div className="space-y-1.5">
+                                <input
+                                    type="text"
+                                    value={formData.image}
+                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
+                                    placeholder="https://example.com/image.jpg"
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-4">
+                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 hover:border-fit-primary rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-50/50 transition-colors">
+                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg className="w-8 h-8 text-slate-400 mb-2 group-hover:text-fit-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                            </svg>
+                                            <p className="text-xs text-slate-500"><span className="font-semibold text-fit-primary">Nhấp để tải lên</span> hoặc kéo thả</p>
+                                            <p className="text-[10px] text-slate-400 mt-1">PNG, JPG, JPEG (Tối đa 5MB)</p>
+                                        </div>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            className="hidden" 
+                                            onChange={handleImageUpload} 
+                                            disabled={uploadingImage}
+                                        />
+                                    </label>
+                                </div>
+                                {uploadingImage && <p className="text-xs text-slate-500">Đang tải ảnh lên...</p>}
+                            </div>
+                        )}
+
+                        {formData.image && (
+                            <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-slate-200 mt-2">
+                                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, image: "" })}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
