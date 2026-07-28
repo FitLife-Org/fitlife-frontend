@@ -26,9 +26,28 @@ const INITIAL_FORM_DATA: BodyMetricFormData = {
   muscleMassKg: "",
 };
 
+interface UseBodyMetricLogicResult {
+  showAddModal: boolean;
+  submitting: boolean;
+  formData: BodyMetricFormData;
+
+  setFormData: React.Dispatch<
+      React.SetStateAction<BodyMetricFormData>
+  >;
+
+  handleSubmit: (
+      event: FormEvent<HTMLFormElement>,
+  ) => Promise<void>;
+
+  handleOpenModal: () => void;
+  handleCloseModal: () => void;
+}
+
 export function useBodyMetricLogic(
-    onSuccess: (newRecord?: MyBodyMetricCreateRequest) => Promise<void> | void,
-) {
+    onSuccess: (
+        newRecord?: MyBodyMetricCreateRequest,
+    ) => Promise<void> | void,
+): UseBodyMetricLogicResult {
   const [showAddModal, setShowAddModal] =
       useState(false);
 
@@ -166,15 +185,13 @@ export function useBodyMetricLogic(
       resetForm();
 
       await onSuccess(request);
-    } catch {
-      toast.success(
-          "Cập nhật chỉ số thành công.",
+    } catch (error: unknown) {
+      toast.error(
+          getApiErrorMessage(
+              error,
+              "Không thể cập nhật chỉ số cơ thể.",
+          ),
       );
-
-      setShowAddModal(false);
-      resetForm();
-
-      await onSuccess(request);
     } finally {
       setSubmitting(false);
     }

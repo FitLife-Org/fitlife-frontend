@@ -1,12 +1,33 @@
-import { useEffect, useState } from "react";
-import { History, Users, Search, RefreshCw, LogOut, CheckCircle2, Clock } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  History,
+  Users,
+  Search,
+  RefreshCw,
+  LogOut,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
+
+import toast from "react-hot-toast";
+
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
-import { staffCheckinService } from "../../services/checkinService";
-import type { CheckinRecord } from "../../types/checkin.type";
-import toast from "react-hot-toast";
+
+import {
+  staffCheckinService,
+} from "../../services/checkinService";
+
+import type {
+  CheckinRecord,
+} from "../../types/checkin.type";
 
 export default function StaffCheckinHistoryPage() {
   const [activeTab, setActiveTab] = useState<"HISTORY" | "INSIDE">("HISTORY");
@@ -16,35 +37,63 @@ export default function StaffCheckinHistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [checkingOutId, setCheckingOutId] = useState<number | null>(null);
 
+  const fetchData =
+      useCallback(async (): Promise<void> => {
+        setLoading(true);
+
+        try {
+          if (activeTab === "HISTORY") {
+            const data =
+                await staffCheckinService
+                    .getCheckinHistory();
+
+            setHistoryRecords(data);
+          } else {
+            const data =
+                await staffCheckinService
+                    .getMembersCurrentlyInside();
+
+            setInsideRecords(data);
+          }
+        } catch {
+          toast.error(
+              "Không thể tải danh sách dữ liệu.",
+          );
+        } finally {
+          setLoading(false);
+        }
+      }, [activeTab]);
+
   useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+    void fetchData();
+  }, [fetchData]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === "HISTORY") {
-        const data = await staffCheckinService.getCheckinHistory();
-        setHistoryRecords(data);
-      } else {
-        const data = await staffCheckinService.getMembersCurrentlyInside();
-        setInsideRecords(data);
-      }
-    } catch {
-      toast.error("Không thể tải danh sách dữ liệu.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleManualCheckout = async (id: number, memberName?: string) => {
+  const handleManualCheckout = async (
+      id: number,
+      memberName?: string,
+  ): Promise<void> => {
     try {
       setCheckingOutId(id);
-      await staffCheckinService.manualCheckout(id);
-      toast.success(`Đã Check-out thành công cho ${memberName || 'Hội viên'}`);
+
+      await staffCheckinService
+          .manualCheckout(id);
+
+      toast.success(
+          `Đã check-out thành công cho ${
+              memberName || "hội viên"
+          }.`,
+      );
+
       await fetchData();
-    } catch {
-      toast.error("Check-out thất bại.");
+    } catch (error: unknown) {
+      console.error(
+          "Manual checkout failed:",
+          error,
+      );
+
+      toast.error(
+          "Check-out thất bại.",
+      );
     } finally {
       setCheckingOutId(null);
     }
@@ -194,7 +243,9 @@ export default function StaffCheckinHistoryPage() {
           </div>
 
           <button
-            onClick={fetchData}
+              onClick={() => {
+                void fetchData();
+              }}
             className="p-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 text-sm font-bold"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Tải lại

@@ -1,147 +1,335 @@
 import axios, {
+    AxiosHeaders,
     type AxiosError,
+    type AxiosResponse,
     type InternalAxiosRequestConfig,
 } from "axios";
 
-import { tokenStorage } from "../utils/token";
+import { env } from "../config/env";
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:8080/api/v1";
+import type {
+    ApiResponse,
+} from "../types/common.type";
+
+import type {
+    AuthResponsePayload,
+} from "../types/auth.type";
+
+import { tokenStorage } from "../utils/token";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const REFRESH_TIMEOUT_MS = 15_000;
 
-const apiClient = axios.create({
-    baseURL: API_BASE_URL,
-
-    headers: {
-        "Content-Type": "application/json",
-    },
-
-    timeout: DEFAULT_TIMEOUT_MS,
-});
-
-/**
- * Axios instance riêng dùng để refresh token.
- *
- * Không dùng apiClient để tránh interceptor tự gọi lặp
- * khi refresh token hết hạn hoặc không hợp lệ.
- */
-const refreshClient = axios.create({
-    baseURL: API_BASE_URL,
-
-    headers: {
-        "Content-Type": "application/json",
-    },
-
-    timeout: REFRESH_TIMEOUT_MS,
-});
+const AUTH_USER_KEY =
+    "fitlife.authUser";
 
 interface RetryRequestConfig
     extends InternalAxiosRequestConfig {
     _retry?: boolean;
 }
 
-interface BackendErrorResponse {
-    code?: number;
-    message?: string;
-    error?: string;
+interface RefreshResult {
+    accessToken: string;
+    refreshToken?: string | null;
 }
 
-/**
- * Các Auth API không cần access token.
- *
- * Không đưa /auth/logout và /auth/logout-all vào đây
- * vì backend yêu cầu access token cho hai endpoint này.
- */
 const PUBLIC_AUTH_ENDPOINTS = [
-    "/auth/login",
     "/auth/register",
+    "/auth/login",
     "/auth/google-login",
+    "/auth/refresh-token",
     "/auth/verify-email",
     "/auth/resend-verification-email",
     "/auth/forgot-password",
     "/auth/reset-password",
-    "/auth/refresh-token",
 ];
 
-const isPublicAuthEndpoint = (
+const apiClient = axios.create({
+    baseURL: env.apiBaseUrl,
+    timeout: DEFAULT_TIMEOUT_MS,
+
+    headers: {
+        Accept: "application/json",
+        "Content-Type":
+            "application/json",
+    },
+});
+
+const refreshClient = axios.create({
+    baseURL: env.apiBaseUrl,
+    timeout: REFRESH_TIMEOUT_MS,
+
+    headers: {
+        Accept: "application/json",
+        "Content-Type":
+            "application/json",
+    },
+});
+
+/*
+ * Chỉ cho phép một request refresh chạy tại một thời điểm.
+ *
+ * Khi nhiều API cùng trả 401, các request còn lại sẽ chờ
+ * cùng refreshPromise thay vì gửi nhiều refresh request.
+ */
+let refreshPromise:
+    | Promise<RefreshResult>
+    | null = null;
+
+function normalizeRequestPath(
     url?: string,
-): boolean => {
+): string {
     if (!url) {
-        return false;
+        return "";
     }
+
+    try {
+        const parsedUrl = new URL(
+            url,
+            env.apiBaseUrl,
+        );
+
+        return parsedUrl.pathname.replace(
+            /^\/api\/v1/,
+            "",
+        );
+    } catch {
+        return url.split("?")[0];
+    }
+}
+
+function isPublicAuthEndpoint(
+    url?: string,
+): boolean {
+    const requestPath =
+        normalizeRequestPath(url);
 
     return PUBLIC_AUTH_ENDPOINTS.some(
-        (endpoint) => url.includes(endpoint),
+        (endpoint) =>
+            requestPath === endpoint ||
+            requestPath.startsWith(
+                `${endpoint}/`,
+            ),
     );
-};
+}
 
-const isPublicEndpoint = (
+function isRefreshEndpoint(
     url?: string,
-): boolean => {
-    if (!url) {
-        return false;
+): boolean {
+    return (
+        normalizeRequestPath(url) ===
+        "/auth/refresh-token"
+    );
+}
+
+function isValidJwtFormat(
+    token: string,
+): boolean {
+    const tokenParts =
+        token.split(".");
+
+    return tokenParts.length === 3;
+}
+
+function clearAuthentication(): void {
+    tokenStorage.clear();
+
+    if (
+        typeof window !== "undefined"
+    ) {
+        window.localStorage.removeItem(
+            AUTH_USER_KEY,
+        );
+
+        /*
+         * Xóa key authUser cũ.
+         */
+        window.localStorage.removeItem(
+            "authUser",
+        );
+
+        window.dispatchEvent(
+            new CustomEvent(
+                "fitlife:session-cleared",
+            ),
+        );
+    }
+}
+
+function redirectToLogin(): void {
+    if (
+        typeof window === "undefined"
+    ) {
+        return;
     }
 
-    return (
-        isPublicAuthEndpoint(url) ||
-        url.includes("/public/") ||
-        url === "/gym-packages" ||
-        url.startsWith("/gym-packages/") ||
-        url === "/package-durations" ||
-        url.startsWith("/package-durations/") ||
-        url.includes("/payments/vnpay/return") ||
-        url.includes("/payments/vnpay/ipn")
+    const currentPath =
+        `${window.location.pathname}${window.location.search}`;
+
+    if (
+        window.location.pathname ===
+        "/login"
+    ) {
+        return;
+    }
+
+    const loginUrl =
+        `/login?from=${encodeURIComponent(
+            currentPath,
+        )}`;
+
+    window.location.replace(loginUrl);
+}
+
+function clearSessionAndRedirect(): void {
+    clearAuthentication();
+    redirectToLogin();
+}
+
+function setAuthorizationHeader(
+    config: InternalAxiosRequestConfig,
+    accessToken: string,
+): void {
+    if (
+        config.headers instanceof
+        AxiosHeaders
+    ) {
+        config.headers.set(
+            "Authorization",
+            `Bearer ${accessToken}`,
+        );
+
+        return;
+    }
+
+    config.headers =
+        new AxiosHeaders(
+            config.headers,
+        );
+
+    config.headers.set(
+        "Authorization",
+        `Bearer ${accessToken}`,
     );
-};
+}
 
-const isValidJwtFormat = (
-    token: string,
-): boolean => {
-    return token.split(".").length === 3;
-};
+async function requestNewAccessToken():
+    Promise<RefreshResult> {
+    const refreshToken =
+        tokenStorage.getRefreshToken();
 
-const clearAuthenticationAndRedirect =
-    (): void => {
-        tokenStorage.clear();
-        localStorage.removeItem("authUser");
+    if (!refreshToken) {
+        throw new Error(
+            "Không tìm thấy refresh token.",
+        );
+    }
 
-        if (
-            typeof window !== "undefined" &&
-            !window.location.pathname.includes("/login")
-        ) {
-            window.location.href = "/login";
-        }
+    const response =
+        await refreshClient.post<
+            ApiResponse<AuthResponsePayload>
+        >(
+            "/auth/refresh-token",
+            {
+                refreshToken,
+            },
+        );
+
+    const payload =
+        response.data.data;
+
+    const newAccessToken =
+        payload?.accessToken ??
+        payload?.token;
+
+    if (!newAccessToken) {
+        throw new Error(
+            "Máy chủ không trả về access token mới.",
+        );
+    }
+
+    if (
+        !isValidJwtFormat(
+            newAccessToken,
+        )
+    ) {
+        throw new Error(
+            "Access token mới không đúng định dạng.",
+        );
+    }
+
+    return {
+        accessToken:
+        newAccessToken,
+
+        refreshToken:
+        payload?.refreshToken,
     };
+}
+
+async function refreshAccessToken():
+    Promise<RefreshResult> {
+    if (!refreshPromise) {
+        refreshPromise =
+            requestNewAccessToken()
+                .then((result) => {
+                    tokenStorage.setAccessToken(
+                        result.accessToken,
+                    );
+
+                    if (
+                        result.refreshToken
+                    ) {
+                        tokenStorage
+                            .setRefreshToken(
+                                result.refreshToken,
+                            );
+                    }
+
+                    return result;
+                })
+                .finally(() => {
+                    refreshPromise = null;
+                });
+    }
+
+    return refreshPromise;
+}
 
 apiClient.interceptors.request.use(
-    (config) => {
+    (
+        config:
+        InternalAxiosRequestConfig,
+    ) => {
         const accessToken =
             tokenStorage.getAccessToken();
 
-        /*
-         * Không gửi access token vào các Auth API public.
-         *
-         * Các API protected, bao gồm AI, logout và logout-all,
-         * sẽ tự động được gắn Bearer token.
-         */
         if (
-            accessToken &&
-            !isPublicAuthEndpoint(config.url)
+            !accessToken ||
+            isPublicAuthEndpoint(
+                config.url,
+            )
         ) {
-            if (!isValidJwtFormat(accessToken)) {
-                clearAuthenticationAndRedirect();
-
-                return Promise.reject(
-                    new Error("Access token không hợp lệ."),
-                );
-            }
-
-            config.headers.Authorization =
-                `Bearer ${accessToken}`;
+            return config;
         }
+
+        if (
+            !isValidJwtFormat(
+                accessToken,
+            )
+        ) {
+            clearSessionAndRedirect();
+
+            return Promise.reject(
+                new Error(
+                    "Access token không đúng định dạng.",
+                ),
+            );
+        }
+
+        setAuthorizationHeader(
+            config,
+            accessToken,
+        );
 
         return config;
     },
@@ -151,13 +339,15 @@ apiClient.interceptors.request.use(
 );
 
 apiClient.interceptors.response.use(
-    (response) => response,
+    (
+        response: AxiosResponse,
+    ) => response,
 
     async (
-        error: AxiosError<BackendErrorResponse>,
+        error: AxiosError,
     ) => {
-        const status = error.response?.status;
-        const data = error.response?.data;
+        const status =
+            error.response?.status;
 
         const originalRequest =
             error.config as
@@ -167,143 +357,75 @@ apiClient.interceptors.response.use(
         const requestUrl =
             originalRequest?.url;
 
-        if (import.meta.env.DEV) {
-            console.error("API_ERROR:", {
-                status,
-                url: requestUrl,
-                data,
-            });
+        if (env.isDevelopment) {
+            console.error(
+                "FITLIFE_API_ERROR",
+                {
+                    method:
+                    originalRequest
+                        ?.method,
+                    url: requestUrl,
+                    status,
+                    response:
+                    error.response?.data,
+                },
+            );
         }
 
         /*
-         * Auth public API tự hiển thị lỗi tại page/hook.
-         *
-         * Ví dụ:
-         * - EMAIL_NOT_VERIFIED
-         * - INVALID_CREDENTIALS
-         * - INVALID_REFRESH_TOKEN
-         */
-        if (isPublicEndpoint(requestUrl)) {
-            return Promise.reject(error);
-        }
-
-        /*
-         * Protected API trả 401:
-         *
-         * 1. Lấy refresh token.
-         * 2. Gọi /auth/refresh-token bằng refreshClient.
-         * 3. Lưu access token mới.
-         * 4. Gửi lại request ban đầu đúng một lần.
+         * Không refresh cho:
+         * - public auth API;
+         * - chính refresh endpoint;
+         * - request đã retry.
          */
         if (
-            status === 401 &&
-            originalRequest &&
-            !originalRequest._retry
+            status !== 401 ||
+            !originalRequest ||
+            originalRequest._retry ||
+            isPublicAuthEndpoint(
+                requestUrl,
+            ) ||
+            isRefreshEndpoint(
+                requestUrl,
+            )
         ) {
-            originalRequest._retry = true;
-
-            const refreshToken =
-                tokenStorage.getRefreshToken();
-
-            if (!refreshToken) {
-                clearAuthenticationAndRedirect();
-
-                return Promise.reject(error);
+            if (
+                status === 401 &&
+                !isPublicAuthEndpoint(
+                    requestUrl,
+                )
+            ) {
+                clearSessionAndRedirect();
             }
 
-            try {
-                const refreshResponse =
-                    await refreshClient.post(
-                        "/auth/refresh-token",
-                        {
-                            refreshToken,
-                        },
-                    );
-
-                const newAccessToken =
-                    refreshResponse.data?.data
-                        ?.accessToken;
-
-                const returnedRefreshToken =
-                    refreshResponse.data?.data
-                        ?.refreshToken;
-
-                if (!newAccessToken) {
-                    clearAuthenticationAndRedirect();
-
-                    return Promise.reject(error);
-                }
-
-                tokenStorage.setAccessToken(
-                    newAccessToken,
-                );
-
-                /*
-                 * Backend có thể triển khai refresh-token rotation.
-                 * Nếu response có refresh token mới thì lưu lại.
-                 */
-                if (returnedRefreshToken) {
-                    tokenStorage.setRefreshToken(
-                        returnedRefreshToken,
-                    );
-                }
-
-                originalRequest.headers =
-                    originalRequest.headers ?? {};
-
-                originalRequest.headers.Authorization =
-                    `Bearer ${newAccessToken}`;
-
-                return apiClient(originalRequest);
-            } catch (refreshError) {
-                clearAuthenticationAndRedirect();
-
-                return Promise.reject(
-                    refreshError,
-                );
-            }
+            return Promise.reject(
+                error,
+            );
         }
 
-        /*
-         * Fallback tạm thời cho backend cũ từng trả lỗi JWT dưới dạng 500.
-         * Khi toàn backend đã chuẩn hóa 401 thì có thể xóa đoạn này.
-         */
-        const isLegacyJwtServerError =
-            status === 500 &&
-            typeof data?.message === "string" &&
-            (
-                data.message.includes("JWT") ||
-                data.message.includes("Jwt") ||
-                data.message.includes(
-                    "MalformedJwtException",
-                )
+        originalRequest._retry = true;
+
+        try {
+            const refreshResult =
+                await refreshAccessToken();
+
+            setAuthorizationHeader(
+                originalRequest,
+                refreshResult.accessToken,
             );
 
-        if (
-            isLegacyJwtServerError &&
-            !isPublicEndpoint(requestUrl)
-        ) {
-            clearAuthenticationAndRedirect();
+            return apiClient(
+                originalRequest,
+            );
+        } catch (
+            refreshError: unknown
+            ) {
+            clearSessionAndRedirect();
 
-            return Promise.reject(error);
+            return Promise.reject(
+                refreshError,
+            );
         }
-
-        /*
-         * 403 của protected API chuyển sang trang Forbidden.
-         *
-         * Không áp dụng với Auth API public vì page Auth
-         * cần tự hiển thị lỗi nghiệp vụ.
-         */
-        if (
-            status === 403 &&
-            !isPublicEndpoint(requestUrl) &&
-            typeof window !== "undefined" &&
-            !window.location.pathname.includes("/403")
-        ) {
-            window.location.href = "/403";
-        }
-
-        return Promise.reject(error);
     },
 );
 
