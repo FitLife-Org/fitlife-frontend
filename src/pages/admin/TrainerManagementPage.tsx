@@ -151,11 +151,11 @@ export default function TrainerManagementPage() {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <Input 
             label="Họ và Tên *"
-            name="fullName"
+            name="userId"
             placeholder="Ví dụ: Nguyễn Văn A"
-            value={formData.fullName}
+            value={formData.userId}
             onChange={handleFormChange}
-            error={formErrors.fullName}
+            error={formErrors.userId}
             icon={<User className="w-4 h-4" />}
           />
           
@@ -172,22 +172,22 @@ export default function TrainerManagementPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input 
               label="Số điện thoại"
-              name="phone"
+              name="trainerCode"
               placeholder="0912345678"
-              value={formData.phone}
+              value={formData.trainerCode}
               onChange={handleFormChange}
-              error={formErrors.phone}
+              error={formErrors.trainerCode}
               icon={<Phone className="w-4 h-4" />}
             />
             
             <Input 
               label="Email"
-              name="email"
-              type="email"
+              name="specialty"
+              type="text"
               placeholder="example@fitlife.vn"
-              value={formData.email}
+              value={formData.specialty}
               onChange={handleFormChange}
-              error={formErrors.email}
+              error={formErrors.specialty}
               icon={<Mail className="w-4 h-4" />}
             />
           </div>

@@ -1,23 +1,23 @@
 import apiClient from "./apiClient";
-import type { ApiResponse, Status, PageResult, PageResponse } from "../types/common.type";
+import type { Status, PageResult, PageResponse } from "../types/common.type";
 import type { BodyMetric, MemberProfile, AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../types/member.type";
 import type { Subscription } from "../types/subscription.type";
 import type { CheckinRecord } from "../types/checkin.type";
 
 export const memberService = {
   async getMyProfile(): Promise<MemberProfile> {
-    const response = await apiClient.get<ApiResponse<MemberProfile>>("/members/me");
-    return response.data.data as MemberProfile;
+    const response = await apiClient.get<MemberProfile>("/members/me");
+    return response.data;
   },
 
   async updateMyProfile(data: Partial<MemberProfile>): Promise<MemberProfile> {
-    const response = await apiClient.put<ApiResponse<MemberProfile>>("/members/me", data);
-    return response.data.data as MemberProfile;
+    const response = await apiClient.put<MemberProfile>("/members/me", data);
+    return response.data;
   },
 
   async getBodyMetrics(): Promise<BodyMetric[]> {
-    const response = await apiClient.get<ApiResponse<BodyMetric[]>>("/members/me/body-metrics");
-    return response.data.data || [];
+    const response = await apiClient.get<BodyMetric[]>("/body-metrics/me");
+    return response.data || [];
   },
 
   async getMembers(page: number = 1, size: number = 20, keyword?: string, status?: string): Promise<PageResult<MemberProfile>> {
@@ -50,15 +50,15 @@ export const memberService = {
   },
 
   async getMemberById(id: number): Promise<MemberProfile> {
-    const response = await apiClient.get<ApiResponse<MemberProfile>>(`/admin/members/${id}`);
-    const member = response.data.data;
+    const response = await apiClient.get<MemberProfile>(`/admin/members/${id}`);
+    const member = response.data;
     if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
 
   async getMemberByCode(memberCode: string): Promise<MemberProfile> {
-    const response = await apiClient.get<ApiResponse<MemberProfile>>(`/admin/members/code/${memberCode}`);
-    const member = response.data.data;
+    const response = await apiClient.get<MemberProfile>(`/admin/members/code/${memberCode}`);
+    const member = response.data;
     if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
@@ -69,8 +69,8 @@ export const memberService = {
     if (payload.status === 'PENDING') payload.status = 'INACTIVE';
     if (payload.fitnessGoal === "") delete payload.fitnessGoal;
     
-    const response = await apiClient.post<ApiResponse<MemberProfile>>("/admin/members", payload);
-    const member = response.data.data;
+    const response = await apiClient.post<MemberProfile>("/admin/members", payload);
+    const member = response.data;
     if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
@@ -81,8 +81,8 @@ export const memberService = {
     if (payload.status === 'PENDING') payload.status = 'INACTIVE';
     if (payload.fitnessGoal === "") delete payload.fitnessGoal;
     
-    const response = await apiClient.put<ApiResponse<MemberProfile>>(`/admin/members/${id}`, payload);
-    const member = response.data.data;
+    const response = await apiClient.put<MemberProfile>(`/admin/members/${id}`, payload);
+    const member = response.data;
     if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
@@ -91,8 +91,8 @@ export const memberService = {
     let mappedStatus: string = status;
     if (status === 'LOCKED') mappedStatus = 'SUSPENDED';
     if (status === 'PENDING') mappedStatus = 'INACTIVE';
-    const response = await apiClient.patch<ApiResponse<MemberProfile>>(`/admin/members/${id}/status`, { status: mappedStatus });
-    const member = response.data.data;
+    const response = await apiClient.patch<MemberProfile>(`/admin/members/${id}/status`, { status: mappedStatus });
+    const member = response.data;
     if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
     return member;
   },
@@ -103,8 +103,8 @@ export const memberService = {
 
   async getMemberSubscriptions(id: number): Promise<Subscription[]> {
     try {
-      const response = await apiClient.get<ApiResponse<PageResponse<Subscription> | Subscription[]>>(`/admin/subscriptions?memberId=${id}`);
-      const data = response.data?.data;
+      const response = await apiClient.get<PageResponse<Subscription> | Subscription[]>(`/admin/subscriptions?memberId=${id}`);
+      const data = response.data;
       if (Array.isArray(data)) return data;
       if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<Subscription>).content)) {
         return (data as PageResponse<Subscription>).content;
@@ -117,8 +117,8 @@ export const memberService = {
 
   async getMemberCheckins(id: number): Promise<CheckinRecord[]> {
     try {
-      const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>(`/check-ins?memberId=${id}`);
-      const data = response.data?.data;
+      const response = await apiClient.get<PageResponse<CheckinRecord> | CheckinRecord[]>(`/check-ins?memberId=${id}`);
+      const data = response.data;
       if (Array.isArray(data)) return data;
       if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<CheckinRecord>).content)) {
         return (data as PageResponse<CheckinRecord>).content;
@@ -129,8 +129,7 @@ export const memberService = {
     }
   },
 
-  async restoreMember(id: number): Promise<MemberProfile> {
-    const response = await apiClient.patch<ApiResponse<MemberProfile>>(`/admin/members/${id}/restore`);
-    return response.data.data as MemberProfile;
+  async restoreMember(id: number): Promise<void> {
+    await apiClient.patch(`/admin/members/${id}/restore`);
   }
 };

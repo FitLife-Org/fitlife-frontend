@@ -6,7 +6,7 @@ import type {
     NutritionPlanRequest,
 } from "../types/nutrition.type";
 
-const MY_NUTRITION_BASE_URL = "/nutrition-plans/me";
+const BASE_URL = "/nutrition-plans";
 
 function validatePositiveId(
     value: number,
@@ -31,7 +31,7 @@ export const nutritionService = {
     ): Promise<SpringPage<NutritionPlan>> {
         const response = await apiClient.get<
             SpringPage<NutritionPlan>
-        >(MY_NUTRITION_BASE_URL, {
+        >(`${BASE_URL}/me`, {
             params: {
                 page,
                 size,
@@ -50,7 +50,7 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
 
         const response = await apiClient.get<NutritionPlan>(
-            `${MY_NUTRITION_BASE_URL}/${planId}`,
+            `${BASE_URL}/${planId}`,
         );
 
         return normalizePlan(response.data);
@@ -58,7 +58,7 @@ export const nutritionService = {
 
     async getActivePlan(): Promise<NutritionPlan> {
         const response = await apiClient.get<NutritionPlan>(
-            `${MY_NUTRITION_BASE_URL}/active`,
+            `${BASE_URL}/me/active`,
         );
 
         return normalizePlan(response.data);
@@ -66,7 +66,7 @@ export const nutritionService = {
 
     async getTodayPlan(): Promise<NutritionPlan> {
         const response = await apiClient.get<NutritionPlan>(
-            `${MY_NUTRITION_BASE_URL}/today`,
+            `${BASE_URL}/me/today`,
         );
 
         return normalizePlan(response.data);
@@ -76,7 +76,7 @@ export const nutritionService = {
         request: NutritionPlanRequest,
     ): Promise<NutritionPlan> {
         const response = await apiClient.post<NutritionPlan>(
-            MY_NUTRITION_BASE_URL,
+            BASE_URL,
             request,
         );
 
@@ -90,7 +90,7 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
 
         const response = await apiClient.put<NutritionPlan>(
-            `${MY_NUTRITION_BASE_URL}/${planId}`,
+            `${BASE_URL}/${planId}`,
             request,
         );
 
@@ -101,7 +101,7 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
 
         await apiClient.post(
-            `${MY_NUTRITION_BASE_URL}/${planId}/activate`,
+            `${BASE_URL}/${planId}/activate`,
         );
     },
 
@@ -109,7 +109,7 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
 
         await apiClient.post(
-            `${MY_NUTRITION_BASE_URL}/${planId}/archive`,
+            `${BASE_URL}/${planId}/archive`,
         );
     },
 
@@ -117,7 +117,7 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
 
         await apiClient.post(
-            `${MY_NUTRITION_BASE_URL}/${planId}/complete`,
+            `${BASE_URL}/${planId}/complete`,
         );
     },
 
@@ -125,7 +125,7 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
 
         const response = await apiClient.post<NutritionPlan>(
-            `${MY_NUTRITION_BASE_URL}/${planId}/clone`,
+            `${BASE_URL}/${planId}/clone`,
         );
 
         return normalizePlan(response.data);
@@ -135,7 +135,7 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
 
         await apiClient.delete(
-            `${MY_NUTRITION_BASE_URL}/${planId}`,
+            `${BASE_URL}/${planId}`,
         );
     },
 };

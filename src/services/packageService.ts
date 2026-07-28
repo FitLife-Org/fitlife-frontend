@@ -92,7 +92,7 @@ export const packageService = {
   },
 
   async getAdminPackageDurationById(id: number): Promise<PackageDuration> {
-    const response = await apiClient.get<ApiResponse<PackageDuration>>(`/admin/package-durations/${id}`);
+    const response = await apiClient.get<ApiResponse<PackageDuration>>(`/package-durations/${id}`);
     if (response.data.data) {
       return response.data.data as PackageDuration;
     }

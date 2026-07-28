@@ -14,10 +14,9 @@ export function useTrainerManagement() {
   const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
   
   const [formData, setFormData] = useState<TrainerFormData>({
-    fullName: "",
+    userId: "",
+    trainerCode: "",
     specialty: "",
-    phone: "",
-    email: ""
   });
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof TrainerFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,14 +41,13 @@ export function useTrainerManagement() {
     if (trainer) {
       setEditingTrainer(trainer);
       setFormData({
-        fullName: trainer.fullName,
+        userId: trainer.userId?.toString() || "",
+        trainerCode: trainer.trainerCode || "",
         specialty: trainer.specialty || "",
-        phone: trainer.phone || "",
-        email: trainer.email || ""
       });
     } else {
       setEditingTrainer(null);
-      setFormData({ fullName: "", specialty: "", phone: "", email: "" });
+      setFormData({ userId: "", trainerCode: "", specialty: "" });
     }
     setFormErrors({});
     setIsModalOpen(true);
@@ -59,7 +57,7 @@ export function useTrainerManagement() {
     setIsModalOpen(false);
     setTimeout(() => {
       setEditingTrainer(null);
-      setFormData({ fullName: "", specialty: "", phone: "", email: "" });
+      setFormData({ userId: "", trainerCode: "", specialty: "" });
       setFormErrors({});
     }, 200);
   };
@@ -84,10 +82,14 @@ export function useTrainerManagement() {
     try {
       setIsSubmitting(true);
       if (editingTrainer) {
-        await trainerService.updateTrainer(editingTrainer.id, formData);
+        await trainerService.updateTrainer(editingTrainer.id, { specialty: formData.specialty });
         toast.success("Cập nhật PT thành công!");
       } else {
-        await trainerService.createTrainer(formData);
+        await trainerService.createTrainer({
+          userId: Number(formData.userId),
+          trainerCode: formData.trainerCode,
+          specialty: formData.specialty,
+        });
         toast.success("Thêm PT thành công!");
       }
       fetchTrainers();

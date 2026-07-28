@@ -63,7 +63,7 @@ export default function EquipmentDetailPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button onClick={() => navigate(`/admin/equipment/${id}/edit`)} className="px-4 py-2 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-lg font-medium text-sm flex items-center gap-2">
+                    <Button onClick={() => navigate(`/admin/equipment/edit/${id}`)} className="px-4 py-2 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-lg font-medium text-sm flex items-center gap-2">
                         <Edit2 className="w-4 h-4" /> Sửa
                     </Button>
                     <Button onClick={() => navigate(`/admin/equipment/${id}/maintenance`)} className="bg-fit-trainer text-white hover:bg-fit-trainer/90 px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2">

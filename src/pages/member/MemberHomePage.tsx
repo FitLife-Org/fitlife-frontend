@@ -77,7 +77,7 @@ export default function MemberHomePage() {
                 <CreditCard className="w-5 h-5 text-fit-primary" />
                 Gói tập hiện tại
               </h2>
-              <Link to="/member/subscriptions" className="text-sm font-medium text-fit-primary hover:underline flex items-center">
+              <Link to="/member/subscription" className="text-sm font-medium text-fit-primary hover:underline flex items-center">
                 Quản lý gói <ChevronRight className="w-4 h-4" />
               </Link>
             </div>

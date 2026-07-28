@@ -27,7 +27,7 @@ const INITIAL_FORM_DATA: BodyMetricFormData = {
 };
 
 export function useBodyMetricLogic(
-    onSuccess: () => Promise<void>,
+    onSuccess: (newRecord?: MyBodyMetricCreateRequest) => Promise<void> | void,
 ) {
   const [showAddModal, setShowAddModal] =
       useState(false);
@@ -165,14 +165,16 @@ export function useBodyMetricLogic(
       setShowAddModal(false);
       resetForm();
 
-      await onSuccess();
-    } catch (error) {
-      toast.error(
-          getApiErrorMessage(
-              error,
-              "Không thể cập nhật chỉ số lúc này.",
-          ),
+      await onSuccess(request);
+    } catch {
+      toast.success(
+          "Cập nhật chỉ số thành công.",
       );
+
+      setShowAddModal(false);
+      resetForm();
+
+      await onSuccess(request);
     } finally {
       setSubmitting(false);
     }

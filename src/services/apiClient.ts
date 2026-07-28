@@ -87,6 +87,7 @@ const isPublicEndpoint = (
 
     return (
         isPublicAuthEndpoint(url) ||
+        url.includes("/public/") ||
         url === "/gym-packages" ||
         url.startsWith("/gym-packages/") ||
         url === "/package-durations" ||
@@ -182,7 +183,7 @@ apiClient.interceptors.response.use(
          * - INVALID_CREDENTIALS
          * - INVALID_REFRESH_TOKEN
          */
-        if (isPublicAuthEndpoint(requestUrl)) {
+        if (isPublicEndpoint(requestUrl)) {
             return Promise.reject(error);
         }
 

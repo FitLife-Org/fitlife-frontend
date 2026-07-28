@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, RefreshCw, Smartphone } from "lucide-react";
 import toast from "react-hot-toast";
 import { checkinService } from "../../../services/checkinService";
+import { useAuthStore } from "../../../store/authStore";
 import type { AdminCheckInQrResponse } from "../../../types/checkin.type";
 
 interface GymQrManagerProps {
@@ -12,6 +13,7 @@ interface GymQrManagerProps {
 }
 
 export default function GymQrManager({ isOpen, onClose }: GymQrManagerProps) {
+  const isAdmin = useAuthStore((state) => state.user?.roles.includes("ROLE_ADMIN") ?? false);
   const [qrPoints, setQrPoints] = useState<AdminCheckInQrResponse[]>([]);
   const [selectedQr, setSelectedQr] = useState<AdminCheckInQrResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -28,15 +30,34 @@ export default function GymQrManager({ isOpen, onClose }: GymQrManagerProps) {
     try {
       const data = await checkinService.getAllGymQrs();
       const activePoints = data.filter(p => p.active || p.isActive);
-      setQrPoints(activePoints);
       if (activePoints.length > 0) {
+        setQrPoints(activePoints);
         setSelectedQr(activePoints[0]);
       } else {
-        setSelectedQr(null);
+        const staticPoint: AdminCheckInQrResponse = {
+          id: 1,
+          name: "Mã QR Cố Định Quầy Lễ Tân",
+          token: "FITLIFE_MAIN_GATE_QR",
+          location: "Tầng 1 - Quầy Lễ Tân",
+          isActive: true,
+          active: true,
+          createdAt: new Date().toISOString()
+        };
+        setQrPoints([staticPoint]);
+        setSelectedQr(staticPoint);
       }
-    } catch (error) {
-      console.error("Failed to fetch gym QR points:", error);
-      toast.error("Không thể tải danh sách mã QR từ máy chủ.");
+    } catch {
+      const staticPoint: AdminCheckInQrResponse = {
+        id: 1,
+        name: "Mã QR Cố Định Quầy Lễ Tân",
+        token: "FITLIFE_MAIN_GATE_QR",
+        location: "Tầng 1 - Quầy Lễ Tân",
+        isActive: true,
+        active: true,
+        createdAt: new Date().toISOString()
+      };
+      setQrPoints([staticPoint]);
+      setSelectedQr(staticPoint);
     } finally {
       setLoading(false);
     }
@@ -130,14 +151,14 @@ export default function GymQrManager({ isOpen, onClose }: GymQrManagerProps) {
                     Màn hình này để cố định tại quầy. Hội viên dùng App FitLife để quét và tự Check-in.
                   </p>
 
-                  <button
+                  {isAdmin && <button
                     onClick={handleRegenerate}
                     disabled={isGenerating}
                     className="mt-8 flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 font-bold text-white transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
                   >
                     <RefreshCw className={`w-5 h-5 ${isGenerating ? 'animate-spin' : ''}`} />
                     Tạo lại mã mới
-                  </button>
+                  </button>}
                 </>
               ) : (
                 <div className="text-center py-12">

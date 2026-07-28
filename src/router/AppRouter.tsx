@@ -8,6 +8,9 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import EquipmentManagementPage from "../pages/admin/Equipment/EquipmentManagementPage";
 import AddEquipmentPage from "../pages/admin/Equipment/AddEquipmentPage";
 import EditEquipmentPage from "../pages/admin/Equipment/EditEquipmentPage";
+import EquipmentDetailPage from "../pages/admin/Equipment/EquipmentDetailPage";
+import CreateMaintenancePage from "../pages/admin/Equipment/CreateMaintenancePage";
+import MaintenanceSchedulesPage from "../pages/admin/Equipment/MaintenanceSchedulesPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import ReportPage from "../pages/admin/ReportPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
@@ -40,6 +43,7 @@ import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import PaymentResultPage from "../pages/member/PaymentResultPage";
 import SettingsPage from "../pages/settings/SettingsPage";
 import CheckinPage from "../pages/staff/CheckinPage";
+import StaffCheckinHistoryPage from "../pages/staff/StaffCheckinHistoryPage";
 import SubscriptionSupportPage from "../pages/staff/SubscriptionSupportPage";
 import MyMembersPage from "../pages/trainer/MyMembersPage";
 import TrainerSchedulePage from "../pages/trainer/TrainerSchedulePage";
@@ -308,6 +312,30 @@ export default function AppRouter() {
                                 </RoleGuard>
                             }
                         />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/:id`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <EquipmentDetailPage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/:id/maintenance`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <CreateMaintenancePage/>
+                                </RoleGuard>
+                            }
+                        />
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/maintenance-schedules`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <MaintenanceSchedulesPage/>
+                                </RoleGuard>
+                            }
+                        />
 
                         <Route
                             path={ROUTES.ADMIN_TRAINERS}
@@ -348,6 +376,15 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_STAFF", "ROLE_ADMIN"]}>
                                     <CheckinPage/>
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.STAFF_CHECKIN_HISTORY}
+                            element={
+                                <RoleGuard roles={["ROLE_STAFF", "ROLE_ADMIN"]}>
+                                    <StaffCheckinHistoryPage/>
                                 </RoleGuard>
                             }
                         />

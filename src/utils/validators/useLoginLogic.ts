@@ -122,7 +122,9 @@ export function useLoginLogic() {
         try {
             const data = validationResult.data;
             const session = await authService.login({
-                identifier: data.identifier.trim().toLowerCase(),
+                identifier: data.identifier.includes("@")
+                    ? data.identifier.trim().toLowerCase()
+                    : data.identifier.trim(),
                 password: data.password,
             });
             setSession(session);

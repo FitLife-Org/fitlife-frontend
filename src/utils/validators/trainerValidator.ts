@@ -1,23 +1,18 @@
 export interface TrainerFormData {
-  fullName: string;
+  userId: string;
+  trainerCode: string;
   specialty?: string;
-  phone?: string;
-  email?: string;
 }
 
 export const validateTrainerForm = (data: TrainerFormData) => {
   const errors: Partial<Record<keyof TrainerFormData, string>> = {};
 
-  if (!data.fullName || data.fullName.trim().length < 3) {
-    errors.fullName = "Họ tên phải có ít nhất 3 ký tự.";
+  if (!data.userId || !Number.isInteger(Number(data.userId)) || Number(data.userId) <= 0) {
+    errors.userId = "Nhập ID tài khoản hợp lệ để gán làm PT.";
   }
 
-  if (data.phone && !/^(0[3|5|7|8|9])+([0-9]{8})$/.test(data.phone.trim())) {
-    errors.phone = "Số điện thoại không hợp lệ (VD: 0912345678).";
-  }
-
-  if (data.email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(data.email.trim())) {
-    errors.email = "Email không hợp lệ.";
+  if (!data.trainerCode || data.trainerCode.trim().length < 2) {
+    errors.trainerCode = "Mã PT phải có ít nhất 2 ký tự.";
   }
 
   if (!data.specialty || data.specialty.trim() === "") {
