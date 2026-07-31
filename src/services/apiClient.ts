@@ -33,7 +33,11 @@ interface RefreshResult {
     refreshToken?: string | null;
 }
 
-const PUBLIC_AUTH_ENDPOINTS = [
+/**
+ * Các API không yêu cầu đăng nhập.
+ */
+const PUBLIC_API_ENDPOINTS = [
+    // Auth
     "/auth/register",
     "/auth/login",
     "/auth/google-login",
@@ -42,7 +46,29 @@ const PUBLIC_AUTH_ENDPOINTS = [
     "/auth/resend-verification-email",
     "/auth/forgot-password",
     "/auth/reset-password",
-];
+
+    // Public website
+    "/public/home",
+    "/public/packages",
+    "/public/trainers",
+    "/public/contact-requests",
+
+    // Nếu backend package public dùng endpoint này
+    "/gym-packages",
+] as const;
+
+/**
+ * Các trang frontend không yêu cầu đăng nhập.
+ */
+const PUBLIC_PAGE_PATHS = [
+    "/",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+    "/check-email",
+    "/verify-email",
+] as const;
 
 const apiClient = axios.create({
     baseURL: env.apiBaseUrl,
@@ -66,12 +92,6 @@ const refreshClient = axios.create({
     },
 });
 
-/*
- * Chỉ cho phép một request refresh chạy tại một thời điểm.
- *
- * Khi nhiều API cùng trả 401, các request còn lại sẽ chờ
- * cùng refreshPromise thay vì gửi nhiều refresh request.
- */
 let refreshPromise:
     | Promise<RefreshResult>
     | null = null;
@@ -84,10 +104,11 @@ function normalizeRequestPath(
     }
 
     try {
-        const parsedUrl = new URL(
-            url,
-            env.apiBaseUrl,
-        );
+        const parsedUrl =
+            new URL(
+                url,
+                env.apiBaseUrl,
+            );
 
         return parsedUrl.pathname.replace(
             /^\/api\/v1/,
@@ -98,13 +119,13 @@ function normalizeRequestPath(
     }
 }
 
-function isPublicAuthEndpoint(
+function isPublicApiEndpoint(
     url?: string,
 ): boolean {
     const requestPath =
         normalizeRequestPath(url);
 
-    return PUBLIC_AUTH_ENDPOINTS.some(
+    return PUBLIC_API_ENDPOINTS.some(
         (endpoint) =>
             requestPath === endpoint ||
             requestPath.startsWith(
@@ -122,38 +143,53 @@ function isRefreshEndpoint(
     );
 }
 
+function isPublicPage(
+    pathname: string,
+): boolean {
+    return PUBLIC_PAGE_PATHS.some(
+        (publicPath) => {
+            if (publicPath === "/") {
+                return pathname === "/";
+            }
+
+            return (
+                pathname === publicPath ||
+                pathname.startsWith(
+                    `${publicPath}/`,
+                )
+            );
+        },
+    );
+}
+
 function isValidJwtFormat(
     token: string,
 ): boolean {
-    const tokenParts =
-        token.split(".");
-
-    return tokenParts.length === 3;
+    return token.split(".").length === 3;
 }
 
 function clearAuthentication(): void {
     tokenStorage.clear();
 
     if (
-        typeof window !== "undefined"
+        typeof window === "undefined"
     ) {
-        window.localStorage.removeItem(
-            AUTH_USER_KEY,
-        );
-
-        /*
-         * Xóa key authUser cũ.
-         */
-        window.localStorage.removeItem(
-            "authUser",
-        );
-
-        window.dispatchEvent(
-            new CustomEvent(
-                "fitlife:session-cleared",
-            ),
-        );
+        return;
     }
+
+    window.localStorage.removeItem(
+        AUTH_USER_KEY,
+    );
+
+    window.localStorage.removeItem(
+        "authUser",
+    );
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "fitlife:session-cleared",
+        ),
+    );
 }
 
 function redirectToLogin(): void {
@@ -163,22 +199,30 @@ function redirectToLogin(): void {
         return;
     }
 
-    const currentPath =
-        `${window.location.pathname}${window.location.search}`;
+    const pathname =
+        window.location.pathname;
 
+    /*
+     * Không redirect từ trang public.
+     */
     if (
-        window.location.pathname ===
-        "/login"
+        isPublicPage(pathname) ||
+        pathname === "/login"
     ) {
         return;
     }
+
+    const currentPath =
+        `${pathname}${window.location.search}`;
 
     const loginUrl =
         `/login?from=${encodeURIComponent(
             currentPath,
         )}`;
 
-    window.location.replace(loginUrl);
+    window.location.replace(
+        loginUrl,
+    );
 }
 
 function clearSessionAndRedirect(): void {
@@ -279,10 +323,9 @@ async function refreshAccessToken():
                     if (
                         result.refreshToken
                     ) {
-                        tokenStorage
-                            .setRefreshToken(
-                                result.refreshToken,
-                            );
+                        tokenStorage.setRefreshToken(
+                            result.refreshToken,
+                        );
                     }
 
                     return result;
@@ -295,35 +338,57 @@ async function refreshAccessToken():
     return refreshPromise;
 }
 
+/**
+ * Request interceptor
+ */
 apiClient.interceptors.request.use(
     (
         config:
         InternalAxiosRequestConfig,
     ) => {
-        const accessToken =
-            tokenStorage.getAccessToken();
-
+        /*
+         * Public API không cần token.
+         * Kể cả localStorage đang có token cũ,
+         * không gắn token vào request public.
+         */
         if (
-            !accessToken ||
-            isPublicAuthEndpoint(
+            isPublicApiEndpoint(
                 config.url,
             )
         ) {
+            if (
+                config.headers instanceof
+                AxiosHeaders
+            ) {
+                config.headers.delete(
+                    "Authorization",
+                );
+            }
+
             return config;
         }
 
+        const accessToken =
+            tokenStorage.getAccessToken();
+
+        if (!accessToken) {
+            return config;
+        }
+
+        /*
+         * Token sai định dạng:
+         * xóa session local nhưng chỉ redirect
+         * nếu đang ở trang protected.
+         */
         if (
             !isValidJwtFormat(
                 accessToken,
             )
         ) {
-            clearSessionAndRedirect();
+            clearAuthentication();
+            redirectToLogin();
 
-            return Promise.reject(
-                new Error(
-                    "Access token không đúng định dạng.",
-                ),
-            );
+            return config;
         }
 
         setAuthorizationHeader(
@@ -338,6 +403,9 @@ apiClient.interceptors.request.use(
         Promise.reject(error),
 );
 
+/**
+ * Response interceptor
+ */
 apiClient.interceptors.response.use(
     (
         response: AxiosResponse,
@@ -357,15 +425,25 @@ apiClient.interceptors.response.use(
         const requestUrl =
             originalRequest?.url;
 
+        const publicApiRequest =
+            isPublicApiEndpoint(
+                requestUrl,
+            );
+
         if (env.isDevelopment) {
             console.error(
                 "FITLIFE_API_ERROR",
                 {
                     method:
-                    originalRequest
-                        ?.method,
-                    url: requestUrl,
+                    originalRequest?.method,
+
+                    url:
+                    requestUrl,
+
                     status,
+
+                    publicApiRequest,
+
                     response:
                     error.response?.data,
                 },
@@ -373,30 +451,53 @@ apiClient.interceptors.response.use(
         }
 
         /*
-         * Không refresh cho:
-         * - public auth API;
-         * - chính refresh endpoint;
-         * - request đã retry.
+         * API public trả 401:
+         * chỉ trả lỗi cho HomePage xử lý,
+         * tuyệt đối không redirect login.
+         */
+        if (
+            status === 401 &&
+            publicApiRequest
+        ) {
+            return Promise.reject(
+                error,
+            );
+        }
+
+        /*
+         * Không xử lý refresh nếu:
+         * - không phải 401;
+         * - không có request config;
+         * - request đã retry;
+         * - chính refresh endpoint.
          */
         if (
             status !== 401 ||
             !originalRequest ||
             originalRequest._retry ||
-            isPublicAuthEndpoint(
-                requestUrl,
-            ) ||
             isRefreshEndpoint(
                 requestUrl,
             )
         ) {
-            if (
-                status === 401 &&
-                !isPublicAuthEndpoint(
-                    requestUrl,
-                )
-            ) {
+            if (status === 401) {
                 clearSessionAndRedirect();
             }
+
+            return Promise.reject(
+                error,
+            );
+        }
+
+        const refreshToken =
+            tokenStorage.getRefreshToken();
+
+        /*
+         * Người dùng chưa có phiên:
+         * không thử refresh.
+         */
+        if (!refreshToken) {
+            clearAuthentication();
+            redirectToLogin();
 
             return Promise.reject(
                 error,

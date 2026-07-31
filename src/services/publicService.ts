@@ -1,29 +1,96 @@
 import apiClient from "./apiClient";
-import type { ApiResponse } from "../types/common.type";
-import type { HomeData, PublicPackage, PublicTrainer, ContactRequestForm } from "../types/public.type";
+
+import type {
+  ApiResponse,
+} from "../types/common.type";
+
+import type {
+  HomeData,
+  PublicPackage,
+  PublicTrainer,
+  ContactRequestForm,
+} from "../types/public.type";
+
+function requireData<T>(
+    response: ApiResponse<T>,
+    message: string,
+): T {
+  if (
+      response.data === null ||
+      response.data === undefined
+  ) {
+    throw new Error(message);
+  }
+
+  return response.data;
+}
 
 export const publicService = {
-  getHomeData: async (): Promise<HomeData> => {
-    const response = await apiClient.get<ApiResponse<HomeData>>("/public/home");
-    return response.data.data;
+  async getHomeData():
+      Promise<HomeData> {
+    const response =
+        await apiClient.get<
+            ApiResponse<HomeData>
+        >("/public/home");
+
+    return requireData(
+        response.data,
+        "Không nhận được dữ liệu trang chủ.",
+    );
   },
 
-  getPackages: async (): Promise<PublicPackage[]> => {
-    const response = await apiClient.get<ApiResponse<PublicPackage[]>>("/public/packages");
-    return response.data.data;
+  async getPackages():
+      Promise<PublicPackage[]> {
+    const response =
+        await apiClient.get<
+            ApiResponse<PublicPackage[]>
+        >("/public/packages");
+
+    return requireData(
+        response.data,
+        "Không nhận được danh sách gói tập.",
+    );
   },
 
-  getPackageDetails: async (id: string): Promise<PublicPackage> => {
-    const response = await apiClient.get<ApiResponse<PublicPackage>>(`/public/packages/${id}`);
-    return response.data.data;
+  async getPackageDetails(
+      id: string,
+  ): Promise<PublicPackage> {
+    const response =
+        await apiClient.get<
+            ApiResponse<PublicPackage>
+        >(
+            `/public/packages/${encodeURIComponent(
+                id,
+            )}`,
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được chi tiết gói tập.",
+    );
   },
 
-  getTrainers: async (): Promise<PublicTrainer[]> => {
-    const response = await apiClient.get<ApiResponse<PublicTrainer[]>>("/public/trainers");
-    return response.data.data;
+  async getTrainers():
+      Promise<PublicTrainer[]> {
+    const response =
+        await apiClient.get<
+            ApiResponse<PublicTrainer[]>
+        >("/public/trainers");
+
+    return requireData(
+        response.data,
+        "Không nhận được danh sách huấn luyện viên.",
+    );
   },
 
-  submitContactRequest: async (data: ContactRequestForm): Promise<void> => {
-    await apiClient.post<ApiResponse<void>>("/public/contact-requests", data);
-  }
+  async submitContactRequest(
+      data: ContactRequestForm,
+  ): Promise<void> {
+    await apiClient.post<
+        ApiResponse<void>
+    >(
+        "/public/contact-requests",
+        data,
+    );
+  },
 };
