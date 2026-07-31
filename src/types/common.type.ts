@@ -31,18 +31,6 @@ export interface PageResponse<T> {
 }
 
 /**
- * Tương thích tạm với các màn hình cũ.
- * Service mới nên dùng PageResponse<T>.
- */
-export interface PageResult<T> {
-  items: T[];
-  totalItems: number;
-  totalPages: number;
-  page: number;
-  size: number;
-}
-
-/**
  * Tương thích với Spring Page trả trực tiếp.
  */
 export interface SpringPage<T> {

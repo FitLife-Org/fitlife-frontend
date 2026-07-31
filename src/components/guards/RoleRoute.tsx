@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+import type {
+    ReactNode,
+} from "react";
 
 import {
     Navigate,
@@ -8,10 +10,12 @@ import {
 import { ROUTES } from "../../config/routes";
 import { useAuthStore } from "../../store/authStore";
 
-import type { Role } from "../../types/common.type";
+import type {
+    Role,
+} from "../../types/common.type";
 
 interface RoleRouteProps {
-    roles: Role[];
+    roles: readonly Role[];
     children: ReactNode;
 }
 
@@ -33,6 +37,9 @@ export default function RoleRoute({
                 state.user,
         );
 
+    const returnUrl =
+        `${location.pathname}${location.search}`;
+
     if (
         !isAuthenticated ||
         !user
@@ -42,8 +49,7 @@ export default function RoleRoute({
                 to={ROUTES.LOGIN}
                 replace
                 state={{
-                    from:
-                        `${location.pathname}${location.search}`,
+                    from: returnUrl,
                 }}
             />
         );
@@ -63,8 +69,7 @@ export default function RoleRoute({
                 to={ROUTES.FORBIDDEN}
                 replace
                 state={{
-                    from:
-                        `${location.pathname}${location.search}`,
+                    from: returnUrl,
                 }}
             />
         );

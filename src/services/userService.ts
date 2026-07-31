@@ -1,152 +1,407 @@
 import apiClient from "./apiClient";
-import type { ApiResponse, PageResult } from "../types/common.type";
-import type { User, AdminUserCreateRequest, AdminUserUpdateRequest } from "../types/user.type";
+
+import type {
+  ApiResponse,
+  PageResponse,
+  Role,
+} from "../types/common.type";
+
+import type {
+  User,
+  UserStatus,
+  AdminUserCreateRequest,
+  AdminUserUpdateRequest,
+  AdminUpdateUserStatusRequest,
+  AdminUpdateUserRolesRequest,
+} from "../types/user.type";
+
+export interface AdminUserQueryParams {
+  /**
+   * Spring Pageable dùng page bắt đầu từ 0.
+   */
+  page?: number;
+  size?: number;
+
+  /**
+   * Ví dụ:
+   * createdAt,desc
+   */
+  sort?: string;
+
+  keyword?: string;
+  roleCode?: Role;
+  status?: UserStatus;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+function requireData<T>(
+    response: ApiResponse<T>,
+    message = "Máy chủ không trả về dữ liệu.",
+): T {
+  if (
+      response.data === null ||
+      response.data === undefined
+  ) {
+    throw new Error(message);
+  }
+
+  return response.data;
+}
+
+const VALID_ROLES: readonly Role[] = [
+  "ROLE_ADMIN",
+  "ROLE_STAFF",
+  "ROLE_TRAINER",
+  "ROLE_MEMBER",
+];
+
+const VALID_USER_STATUSES:
+    readonly UserStatus[] = [
+  "PENDING",
+  "ACTIVE",
+  "INACTIVE",
+  "LOCKED",
+];
+
+function isRole(
+    value: unknown,
+): value is Role {
+  return (
+      typeof value === "string" &&
+      VALID_ROLES.includes(
+          value as Role,
+      )
+  );
+}
+
+function isUserStatus(
+    value: unknown,
+): value is UserStatus {
+  return (
+      typeof value === "string" &&
+      VALID_USER_STATUSES.includes(
+          value as UserStatus,
+      )
+  );
+}
+
+function mapUser(
+    user: User,
+): User {
+  const roles = Array.isArray(
+      user.roles,
+  )
+      ? user.roles.filter(isRole)
+      : [];
+
+  if (!isUserStatus(user.status)) {
+    throw new Error(
+        `Trạng thái user không hợp lệ: ${String(
+            user.status,
+        )}`,
+    );
+  }
+
+  return {
+    ...user,
+
+    id: user.id,
+
+    username:
+        user.username ?? "",
+
+    fullName:
+        user.fullName ?? "",
+
+    email:
+        user.email ?? "",
+
+    phone:
+    user.phone,
+
+    roles,
+
+    status:
+    user.status,
+  };
+}
+
+function mapUserPage(
+    pageData: PageResponse<User>,
+): PageResponse<User> {
+  return {
+    content:
+        pageData.content.map(mapUser),
+
+    page:
+    pageData.page,
+
+    size:
+    pageData.size,
+
+    totalElements:
+    pageData.totalElements,
+
+    totalPages:
+    pageData.totalPages,
+
+    first:
+    pageData.first,
+
+    last:
+    pageData.last,
+
+    empty:
+    pageData.empty,
+  };
+}
 
 export const userService = {
-  async getUsers(params?: Record<string, unknown>): Promise<PageResult<User>> {
-    const apiParams = { ...params };
-    if (typeof apiParams.page === "number" && apiParams.page > 0) {
-      apiParams.page = apiParams.page - 1;
+  /**
+   * Admin lấy danh sách user.
+   */
+  async getUsers(
+      params: AdminUserQueryParams = {},
+  ): Promise<PageResponse<User>> {
+    const response =
+        await apiClient.get<
+            ApiResponse<
+                PageResponse<User>
+            >
+        >(
+            "/admin/users",
+            {
+              params: {
+                page:
+                    params.page ?? 0,
+
+                size:
+                    params.size ?? 10,
+
+                ...(params.sort
+                    ? {
+                      sort:
+                      params.sort,
+                    }
+                    : {}),
+
+                ...(params.keyword?.trim()
+                    ? {
+                      keyword:
+                          params.keyword.trim(),
+                    }
+                    : {}),
+
+                ...(params.roleCode
+                    ? {
+                      roleCode:
+                      params.roleCode,
+                    }
+                    : {}),
+
+                ...(params.status
+                    ? {
+                      status:
+                      params.status,
+                    }
+                    : {}),
+              },
+            },
+        );
+
+    const pageData =
+        requireData(
+            response.data,
+            "Không nhận được danh sách người dùng.",
+        );
+
+    return mapUserPage(
+        pageData,
+    );
+  },
+
+  /**
+   * Admin lấy chi tiết user.
+   */
+  async getUserById(
+      id: number,
+  ): Promise<User> {
+    const response =
+        await apiClient.get<
+            ApiResponse<User>
+        >(
+            `/admin/users/${id}`,
+        );
+
+    const user =
+        requireData(
+            response.data,
+            "Không nhận được thông tin người dùng.",
+        );
+
+    return mapUser(user);
+  },
+
+  /**
+   * Admin tạo tài khoản nội bộ.
+   */
+  async createUser(
+      data: AdminUserCreateRequest,
+  ): Promise<User> {
+    const response =
+        await apiClient.post<
+            ApiResponse<User>
+        >(
+            "/admin/users",
+            data,
+        );
+
+    const user =
+        requireData(
+            response.data,
+            "Không nhận được tài khoản vừa tạo.",
+        );
+
+    return mapUser(user);
+  },
+
+  /**
+   * Admin cập nhật thông tin user.
+   */
+  async updateUser(
+      id: number,
+      data: AdminUserUpdateRequest,
+  ): Promise<User> {
+    const response =
+        await apiClient.put<
+            ApiResponse<User>
+        >(
+            `/admin/users/${id}`,
+            data,
+        );
+
+    const user =
+        requireData(
+            response.data,
+            "Không nhận được tài khoản sau khi cập nhật.",
+        );
+
+    return mapUser(user);
+  },
+
+  /**
+   * Admin cập nhật trạng thái user.
+   */
+  async updateUserStatus(
+      id: number,
+      status: UserStatus,
+  ): Promise<User> {
+    const payload:
+        AdminUpdateUserStatusRequest = {
+      status,
+    };
+
+    const response =
+        await apiClient.patch<
+            ApiResponse<User>
+        >(
+            `/admin/users/${id}/status`,
+            payload,
+        );
+
+    const user =
+        requireData(
+            response.data,
+            "Không nhận được trạng thái tài khoản.",
+        );
+
+    return mapUser(user);
+  },
+
+  /**
+   * Admin thay toàn bộ role của user.
+   */
+  async updateUserRoles(
+      id: number,
+      roleCodes: Role[],
+  ): Promise<User> {
+    if (roleCodes.length === 0) {
+      throw new Error(
+          "Người dùng phải có ít nhất một vai trò.",
+      );
     }
-    
-    const response = await apiClient.get<ApiResponse<{ content?: User[]; totalElements?: number; totalPages?: number; page?: number; size?: number }>>("/admin/users", { params: apiParams });
-    const pageData = response.data.data;
-    
-    if (!pageData) {
-      return {
-        items: [],
-        totalItems: 0,
-        totalPages: 0,
-        page: (params?.page as number) || 1,
-        size: (params?.size as number) || 10
-      };
+
+    const invalidRole =
+        roleCodes.find(
+            (role) =>
+                !VALID_ROLES.includes(role),
+        );
+
+    if (invalidRole) {
+      throw new Error(
+          `Vai trò không hợp lệ: ${invalidRole}`,
+      );
     }
-    
-    return {
-      items: (pageData.content || []).map((u: User) => ({
-        id: u.id,
-        username: u.username,
-        fullName: u.fullName,
-        email: u.email,
-        phone: u.phone,
-        roles: u.roles || ["ROLE_MEMBER"],
-        status: u.status
-      })),
-      totalItems: pageData.totalElements || 0,
-      totalPages: pageData.totalPages || 0,
-      page: (pageData.page !== undefined ? pageData.page + 1 : ((params?.page as number) || 1)),
-      size: pageData.size || 10
+
+    const payload:
+        AdminUpdateUserRolesRequest = {
+      roleCodes,
     };
+
+    const response =
+        await apiClient.patch<
+            ApiResponse<User>
+        >(
+            `/admin/users/${id}/roles`,
+            payload,
+        );
+
+    const user =
+        requireData(
+            response.data,
+            "Không nhận được vai trò tài khoản.",
+        );
+
+    return mapUser(user);
   },
 
+  /**
+   * Lấy thông tin user hiện tại.
+   */
+  async getCurrentUser():
+      Promise<User> {
+    const response =
+        await apiClient.get<
+            ApiResponse<User>
+        >(
+            "/users/me",
+        );
 
-  async getUserById(id: number): Promise<User> {
-    const response = await apiClient.get<ApiResponse<User>>(`/admin/users/${id}`);
-    const u = response.data.data;
-    return {
-      id: u.id,
-      username: u.username,
-      fullName: u.fullName,
-      email: u.email,
-      phone: u.phone,
-      roles: u.roles || ["ROLE_MEMBER"],
-      status: u.status
-    };
+    const user =
+        requireData(
+            response.data,
+            "Không nhận được tài khoản hiện tại.",
+        );
+
+    return mapUser(user);
   },
 
-
-  async createUser(data: AdminUserCreateRequest): Promise<User> {
-    const response = await apiClient.post<ApiResponse<User>>("/admin/users", data);
-    const u = response.data.data;
-    return {
-      id: u.id,
-      username: u.username,
-      fullName: u.fullName,
-      email: u.email,
-      phone: u.phone,
-      roles: u.roles || ["ROLE_MEMBER"],
-      status: u.status
-    };
-  },
-
-
-  async updateUser(id: number, data: AdminUserUpdateRequest): Promise<User> {
-    const response = await apiClient.put<ApiResponse<User>>(`/admin/users/${id}`, data);
-    const u = response.data.data;
-    return {
-      id: u.id,
-      username: u.username,
-      fullName: u.fullName,
-      email: u.email,
-      phone: u.phone,
-      roles: u.roles || ["ROLE_MEMBER"],
-      status: u.status
-    };
-  },
-
-
-  async updateUserStatus(id: number, status: string): Promise<User> {
-    const response = await apiClient.patch<ApiResponse<User>>(`/admin/users/${id}/status`, { status });
-    const u = response.data.data;
-    return {
-      id: u.id,
-      username: u.username,
-      fullName: u.fullName,
-      email: u.email,
-      phone: u.phone,
-      roles: u.roles || ["ROLE_MEMBER"],
-      status: u.status
-    };
-  },
-
-
-  async updateUserRoles(id: number, roleCodes: string[]): Promise<User> {
-    const response = await apiClient.patch<ApiResponse<User>>(`/admin/users/${id}/roles`, { roleCodes });
-    const u = response.data.data;
-    return {
-      id: u.id,
-      username: u.username,
-      fullName: u.fullName,
-      email: u.email,
-      phone: u.phone,
-      roles: u.roles || ["ROLE_MEMBER"],
-      status: u.status
-    };
-  },
-
-
-  async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<ApiResponse<User>>("/users/me");
-    const u = response.data.data;
-    return {
-      id: u.id,
-      username: u.username,
-      fullName: u.fullName,
-      email: u.email,
-      phone: u.phone,
-      roles: u.roles || ["ROLE_MEMBER"],
-      status: u.status
-    };
-  },
-
-
-  async updateCurrentUser(data: Partial<User> | Record<string, unknown>): Promise<User> {
-    const response = await apiClient.put<ApiResponse<User & { memberCode?: string }>>("/users/me", data);
-    const u = response.data.data;
-    return {
-      id: u.id,
-      username: u.memberCode || u.username || "",
-      fullName: u.fullName,
-      email: u.email,
-      phone: u.phone,
-      roles: u.roles || ["ROLE_MEMBER"],
-      status: u.status
-    };
-  },
-
-  async changePassword(data: Record<string, unknown>): Promise<void> {
-    await apiClient.put<ApiResponse<void>>("/users/me/change-password", data);
+  /**
+   * Đổi mật khẩu user hiện tại.
+   */
+  async changePassword(
+      data: ChangePasswordRequest,
+  ): Promise<void> {
+    await apiClient.put<
+        ApiResponse<void>
+    >(
+        "/users/me/change-password",
+        data,
+    );
   },
 };
-
-
