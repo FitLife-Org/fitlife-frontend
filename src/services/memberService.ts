@@ -1,135 +1,349 @@
 import apiClient from "./apiClient";
-import type { Status, PageResult, PageResponse } from "../types/common.type";
-import type { BodyMetric, MemberProfile, AdminMemberCreateRequest, AdminMemberUpdateRequest } from "../types/member.type";
-import type { Subscription } from "../types/subscription.type";
-import type { CheckinRecord } from "../types/checkin.type";
+
+import type {
+  ApiResponse,
+  PageResponse,
+  Status,
+} from "../types/common.type";
+
+import type {
+  BodyMetric,
+  MemberProfile,
+  AdminMemberCreateRequest,
+  AdminMemberUpdateRequest,
+} from "../types/member.type";
+
+import type {
+  Subscription,
+} from "../types/subscription.type";
+
+import type {
+  CheckinRecord,
+} from "../types/checkin.type";
+
+export interface MemberQueryParams {
+  page?: number;
+  size?: number;
+  keyword?: string;
+  status?: Status;
+  fitnessGoal?: string;
+  sort?: string;
+}
+
+function requireData<T>(
+    response: ApiResponse<T>,
+    message: string,
+): T {
+  if (
+      response.data === null ||
+      response.data === undefined
+  ) {
+    throw new Error(message);
+  }
+
+  return response.data;
+}
+
+function mapMember(
+    member: MemberProfile,
+): MemberProfile {
+  return {
+    ...member,
+    status: member.status,
+  };
+}
 
 export const memberService = {
-  async getMyProfile(): Promise<MemberProfile> {
-    const response = await apiClient.get<MemberProfile>("/members/me");
-    return response.data;
+  async getMyProfile():
+      Promise<MemberProfile> {
+    const response =
+        await apiClient.get<
+            ApiResponse<MemberProfile>
+        >("/members/me");
+
+    return mapMember(
+        requireData(
+            response.data,
+            "Không nhận được hồ sơ hội viên.",
+        ),
+    );
   },
 
-  async updateMyProfile(data: Partial<MemberProfile>): Promise<MemberProfile> {
-    const response = await apiClient.put<MemberProfile>("/members/me", data);
-    return response.data;
+  async updateMyProfile(
+      data: Partial<MemberProfile>,
+  ): Promise<MemberProfile> {
+    const response =
+        await apiClient.put<
+            ApiResponse<MemberProfile>
+        >(
+            "/members/me",
+            data,
+        );
+
+    return mapMember(
+        requireData(
+            response.data,
+            "Không nhận được hồ sơ sau khi cập nhật.",
+        ),
+    );
   },
 
-  async getBodyMetrics(): Promise<BodyMetric[]> {
-    const response = await apiClient.get<BodyMetric[]>("/body-metrics/me");
-    return response.data || [];
+  async getBodyMetrics():
+      Promise<BodyMetric[]> {
+    const response =
+        await apiClient.get<
+            ApiResponse<
+                PageResponse<BodyMetric> |
+                BodyMetric[]
+            >
+        >("/body-metrics/me");
+
+    const data = requireData(
+        response.data,
+        "Không nhận được lịch sử chỉ số cơ thể.",
+    );
+
+    return Array.isArray(data)
+        ? data
+        : data.content;
   },
 
-  async getMembers(page: number = 1, size: number = 20, keyword?: string, status?: string): Promise<PageResult<MemberProfile>> {
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('size', size.toString());
-    if (keyword) params.append('keyword', keyword);
-    else params.append('keyword', '%');
-    
-      if (status && status !== 'ALL') {
-        let mappedStatus = status;
-        if (status === 'LOCKED') mappedStatus = 'SUSPENDED';
-        if (status === 'PENDING') mappedStatus = 'INACTIVE';
-        params.append('status', mappedStatus);
-      }
+  /**
+   * Admin lấy danh sách Member.
+   * page bắt đầu từ 0.
+   */
+  async getMembers(
+      params: MemberQueryParams = {},
+  ): Promise<PageResponse<MemberProfile>> {
+    const response =
+        await apiClient.get<
+            ApiResponse<
+                PageResponse<MemberProfile>
+            >
+        >(
+            "/admin/members",
+            {
+              params: {
+                page: params.page ?? 0,
+                size: params.size ?? 20,
 
-      const response = await apiClient.get<{ content?: MemberProfile[]; totalElements?: number; totalPages?: number; page?: number; size?: number }>(`/admin/members?${params.toString()}`);
-      const pageData = response.data;
-      
-      return {
-        items: (pageData.content || []).map((item: MemberProfile) => ({
-          ...item,
-          status: (item.status as string) === 'SUSPENDED' ? 'LOCKED' : item.status
-        })),
-        totalItems: pageData.totalElements || 0,
-        totalPages: pageData.totalPages || 0,
-        page: pageData.page || page,
-        size: pageData.size || size
-      };
+                ...(params.keyword?.trim()
+                    ? {
+                      keyword:
+                          params.keyword.trim(),
+                    }
+                    : {}),
+
+                ...(params.status
+                    ? {
+                      status: params.status,
+                    }
+                    : {}),
+
+                ...(params.fitnessGoal
+                    ? {
+                      fitnessGoal:
+                      params.fitnessGoal,
+                    }
+                    : {}),
+
+                ...(params.sort
+                    ? {
+                      sort: params.sort,
+                    }
+                    : {}),
+              },
+            },
+        );
+
+    const pageData = requireData(
+        response.data,
+        "Không nhận được danh sách hội viên.",
+    );
+
+    return {
+      ...pageData,
+      content:
+          pageData.content.map(mapMember),
+    };
   },
 
-  async getMemberById(id: number): Promise<MemberProfile> {
-    const response = await apiClient.get<MemberProfile>(`/admin/members/${id}`);
-    const member = response.data;
-    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
-    return member;
+  async getMemberById(
+      id: number,
+  ): Promise<MemberProfile> {
+    const response =
+        await apiClient.get<
+            ApiResponse<MemberProfile>
+        >(`/admin/members/${id}`);
+
+    return mapMember(
+        requireData(
+            response.data,
+            "Không nhận được thông tin hội viên.",
+        ),
+    );
   },
 
-  async getMemberByCode(memberCode: string): Promise<MemberProfile> {
-    const response = await apiClient.get<MemberProfile>(`/admin/members/code/${memberCode}`);
-    const member = response.data;
-    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
-    return member;
+  async getMemberByCode(
+      memberCode: string,
+  ): Promise<MemberProfile> {
+    const response =
+        await apiClient.get<
+            ApiResponse<MemberProfile>
+        >(
+            `/admin/members/code/${encodeURIComponent(
+                memberCode.trim(),
+            )}`,
+        );
+
+    return mapMember(
+        requireData(
+            response.data,
+            "Không tìm thấy hội viên.",
+        ),
+    );
   },
 
-  async createMember(data: AdminMemberCreateRequest): Promise<MemberProfile> {
-    const payload: Record<string, unknown> = { ...data };
-    if (payload.status === 'LOCKED') payload.status = 'SUSPENDED';
-    if (payload.status === 'PENDING') payload.status = 'INACTIVE';
-    if (payload.fitnessGoal === "") delete payload.fitnessGoal;
-    
-    const response = await apiClient.post<MemberProfile>("/admin/members", payload);
-    const member = response.data;
-    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
-    return member;
+  async createMember(
+      data: AdminMemberCreateRequest,
+  ): Promise<MemberProfile> {
+    const payload = {
+      ...data,
+
+      fitnessGoal:
+          data.fitnessGoal || undefined,
+    };
+
+    const response =
+        await apiClient.post<
+            ApiResponse<MemberProfile>
+        >(
+            "/admin/members",
+            payload,
+        );
+
+    return mapMember(
+        requireData(
+            response.data,
+            "Không nhận được hội viên vừa tạo.",
+        ),
+    );
   },
 
-  async updateMember(id: number, data: AdminMemberUpdateRequest): Promise<MemberProfile> {
-    const payload: Record<string, unknown> = { ...data };
-    if (payload.status === 'LOCKED') payload.status = 'SUSPENDED';
-    if (payload.status === 'PENDING') payload.status = 'INACTIVE';
-    if (payload.fitnessGoal === "") delete payload.fitnessGoal;
-    
-    const response = await apiClient.put<MemberProfile>(`/admin/members/${id}`, payload);
-    const member = response.data;
-    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
-    return member;
+  async updateMember(
+      id: number,
+      data: AdminMemberUpdateRequest,
+  ): Promise<MemberProfile> {
+    const payload = {
+      ...data,
+
+      fitnessGoal:
+          data.fitnessGoal || undefined,
+    };
+
+    const response =
+        await apiClient.put<
+            ApiResponse<MemberProfile>
+        >(
+            `/admin/members/${id}`,
+            payload,
+        );
+
+    return mapMember(
+        requireData(
+            response.data,
+            "Không nhận được hội viên sau khi cập nhật.",
+        ),
+    );
   },
 
-  async updateMemberStatus(id: number, status: Status): Promise<MemberProfile> {
-    let mappedStatus: string = status;
-    if (status === 'LOCKED') mappedStatus = 'SUSPENDED';
-    if (status === 'PENDING') mappedStatus = 'INACTIVE';
-    const response = await apiClient.patch<MemberProfile>(`/admin/members/${id}/status`, { status: mappedStatus });
-    const member = response.data;
-    if ((member.status as string) === 'SUSPENDED') member.status = 'LOCKED';
-    return member;
+  async updateMemberStatus(
+      id: number,
+      status: Status,
+  ): Promise<MemberProfile> {
+    const response =
+        await apiClient.patch<
+            ApiResponse<MemberProfile>
+        >(
+            `/admin/members/${id}/status`,
+            {
+              status,
+            },
+        );
+
+    return mapMember(
+        requireData(
+            response.data,
+            "Không nhận được trạng thái hội viên.",
+        ),
+    );
   },
 
-  async deleteMember(id: number): Promise<void> {
-    await apiClient.delete(`/admin/members/${id}`);
+  async deleteMember(
+      id: number,
+  ): Promise<void> {
+    await apiClient.delete<
+        ApiResponse<void>
+    >(`/admin/members/${id}`);
   },
 
-  async getMemberSubscriptions(id: number): Promise<Subscription[]> {
-    try {
-      const response = await apiClient.get<PageResponse<Subscription> | Subscription[]>(`/admin/subscriptions?memberId=${id}`);
-      const data = response.data;
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<Subscription>).content)) {
-        return (data as PageResponse<Subscription>).content;
-      }
-      return [];
-    } catch {
-      return [];
-    }
+  async getMemberSubscriptions(
+      id: number,
+  ): Promise<Subscription[]> {
+    const response =
+        await apiClient.get<
+            ApiResponse<
+                PageResponse<Subscription>
+            >
+        >(
+            "/admin/subscriptions",
+            {
+              params: {
+                memberId: id,
+                page: 0,
+                size: 100,
+              },
+            },
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được danh sách subscription.",
+    ).content;
   },
 
-  async getMemberCheckins(id: number): Promise<CheckinRecord[]> {
-    try {
-      const response = await apiClient.get<PageResponse<CheckinRecord> | CheckinRecord[]>(`/check-ins?memberId=${id}`);
-      const data = response.data;
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<CheckinRecord>).content)) {
-        return (data as PageResponse<CheckinRecord>).content;
-      }
-      return [];
-    } catch {
-      return [];
-    }
+  async getMemberCheckins(
+      id: number,
+  ): Promise<CheckinRecord[]> {
+    const response =
+        await apiClient.get<
+            ApiResponse<
+                PageResponse<CheckinRecord>
+            >
+        >(
+            "/admin/check-ins",
+            {
+              params: {
+                memberId: id,
+                page: 0,
+                size: 100,
+              },
+            },
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được lịch sử check-in.",
+    ).content;
   },
 
-  async restoreMember(id: number): Promise<void> {
-    await apiClient.patch(`/admin/members/${id}/restore`);
-  }
+  async restoreMember(
+      id: number,
+  ): Promise<void> {
+    await apiClient.patch<
+        ApiResponse<void>
+    >(
+        `/admin/members/${id}/restore`,
+    );
+  },
 };
