@@ -6,9 +6,7 @@ import {
   type ReactNode,
 } from "react";
 
-import {
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
 
 import Button from "./Button";
 
@@ -18,7 +16,17 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
 
+  /**
+   * Khi true:
+   * - Không đóng bằng nút X.
+   * - Không đóng bằng phím Escape.
+   * - Không đóng khi click backdrop.
+   */
   disableClose?: boolean;
+
+  /**
+   * Cho phép click backdrop để đóng modal.
+   */
   closeOnBackdrop?: boolean;
 }
 
@@ -38,10 +46,29 @@ export default function Modal({
   const dialogRef =
       useRef<HTMLElement>(null);
 
+  /**
+   * Giữ callback onClose mới nhất trong ref.
+   *
+   * Nhờ vậy useEffect không phải phụ thuộc trực tiếp
+   * vào onClose và không chạy lại sau mỗi lần parent render.
+   */
+  const onCloseRef =
+      useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current =
+        onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) {
       return;
     }
+
+    const previouslyFocusedElement =
+        document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
 
     const previousOverflow =
         document.body.style.overflow;
@@ -49,7 +76,13 @@ export default function Modal({
     document.body.style.overflow =
         "hidden";
 
-    dialogRef.current?.focus();
+    /**
+     * Chỉ focus dialog một lần khi modal vừa mở.
+     * Không focus lại sau mỗi ký tự người dùng nhập.
+     */
+    window.requestAnimationFrame(() => {
+      dialogRef.current?.focus();
+    });
 
     const handleKeyDown = (
         event: KeyboardEvent,
@@ -58,7 +91,7 @@ export default function Modal({
           event.key === "Escape" &&
           !disableClose
       ) {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -75,10 +108,14 @@ export default function Modal({
 
       document.body.style.overflow =
           previousOverflow;
+
+      /**
+       * Trả focus về phần tử đã mở modal.
+       */
+      previouslyFocusedElement?.focus();
     };
   }, [
     disableClose,
-    onClose,
     open,
   ]);
 
@@ -86,9 +123,8 @@ export default function Modal({
     return null;
   }
 
-  const handleBackdropClick = (
-      event:
-      MouseEvent<HTMLDivElement>,
+  const handleBackdropMouseDown = (
+      event: MouseEvent<HTMLDivElement>,
   ) => {
     if (
         disableClose ||
@@ -101,7 +137,7 @@ export default function Modal({
         event.target ===
         event.currentTarget
     ) {
-      onClose();
+      onCloseRef.current();
     }
   };
 
@@ -110,7 +146,7 @@ export default function Modal({
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-[2px]"
           role="presentation"
           onMouseDown={
-            handleBackdropClick
+            handleBackdropMouseDown
           }
       >
         <section
@@ -135,7 +171,9 @@ export default function Modal({
             <Button
                 type="button"
                 variant="ghost"
-                onClick={onClose}
+                onClick={() => {
+                  onCloseRef.current();
+                }}
                 disabled={disableClose}
                 aria-label="Đóng modal"
                 className="min-h-10 px-3 py-2"

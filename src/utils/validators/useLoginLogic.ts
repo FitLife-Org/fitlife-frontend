@@ -34,9 +34,16 @@ import { showAlert } from "../alert";
 
 import { ROUTES } from "../../config/routes";
 
+import type {
+    AuthSession,
+} from "../../types/auth.type";
+
 const EMAIL_NOT_VERIFIED_CODE = 5018;
 
 const REMEMBERED_IDENTIFIER_KEY =
+    "fitlife.rememberedIdentifier";
+
+const LEGACY_IDENTIFIER_KEY =
     "fitlife_remembered_identifier";
 
 const loginSchema = z.object({
@@ -93,16 +100,46 @@ type LoginFieldErrors =
         >
     >;
 
-function getRememberedIdentifier(): string {
-    if (typeof window === "undefined") {
+function canUseWindow(): boolean {
+    return (
+        typeof window !== "undefined"
+    );
+}
+
+function getRememberedIdentifier():
+    string {
+    if (!canUseWindow()) {
         return "";
     }
 
-    return (
+    const currentIdentifier =
         window.localStorage.getItem(
             REMEMBERED_IDENTIFIER_KEY,
-        ) ?? ""
-    );
+        );
+
+    if (currentIdentifier) {
+        return currentIdentifier;
+    }
+
+    const legacyIdentifier =
+        window.localStorage.getItem(
+            LEGACY_IDENTIFIER_KEY,
+        );
+
+    if (legacyIdentifier) {
+        window.localStorage.setItem(
+            REMEMBERED_IDENTIFIER_KEY,
+            legacyIdentifier,
+        );
+
+        window.localStorage.removeItem(
+            LEGACY_IDENTIFIER_KEY,
+        );
+
+        return legacyIdentifier;
+    }
+
+    return "";
 }
 
 function normalizeIdentifier(
@@ -117,37 +154,53 @@ function normalizeIdentifier(
 }
 
 export function useLoginLogic() {
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
-    const setSession = useAuthStore(
-        (state) => state.setSession,
-    );
+    const setSession =
+        useAuthStore(
+            (state) =>
+                state.setSession,
+        );
 
     const rememberedIdentifier =
         getRememberedIdentifier();
 
-    const [formData, setFormData] =
-        useState<LoginFormData>({
-            identifier:
+    const [
+        formData,
+        setFormData,
+    ] = useState<LoginFormData>({
+        identifier:
+        rememberedIdentifier,
+
+        password: "",
+    });
+
+    const [
+        rememberMe,
+        setRememberMe,
+    ] = useState(
+        Boolean(
             rememberedIdentifier,
-            password: "",
-        });
+        ),
+    );
 
-    const [rememberMe, setRememberMe] =
-        useState(
-            Boolean(rememberedIdentifier),
-        );
-
-    const [error, setError] =
-        useState("");
+    const [
+        error,
+        setError,
+    ] = useState("");
 
     const [
         fieldErrors,
         setFieldErrors,
-    ] = useState<LoginFieldErrors>({});
+    ] = useState<LoginFieldErrors>(
+        {},
+    );
 
-    const [loading, setLoading] =
-        useState(false);
+    const [
+        loading,
+        setLoading,
+    ] = useState(false);
 
     const containerRef =
         useRef<HTMLElement>(null);
@@ -175,14 +228,16 @@ export function useLoginLogic() {
                 setFormData(
                     (previous) => ({
                         ...previous,
-                        [fieldName]: value,
+                        [fieldName]:
+                        value,
                     }),
                 );
 
                 setFieldErrors(
                     (previous) => ({
                         ...previous,
-                        [fieldName]: undefined,
+                        [fieldName]:
+                        undefined,
                     }),
                 );
 
@@ -193,13 +248,26 @@ export function useLoginLogic() {
 
     const handleRememberMeChange =
         useCallback(
-            (checked: boolean) => {
-                setRememberMe(checked);
+            (
+                checked: boolean,
+            ) => {
+                setRememberMe(
+                    checked,
+                );
 
-                if (!checked) {
-                    window.localStorage.removeItem(
-                        REMEMBERED_IDENTIFIER_KEY,
-                    );
+                if (
+                    !checked &&
+                    canUseWindow()
+                ) {
+                    window.localStorage
+                        .removeItem(
+                            REMEMBERED_IDENTIFIER_KEY,
+                        );
+
+                    window.localStorage
+                        .removeItem(
+                            LEGACY_IDENTIFIER_KEY,
+                        );
                 }
             },
             [],
@@ -207,7 +275,13 @@ export function useLoginLogic() {
 
     const persistRememberedIdentifier =
         useCallback(
-            (identifier: string) => {
+            (
+                identifier: string,
+            ) => {
+                if (!canUseWindow()) {
+                    return;
+                }
+
                 if (rememberMe) {
                     window.localStorage.setItem(
                         REMEMBERED_IDENTIFIER_KEY,
@@ -218,21 +292,27 @@ export function useLoginLogic() {
                         REMEMBERED_IDENTIFIER_KEY,
                     );
                 }
+
+                window.localStorage.removeItem(
+                    LEGACY_IDENTIFIER_KEY,
+                );
             },
-            [rememberMe],
+            [
+                rememberMe,
+            ],
         );
 
     const completeLogin =
         useCallback(
             (
-                session:
-                Awaited<
-                    ReturnType<
-                        typeof authService.login
-                    >
-                >,
+                session: AuthSession,
+                shouldRemember:
+                boolean,
             ) => {
-                setSession(session);
+                setSession(
+                    session,
+                    shouldRemember,
+                );
 
                 navigate(
                     getRedirectPathByRoles(
@@ -265,7 +345,8 @@ export function useLoginLogic() {
 
                 try {
                     const idToken =
-                        credentialResponse.credential;
+                        credentialResponse
+                            .credential;
 
                     if (!idToken) {
                         throw new Error(
@@ -274,11 +355,15 @@ export function useLoginLogic() {
                     }
 
                     const session =
-                        await authService.googleLogin(
-                            idToken,
-                        );
+                        await authService
+                            .googleLogin(
+                                idToken,
+                            );
 
-                    completeLogin(session);
+                    completeLogin(
+                        session,
+                        rememberMe,
+                    );
 
                     showAlert.success(
                         "Thành công",
@@ -292,7 +377,9 @@ export function useLoginLogic() {
                             googleError,
                         );
 
-                    setError(message);
+                    setError(
+                        message,
+                    );
 
                     showAlert.error(
                         "Đăng nhập thất bại",
@@ -305,6 +392,7 @@ export function useLoginLogic() {
             [
                 completeLogin,
                 loading,
+                rememberMe,
             ],
         );
 
@@ -345,7 +433,8 @@ export function useLoginLogic() {
                     !validationResult.success
                 ) {
                     const errors =
-                        validationResult.error
+                        validationResult
+                            .error
                             .flatten()
                             .fieldErrors;
 
@@ -364,7 +453,8 @@ export function useLoginLogic() {
 
                 const normalizedIdentifier =
                     normalizeIdentifier(
-                        validationResult.data
+                        validationResult
+                            .data
                             .identifier,
                     );
 
@@ -375,7 +465,8 @@ export function useLoginLogic() {
                             normalizedIdentifier,
 
                             password:
-                            validationResult.data
+                            validationResult
+                                .data
                                 .password,
                         });
 
@@ -383,7 +474,10 @@ export function useLoginLogic() {
                         normalizedIdentifier,
                     );
 
-                    completeLogin(session);
+                    completeLogin(
+                        session,
+                        rememberMe,
+                    );
 
                     showAlert.success(
                         "Thành công",
@@ -416,9 +510,8 @@ export function useLoginLogic() {
                             {
                                 state: {
                                     email:
-                                        normalizedIdentifier.includes(
-                                            "@",
-                                        )
+                                        normalizedIdentifier
+                                            .includes("@")
                                             ? normalizedIdentifier
                                             : "",
                                 },
@@ -444,6 +537,7 @@ export function useLoginLogic() {
                 loading,
                 navigate,
                 persistRememberedIdentifier,
+                rememberMe,
             ],
         );
 
@@ -452,9 +546,12 @@ export function useLoginLogic() {
             const timeline =
                 gsap.timeline();
 
-            if (introRef.current) {
+            if (
+                introRef.current
+            ) {
                 timeline.fromTo(
-                    introRef.current.children,
+                    introRef.current
+                        .children,
                     {
                         opacity: 0,
                         x: -50,
@@ -464,12 +561,15 @@ export function useLoginLogic() {
                         x: 0,
                         duration: 0.8,
                         stagger: 0.2,
-                        ease: "power3.out",
+                        ease:
+                            "power3.out",
                     },
                 );
             }
 
-            if (formRef.current) {
+            if (
+                formRef.current
+            ) {
                 timeline.fromTo(
                     formRef.current,
                     {
@@ -482,14 +582,16 @@ export function useLoginLogic() {
                         y: 0,
                         scale: 1,
                         duration: 0.8,
-                        ease: "power3.out",
+                        ease:
+                            "power3.out",
                     },
                     "-=0.4",
                 );
             }
         },
         {
-            scope: containerRef,
+            scope:
+            containerRef,
         },
     );
 
