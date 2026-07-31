@@ -11,10 +11,15 @@ import { tokenStorage } from "../utils/token";
 const AUTH_USER_KEY =
     "fitlife.authUser";
 
+const LEGACY_AUTH_USER_KEY =
+    "authUser";
+
 function canUseStorage(): boolean {
     return (
         typeof window !== "undefined" &&
         typeof window.localStorage !==
+        "undefined" &&
+        typeof window.sessionStorage !==
         "undefined"
     );
 }
@@ -43,70 +48,99 @@ function isAuthUser(
     );
 }
 
+function parseStoredUser(
+    storedUser: string | null,
+): AuthUser | null {
+    if (!storedUser) {
+        return null;
+    }
+
+    try {
+        const parsed: unknown =
+            JSON.parse(storedUser);
+
+        return isAuthUser(parsed)
+            ? parsed
+            : null;
+    } catch {
+        return null;
+    }
+}
+
 function getUserFromStorage():
     AuthUser | null {
     if (!canUseStorage()) {
         return null;
     }
 
-    try {
-        const storedUser =
+    const localUser =
+        parseStoredUser(
             window.localStorage.getItem(
                 AUTH_USER_KEY,
-            ) ??
+            ),
+        );
+
+    if (localUser) {
+        return localUser;
+    }
+
+    const sessionUser =
+        parseStoredUser(
+            window.sessionStorage.getItem(
+                AUTH_USER_KEY,
+            ),
+        );
+
+    if (sessionUser) {
+        return sessionUser;
+    }
+
+    const legacyUser =
+        parseStoredUser(
             window.localStorage.getItem(
-                "authUser",
-            );
+                LEGACY_AUTH_USER_KEY,
+            ),
+        );
 
-        if (!storedUser) {
-            return null;
-        }
-
-        const parsedUser: unknown =
-            JSON.parse(storedUser);
-
-        if (!isAuthUser(parsedUser)) {
-            throw new Error(
-                "Invalid auth user.",
-            );
-        }
-
+    if (legacyUser) {
         /*
-         * Migrate key cũ.
+         * User cũ nằm localStorage,
+         * migrate thành phiên Remember Me.
          */
         window.localStorage.setItem(
             AUTH_USER_KEY,
             JSON.stringify(
-                parsedUser,
+                legacyUser,
             ),
         );
 
         window.localStorage.removeItem(
-            "authUser",
+            LEGACY_AUTH_USER_KEY,
         );
 
-        return parsedUser;
-    } catch {
-        window.localStorage.removeItem(
-            AUTH_USER_KEY,
-        );
-
-        window.localStorage.removeItem(
-            "authUser",
-        );
-
-        return null;
+        return legacyUser;
     }
+
+    removeStoredUser();
+
+    return null;
 }
 
 function saveUser(
     user: AuthUser,
+    rememberMe: boolean,
 ): void {
     if (!canUseStorage()) {
         return;
     }
 
-    window.localStorage.setItem(
+    removeStoredUser();
+
+    const storage = rememberMe
+        ? window.localStorage
+        : window.sessionStorage;
+
+    storage.setItem(
         AUTH_USER_KEY,
         JSON.stringify(user),
     );
@@ -121,8 +155,16 @@ function removeStoredUser(): void {
         AUTH_USER_KEY,
     );
 
+    window.sessionStorage.removeItem(
+        AUTH_USER_KEY,
+    );
+
     window.localStorage.removeItem(
-        "authUser",
+        LEGACY_AUTH_USER_KEY,
+    );
+
+    window.sessionStorage.removeItem(
+        LEGACY_AUTH_USER_KEY,
     );
 }
 
@@ -156,6 +198,7 @@ interface AuthState {
 
     setSession: (
         session: AuthSession,
+        rememberMe?: boolean,
     ) => void;
 
     updateAccessToken: (
@@ -198,24 +241,34 @@ export const useAuthStore =
 
             setSession: (
                 session: AuthSession,
+                rememberMe = false,
             ) => {
                 tokenStorage.setTokens(
                     session.accessToken,
                     session.refreshToken,
+                    rememberMe,
                 );
 
                 saveUser(
                     session.user,
+                    rememberMe,
                 );
 
                 set({
                     accessToken:
                     session.accessToken,
+
                     refreshToken:
                     session.refreshToken,
-                    user: session.user,
-                    isAuthenticated: true,
-                    loggingOut: false,
+
+                    user:
+                    session.user,
+
+                    isAuthenticated:
+                        true,
+
+                    loggingOut:
+                        false,
                 });
             },
 
@@ -234,7 +287,10 @@ export const useAuthStore =
             updateUser: (
                 user: AuthUser,
             ) => {
-                saveUser(user);
+                saveUser(
+                    user,
+                    tokenStorage.isRemembered(),
+                );
 
                 set({
                     user,
@@ -267,8 +323,8 @@ export const useAuthStore =
                     await authService.logout();
                 } catch {
                     /*
-                     * Logout local vẫn phải chạy kể cả backend
-                     * không phản hồi hoặc token đã hết hạn.
+                     * Logout local vẫn phải chạy
+                     * khi backend không phản hồi.
                      */
                 } finally {
                     get().clearSession();

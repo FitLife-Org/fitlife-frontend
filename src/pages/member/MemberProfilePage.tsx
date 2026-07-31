@@ -182,6 +182,17 @@ export default function MemberProfilePage() {
     }
   };
 
+  const handleClosePasswordModal = () => {
+    if (passwordSaving) {
+      return;
+    }
+
+    setPasswordModalOpen(false);
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Đang tải hồ sơ...</div>;
   }
@@ -473,9 +484,12 @@ export default function MemberProfilePage() {
 
       {/* Change Password Modal (USER-09) */}
       <Modal
-        title="Đổi mật khẩu tài khoản"
-        open={passwordModalOpen}
-        onClose={() => setPasswordModalOpen(false)}
+          title="Đổi mật khẩu tài khoản"
+          open={passwordModalOpen}
+          onClose={
+            handleClosePasswordModal
+          }
+          disableClose={passwordSaving}
       >
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <Input
@@ -506,7 +520,14 @@ export default function MemberProfilePage() {
             required
           />
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
-            <Button type="button" variant="outline" onClick={() => setPasswordModalOpen(false)}>
+            <Button
+                type="button"
+                variant="outline"
+                onClick={
+                  handleClosePasswordModal
+                }
+                disabled={passwordSaving}
+            >
               Hủy
             </Button>
             <Button type="submit" isLoading={passwordSaving} className="bg-fit-primary hover:bg-fit-primaryHover text-white">

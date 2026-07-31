@@ -54,39 +54,33 @@ function mapMember(
 }
 
 export const memberService = {
-  async getMyProfile():
-      Promise<MemberProfile> {
-    const response =
-        await apiClient.get<
-            ApiResponse<MemberProfile>
-        >("/members/me");
+    async getMyProfile():
+        Promise<MemberProfile> {
+        const response =
+            await apiClient.get<
+                MemberProfile
+            >("/members/me");
 
-    return mapMember(
-        requireData(
+        return mapMember(
             response.data,
-            "Không nhận được hồ sơ hội viên.",
-        ),
-    );
-  },
-
-  async updateMyProfile(
-      data: Partial<MemberProfile>,
-  ): Promise<MemberProfile> {
-    const response =
-        await apiClient.put<
-            ApiResponse<MemberProfile>
-        >(
-            "/members/me",
-            data,
         );
+    },
 
-    return mapMember(
-        requireData(
+    async updateMyProfile(
+        data: Partial<MemberProfile>,
+    ): Promise<MemberProfile> {
+        const response =
+            await apiClient.put<
+                MemberProfile
+            >(
+                "/members/me",
+                data,
+            );
+
+        return mapMember(
             response.data,
-            "Không nhận được hồ sơ sau khi cập nhật.",
-        ),
-    );
-  },
+        );
+    },
 
   async getBodyMetrics():
       Promise<BodyMetric[]> {
