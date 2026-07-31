@@ -3,11 +3,9 @@ import { CheckCircle2, History, X, ScanLine, XCircle } from "lucide-react";
 import Button from "../../components/common/Button";
 import GymQrScanner from "../../components/checkin/GymQrScanner";
 import { useCheckinHistory } from "../../hooks/useCheckinHistory";
-import { useAuthStore } from "../../store/authStore";
 
 export default function CheckinHistoryPage() {
-  const user = useAuthStore(state => state.user);
-  
+
   const {
     history,
     loading,

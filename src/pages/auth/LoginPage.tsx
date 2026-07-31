@@ -1,4 +1,12 @@
-import React, { useState, useEffect, memo } from "react";
+import {
+    useState,
+    useEffect,
+    memo,
+} from "react";
+
+import type {
+    CredentialResponse,
+} from "@react-oauth/google";
 import { Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { Loader2, ArrowRight } from "lucide-react";
@@ -8,14 +16,28 @@ import Input from "../../components/common/Input";
 import { ROUTES } from "../../config/routes";
 import { useLoginLogic } from "../../utils/validators/useLoginLogic";
 
-const MemoizedGoogleLogin = memo(({ onSuccess, onError }: { onSuccess: any, onError: any }) => (
-    <GoogleLogin
-        onSuccess={onSuccess}
-        onError={onError}
-        useOneTap={false}
-        width="400"
-    />
-));
+interface MemoizedGoogleLoginProps {
+    onSuccess: (
+        credentialResponse:
+        CredentialResponse,
+    ) => void | Promise<void>;
+
+    onError: () => void;
+}
+
+const MemoizedGoogleLogin = memo(
+    ({
+         onSuccess,
+         onError,
+     }: MemoizedGoogleLoginProps) => (
+        <GoogleLogin
+            onSuccess={onSuccess}
+            onError={onError}
+            useOneTap={false}
+            width="400"
+        />
+    ),
+);
 
 function AnimatedText() {
     const [activeStep, setActiveStep] = useState(0);

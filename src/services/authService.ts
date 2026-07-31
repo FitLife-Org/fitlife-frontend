@@ -1,6 +1,8 @@
-import axios from "axios";
-
 import apiClient from "./apiClient";
+import {
+  getApiErrorCode,
+  getApiErrorMessage,
+} from "../utils/apiError";
 
 import type {
   ApiResponse,
@@ -19,12 +21,6 @@ import type {
 } from "../types/auth.type";
 
 import { tokenStorage } from "../utils/token";
-
-interface BackendErrorResponse {
-  code?: number;
-  message?: string;
-  error?: string;
-}
 
 const normalizeRoles = (
     payload: AuthResponsePayload,
@@ -134,74 +130,11 @@ const normalizeRegisterResult = (
   };
 };
 
-export const extractErrorCode = (
-    error: unknown,
-): number | undefined => {
-  if (!axios.isAxiosError(error)) {
-    return undefined;
-  }
+export const extractErrorCode =
+    getApiErrorCode;
 
-  const responseData =
-      error.response
-          ?.data as
-          | BackendErrorResponse
-          | undefined;
-
-  return responseData?.code;
-};
-
-export const extractErrorMessage = (
-    error: unknown,
-): string => {
-  if (axios.isAxiosError(error)) {
-    const responseData =
-        error.response
-            ?.data as
-            | BackendErrorResponse
-            | undefined;
-
-    const backendCode =
-        responseData?.code;
-
-    const backendMessage =
-        responseData?.message ||
-        responseData?.error;
-
-    if (
-        backendCode === 5018 ||
-        backendMessage ===
-        "Email has not been verified"
-    ) {
-      return "Email chưa được xác minh. Vui lòng kiểm tra hộp thư hoặc gửi lại email xác minh.";
-    }
-
-    if (
-        error.response?.status === 401
-    ) {
-      return "Email, tên đăng nhập hoặc mật khẩu không chính xác.";
-    }
-
-    if (
-        error.response?.status === 403
-    ) {
-      return (
-          backendMessage ||
-          "Tài khoản hiện không thể đăng nhập."
-      );
-    }
-
-    return (
-        backendMessage ||
-        "Có lỗi xảy ra. Vui lòng thử lại."
-    );
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Có lỗi xảy ra. Vui lòng thử lại.";
-};
+export const extractErrorMessage =
+    getApiErrorMessage;
 
 export const authService = {
   async login(

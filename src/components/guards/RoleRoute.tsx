@@ -1,58 +1,74 @@
-import type {
-  ReactNode,
-} from "react";
+import type { ReactNode } from "react";
 
 import {
-  Navigate,
-  useLocation,
+    Navigate,
+    useLocation,
 } from "react-router-dom";
 
 import { ROUTES } from "../../config/routes";
 import { useAuthStore } from "../../store/authStore";
 
-import type {
-  Role,
-} from "../../types/common.type";
+import type { Role } from "../../types/common.type";
 
 interface RoleRouteProps {
-  roles: Role[];
-  children: ReactNode;
+    roles: Role[];
+    children: ReactNode;
 }
 
 export default function RoleRoute({
-                                    roles,
-                                    children,
+                                      roles,
+                                      children,
                                   }: RoleRouteProps) {
-  const location = useLocation();
+    const location = useLocation();
 
-  const user = useAuthStore(
-      (state) => state.user,
-  );
+    const isAuthenticated =
+        useAuthStore(
+            (state) =>
+                state.isAuthenticated,
+        );
 
-  if (!user) {
-    return (
-        <Navigate
-            to={ROUTES.LOGIN}
-            replace
-            state={{
-              from: location.pathname,
-            }}
-        />
-    );
-  }
+    const user =
+        useAuthStore(
+            (state) =>
+                state.user,
+        );
 
-  const hasPermission = roles.some(
-      (role) => user.roles.includes(role),
-  );
+    if (
+        !isAuthenticated ||
+        !user
+    ) {
+        return (
+            <Navigate
+                to={ROUTES.LOGIN}
+                replace
+                state={{
+                    from:
+                        `${location.pathname}${location.search}`,
+                }}
+            />
+        );
+    }
 
-  if (!hasPermission) {
-    return (
-        <Navigate
-            to={ROUTES.FORBIDDEN}
-            replace
-        />
-    );
-  }
+    const hasPermission =
+        roles.some(
+            (requiredRole) =>
+                user.roles.includes(
+                    requiredRole,
+                ),
+        );
 
-  return <>{children}</>;
+    if (!hasPermission) {
+        return (
+            <Navigate
+                to={ROUTES.FORBIDDEN}
+                replace
+                state={{
+                    from:
+                        `${location.pathname}${location.search}`,
+                }}
+            />
+        );
+    }
+
+    return <>{children}</>;
 }
