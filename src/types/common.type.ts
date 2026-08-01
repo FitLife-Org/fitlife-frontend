@@ -4,19 +4,21 @@ export interface ApiResponse<T = unknown> {
   data: T;
 }
 
-/**
- * Backend PageResponse hiện tại:
- * {
- *   content: T[],
- *   page: number,
- *   size: number,
- *   totalElements: number,
- *   totalPages: number,
- *   first: boolean,
- *   last: boolean,
- *   empty: boolean
- * }
- */
+export interface ApiErrorResponse<
+    T = unknown,
+> {
+  code?: number;
+  message?: string;
+  data?: T;
+  error?: string;
+  timestamp?: string;
+  path?: string;
+}
+
+export interface ValidationErrorData {
+  [fieldName: string]: string;
+}
+
 export interface PageResponse<T> {
   content: T[];
   page: number;
@@ -29,17 +31,8 @@ export interface PageResponse<T> {
 }
 
 /**
- * Giữ lại PageResult để không làm vỡ các màn cũ nếu Khoa đang dùng.
- * Nhưng từ giờ các service mới nên ưu tiên dùng PageResponse<T>.
+ * Tương thích với Spring Page trả trực tiếp.
  */
-export interface PageResult<T> {
-  items: T[];
-  totalItems: number;
-  totalPages: number;
-  page: number;
-  size: number;
-}
-
 export interface SpringPage<T> {
   content: T[];
 
@@ -53,12 +46,9 @@ export interface SpringPage<T> {
 
   totalElements: number;
   totalPages: number;
-
   size: number;
   number: number;
-
   numberOfElements: number;
-
   first: boolean;
   last: boolean;
   empty: boolean;
@@ -105,5 +95,6 @@ export type PaymentMethod =
 export type SubscriptionStatus =
     | "PENDING_PAYMENT"
     | "ACTIVE"
+    | "PAUSED"
     | "EXPIRED"
     | "CANCELLED";

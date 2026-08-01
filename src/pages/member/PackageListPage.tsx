@@ -102,14 +102,6 @@ export default function PackageListPage() {
     };
   };
 
-  const getDurationLabel = (): string => {
-    if (!selectedDuration) {
-      return "Giá cơ bản";
-    }
-
-    return selectedDuration.name;
-  };
-
   const handlePurchase = async (pkgId: number): Promise<void> => {
     if (!selectedDurationId) {
       showAlert.error("Lỗi", "Vui lòng chọn thời hạn gói tập.");

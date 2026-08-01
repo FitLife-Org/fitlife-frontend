@@ -1,5 +1,7 @@
 import {
   useEffect,
+  useId,
+  useRef,
   type MouseEvent,
   type ReactNode,
 } from "react";
@@ -18,13 +20,13 @@ interface ModalProps {
   /**
    * Khi true:
    * - Không đóng bằng nút X.
-   * - Không đóng bằng Escape.
-   * - Không đóng khi click nền.
+   * - Không đóng bằng phím Escape.
+   * - Không đóng khi click backdrop.
    */
   disableClose?: boolean;
 
   /**
-   * Có cho phép click nền để đóng modal hay không.
+   * Cho phép click backdrop để đóng modal.
    */
   closeOnBackdrop?: boolean;
 }
@@ -38,10 +40,51 @@ export default function Modal({
                                 closeOnBackdrop = true,
                                 className = "",
                               }: ModalProps) {
+  const generatedId = useId();
+
+  const titleId =
+      `modal-title-${generatedId}`;
+
+  const dialogRef =
+      useRef<HTMLElement>(null);
+
+  /**
+   * Giữ callback onClose mới nhất trong ref.
+   *
+   * Nhờ vậy useEffect không phải phụ thuộc trực tiếp
+   * vào onClose và không chạy lại sau mỗi lần parent render.
+   */
+  const onCloseRef =
+      useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current =
+        onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) {
       return;
     }
+
+    const previouslyFocusedElement =
+        document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+
+    const previousOverflow =
+        document.body.style.overflow;
+
+    document.body.style.overflow =
+        "hidden";
+
+    /**
+     * Chỉ focus dialog một lần khi modal vừa mở.
+     * Không focus lại sau mỗi ký tự người dùng nhập.
+     */
+    window.requestAnimationFrame(() => {
+      dialogRef.current?.focus();
+    });
 
     const handleKeyDown = (
         event: KeyboardEvent,
@@ -50,7 +93,7 @@ export default function Modal({
           event.key === "Escape" &&
           !disableClose
       ) {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -58,14 +101,6 @@ export default function Modal({
         "keydown",
         handleKeyDown,
     );
-
-    /*
-     * Chặn scroll trang phía sau khi modal mở.
-     */
-    const previousOverflow =
-        document.body.style.overflow;
-
-    document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener(
@@ -75,14 +110,22 @@ export default function Modal({
 
       document.body.style.overflow =
           previousOverflow;
+
+      /**
+       * Trả focus về phần tử đã mở modal.
+       */
+      previouslyFocusedElement?.focus();
     };
-  }, [open, disableClose, onClose]);
+  }, [
+    disableClose,
+    open,
+  ]);
 
   if (!open) {
     return null;
   }
 
-  const handleBackdropClick = (
+  const handleBackdropMouseDown = (
       event: MouseEvent<HTMLDivElement>,
   ) => {
     if (
@@ -92,14 +135,11 @@ export default function Modal({
       return;
     }
 
-    /*
-     * Chỉ đóng khi click đúng backdrop,
-     * không đóng khi click phần nội dung modal.
-     */
     if (
-        event.target === event.currentTarget
+        event.target ===
+        event.currentTarget
     ) {
-      onClose();
+      onCloseRef.current();
     }
   };
 
@@ -107,17 +147,24 @@ export default function Modal({
       <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-[2px]"
           role="presentation"
-          onMouseDown={handleBackdropClick}
+          onMouseDown={
+            handleBackdropMouseDown
+          }
       >
         <section
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="modal-title"
-            className={`w-full overflow-hidden rounded-2xl bg-white shadow-2xl ${className ? className : "max-w-lg"}`}
+            aria-labelledby={titleId}
+            tabIndex={-1}
+            className={`w-full overflow-hidden rounded-2xl bg-white shadow-2xl outline-none ${className ? className : "max-w-lg"}`}
+            onMouseDown={(event) => {
+              event.stopPropagation();
+            }}
         >
           <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <h2
-                id="modal-title"
+                id={titleId}
                 className="text-lg font-semibold text-slate-950"
             >
               {title}
@@ -126,12 +173,17 @@ export default function Modal({
             <Button
                 type="button"
                 variant="ghost"
-                onClick={onClose}
+                onClick={() => {
+                  onCloseRef.current();
+                }}
                 disabled={disableClose}
-                aria-label="Đóng"
+                aria-label="Đóng modal"
                 className="min-h-10 px-3 py-2"
             >
-              <X className="h-5 w-5" />
+              <X
+                  className="h-5 w-5"
+                  aria-hidden="true"
+              />
             </Button>
           </header>
 

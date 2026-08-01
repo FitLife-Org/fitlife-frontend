@@ -202,15 +202,33 @@ export default function UserManagementPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700">Trạng thái hoạt động</label>
-                <select 
-                  value={formValues.status}
-                  onChange={(e) => setFormValues(prev => ({ ...prev, status: e.target.value as Status }))}
-                  className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
+                <select
+                    value={formValues.status}
+                    onChange={(event) => {
+                      setFormValues((previous) => ({
+                        ...previous,
+
+                        status:
+                            event.target.value as Status,
+                      }));
+                    }}
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium focus:border-fit-primary focus:outline-none focus:ring-2 focus:ring-fit-primary/10"
                 >
-                  <option value="ACTIVE">Hoạt động</option>
-                  <option value="PENDING">Chờ xử lý</option>
-                  <option value="INACTIVE">Ngưng hoạt động</option>
-                  <option value="LOCKED">Bị khóa</option>
+                  <option value="ACTIVE">
+                    Hoạt động
+                  </option>
+
+                  <option value="PENDING">
+                    Chờ xử lý
+                  </option>
+
+                  <option value="INACTIVE">
+                    Ngưng hoạt động
+                  </option>
+
+                  <option value="LOCKED">
+                    Bị khóa
+                  </option>
                 </select>
               </div>
             </div>
@@ -291,39 +309,76 @@ export default function UserManagementPage() {
       {/* Main Filter & Table Card */}
       <Card className="shadow-sm border-slate-100 overflow-hidden">
         {/* Filter Toolbar */}
-        <div className="p-5 border-b border-slate-100 flex flex-wrap lg:flex-nowrap items-center justify-between gap-4 bg-slate-50/30">
-          <div className="w-full lg:w-80 relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 h-4.5 w-4.5" />
-            <input 
-              type="text" 
-              placeholder="Tìm theo mã, tên, SĐT, email..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary transition-all shadow-inner"
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/30 p-5 lg:flex-nowrap">
+          <div className="relative w-full lg:w-80">
+            <Search className="absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
+
+            <input
+                type="text"
+                placeholder="Tìm theo mã, tên, SĐT, email..."
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(
+                      event.target.value,
+                  );
+                }}
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm shadow-inner transition-all focus:border-fit-primary focus:outline-none focus:ring-2 focus:ring-fit-primary/10"
             />
           </div>
-          
-          <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
-            <div className="flex flex-col gap-1 min-w-[150px]">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide pl-1">Lọc Trạng thái</label>
-              <select 
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-sm text-slate-700 focus:outline-none focus:border-fit-primary focus:ring-2 focus:ring-fit-primary/10 shadow-sm appearance-none cursor-pointer w-full font-medium"
-                style={{ 
-                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", 
-                  backgroundRepeat: "no-repeat", 
-                  backgroundPosition: "right 0.75rem center", 
-                  backgroundSize: "1.2em 1.2em", 
-                  paddingRight: "2.25rem" 
-                }}
+
+          <div className="flex w-full items-center gap-3 overflow-x-auto pb-1 lg:w-auto lg:pb-0">
+            <div className="flex min-w-[180px] flex-col gap-1">
+              <label
+                  htmlFor="member-status-filter"
+                  className="pl-1 text-[10px] font-bold uppercase tracking-wide text-slate-500"
               >
-                <option value="ALL">Tất cả trạng thái</option>
-                <option value="ACTIVE">Hoạt động</option>
-                <option value="PENDING">Chờ xử lý</option>
-                <option value="LOCKED">Bị khóa</option>
-                <option value="INACTIVE">Ngưng hoạt động</option>
-                <option value="EXPIRED">Gói đã hết hạn</option>
+                Lọc trạng thái
+              </label>
+
+              <select
+                  id="member-status-filter"
+                  value={statusFilter}
+                  onChange={(event) => {
+                    setStatusFilter(
+                        event.target.value as
+                            Status | "ALL",
+                    );
+                  }}
+                  className="w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-9 text-sm font-medium text-slate-700 shadow-sm focus:border-fit-primary focus:outline-none focus:ring-2 focus:ring-fit-primary/10"
+                  style={{
+                    backgroundImage:
+                        "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")",
+                    backgroundRepeat:
+                        "no-repeat",
+                    backgroundPosition:
+                        "right 0.75rem center",
+                    backgroundSize:
+                        "1.2em 1.2em",
+                  }}
+              >
+                <option value="ALL">
+                  Tất cả trạng thái
+                </option>
+
+                <option value="ACTIVE">
+                  Hoạt động
+                </option>
+
+                <option value="PENDING">
+                  Chờ xử lý
+                </option>
+
+                <option value="LOCKED">
+                  Bị khóa
+                </option>
+
+                <option value="INACTIVE">
+                  Ngưng hoạt động
+                </option>
+
+                <option value="EXPIRED">
+                  Gói đã hết hạn
+                </option>
               </select>
             </div>
           </div>

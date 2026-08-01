@@ -90,29 +90,72 @@ export default function MemberProfilePage() {
     }
   };
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateChangePassword(oldPassword, newPassword, confirmPassword)) {
+  const handlePasswordChange = async (
+      event: React.FormEvent,
+  ) => {
+    event.preventDefault();
+
+    if (
+        !validateChangePassword(
+            oldPassword,
+            newPassword,
+            confirmPassword,
+        )
+    ) {
       return;
     }
 
     try {
       setPasswordSaving(true);
+
       await userService.changePassword({
-        oldPassword,
-        newPassword
+        currentPassword: oldPassword,
+        newPassword,
+        confirmPassword,
       });
-      showAlert.success("Thành công", "Đổi mật khẩu thành công!");
+
+      showAlert.success(
+          "Thành công",
+          "Đổi mật khẩu thành công!",
+      );
+
       setPasswordModalOpen(false);
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: unknown) {
-      console.error("Failed to change password:", error);
-      const errorMsg = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-        : "Đổi mật khẩu thất bại. Vui lòng thử lại.";
-      showAlert.error("Lỗi", errorMsg || "Đổi mật khẩu thất bại. Vui lòng thử lại.");
+      console.error(
+          "Failed to change password:",
+          error,
+      );
+
+      const message =
+          error &&
+          typeof error === "object" &&
+          "response" in error
+              ? (
+                  error as {
+                    response?: {
+                      data?: {
+                        message?: string;
+                        data?: Record<string, string>;
+                      };
+                    };
+                  }
+              ).response?.data
+              : undefined;
+
+      const validationMessage =
+          message?.data
+              ? Object.values(message.data)[0]
+              : undefined;
+
+      showAlert.error(
+          "Đổi mật khẩu thất bại",
+          validationMessage ??
+          message?.message ??
+          "Đổi mật khẩu thất bại. Vui lòng thử lại.",
+      );
     } finally {
       setPasswordSaving(false);
     }
@@ -137,6 +180,17 @@ export default function MemberProfilePage() {
     } finally {
       setUploadingAvatar(false);
     }
+  };
+
+  const handleClosePasswordModal = () => {
+    if (passwordSaving) {
+      return;
+    }
+
+    setPasswordModalOpen(false);
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
   };
 
   if (loading) {
@@ -430,9 +484,12 @@ export default function MemberProfilePage() {
 
       {/* Change Password Modal (USER-09) */}
       <Modal
-        title="Đổi mật khẩu tài khoản"
-        open={passwordModalOpen}
-        onClose={() => setPasswordModalOpen(false)}
+          title="Đổi mật khẩu tài khoản"
+          open={passwordModalOpen}
+          onClose={
+            handleClosePasswordModal
+          }
+          disableClose={passwordSaving}
       >
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <Input
@@ -450,7 +507,7 @@ export default function MemberProfilePage() {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+            placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
             required
           />
           <Input
@@ -463,7 +520,14 @@ export default function MemberProfilePage() {
             required
           />
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
-            <Button type="button" variant="outline" onClick={() => setPasswordModalOpen(false)}>
+            <Button
+                type="button"
+                variant="outline"
+                onClick={
+                  handleClosePasswordModal
+                }
+                disabled={passwordSaving}
+            >
               Hủy
             </Button>
             <Button type="submit" isLoading={passwordSaving} className="bg-fit-primary hover:bg-fit-primaryHover text-white">

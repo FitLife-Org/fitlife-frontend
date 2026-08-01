@@ -1,4 +1,14 @@
-import type { Role, Status } from "./common.type";
+import type { Role } from "./common.type";
+
+export type UserStatus =
+    | "PENDING"
+    | "ACTIVE"
+    | "INACTIVE"
+    | "LOCKED";
+
+export type AuthProvider =
+    | "LOCAL"
+    | "GOOGLE";
 
 export interface User {
   id: number;
@@ -6,10 +16,12 @@ export interface User {
   fullName: string;
   email: string;
   phone?: string;
-  roles: string[];
-  status: Status;
+
+  roles: Role[];
+  status: UserStatus;
+
   avatarUrl?: string;
-  authProvider?: string;
+  authProvider?: AuthProvider;
   emailVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -21,12 +33,23 @@ export interface AdminUserCreateRequest {
   password: string;
   fullName: string;
   phone: string;
-  roleCode: string;
-  status?: string;
+
+  roleCode: Role;
+  status?: UserStatus;
 }
 
 export interface AdminUserUpdateRequest {
-  fullName?: string;
-  phone?: string;
-  status?: string;
+  username: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  status: UserStatus;
+}
+
+export interface AdminUpdateUserStatusRequest {
+  status: UserStatus;
+}
+
+export interface AdminUpdateUserRolesRequest {
+  roleCodes: Role[];
 }

@@ -6,6 +6,9 @@ import toast from "react-hot-toast";
 import { checkinService } from "../../../services/checkinService";
 import { useAuthStore } from "../../../store/authStore";
 import type { AdminCheckInQrResponse } from "../../../types/checkin.type";
+import {
+  getApiErrorMessage,
+} from "../../../utils/apiError";
 
 interface GymQrManagerProps {
   isOpen: boolean;
@@ -74,8 +77,13 @@ export default function GymQrManager({ isOpen, onClose }: GymQrManagerProps) {
       setSelectedQr(updated);
       setQrPoints(prev => prev.map(p => p.id === updated.id ? updated : p));
       toast.success(`Đã tạo lại mã QR mới cho điểm "${updated.name}".`);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Không thể tạo lại mã QR.");
+    } catch (error: unknown) {
+      toast.error(
+          getApiErrorMessage(
+              error,
+              "Không thể tạo lại mã QR.",
+          ),
+      );
     } finally {
       setIsGenerating(false);
     }
