@@ -1,79 +1,169 @@
-import {BrowserRouter, Navigate, Outlet, Route, Routes} from "react-router-dom";
+import type {
+    ReactNode,
+} from "react";
+
+import {
+    BrowserRouter,
+    Outlet,
+    Route,
+    Routes,
+} from "react-router-dom";
+
 import DashboardLayout from "../components/layout/DashboardLayout";
+
 import ProtectedRoute from "../components/guards/ProtectedRoute";
 import RoleRoute from "../components/guards/RoleRoute";
-import {ROUTES} from "../config/routes";
+
+import ScrollToTop from "../components/common/ScrollToTop";
+
+import {
+    ROUTES,
+} from "../config/routes";
+
+import type {
+    Role,
+} from "../types/common.type";
+
+// =====================================================
+// PUBLIC
+// =====================================================
+
 import HomePage from "../pages/HomePage";
+
+// =====================================================
+// AUTHENTICATION
+// =====================================================
+
+import LoginPage from "../pages/auth/LoginPage";
+import RegisterPage from "../pages/auth/RegisterPage";
+import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
+import CheckEmailPage from "../pages/auth/CheckEmailPage";
+import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
+
+// =====================================================
+// COMMON
+// =====================================================
+
+import DashboardPage from "../pages/dashboard/DashboardPage";
+import SettingsPage from "../pages/settings/SettingsPage";
+
+import ForbiddenPage from "../pages/error/ForbiddenPage";
+import NotFoundPage from "../pages/error/NotFoundPage";
+
+// =====================================================
+// ADMIN
+// =====================================================
+
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AccountManagementPage from "../pages/admin/AccountManagementPage";
+import UserManagementPage from "../pages/admin/UserManagementPage";
+import PackageManagementPage from "../pages/admin/PackageManagementPage";
+import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
+import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
+import ReportPage from "../pages/admin/ReportPage";
+
+import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
+import AdminInvoiceDetailPage from "../pages/admin/AdminInvoiceDetailPage";
+
+// =====================================================
+// ADMIN - EQUIPMENT
+// =====================================================
+
 import EquipmentManagementPage from "../pages/admin/equipment/EquipmentManagementPage";
 import AddEquipmentPage from "../pages/admin/equipment/AddEquipmentPage";
 import EditEquipmentPage from "../pages/admin/equipment/EditEquipmentPage";
 import EquipmentDetailPage from "../pages/admin/equipment/EquipmentDetailPage";
 import CreateMaintenancePage from "../pages/admin/equipment/CreateMaintenancePage";
 import MaintenanceSchedulesPage from "../pages/admin/equipment/MaintenanceSchedulesPage";
-import PackageManagementPage from "../pages/admin/PackageManagementPage";
-import ReportPage from "../pages/admin/ReportPage";
-import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
-import UserManagementPage from "../pages/admin/UserManagementPage";
-import AccountManagementPage from "../pages/admin/AccountManagementPage";
-import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
-import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 
-import LoginPage from "../pages/auth/LoginPage";
-import RegisterPage from "../pages/auth/RegisterPage";
-import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
-import CheckEmailPage from "../pages/auth/CheckEmailPage";
-import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
-import DashboardPage from "../pages/dashboard/DashboardPage";
-import ForbiddenPage from "../pages/error/ForbiddenPage";
-import NotFoundPage from "../pages/error/NotFoundPage";
-import AiFitnessPage from "../pages/member/AiFitnessPage";
-import BodyMetricPage from "../pages/member/BodyMetricPage";
-import BookingPage from "../pages/member/BookingPage";
-import CheckinHistoryPage from "../pages/member/CheckinHistoryPage";
+// =====================================================
+// MEMBER
+// =====================================================
+
 import MemberHomePage from "../pages/member/MemberHomePage";
 import MemberProfilePage from "../pages/member/MemberProfilePage";
-import MySubscriptionPage from "../pages/member/MySubscriptionPage";
-import NutritionPage from "../pages/member/NutritionPage";
-import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
+import BodyMetricPage from "../pages/member/BodyMetricPage";
+
 import PackageListPage from "../pages/member/PackageListPage";
+import MySubscriptionPage from "../pages/member/MySubscriptionPage";
+
 import PaymentHistoryPage from "../pages/member/PaymentHistoryPage";
 import PaymentDetailPage from "../pages/member/PaymentDetailPage";
-import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import PaymentResultPage from "../pages/member/PaymentResultPage";
-import SettingsPage from "../pages/settings/SettingsPage";
+
+import MemberInvoiceListPage from "../pages/member/MemberInvoiceListPage";
+import MemberInvoiceDetailPage from "../pages/member/MemberInvoiceDetailPage";
+
+import CheckinHistoryPage from "../pages/member/CheckinHistoryPage";
+import BookingPage from "../pages/member/BookingPage";
+
+import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
+import WorkoutPlanDetailPage from "../pages/member/WorkoutPlanDetailPage";
+
+import NutritionPage from "../pages/member/NutritionPage";
+import NutritionPlanDetailPage from "../pages/member/NutritionPlanDetailPage";
+
+import AiFitnessPage from "../pages/member/AiFitnessPage";
+
+// =====================================================
+// STAFF
+// =====================================================
+
 import CheckinPage from "../pages/staff/CheckinPage";
 import StaffCheckinHistoryPage from "../pages/staff/StaffCheckinHistoryPage";
 import SubscriptionSupportPage from "../pages/staff/SubscriptionSupportPage";
-import MyMembersPage from "../pages/trainer/MyMembersPage";
-import TrainerSchedulePage from "../pages/trainer/TrainerSchedulePage";
-import WorkoutTrackingPage from "../pages/trainer/WorkoutTrackingPage";
-import NutritionPlanDetailPage from "../pages/member/NutritionPlanDetailPage";
-import WorkoutPlanDetailPage from "../pages/member/WorkoutPlanDetailPage";
-import type {Role} from "../types/common.type";
-import ScrollToTop from "../components/common/ScrollToTop";
 
-const DashboardLayoutRoute = () => {
+// =====================================================
+// TRAINER
+// =====================================================
+
+import TrainerSchedulePage from "../pages/trainer/TrainerSchedulePage";
+import MyMembersPage from "../pages/trainer/MyMembersPage";
+import WorkoutTrackingPage from "../pages/trainer/WorkoutTrackingPage";
+
+// =====================================================
+// ROUTE LAYOUT
+// =====================================================
+
+function DashboardLayoutRoute() {
     return (
         <DashboardLayout>
-            <Outlet/>
+            <Outlet />
         </DashboardLayout>
     );
-};
+}
 
-const RoleGuard = ({
+interface RoleGuardProps {
+    roles: readonly Role[];
+    children: ReactNode;
+}
+
+function RoleGuard({
                        roles,
                        children,
-                   }: {
-    roles: Role[];
-    children: React.ReactNode;
-}) => <RoleRoute roles={roles}>{children}</RoleRoute>;
+                   }: RoleGuardProps) {
+    return (
+        <RoleRoute roles={roles}>
+            {children}
+        </RoleRoute>
+    );
+}
+
+// =====================================================
+// ROUTER
+// =====================================================
 
 export default function AppRouter() {
     return (
         <BrowserRouter>
             <ScrollToTop />
+
             <Routes>
+                {/* =================================================
+         * PUBLIC ROUTES
+         * ================================================= */}
+
                 <Route
                     path={ROUTES.HOME}
                     element={<HomePage />}
@@ -109,14 +199,35 @@ export default function AppRouter() {
                     element={<ResetPasswordPage />}
                 />
 
+                <Route
+                    path={ROUTES.FORBIDDEN}
+                    element={<ForbiddenPage />}
+                />
 
+                {/* =================================================
+         * PROTECTED ROUTES
+         * ================================================= */}
 
-                <Route element={<ProtectedRoute/>}>
-                    <Route element={<DashboardLayoutRoute/>}>
-                        <Route path={ROUTES.DASHBOARD} element={<DashboardPage/>}/>
-                        <Route path={ROUTES.COMMON_SETTINGS} element={<SettingsPage/>}/>
+                <Route element={<ProtectedRoute />}>
+                    <Route element={<DashboardLayoutRoute />}>
+                        {/* =============================================
+             * COMMON AUTHENTICATED ROUTES
+             * ============================================= */}
 
-                        {/* Member Routes */}
+                        <Route
+                            path={ROUTES.DASHBOARD}
+                            element={<DashboardPage />}
+                        />
+
+                        <Route
+                            path={ROUTES.COMMON_SETTINGS}
+                            element={<SettingsPage />}
+                        />
+
+                        {/* =============================================
+             * MEMBER ROUTES
+             * ============================================= */}
+
                         <Route
                             path={ROUTES.MEMBER_HOME}
                             element={
@@ -162,14 +273,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        <Route
-                            path={ROUTES.MEMBER_PAYMENT_DETAIL}
-                            element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
-                                    <PaymentDetailPage />
-                                </RoleGuard>
-                            }
-                        />
+                        {/* Member Payment */}
 
                         <Route
                             path={ROUTES.MEMBER_PAYMENT}
@@ -181,10 +285,39 @@ export default function AppRouter() {
                         />
 
                         <Route
+                            path={ROUTES.MEMBER_PAYMENT_DETAIL}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <PaymentDetailPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
                             path={ROUTES.MEMBER_PAYMENT_RESULT}
                             element={
                                 <RoleGuard roles={["ROLE_MEMBER"]}>
                                     <PaymentResultPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Member Invoice */}
+
+                        <Route
+                            path={ROUTES.MEMBER_INVOICES}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MemberInvoiceListPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_INVOICE_DETAIL}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MemberInvoiceDetailPage />
                                 </RoleGuard>
                             }
                         />
@@ -207,6 +340,8 @@ export default function AppRouter() {
                             }
                         />
 
+                        {/* Member Workout */}
+
                         <Route
                             path={ROUTES.MEMBER_WORKOUTS}
                             element={
@@ -225,14 +360,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        <Route
-                            path={ROUTES.MEMBER_AI}
-                            element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
-                                    <AiFitnessPage />
-                                </RoleGuard>
-                            }
-                        />
+                        {/* Member Nutrition */}
 
                         <Route
                             path={ROUTES.MEMBER_NUTRITION}
@@ -251,12 +379,27 @@ export default function AppRouter() {
                                 </RoleGuard>
                             }
                         />
-                        {/* Admin Routes */}
+
+                        {/* Member AI */}
+
+                        <Route
+                            path={ROUTES.MEMBER_AI}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <AiFitnessPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* =============================================
+             * ADMIN ROUTES
+             * ============================================= */}
+
                         <Route
                             path={ROUTES.ADMIN_DASHBOARD}
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
-                                    <AdminDashboardPage/>
+                                    <AdminDashboardPage />
                                 </RoleGuard>
                             }
                         />
@@ -265,7 +408,7 @@ export default function AppRouter() {
                             path={ROUTES.ADMIN_USERS}
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
-                                    <AccountManagementPage/>
+                                    <AccountManagementPage />
                                 </RoleGuard>
                             }
                         />
@@ -274,7 +417,7 @@ export default function AppRouter() {
                             path={ROUTES.ADMIN_MEMBERS}
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
-                                    <UserManagementPage/>
+                                    <UserManagementPage />
                                 </RoleGuard>
                             }
                         />
@@ -283,56 +426,7 @@ export default function AppRouter() {
                             path={ROUTES.ADMIN_PACKAGES}
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
-                                    <PackageManagementPage/>
-                                </RoleGuard>
-                            }
-                        />
-
-                        <Route
-                            path={ROUTES.ADMIN_EQUIPMENT}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
-                                    <EquipmentManagementPage/>
-                                </RoleGuard>
-                            }
-                        />
-                        <Route
-                            path={`${ROUTES.ADMIN_EQUIPMENT}/add`}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
-                                    <AddEquipmentPage/>
-                                </RoleGuard>
-                            }
-                        />
-                        <Route
-                            path={`${ROUTES.ADMIN_EQUIPMENT}/edit/:id`}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
-                                    <EditEquipmentPage/>
-                                </RoleGuard>
-                            }
-                        />
-                        <Route
-                            path={`${ROUTES.ADMIN_EQUIPMENT}/:id`}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
-                                    <EquipmentDetailPage/>
-                                </RoleGuard>
-                            }
-                        />
-                        <Route
-                            path={`${ROUTES.ADMIN_EQUIPMENT}/:id/maintenance`}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
-                                    <CreateMaintenancePage/>
-                                </RoleGuard>
-                            }
-                        />
-                        <Route
-                            path={`${ROUTES.ADMIN_EQUIPMENT}/maintenance-schedules`}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
-                                    <MaintenanceSchedulesPage/>
+                                    <PackageManagementPage />
                                 </RoleGuard>
                             }
                         />
@@ -341,41 +435,160 @@ export default function AppRouter() {
                             path={ROUTES.ADMIN_TRAINERS}
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
-                                    <TrainerManagementPage/>
+                                    <TrainerManagementPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Admin Invoice */}
+
+                        <Route
+                            path={ROUTES.ADMIN_INVOICES}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <InvoiceManagementPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.ADMIN_REPORTS}
+                            path={ROUTES.ADMIN_INVOICE_DETAIL}
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
-                                    <ReportPage/>
+                                    <AdminInvoiceDetailPage />
                                 </RoleGuard>
                             }
                         />
-                        <Route
-                            path={ROUTES.ADMIN_INVOICES}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
-                                    <InvoiceManagementPage/>
-                                </RoleGuard>
-                            }
-                        />
+
+                        {/* Admin/Staff Payment */}
+
                         <Route
                             path={ROUTES.ADMIN_PAYMENTS}
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
                                     <PaymentManagementPage />
                                 </RoleGuard>
                             }
                         />
-                        {/* Staff Routes */}
+
+                        {/* Admin Reports */}
+
+                        <Route
+                            path={ROUTES.ADMIN_REPORTS}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <ReportPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* =============================================
+             * EQUIPMENT ROUTES
+             * ============================================= */}
+
+                        <Route
+                            path={ROUTES.ADMIN_EQUIPMENT}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <EquipmentManagementPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/add`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <AddEquipmentPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/maintenance-schedules`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <MaintenanceSchedulesPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/edit/:id`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <EditEquipmentPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/:id/maintenance`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <CreateMaintenancePage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/:id`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <EquipmentDetailPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* =============================================
+             * STAFF ROUTES
+             * ============================================= */}
+
                         <Route
                             path={ROUTES.STAFF_CHECKIN}
                             element={
-                                <RoleGuard roles={["ROLE_STAFF", "ROLE_ADMIN"]}>
-                                    <CheckinPage/>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <CheckinPage />
                                 </RoleGuard>
                             }
                         />
@@ -383,8 +596,13 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.STAFF_CHECKIN_HISTORY}
                             element={
-                                <RoleGuard roles={["ROLE_STAFF", "ROLE_ADMIN"]}>
-                                    <StaffCheckinHistoryPage/>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <StaffCheckinHistoryPage />
                                 </RoleGuard>
                             }
                         />
@@ -392,18 +610,31 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.STAFF_SUBSCRIPTION_SUPPORT}
                             element={
-                                <RoleGuard roles={["ROLE_STAFF", "ROLE_ADMIN"]}>
-                                    <SubscriptionSupportPage/>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <SubscriptionSupportPage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* Trainer Routes */}
+                        {/* =============================================
+             * TRAINER ROUTES
+             * ============================================= */}
+
                         <Route
                             path={ROUTES.TRAINER_SCHEDULE}
                             element={
-                                <RoleGuard roles={["ROLE_TRAINER", "ROLE_ADMIN"]}>
-                                    <TrainerSchedulePage/>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <TrainerSchedulePage />
                                 </RoleGuard>
                             }
                         />
@@ -411,8 +642,13 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.TRAINER_MEMBERS}
                             element={
-                                <RoleGuard roles={["ROLE_TRAINER", "ROLE_ADMIN"]}>
-                                    <MyMembersPage/>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <MyMembersPage />
                                 </RoleGuard>
                             }
                         />
@@ -420,18 +656,32 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.TRAINER_WORKOUT_TRACKING}
                             element={
-                                <RoleGuard roles={["ROLE_TRAINER", "ROLE_ADMIN"]}>
-                                    <WorkoutTrackingPage/>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <WorkoutTrackingPage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* 404 CATCH ALL */}
-                        <Route path="*" element={<NotFoundPage/>}/>
+                        {/* Protected 404 */}
+
+                        <Route
+                            path="*"
+                            element={<NotFoundPage />}
+                        />
                     </Route>
                 </Route>
 
+                {/* Public 404 */}
 
+                <Route
+                    path="*"
+                    element={<NotFoundPage />}
+                />
             </Routes>
         </BrowserRouter>
     );
