@@ -13,6 +13,7 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  className?: string;
 
   /**
    * Khi true:
@@ -35,6 +36,7 @@ export default function Modal({
                                 children,
                                 disableClose = false,
                                 closeOnBackdrop = true,
+                                className = "",
                               }: ModalProps) {
   useEffect(() => {
     if (!open) {
@@ -111,7 +113,7 @@ export default function Modal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
-            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className={`w-full overflow-hidden rounded-2xl bg-white shadow-2xl ${className ? className : "max-w-lg"}`}
         >
           <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <h2

@@ -1,6 +1,6 @@
 import { 
   Search, Plus, Eye, Edit2, Lock, Unlock, 
-  Shield
+  Shield, User, Phone, Mail, Key, Briefcase, Activity, Dumbbell
 } from "lucide-react";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
@@ -316,18 +316,38 @@ export default function AccountManagementPage() {
         )}
       </Modal>
 
-      {/* Create / Edit Form Modal (USER-03, USER-04) */}
       <Modal 
-        title={isEditMode ? "Chỉnh sửa Tài khoản" : "Tạo Tài khoản Nội bộ"}
+        title={isEditMode ? "Chỉnh sửa tài khoản" : "Tạo tài khoản nội bộ"}
         open={formModalOpen}
         onClose={() => setFormModalOpen(false)}
+        className="max-w-3xl"
       >
-        <form onSubmit={handleFormSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm shrink-0">
+            <img 
+              src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png" 
+              alt="FitLife Logo" 
+              className="w-10 h-10 object-contain"
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">FitLife Workspace</h3>
+            <p className="text-sm text-slate-500 mt-0.5 leading-relaxed">
+              {isEditMode 
+                ? "Cập nhật thông tin chi tiết của tài khoản trên hệ thống quản trị FitLife." 
+                : "Điền thông tin dưới đây để cấp phát tài khoản mới cho nhân viên trong hệ thống."}
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleFormSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+            <div>
               <Input 
-                label="Họ và tên *" 
+                label="Họ và tên *"
                 name="fullName"
+                icon={<User className="w-4.5 h-4.5" />}
                 value={formValues.fullName} 
                 onChange={(e) => setFormValues(prev => ({ ...prev, fullName: e.target.value }))}
                 placeholder="Nhập họ và tên"
@@ -339,11 +359,13 @@ export default function AccountManagementPage() {
               <Input 
                 label="Username *" 
                 name="username"
+                icon={<Shield className="w-4.5 h-4.5" />}
                 value={formValues.username} 
                 onChange={(e) => setFormValues(prev => ({ ...prev, username: e.target.value }))}
                 placeholder="Nhập tên đăng nhập"
                 required
                 disabled={isEditMode}
+                className={isEditMode ? "bg-slate-50 text-slate-400 cursor-not-allowed" : ""}
               />
             </div>
 
@@ -351,6 +373,7 @@ export default function AccountManagementPage() {
               <Input 
                 label="Số điện thoại *" 
                 name="phone"
+                icon={<Phone className="w-4.5 h-4.5" />}
                 value={formValues.phone} 
                 onChange={(e) => setFormValues(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder="Ví dụ: 0987654321"
@@ -358,11 +381,12 @@ export default function AccountManagementPage() {
               />
             </div>
 
-            <div className="col-span-2">
+            <div>
               <Input 
                 label="Email *" 
                 name="email"
                 type="email"
+                icon={<Mail className="w-4.5 h-4.5" />}
                 value={formValues.email} 
                 onChange={(e) => setFormValues(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="example@fitlife.local"
@@ -371,11 +395,12 @@ export default function AccountManagementPage() {
             </div>
 
             {!isEditMode && (
-              <div className="col-span-2">
+              <div className="md:col-span-2">
                 <Input 
                   label="Mật khẩu khởi tạo *" 
                   name="password"
                   type="password"
+                  icon={<Key className="w-4.5 h-4.5" />}
                   value={formValues.password} 
                   onChange={(e) => setFormValues(prev => ({ ...prev, password: e.target.value }))}
                   placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
@@ -386,45 +411,65 @@ export default function AccountManagementPage() {
 
             {!isEditMode && (
               <div>
-                <label className="block text-sm font-semibold text-slate-700">Vai trò chính</label>
-                <select 
-                  value={formValues.roleCode}
-                  onChange={(e) => setFormValues(prev => ({ ...prev, roleCode: e.target.value }))}
-                  className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
-                >
-                  <option value="ROLE_STAFF">Nhân viên (Staff)</option>
-                  <option value="ROLE_TRAINER">Huấn luyện viên (PT)</option>
-                  <option value="ROLE_ADMIN">Quản trị viên (Admin)</option>
-                </select>
+                <label className="block text-sm font-medium text-slate-700">Vai trò chính</label>
+                <div className="relative mt-2">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <Briefcase className="w-4.5 h-4.5" />
+                  </div>
+                  <select 
+                    value={formValues.roleCode}
+                    onChange={(e) => setFormValues(prev => ({ ...prev, roleCode: e.target.value }))}
+                    className="w-full pl-11 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary font-medium text-slate-700 appearance-none transition-all shadow-sm"
+                  >
+                    <option value="ROLE_STAFF">Nhân viên (Staff)</option>
+                    <option value="ROLE_TRAINER">Huấn luyện viên (PT)</option>
+                    <option value="ROLE_ADMIN">Quản trị viên (Admin)</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700">Trạng thái</label>
-              <select 
-                value={formValues.status}
-                onChange={(e) => setFormValues(prev => ({ ...prev, status: e.target.value }))}
-                className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
-              >
-                <option value="ACTIVE">Hoạt động</option>
-                <option value="INACTIVE">Không hoạt động</option>
-                <option value="LOCKED">Bị khóa</option>
-              </select>
+              <label className="block text-sm font-medium text-slate-700">Trạng thái</label>
+              <div className="relative mt-2">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  <Activity className="w-4.5 h-4.5" />
+                </div>
+                <select 
+                  value={formValues.status}
+                  onChange={(e) => setFormValues(prev => ({ ...prev, status: e.target.value }))}
+                  className="w-full pl-11 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary font-medium text-slate-700 appearance-none transition-all shadow-sm"
+                >
+                  <option value="ACTIVE">Hoạt động</option>
+                  <option value="INACTIVE">Không hoạt động</option>
+                  <option value="LOCKED">Bị khóa</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
-            <Button type="button" variant="outline" onClick={() => setFormModalOpen(false)}>
-              Hủy
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-8">
+            <Button type="button" variant="outline" onClick={() => setFormModalOpen(false)} className="px-5 py-2.5 rounded-xl font-medium">
+              Hủy bỏ
             </Button>
-            <Button type="submit" isLoading={formLoading} className="bg-fit-primary hover:bg-fit-primaryHover text-white">
-              {isEditMode ? "Lưu thay đổi" : "Tạo mới"}
+            <Button type="submit" isLoading={formLoading} className="bg-fit-primary hover:bg-fit-primaryHover text-white px-6 py-2.5 rounded-xl font-medium shadow-sm shadow-fit-primary/20">
+              {isEditMode ? "Lưu thay đổi" : "Tạo tài khoản"}
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Role Assignment Modal (USER-06) */}
+
       <Modal 
         title="Gán vai trò cho tài khoản"
         open={roleModalOpen}
