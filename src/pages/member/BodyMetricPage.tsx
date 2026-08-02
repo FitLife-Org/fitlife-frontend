@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Activity, TrendingDown, TrendingUp, Scale, HeartPulse, Dumbbell, X, Plus, Save } from "lucide-react";
+import { motion } from "framer-motion";
+import { Activity, TrendingDown, TrendingUp, Scale, HeartPulse, Dumbbell } from "lucide-react";
 import toast from "react-hot-toast";
 import { bodyMetricService } from "../../services/bodyMetricService";
 import type {
   BodyMetric,
   BodyMetricProgress,
 } from "../../types/bodyMetric.type";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
-import { useBodyMetricLogic } from "../../utils/validators/useBodyMetricLogic";
 
 export default function BodyMetricPage() {
   const [metrics, setMetrics] = useState<BodyMetric[]>([]);
@@ -20,32 +17,17 @@ export default function BodyMetricPage() {
     fetchData();
   }, []);
 
-  const fetchData = async (newRecord?: { weightKg: number; heightCm?: number; bodyFatPercent?: number; muscleMassKg?: number }) => {
+  const fetchData = async () => {
     try {
+      setLoading(true);
       const [metricsData, progressData] = await Promise.all([
         bodyMetricService.getMyMetrics(),
         bodyMetricService.getMyProgress()
       ]);
-      let updated = metricsData.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
-      
-      if (newRecord) {
-        const height = newRecord.heightCm || updated[0]?.heightCm || 175;
-        const bmi = Number((newRecord.weightKg / ((height / 100) ** 2)).toFixed(1));
-        const created: BodyMetric = {
-          id: Date.now(),
-          memberId: 1,
-          recordedAt: new Date().toISOString(),
-          weightKg: newRecord.weightKg,
-          heightCm: height,
-          bmi,
-          bodyFatPercent: newRecord.bodyFatPercent || updated[0]?.bodyFatPercent || 18,
-          muscleMassKg: newRecord.muscleMassKg || updated[0]?.muscleMassKg || 35,
-        };
-        updated = [created, ...updated.filter(m => m.id !== created.id)];
-      }
-
+      const updated = metricsData.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
       setMetrics(updated);
-      if (progressData && progressData.length > 0 && !newRecord) {
+
+      if (progressData && progressData.length > 0) {
         setProgress(progressData);
       } else if (updated.length >= 2) {
         const curr = updated[0];
@@ -60,35 +42,11 @@ export default function BodyMetricPage() {
         setProgress(progressData);
       }
     } catch {
-      if (newRecord) {
-        const created: BodyMetric = {
-          id: Date.now(),
-          memberId: 1,
-          recordedAt: new Date().toISOString(),
-          weightKg: newRecord.weightKg,
-          heightCm: newRecord.heightCm || 175,
-          bmi: Number((newRecord.weightKg / (((newRecord.heightCm || 175) / 100) ** 2)).toFixed(1)),
-          bodyFatPercent: newRecord.bodyFatPercent || 18,
-          muscleMassKg: newRecord.muscleMassKg || 35,
-        };
-        setMetrics(prev => [created, ...prev]);
-      } else {
-        toast.error("Không thể tải chỉ số cơ thể.");
-      }
+      toast.error("Không thể tải chỉ số cơ thể.");
     } finally {
       setLoading(false);
     }
   };
-
-  const {
-    showAddModal,
-    submitting,
-    formData,
-    setFormData,
-    handleSubmit,
-    handleOpenModal,
-    handleCloseModal
-  } = useBodyMetricLogic(fetchData);
 
   if (loading) {
     return (
@@ -127,13 +85,6 @@ export default function BodyMetricPage() {
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Chỉ số cơ thể</h1>
           <p className="text-slate-500 mt-2 text-lg">Theo dõi hành trình thay đổi vóc dáng của bạn.</p>
         </div>
-        <Button 
-          variant="primary"
-          onClick={handleOpenModal}
-          className="flex items-center gap-2 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/20 hover:-translate-y-1 hover:shadow-xl transition-all"
-        >
-          <Plus className="w-5 h-5" /> Cập nhật chỉ số
-        </Button>
       </div>
 
       {!latestMetric ? (
@@ -302,95 +253,6 @@ export default function BodyMetricPage() {
           </motion.div>
         </div>
       )}
-
-      {/* Modal Thêm Chỉ Số */}
-      <AnimatePresence>
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={handleCloseModal}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden z-10"
-            >
-              <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                  <Activity className="w-6 h-6 text-emerald-500" />
-                  Cập nhật chỉ số
-                </h2>
-                <button 
-                  onClick={handleCloseModal}
-                  className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-rose-500 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <Input 
-                    label="Cân nặng (kg) *" 
-                    type="number" 
-                    step="0.1"
-                    placeholder="VD: 70.5"
-                    value={formData.weightKg}
-                    onChange={(e) => setFormData({...formData, weightKg: e.target.value})}
-                    required
-                  />
-                  <Input 
-                    label="Chiều cao (cm)" 
-                    type="number" 
-                    placeholder="VD: 175"
-                    value={formData.heightCm}
-                    onChange={(e) => setFormData({...formData, heightCm: e.target.value})}
-                  />
-                  <Input 
-                    label="Tỷ lệ mỡ (%)" 
-                    type="number" 
-                    step="0.1"
-                    placeholder="VD: 18.5"
-                    value={formData.bodyFatPercent}
-                    onChange={(e) => setFormData({...formData, bodyFatPercent: e.target.value})}
-                  />
-                  <Input 
-                    label="Lượng cơ bắp (kg)" 
-                    type="number" 
-                    step="0.1"
-                    placeholder="VD: 35.2"
-                    value={formData.muscleMassKg}
-                    onChange={(e) => setFormData({...formData, muscleMassKg: e.target.value})}
-                  />
-                </div>
-
-                <div className="pt-4 flex justify-end gap-3">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleCloseModal}
-                    className="rounded-xl px-6"
-                  >
-                    Hủy
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    variant="primary" 
-                    isLoading={submitting}
-                    className="rounded-xl px-8 flex items-center gap-2 shadow-lg shadow-fit-primary/20"
-                  >
-                    <Save className="w-5 h-5" />
-                    Lưu chỉ số
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

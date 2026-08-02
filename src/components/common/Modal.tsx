@@ -15,6 +15,7 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  className?: string;
 
   /**
    * Khi true:
@@ -37,6 +38,7 @@ export default function Modal({
                                 children,
                                 disableClose = false,
                                 closeOnBackdrop = true,
+                                className = "",
                               }: ModalProps) {
   const generatedId = useId();
 
@@ -155,7 +157,7 @@ export default function Modal({
             aria-modal="true"
             aria-labelledby={titleId}
             tabIndex={-1}
-            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
+            className={`w-full overflow-hidden rounded-2xl bg-white shadow-2xl outline-none ${className ? className : "max-w-lg"}`}
             onMouseDown={(event) => {
               event.stopPropagation();
             }}
