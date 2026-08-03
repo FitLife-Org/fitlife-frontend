@@ -17,7 +17,6 @@ import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
 import AccountManagementPage from "../pages/admin/AccountManagementPage";
 import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
-import AdminNutritionPage from "../pages/admin/AdminNutritionPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 
 import LoginPage from "../pages/auth/LoginPage";
@@ -368,14 +367,6 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
                                     <PaymentManagementPage />
-                                </RoleGuard>
-                            }
-                        />
-                        <Route
-                            path={ROUTES.ADMIN_NUTRITION}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
-                                    <AdminNutritionPage />
                                 </RoleGuard>
                             }
                         />
