@@ -60,7 +60,7 @@ export const EquipmentService = {
             ApiResponse<PageResponse<Equipment>>
         >(PUBLIC_API_BASE, {
           params: {
-            page: params.page ?? 0,
+            page: (params.page ?? 0) + 1,
             size: params.size ?? 20,
 
             ...(params.keyword?.trim()
@@ -208,7 +208,10 @@ export const EquipmentService = {
         >(
             `${ADMIN_API_BASE}/maintenance-schedules`,
             {
-              params,
+              params: {
+                ...params,
+                page: ((params.page as number) ?? 0) + 1,
+              },
             },
         );
 

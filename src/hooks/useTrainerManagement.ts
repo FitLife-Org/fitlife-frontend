@@ -126,8 +126,9 @@ export function useTrainerManagement() {
   };
 
   const filteredTrainers = trainers.filter(t => 
-    t.fullName.toLowerCase().includes(search.toLowerCase()) || 
-    (t.specialty && t.specialty.toLowerCase().includes(search.toLowerCase()))
+    (t.fullName || "").toLowerCase().includes(search.toLowerCase()) || 
+    (t.specialty && t.specialty.toLowerCase().includes(search.toLowerCase())) ||
+    (t.email || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return {
