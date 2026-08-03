@@ -251,7 +251,7 @@ export default function PackageListPage() {
         </div>
 
         {/* MAIN CONTENT AREA */}
-        <div className="max-w-6xl mx-auto px-4 -mt-12 relative z-20">
+        <div className="max-w-6xl mx-auto px-4 mt-8 relative z-20">
           {/* DURATION SELECTOR (SLEEK & COMPACT TABS) */}
           {durations.length > 0 && (
             <motion.div 
@@ -375,25 +375,25 @@ export default function PackageListPage() {
                       <div className="mb-8 border-b border-dashed border-slate-300/30 pb-8">
                         <div className="flex items-baseline gap-1">
                           <span className={`text-4xl font-black tracking-tight ${priceColor}`}>
-                            {formatCurrency(pricePerMonth)}
+                            {formatCurrency(priceInfo.finalPrice)}
                           </span>
                           <span className={`text-sm font-medium ${isPremium ? 'text-zinc-500' : 'text-slate-400'}`}>
-                            /tháng
+                            / {selectedDuration?.months || 1} tháng
                           </span>
                         </div>
                         
                         {selectedDuration && priceInfo.discountAmount > 0 ? (
                           <div className="mt-2 flex flex-col gap-1 text-sm">
                             <span className="line-through text-slate-400">
-                              Tổng: {formatCurrency(priceInfo.originalPrice)}
+                              Giá gốc: {formatCurrency(priceInfo.originalPrice)}
                             </span>
                             <span className={`${isPremium ? 'text-yellow-500' : 'text-fit-primary'} font-bold`}>
-                              Chỉ {formatCurrency(priceInfo.finalPrice)} / {selectedDuration.months} tháng
+                              Tiết kiệm: {formatCurrency(priceInfo.discountAmount)} ({selectedDuration.discountPercent}%)
                             </span>
                           </div>
                         ) : (
-                          <div className={`mt-2 text-sm font-medium ${isPremium ? 'text-zinc-400' : 'text-slate-500'}`}>
-                            Tổng: {formatCurrency(priceInfo.finalPrice)} / {selectedDuration?.months || 1} tháng
+                          <div className="mt-2 flex flex-col gap-1 text-sm opacity-0">
+                            <span>Placeholder</span>
                           </div>
                         )}
                       </div>
