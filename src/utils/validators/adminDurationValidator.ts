@@ -18,6 +18,16 @@ export const adminDurationSchema = z.object({
     .number()
     .min(0, "Phần trăm giảm giá không được âm")
     .max(100, "Phần trăm giảm giá không được vượt quá 100"),
+  gymPackageId: z
+    .number({ required_error: "Vui lòng chọn gói tập" })
+    .min(1, "Gói tập không hợp lệ"),
+  price: z
+    .number({ required_error: "Giá cơ bản là bắt buộc" })
+    .min(0, "Giá cơ bản không được âm"),
+  discountPrice: z
+    .number()
+    .min(0, "Giá khuyến mãi không được âm")
+    .optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "LOCKED", "PENDING", "EXPIRED", "CANCELLED"]).optional(),
 });
 

@@ -29,6 +29,10 @@ export interface PackageDuration {
   name: string;
   months: number;
   discountPercent: number;
+  gymPackageId?: number;
+  gymPackageName?: string;
+  price?: number;
+  discountPrice?: number;
   status: string;
   createdAt?: string;
   updatedAt?: string;
@@ -66,6 +70,9 @@ export interface AdminPackageDurationCreateRequest {
   name: string;
   months: number;
   discountPercent: number;
+  gymPackageId: number;
+  price: number;
+  discountPrice?: number;
   status?: string;
 }
 
@@ -73,5 +80,7 @@ export interface AdminPackageDurationUpdateRequest {
   name: string;
   months: number;
   discountPercent: number;
+  price: number;
+  discountPrice?: number;
   status?: string;
 }
