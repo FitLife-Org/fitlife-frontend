@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { showAlert } from "../utils/alert";
 import { packageService } from "../services/packageService";
-import type { PackageDuration } from "../types/package.type";
+import type { GymPackage, PackageDuration } from "../types/package.type";
 import { validateAdminDurationForm } from "../utils/validators/adminDurationValidator";
 
 export function usePackageDurationTab() {
   const [durations, setDurations] = useState<PackageDuration[]>([]);
+  const [packages, setPackages] = useState<GymPackage[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,20 +15,27 @@ export function usePackageDurationTab() {
     code: "",
     name: "",
     months: "1",
-    discountPercent: "0"
+    discountPercent: "0",
+    gymPackageId: "",
+    price: "",
+    discountPrice: ""
   });
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
   
   useEffect(() => {
-    fetchDurations();
+    fetchData();
   }, []);
 
-  const fetchDurations = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await packageService.getAdminPackageDurations();
-      setDurations(data);
+      const [durationsData, packagesData] = await Promise.all([
+        packageService.getAdminPackageDurations(),
+        packageService.getAdminPackages({ size: 100 })
+      ]);
+      setDurations(durationsData);
+      setPackages(packagesData);
     } catch {
       console.error("Failed to fetch durations");
     } finally {
@@ -42,7 +50,10 @@ export function usePackageDurationTab() {
         code: duration.code,
         name: duration.name,
         months: duration.months.toString(),
-        discountPercent: duration.discountPercent.toString()
+        discountPercent: duration.discountPercent.toString(),
+        gymPackageId: duration.gymPackageId ? duration.gymPackageId.toString() : "",
+        price: duration.price ? duration.price.toString() : "",
+        discountPrice: duration.discountPrice ? duration.discountPrice.toString() : ""
       });
     } else {
       setEditingDuration(null);
@@ -50,7 +61,10 @@ export function usePackageDurationTab() {
         code: "", 
         name: "", 
         months: "1",
-        discountPercent: "0"
+        discountPercent: "0",
+        gymPackageId: packages.length > 0 ? packages[0].id.toString() : "",
+        price: "",
+        discountPrice: ""
       });
     }
     setIsModalOpen(true);
@@ -64,6 +78,9 @@ export function usePackageDurationTab() {
         name: formData.name,
         months: Number(formData.months),
         discountPercent: Number(formData.discountPercent),
+        gymPackageId: Number(formData.gymPackageId),
+        price: Number(formData.price),
+        discountPrice: formData.discountPrice ? Number(formData.discountPrice) : Number(formData.price),
         status: "ACTIVE"
       };
 
@@ -85,7 +102,7 @@ export function usePackageDurationTab() {
         showAlert.success("Thành công", "Đã tạo thời hạn mới");
       }
       setIsModalOpen(false);
-      fetchDurations();
+      fetchData();
     } catch {
       showAlert.error("Lỗi", "Không thể lưu thông tin thời hạn");
     }
@@ -96,7 +113,7 @@ export function usePackageDurationTab() {
     try {
       await packageService.deletePackageDuration(deleteId);
       showAlert.success("Thành công", "Đã xóa thời hạn");
-      fetchDurations();
+      fetchData();
     } catch {
       showAlert.error("Lỗi", "Không thể xóa thời hạn");
     } finally {
@@ -109,7 +126,7 @@ export function usePackageDurationTab() {
       const newStatus = duration.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
       await packageService.updatePackageDurationStatus(duration.id, newStatus);
       showAlert.success("Thành công", `Đã ${newStatus === 'ACTIVE' ? 'kích hoạt' : 'khóa'} thời hạn`);
-      fetchDurations();
+      fetchData();
     } catch {
       showAlert.error("Lỗi", "Không thể thay đổi trạng thái");
     }
@@ -117,6 +134,7 @@ export function usePackageDurationTab() {
 
   return {
     durations,
+    packages,
     loading,
     isModalOpen,
     setIsModalOpen,

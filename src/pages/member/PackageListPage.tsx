@@ -43,7 +43,7 @@ export default function PackageListPage() {
         setLoading(true);
 
         const [pkgs, sub, durationData] = await Promise.all([
-          packageService.getPublicPackages(),
+          packageService.getPublicPackages({ size: 100 }),
           subscriptionService.getMySubscription(),
           packageService.getPackageDurations(),
         ]);

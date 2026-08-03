@@ -6,12 +6,14 @@ import Badge from "../../../components/common/Badge";
 import Modal from "../../../components/common/Modal";
 import Input from "../../../components/common/Input";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
+import { formatCurrency } from "../../../utils/formatCurrency";
 import type { PackageDuration } from "../../../types/package.type";
 import { usePackageDurationTab } from "../../../hooks/usePackageDurationTab";
 
 export default function PackageDurationTab() {
   const {
     durations,
+    packages,
     loading,
     isModalOpen,
     setIsModalOpen,
@@ -38,7 +40,10 @@ export default function PackageDurationTab() {
       key: "name",
       header: "Tên thời hạn",
       render: (row: PackageDuration) => (
-        <span className="font-bold text-slate-800">{row.name}</span>
+        <div>
+          <p className="font-bold text-slate-800">{row.name}</p>
+          <span className="text-xs text-slate-500 font-medium">{row.gymPackageName || "Chưa gán gói"}</span>
+        </div>
       ),
     },
     {
@@ -49,10 +54,15 @@ export default function PackageDurationTab() {
       ),
     },
     {
-      key: "discountPercent",
-      header: "% Giảm giá",
+      key: "price",
+      header: "Giá & Khuyến mãi",
       render: (row: PackageDuration) => (
-        <Badge variant="success">Giảm {row.discountPercent}%</Badge>
+        <div>
+          <p className="font-bold text-slate-900">{formatCurrency(row.price || 0)}</p>
+          {row.discountPercent && row.discountPercent > 0 ? (
+            <p className="text-xs text-fit-primary font-semibold">Khuyến mãi: {formatCurrency(row.discountPrice || 0)} (-{row.discountPercent}%)</p>
+          ) : null}
+        </div>
       ),
     },
     {
@@ -106,7 +116,7 @@ export default function PackageDurationTab() {
         title={editingDuration ? "Cập nhật thời hạn" : "Tạo thời hạn mới"}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {!editingDuration && (
               <Input
                 label="Mã thời hạn"
@@ -116,13 +126,30 @@ export default function PackageDurationTab() {
                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
               />
             )}
-            <Input
-              label="Tên thời hạn"
-              placeholder="VD: Gói 1 Tháng"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
+            <div className={!editingDuration ? "md:col-span-1" : "md:col-span-2"}>
+               <label className="mb-1 block text-sm font-semibold text-fit-text">Gói tập áp dụng</label>
+               <select
+                  disabled={!!editingDuration}
+                  className="w-full rounded-xl border border-fit-border bg-white px-4 py-2 text-sm text-fit-text transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary disabled:bg-slate-100"
+                  value={formData.gymPackageId}
+                  onChange={(e) => setFormData({ ...formData, gymPackageId: e.target.value })}
+               >
+                  {packages.map((pkg) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.name} ({pkg.packageType})
+                    </option>
+                  ))}
+               </select>
+            </div>
+            <div className="md:col-span-2">
+              <Input
+                label="Tên thời hạn"
+                placeholder="VD: Gói 1 Tháng"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input
@@ -144,6 +171,25 @@ export default function PackageDurationTab() {
               required
               value={formData.discountPercent}
               onChange={(e) => setFormData({ ...formData, discountPercent: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Giá trị gốc (VNĐ)"
+              type="number"
+              min="0"
+              placeholder="VD: 500000"
+              required
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            />
+            <Input
+              label="Giá khuyến mãi (VNĐ)"
+              type="number"
+              min="0"
+              placeholder="VD: 450000 (Mặc định bằng giá gốc)"
+              value={formData.discountPrice}
+              onChange={(e) => setFormData({ ...formData, discountPrice: e.target.value })}
             />
           </div>
           <div className="flex justify-end gap-3 mt-6">

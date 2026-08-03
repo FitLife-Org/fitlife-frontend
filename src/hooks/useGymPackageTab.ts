@@ -32,7 +32,7 @@ export function useGymPackageTab() {
   const fetchPackages = async () => {
     try {
       setLoading(true);
-      const data = await packageService.getAdminPackages();
+      const data = await packageService.getAdminPackages({ size: 100 });
       setPackages(data);
     } catch {
       console.error("Failed to fetch packages");
