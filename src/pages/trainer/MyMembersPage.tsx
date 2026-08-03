@@ -27,8 +27,8 @@ export default function MyMembersPage() {
   }, []);
 
   const filteredMembers = members.filter(m => 
-    m.fullName.toLowerCase().includes(search.toLowerCase()) || 
-    m.phone?.includes(search)
+    (m.fullName || "").toLowerCase().includes(search.toLowerCase()) || 
+    (m.email || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (

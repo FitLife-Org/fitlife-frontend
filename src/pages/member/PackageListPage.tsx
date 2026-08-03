@@ -56,15 +56,27 @@ export default function PackageListPage() {
             (duration) => duration.status === "ACTIVE"
         );
 
-        // Sort durations by months ascending
-        activeDurations.sort((a, b) => a.months - b.months);
+        const uniqueDurationsMap = new Map<number, PackageDuration>();
+        for (const d of activeDurations) {
+           if (!uniqueDurationsMap.has(d.months)) {
+               uniqueDurationsMap.set(d.months, d);
+           } else {
+               const existing = uniqueDurationsMap.get(d.months)!;
+               if (d.discountPercent > existing.discountPercent) {
+                   uniqueDurationsMap.set(d.months, d);
+               }
+           }
+        }
+        const uniqueDurations = Array.from(uniqueDurationsMap.values());
+
+        uniqueDurations.sort((a, b) => a.months - b.months);
 
         setPackages(activePackages);
-        setDurations(activeDurations);
+        setDurations(uniqueDurations);
         setMySubscription(sub);
 
-        if (activeDurations.length > 0) {
-          setSelectedDurationId(activeDurations[0].id);
+        if (uniqueDurations.length > 0) {
+          setSelectedDurationId(uniqueDurations[0].id);
         }
       } catch (error: unknown) {
         console.error("LOAD_PACKAGES_ERROR:", error);

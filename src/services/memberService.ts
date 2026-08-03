@@ -111,14 +111,12 @@ export const memberService = {
   ): Promise<PageResponse<MemberProfile>> {
     const response =
         await apiClient.get<
-            ApiResponse<
-                PageResponse<MemberProfile>
-            >
+            PageResponse<MemberProfile>
         >(
             "/admin/members",
             {
               params: {
-                page: params.page ?? 0,
+                page: (params.page ?? 0) + 1,
                 size: params.size ?? 20,
 
                 ...(params.keyword?.trim()
@@ -150,10 +148,10 @@ export const memberService = {
             },
         );
 
-    const pageData = requireData(
-        response.data,
-        "Không nhận được danh sách hội viên.",
-    );
+    const pageData = response.data;
+    if (!pageData) {
+      throw new Error("Không nhận được danh sách hội viên.");
+    }
 
     return {
       ...pageData,
@@ -167,14 +165,13 @@ export const memberService = {
   ): Promise<MemberProfile> {
     const response =
         await apiClient.get<
-            ApiResponse<MemberProfile>
+            MemberProfile
         >(`/admin/members/${id}`);
 
+    if (!response.data) throw new Error("Không nhận được thông tin hội viên.");
+
     return mapMember(
-        requireData(
-            response.data,
-            "Không nhận được thông tin hội viên.",
-        ),
+        response.data
     );
   },
 
@@ -183,18 +180,17 @@ export const memberService = {
   ): Promise<MemberProfile> {
     const response =
         await apiClient.get<
-            ApiResponse<MemberProfile>
+            MemberProfile
         >(
             `/admin/members/code/${encodeURIComponent(
                 memberCode.trim(),
             )}`,
         );
 
+    if (!response.data) throw new Error("Không tìm thấy hội viên.");
+
     return mapMember(
-        requireData(
-            response.data,
-            "Không tìm thấy hội viên.",
-        ),
+        response.data
     );
   },
 
@@ -210,17 +206,16 @@ export const memberService = {
 
     const response =
         await apiClient.post<
-            ApiResponse<MemberProfile>
+            MemberProfile
         >(
             "/admin/members",
             payload,
         );
 
+    if (!response.data) throw new Error("Không nhận được hội viên vừa tạo.");
+
     return mapMember(
-        requireData(
-            response.data,
-            "Không nhận được hội viên vừa tạo.",
-        ),
+        response.data
     );
   },
 
@@ -237,17 +232,16 @@ export const memberService = {
 
     const response =
         await apiClient.put<
-            ApiResponse<MemberProfile>
+            MemberProfile
         >(
             `/admin/members/${id}`,
             payload,
         );
 
+    if (!response.data) throw new Error("Không nhận được hội viên sau khi cập nhật.");
+
     return mapMember(
-        requireData(
-            response.data,
-            "Không nhận được hội viên sau khi cập nhật.",
-        ),
+        response.data
     );
   },
 
@@ -257,7 +251,7 @@ export const memberService = {
   ): Promise<MemberProfile> {
     const response =
         await apiClient.patch<
-            ApiResponse<MemberProfile>
+            MemberProfile
         >(
             `/admin/members/${id}/status`,
             {
@@ -265,11 +259,10 @@ export const memberService = {
             },
         );
 
+    if (!response.data) throw new Error("Không nhận được trạng thái hội viên.");
+
     return mapMember(
-        requireData(
-            response.data,
-            "Không nhận được trạng thái hội viên.",
-        ),
+        response.data
     );
   },
 
@@ -277,7 +270,7 @@ export const memberService = {
       id: number,
   ): Promise<void> {
     await apiClient.delete<
-        ApiResponse<void>
+        void
     >(`/admin/members/${id}`);
   },
 
@@ -315,7 +308,7 @@ export const memberService = {
                 PageResponse<CheckinRecord>
             >
         >(
-            "/admin/check-ins",
+            "/check-ins",
             {
               params: {
                 memberId: id,
@@ -335,7 +328,7 @@ export const memberService = {
       id: number,
   ): Promise<void> {
     await apiClient.patch<
-        ApiResponse<void>
+        void
     >(
         `/admin/members/${id}/restore`,
     );
