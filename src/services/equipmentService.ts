@@ -227,4 +227,77 @@ export const EquipmentService = {
 
     return response.data.data;
   },
+
+  async reportBroken(
+      id: number | string,
+      description: string,
+  ): Promise<unknown> {
+    const response =
+        await apiClient.post<
+            ApiResponse<unknown>
+        >(
+            `/staff/equipment/${id}/report-broken`,
+            { description },
+        );
+
+    return response.data.data;
+  },
+
+  async getAreas(): Promise<any[]> {
+    const response =
+        await apiClient.get<
+            ApiResponse<any[]>
+        >(
+            `/admin/equipment-areas`,
+        );
+
+    return response.data.data || [];
+  },
+
+  async updateArea(
+      id: number | string,
+      area: string,
+  ): Promise<Equipment> {
+    const response =
+        await apiClient.patch<
+            ApiResponse<Equipment>
+        >(
+            `${ADMIN_API_BASE}/${id}/area`,
+            { area },
+        );
+
+    return requireData(
+        response.data,
+        "Không thể cập nhật khu vực thiết bị.",
+    );
+  },
+
+  async retire(
+      id: number | string,
+  ): Promise<Equipment> {
+    const response =
+        await apiClient.post<
+            ApiResponse<Equipment>
+        >(
+            `${ADMIN_API_BASE}/${id}/retire`,
+        );
+
+    return requireData(
+        response.data,
+        "Không thể ngừng hoạt động thiết bị.",
+    );
+  },
+
+  async getHistory(
+      id: number | string,
+  ): Promise<any[]> {
+    const response =
+        await apiClient.get<
+            ApiResponse<any[]>
+        >(
+            `${ADMIN_API_BASE}/${id}/history`,
+        );
+
+    return response.data.data || [];
+  },
 };

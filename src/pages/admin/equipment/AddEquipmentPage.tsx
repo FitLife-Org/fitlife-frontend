@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import Button from "../../../components/common/Button";
@@ -15,13 +15,30 @@ export default function AddEquipmentPage() {
         equipmentCode: "",
         name: "",
         category: "Cardio",
-        area: "Khu Cardio – Tầng 1",
+        area: "",
         status: "ACTIVE",
         purchaseDate: "",
         warrantyExpiry: "",
         description: "",
         image: ""
     });
+
+    const [areas, setAreas] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchAreas = async () => {
+            try {
+                const res = await EquipmentService.getAreas();
+                setAreas(res);
+                if (res.length > 0) {
+                    setFormData(prev => ({ ...prev, area: res[0].name }));
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải danh sách khu vực:", error);
+            }
+        };
+        fetchAreas();
+    }, []);
 
     const [loading, setLoading] = useState(false);
     const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
@@ -131,9 +148,11 @@ export default function AddEquipmentPage() {
                                 onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                                 className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
                             >
-                                <option value="Khu Cardio – Tầng 1">Khu Cardio – Tầng 1</option>
-                                <option value="Khu Sức mạnh – Tầng 2">Khu Sức mạnh – Tầng 2</option>
-                                <option value="Khu VIP – Tầng 3">Khu VIP – Tầng 3</option>
+                                {areas.map((a) => (
+                                    <option key={a.id} value={a.name}>
+                                        {a.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
