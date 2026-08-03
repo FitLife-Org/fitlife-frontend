@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, Calendar as CalIcon } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
+import { userService } from "../../../services/userService";
+import type { User } from "../../../types/user.type";
+
 export default function CreateMaintenancePage() {
     const navigate = useNavigate();
     const { id } = useParams();
@@ -13,16 +16,37 @@ export default function CreateMaintenancePage() {
         type: "MAINTENANCE",
         description: "",
         estimatedCost: "",
+        handledById: "",
     });
 
+    const [staffs, setStaffs] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchStaffs = async () => {
+            try {
+                const res = await userService.getUsers({ roleCode: "ROLE_STAFF", size: 100 });
+                setStaffs(res.content || []);
+            } catch (error) {
+                console.error("Lỗi khi tải danh sách nhân viên:", error);
+            }
+        };
+        fetchStaffs();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!id) return;
         setLoading(true);
         try {
-            await EquipmentService.createMaintenance(id, formData);
+            await EquipmentService.createMaintenance(id, {
+                maintenanceDate: formData.date,
+                maintenanceType: formData.type,
+                description: formData.description,
+                cost: formData.estimatedCost ? Number(formData.estimatedCost) : undefined,
+                status: "SCHEDULED",
+                handledById: formData.handledById ? Number(formData.handledById) : undefined,
+            });
             navigate("/admin/equipment/maintenance-schedules");
         } catch (error) {
             console.error("Lỗi khi tạo phiếu bảo trì:", error);
@@ -73,15 +97,33 @@ export default function CreateMaintenancePage() {
                         </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-slate-700">Chi phí dự kiến (VND)</label>
-                        <input
-                            type="number"
-                            placeholder="VD: 500000"
-                            value={formData.estimatedCost}
-                            onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
-                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-trainer/20 focus:border-fit-trainer"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-slate-700">Chi phí dự kiến (VND)</label>
+                            <input
+                                type="number"
+                                placeholder="VD: 500000"
+                                value={formData.estimatedCost}
+                                onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-trainer/20 focus:border-fit-trainer"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-slate-700">Người phụ trách (Nhân viên)</label>
+                            <select
+                                value={formData.handledById}
+                                onChange={(e) => setFormData({ ...formData, handledById: e.target.value })}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-trainer/20 focus:border-fit-trainer"
+                            >
+                                <option value="">-- Chưa phân công --</option>
+                                {staffs.map((staff) => (
+                                    <option key={staff.id} value={staff.id}>
+                                        {staff.fullName} ({staff.username})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     <div className="space-y-1.5">

@@ -242,12 +242,21 @@ export default function EquipmentManagementPage() {
                     </p>
                 </div>
 
-                <Link to="/admin/equipment/add">
-                    <Button className="flex items-center gap-2 bg-fit-primary text-white">
-                        <Plus className="h-4 w-4" />
-                        Thêm thiết bị
-                    </Button>
-                </Link>
+                <div className="flex items-center gap-2">
+                    <Link to="/admin/equipment/maintenance-schedules">
+                        <Button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20">
+                            <CalendarClock className="h-4 w-4" />
+                            Lịch bảo trì
+                        </Button>
+                    </Link>
+
+                    <Link to="/admin/equipment/add">
+                        <Button className="flex items-center gap-2 bg-fit-primary text-white shadow-lg shadow-fit-primary/20">
+                            <Plus className="h-4 w-4" />
+                            Thêm thiết bị
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
@@ -491,15 +500,18 @@ export default function EquipmentManagementPage() {
 
                                         <td className="px-5 py-4">
                                             <div className="flex justify-center gap-2">
-                                                <button
-                                                    type="button"
+                                                <Link
+                                                    to={`/admin/equipment/${equipment.id}`}
                                                     title="Xem chi tiết"
+                                                    className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-600 hover:text-slate-900"
                                                 >
                                                     <Eye className="h-4 w-4" />
-                                                </button>
+                                                </Link>
 
                                                 <Link
                                                     to={`/admin/equipment/edit/${equipment.id}`}
+                                                    title="Chỉnh sửa"
+                                                    className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-600 hover:text-slate-900"
                                                 >
                                                     <Edit2 className="h-4 w-4" />
                                                 </Link>
