@@ -28,6 +28,19 @@ export default function EditEquipmentPage() {
     const [fetching, setFetching] = useState(true);
     const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [areas, setAreas] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchAreas = async () => {
+            try {
+                const res = await EquipmentService.getAreas();
+                setAreas(res);
+            } catch (error) {
+                console.error("Lỗi khi tải danh sách khu vực:", error);
+            }
+        };
+        fetchAreas();
+    }, []);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -150,9 +163,11 @@ export default function EditEquipmentPage() {
                                 onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                                 className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
                             >
-                                <option value="Khu Cardio – Tầng 1">Khu Cardio – Tầng 1</option>
-                                <option value="Khu Sức mạnh – Tầng 2">Khu Sức mạnh – Tầng 2</option>
-                                <option value="Khu VIP – Tầng 3">Khu VIP – Tầng 3</option>
+                                {areas.map((a) => (
+                                    <option key={a.id} value={a.name}>
+                                        {a.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
