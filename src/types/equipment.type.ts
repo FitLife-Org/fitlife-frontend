@@ -10,6 +10,9 @@ export interface Equipment {
   lastMaintenance: string | null;
   nextMaintenance: string | null;
   daysToNextMaintenance?: number | null;
+  purchaseDate?: string | null;
+  warrantyExpiry?: string | null;
+  description?: string | null;
 }
 
 export interface EquipmentSummary {

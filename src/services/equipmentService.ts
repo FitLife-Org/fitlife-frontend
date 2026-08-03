@@ -25,10 +25,12 @@ export interface EquipmentQueryParams {
 }
 
 export interface CreateMaintenanceRequest {
+  maintenanceDate: string;
+  maintenanceType?: string;
   description: string;
-  priority?: string;
-  scheduledDate?: string;
-  note?: string;
+  cost?: number;
+  status?: string;
+  handledById?: number;
 }
 
 function requireData<T>(
@@ -208,6 +210,19 @@ export const EquipmentService = {
             {
               params,
             },
+        );
+
+    return response.data.data;
+  },
+
+  async completeMaintenance(
+      id: number | string,
+  ): Promise<unknown> {
+    const response =
+        await apiClient.patch<
+            ApiResponse<unknown>
+        >(
+            `${ADMIN_API_BASE}/maintenance-schedules/${id}/complete`,
         );
 
     return response.data.data;

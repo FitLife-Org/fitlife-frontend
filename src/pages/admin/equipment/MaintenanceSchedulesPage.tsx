@@ -6,6 +6,7 @@ import { EquipmentService } from "../../../services/equipmentService";
 
 interface ScheduleItem {
     id: string;
+    realId: number;
     equipName: string;
     date: string;
     type: string;
@@ -14,14 +15,14 @@ interface ScheduleItem {
 }
 
 const MOCK_SCHEDULES: ScheduleItem[] = [
-    { id: "BT001", equipName: "Máy chạy bộ TechnoGym T20", date: "15/06/2024", type: "Định kỳ", status: "PENDING", staff: "Nguyễn Văn A" },
-    { id: "BT002", equipName: "Ghế đẩy ngực Hammer", date: "10/06/2024", type: "Sửa chữa", status: "COMPLETED", staff: "Trần Văn B" },
+    { id: "BT001", realId: 1, equipName: "Máy chạy bộ TechnoGym T20", date: "15/06/2024", type: "Định kỳ", status: "PENDING", staff: "Nguyễn Văn A" },
+    { id: "BT002", realId: 2, equipName: "Ghế đẩy ngực Hammer", date: "10/06/2024", type: "Sửa chữa", status: "COMPLETED", staff: "Trần Văn B" },
 ];
 
 export default function MaintenanceSchedulesPage() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
-    const [schedules, setSchedules] = useState<ScheduleItem[]>(MOCK_SCHEDULES);
+    const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -31,11 +32,19 @@ export default function MaintenanceSchedulesPage() {
     const fetchSchedules = async () => {
         setLoading(true);
         try {
-            const response = await EquipmentService.getMaintenanceSchedules() as Record<string, unknown>;
-            const responseData = response?.data as Record<string, unknown> | undefined;
-            const data = responseData?.data || response?.data || [];
-            if (Array.isArray(data) && data.length > 0) {
-                setSchedules(data);
+            const response = await EquipmentService.getMaintenanceSchedules() as any;
+            const content = response?.content || [];
+            if (Array.isArray(content)) {
+                const mapped = content.map((item: any) => ({
+                    id: item.id ? `BT${String(item.id).padStart(3, "0")}` : "BT000",
+                    realId: item.id,
+                    equipName: item.equipmentName || "Không rõ",
+                    date: item.maintenanceDate || "Chưa có",
+                    type: item.maintenanceType === "MAINTENANCE" ? "Định kỳ" : item.maintenanceType === "REPAIR" ? "Sửa chữa" : item.maintenanceType || "Khác",
+                    status: item.status,
+                    staff: item.handledByName || "Chưa phân công"
+                }));
+                setSchedules(mapped);
             }
         } catch (error) {
             console.error("Lỗi khi tải lịch bảo trì:", error);
@@ -43,6 +52,28 @@ export default function MaintenanceSchedulesPage() {
             setLoading(false);
         }
     };
+
+    const handleComplete = async (realId: number) => {
+        if (!window.confirm("Bạn có chắc chắn muốn xác nhận hoàn thành phiếu bảo trì này và đưa thiết bị trở lại hoạt động?")) {
+            return;
+        }
+        try {
+            await EquipmentService.completeMaintenance(realId);
+            fetchSchedules();
+        } catch (error) {
+            console.error("Lỗi khi hoàn thành bảo trì:", error);
+        }
+    };
+
+    const filteredSchedules = schedules.filter((task) => {
+        const term = searchTerm.toLowerCase().trim();
+        if (!term) return true;
+        return (
+            task.id.toLowerCase().includes(term) ||
+            task.equipName.toLowerCase().includes(term) ||
+            task.staff.toLowerCase().includes(term)
+        );
+    });
 
     return (
         <div className="space-y-6">
@@ -80,16 +111,17 @@ export default function MaintenanceSchedulesPage() {
                                 <th className="px-5 py-4">Loại hình</th>
                                 <th className="px-5 py-4">Người phụ trách</th>
                                 <th className="px-5 py-4">Trạng thái</th>
+                                <th className="px-5 py-4 text-right">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-5 py-8 text-center text-slate-500">
+                                    <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
                                         Đang tải dữ liệu...
                                     </td>
                                 </tr>
-                            ) : schedules.map((task) => (
+                            ) : filteredSchedules.map((task) => (
                                 <tr key={task.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="px-5 py-4 font-medium text-slate-900">{task.id}</td>
                                     <td className="px-5 py-4">{task.equipName}</td>
@@ -103,6 +135,19 @@ export default function MaintenanceSchedulesPage() {
                                             <span className="flex items-center gap-1 text-emerald-600 text-xs font-medium"><CheckCircle2 className="w-4 h-4" /> Đã xong</span>
                                         ) : (
                                             <span className="flex items-center gap-1 text-amber-600 text-xs font-medium"><Clock className="w-4 h-4" /> Chờ xử lý</span>
+                                        )}
+                                    </td>
+                                    <td className="px-5 py-4 text-right">
+                                        {task.status !== "COMPLETED" ? (
+                                            <button
+                                                onClick={() => handleComplete(task.realId)}
+                                                className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg text-xs font-medium transition-all duration-200 inline-flex items-center gap-1 shadow-sm hover:shadow active:scale-95"
+                                            >
+                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                Hoàn thành
+                                            </button>
+                                        ) : (
+                                            <span className="text-slate-400 text-xs font-medium">Nghiệm thu xong</span>
                                         )}
                                     </td>
                                 </tr>
