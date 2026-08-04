@@ -67,7 +67,8 @@ export default function UserManagementPage() {
     const matchesSearch = 
       m.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.phone.includes(searchTerm) ||
+        (m.phone ?? "")
+            .includes(searchTerm) ||
       (m.memberCode && m.memberCode.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus = statusFilter === "ALL" || m.status === statusFilter;
@@ -132,7 +133,7 @@ export default function UserManagementPage() {
                 <Input 
                   label="Số điện thoại *" 
                   name="phone"
-                  value={formValues.phone} 
+                  value={formValues.phone ?? ""}
                   onChange={(e) => setFormValues(prev => ({ ...prev, phone: e.target.value }))}
                   placeholder="Nhập số điện thoại"
                   required
@@ -153,9 +154,11 @@ export default function UserManagementPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700">Giới tính</label>
-                <select 
-                  value={formValues.gender}
-                  onChange={(e) => setFormValues(prev => ({ ...prev, gender: e.target.value }))}
+                <select
+                    value={formValues.gender ?? "MALE"}
+                  onChange={(e) => setFormValues(prev => ({ ...prev, gender:
+                        e.target.value as
+                            MemberProfile["gender"], }))}
                   className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
                 >
                   <option value="MALE">Nam</option>
@@ -169,7 +172,7 @@ export default function UserManagementPage() {
                   label="Ngày sinh" 
                   name="dateOfBirth"
                   type="date"
-                  value={formValues.dateOfBirth} 
+                  value={formValues.dateOfBirth ?? ""}
                   onChange={(e) => setFormValues(prev => ({ ...prev, dateOfBirth: e.target.value }))}
                 />
               </div>
@@ -178,7 +181,7 @@ export default function UserManagementPage() {
                 <Input 
                   label="Địa chỉ" 
                   name="address"
-                  value={formValues.address} 
+                  value={formValues.address ?? ""}
                   onChange={(e) => setFormValues(prev => ({ ...prev, address: e.target.value }))}
                   placeholder="Nhập địa chỉ của hội viên"
                 />
@@ -188,7 +191,10 @@ export default function UserManagementPage() {
                 <label className="block text-sm font-semibold text-slate-700">Mục tiêu tập luyện</label>
                 <select 
                   value={formValues.fitnessGoal || ""}
-                  onChange={(e) => setFormValues(prev => ({ ...prev, fitnessGoal: e.target.value }))}
+                  onChange={(e) => setFormValues(prev => ({ ...prev, fitnessGoal:
+                        e.target.value === ""
+                            ? null
+                            : e.target.value as MemberProfile["fitnessGoal"], }))}
                   className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/10 focus:border-fit-primary font-medium"
                 >
                   <option value="">-- Chọn mục tiêu --</option>

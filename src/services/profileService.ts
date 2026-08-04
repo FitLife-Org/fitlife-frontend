@@ -1,79 +1,83 @@
 import apiClient from "./apiClient";
 
 import type {
-    ProfileResponse,
-    UpdateProfileRequest,
-    MembershipResponse,
-} from "../types/profile.type";
+    ApiResponse,
+} from "../types/common.type";
+
+import type {
+    MemberProfile,
+    UpdateMyMemberProfileRequest,
+} from "../types/member.type";
+
+function requireData<T>(
+    response: ApiResponse<T>,
+    message: string,
+): T {
+    if (
+        response.data === null ||
+        response.data === undefined
+    ) {
+        throw new Error(message);
+    }
+
+    return response.data;
+}
 
 export const profileService = {
     async getProfile():
-        Promise<ProfileResponse> {
+        Promise<MemberProfile> {
         const response =
             await apiClient.get<
-                ProfileResponse
+                ApiResponse<MemberProfile>
             >("/members/me");
 
-        return response.data;
+        return requireData(
+            response.data,
+            "Không nhận được hồ sơ hội viên.",
+        );
     },
 
     async updateProfile(
-        data: UpdateProfileRequest,
-    ): Promise<ProfileResponse> {
+        request:
+        UpdateMyMemberProfileRequest,
+    ): Promise<MemberProfile> {
         const response =
             await apiClient.put<
-                ProfileResponse
+                ApiResponse<MemberProfile>
             >(
                 "/members/me",
-                data,
+                request,
             );
 
-        return response.data;
+        return requireData(
+            response.data,
+            "Không nhận được hồ sơ sau khi cập nhật.",
+        );
     },
 
-    /**
-     * Chỉ giữ khi backend có endpoint thật.
-     */
     async updateAvatar(
         file: File,
-    ): Promise<ProfileResponse> {
+    ): Promise<MemberProfile> {
         const formData =
             new FormData();
 
         formData.append(
-            "avatar",
+            "file",
             file,
+            file.name,
         );
 
         const response =
             await apiClient.patch<
-                ProfileResponse
+                ApiResponse<MemberProfile>
             >(
                 "/members/me/avatar",
                 formData,
-                {
-                    headers: {
-                        "Content-Type":
-                            "multipart/form-data",
-                    },
-                },
             );
 
-        return response.data;
-    },
-
-    /**
-     * Chỉ giữ khi backend đã xác nhận endpoint.
-     */
-    async getMyMembership():
-        Promise<MembershipResponse> {
-        const response =
-            await apiClient.get<
-                MembershipResponse
-            >(
-                "/subscriptions/me/active",
-            );
-
-        return response.data;
+        return requireData(
+            response.data,
+            "Không nhận được hồ sơ sau khi cập nhật ảnh.",
+        );
     },
 };

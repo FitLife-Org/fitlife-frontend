@@ -1,4 +1,6 @@
-import type { Role } from "./common.type";
+import type {
+  Role,
+} from "./common.type";
 
 export interface LoginRequest {
   identifier: string;
@@ -45,12 +47,18 @@ export interface AuthResponsePayload {
   accessToken?: string | null;
   refreshToken?: string | null;
   token?: string | null;
+
   tokenType?: string;
+
   userId?: number;
   id?: number;
+
   username?: string;
   email?: string;
   fullName?: string;
+
+  avatarUrl?: string | null;
+
   role?: Role;
   roles?: Role[];
   authorities?: Role[];
@@ -59,8 +67,12 @@ export interface AuthResponsePayload {
 export interface AuthUser {
   userId: number;
   username?: string;
+
   email: string;
   fullName: string;
+
+  avatarUrl?: string | null;
+
   roles: Role[];
 }
 
