@@ -1,15 +1,22 @@
 import {
   useState,
+  type Dispatch,
   type FormEvent,
+  type SetStateAction,
 } from "react";
 
 import toast from "react-hot-toast";
 
-import { bodyMetricService } from "../../services/bodyMetricService";
-import { getApiErrorMessage } from "../apiError";
+import {
+  bodyMetricService,
+} from "../../services/bodyMetricService";
+
+import {
+  getApiErrorMessage,
+} from "../apiError";
 
 import type {
-  MyBodyMetricCreateRequest,
+  CreateMyBodyMetricRequest,
 } from "../../types/bodyMetric.type";
 
 interface BodyMetricFormData {
@@ -19,7 +26,8 @@ interface BodyMetricFormData {
   muscleMassKg: string;
 }
 
-const INITIAL_FORM_DATA: BodyMetricFormData = {
+const INITIAL_FORM_DATA:
+    BodyMetricFormData = {
   weightKg: "",
   heightCm: "",
   bodyFatPercent: "",
@@ -31,111 +39,164 @@ interface UseBodyMetricLogicResult {
   submitting: boolean;
   formData: BodyMetricFormData;
 
-  setFormData: React.Dispatch<
-      React.SetStateAction<BodyMetricFormData>
-  >;
+  setFormData:
+      Dispatch<
+          SetStateAction<
+              BodyMetricFormData
+          >
+      >;
 
   handleSubmit: (
-      event: FormEvent<HTMLFormElement>,
+      event:
+      FormEvent<HTMLFormElement>,
   ) => Promise<void>;
 
   handleOpenModal: () => void;
   handleCloseModal: () => void;
 }
 
+function parseOptionalNumber(
+    value: string,
+): number | undefined {
+  const normalized =
+      value.trim();
+
+  if (!normalized) {
+    return undefined;
+  }
+
+  const parsed =
+      Number(normalized);
+
+  return Number.isFinite(parsed)
+      ? parsed
+      : undefined;
+}
+
 export function useBodyMetricLogic(
     onSuccess: (
-        newRecord?: MyBodyMetricCreateRequest,
+        newRecord?:
+        CreateMyBodyMetricRequest,
     ) => Promise<void> | void,
 ): UseBodyMetricLogicResult {
-  const [showAddModal, setShowAddModal] =
-      useState(false);
+  const [
+    showAddModal,
+    setShowAddModal,
+  ] = useState(false);
 
-  const [submitting, setSubmitting] =
-      useState(false);
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
 
-  const [formData, setFormData] =
+  const [
+    formData,
+    setFormData,
+  ] =
       useState<BodyMetricFormData>(
           INITIAL_FORM_DATA,
       );
 
   const resetForm = (): void => {
-    setFormData(INITIAL_FORM_DATA);
+    setFormData(
+        INITIAL_FORM_DATA,
+    );
   };
 
-  const validateForm = (): boolean => {
-    const weightKg =
-        Number(formData.weightKg);
+  const validateForm =
+      (): boolean => {
+        const weightKg =
+            Number(
+                formData.weightKg,
+            );
 
-    const heightCm =
-        Number(formData.heightCm);
+        const heightCm =
+            parseOptionalNumber(
+                formData.heightCm,
+            );
 
-    const bodyFatPercent =
-        Number(formData.bodyFatPercent);
+        const bodyFatPercent =
+            parseOptionalNumber(
+                formData.bodyFatPercent,
+            );
 
-    const muscleMassKg =
-        Number(formData.muscleMassKg);
+        const muscleMassKg =
+            parseOptionalNumber(
+                formData.muscleMassKg,
+            );
 
-    if (
-        !formData.weightKg ||
-        Number.isNaN(weightKg) ||
-        weightKg <= 0
-    ) {
-      toast.error(
-          "Vui lòng nhập cân nặng hợp lệ.",
-      );
+        if (
+            !formData.weightKg.trim() ||
+            !Number.isFinite(weightKg)
+        ) {
+          toast.error(
+              "Vui lòng nhập cân nặng hợp lệ.",
+          );
 
-      return false;
-    }
+          return false;
+        }
 
-    if (
-        formData.heightCm &&
-        (
-            Number.isNaN(heightCm) ||
-            heightCm <= 0
-        )
-    ) {
-      toast.error(
-          "Chiều cao phải lớn hơn 0.",
-      );
+        if (
+            weightKg < 20 ||
+            weightKg > 300
+        ) {
+          toast.error(
+              "Cân nặng phải từ 20 đến 300 kg.",
+          );
 
-      return false;
-    }
+          return false;
+        }
 
-    if (
-        formData.bodyFatPercent &&
-        (
-            Number.isNaN(bodyFatPercent) ||
-            bodyFatPercent <= 0 ||
-            bodyFatPercent > 100
-        )
-    ) {
-      toast.error(
-          "Tỷ lệ mỡ phải lớn hơn 0 và không vượt quá 100%.",
-      );
+        if (
+            heightCm !== undefined &&
+            (
+                heightCm < 50 ||
+                heightCm > 250
+            )
+        ) {
+          toast.error(
+              "Chiều cao phải từ 50 đến 250 cm.",
+          );
 
-      return false;
-    }
+          return false;
+        }
 
-    if (
-        formData.muscleMassKg &&
-        (
-            Number.isNaN(muscleMassKg) ||
-            muscleMassKg <= 0
-        )
-    ) {
-      toast.error(
-          "Lượng cơ bắp phải lớn hơn 0.",
-      );
+        if (
+            bodyFatPercent !==
+            undefined &&
+            (
+                bodyFatPercent < 0 ||
+                bodyFatPercent > 80
+            )
+        ) {
+          toast.error(
+              "Tỷ lệ mỡ phải từ 0 đến 80%.",
+          );
 
-      return false;
-    }
+          return false;
+        }
 
-    return true;
-  };
+        if (
+            muscleMassKg !==
+            undefined &&
+            (
+                muscleMassKg < 0 ||
+                muscleMassKg > 200
+            )
+        ) {
+          toast.error(
+              "Khối lượng cơ phải từ 0 đến 200 kg.",
+          );
+
+          return false;
+        }
+
+        return true;
+      };
 
   const handleSubmit = async (
-      event: FormEvent<HTMLFormElement>,
+      event:
+      FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
 
@@ -146,36 +207,56 @@ export function useBodyMetricLogic(
       return;
     }
 
+    const heightCm =
+        parseOptionalNumber(
+            formData.heightCm,
+        );
+
+    const bodyFatPercent =
+        parseOptionalNumber(
+            formData.bodyFatPercent,
+        );
+
+    const muscleMassKg =
+        parseOptionalNumber(
+            formData.muscleMassKg,
+        );
+
     const request:
-        MyBodyMetricCreateRequest = {
+        CreateMyBodyMetricRequest = {
       weightKg:
-          Number(formData.weightKg),
+          Number(
+              formData.weightKg,
+          ),
 
-      heightCm:
-          formData.heightCm
-              ? Number(formData.heightCm)
-              : undefined,
+      ...(heightCm !== undefined
+          ? {
+            heightCm,
+          }
+          : {}),
 
-      bodyFatPercent:
-          formData.bodyFatPercent
-              ? Number(
-                  formData.bodyFatPercent,
-              )
-              : undefined,
+      ...(bodyFatPercent !==
+      undefined
+          ? {
+            bodyFatPercent,
+          }
+          : {}),
 
-      muscleMassKg:
-          formData.muscleMassKg
-              ? Number(
-                  formData.muscleMassKg,
-              )
-              : undefined,
+      ...(muscleMassKg !==
+      undefined
+          ? {
+            muscleMassKg,
+          }
+          : {}),
     };
 
     try {
       setSubmitting(true);
 
       await bodyMetricService
-          .createMyMetric(request);
+          .createMyBodyMetric(
+              request,
+          );
 
       toast.success(
           "Cập nhật chỉ số thành công.",
@@ -184,8 +265,12 @@ export function useBodyMetricLogic(
       setShowAddModal(false);
       resetForm();
 
-      await onSuccess(request);
-    } catch (error: unknown) {
+      await onSuccess(
+          request,
+      );
+    } catch (
+        error: unknown
+        ) {
       toast.error(
           getApiErrorMessage(
               error,
@@ -197,22 +282,24 @@ export function useBodyMetricLogic(
     }
   };
 
-  const handleOpenModal = (): void => {
-    if (submitting) {
-      return;
-    }
+  const handleOpenModal =
+      (): void => {
+        if (submitting) {
+          return;
+        }
 
-    setShowAddModal(true);
-  };
+        setShowAddModal(true);
+      };
 
-  const handleCloseModal = (): void => {
-    if (submitting) {
-      return;
-    }
+  const handleCloseModal =
+      (): void => {
+        if (submitting) {
+          return;
+        }
 
-    setShowAddModal(false);
-    resetForm();
-  };
+        setShowAddModal(false);
+        resetForm();
+      };
 
   return {
     showAddModal,

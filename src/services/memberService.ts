@@ -7,11 +7,14 @@ import type {
 } from "../types/common.type";
 
 import type {
-    BodyMetric,
     MemberProfile,
     AdminMemberCreateRequest,
     AdminMemberUpdateRequest,
 } from "../types/member.type";
+
+import type {
+    BodyMetric,
+} from "../types/bodyMetric.type";
 
 import type {
     Subscription,
