@@ -76,8 +76,6 @@ const apiClient = axios.create({
 
     headers: {
         Accept: "application/json",
-        "Content-Type":
-            "application/json",
     },
 });
 
@@ -347,23 +345,57 @@ apiClient.interceptors.request.use(
         InternalAxiosRequestConfig,
     ) => {
         /*
+         * Luôn chuẩn hóa headers thành AxiosHeaders.
+         */
+        if (
+            !(config.headers instanceof AxiosHeaders)
+        ) {
+            config.headers =
+                new AxiosHeaders(
+                    config.headers,
+                );
+        }
+
+        /*
+         * Nếu body là FormData:
+         * phải xóa Content-Type để browser tự sinh:
+         *
+         * multipart/form-data; boundary=...
+         */
+        if (
+            typeof FormData !== "undefined" &&
+            config.data instanceof FormData
+        ) {
+            config.headers.delete(
+                "Content-Type",
+            );
+        } else if (
+            config.data !== undefined &&
+            config.data !== null &&
+            !config.headers.has(
+                "Content-Type",
+            )
+        ) {
+            /*
+             * Body thông thường sử dụng JSON.
+             */
+            config.headers.set(
+                "Content-Type",
+                "application/json",
+            );
+        }
+
+        /*
          * Public API không cần token.
-         * Kể cả localStorage đang có token cũ,
-         * không gắn token vào request public.
          */
         if (
             isPublicApiEndpoint(
                 config.url,
             )
         ) {
-            if (
-                config.headers instanceof
-                AxiosHeaders
-            ) {
-                config.headers.delete(
-                    "Authorization",
-                );
-            }
+            config.headers.delete(
+                "Authorization",
+            );
 
             return config;
         }
@@ -375,11 +407,6 @@ apiClient.interceptors.request.use(
             return config;
         }
 
-        /*
-         * Token sai định dạng:
-         * xóa session local nhưng chỉ redirect
-         * nếu đang ở trang protected.
-         */
         if (
             !isValidJwtFormat(
                 accessToken,

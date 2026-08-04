@@ -91,12 +91,17 @@ const normalizeSession = (
           payload.id ??
           0,
 
-      username: payload.username,
+      username:
+      payload.username,
 
-      email: payload.email ?? "",
+      email:
+          payload.email ?? "",
 
       fullName:
           payload.fullName ?? "User",
+
+      avatarUrl:
+          payload.avatarUrl ?? null,
 
       roles,
     },

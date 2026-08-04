@@ -130,7 +130,7 @@ export function useUserManagement() {
         dateOfBirth: "",
         status: "ACTIVE",
         address: "",
-        fitnessGoal: "",
+        fitnessGoal: null,
         healthNote: "",
     });
 
@@ -294,7 +294,7 @@ export function useUserManagement() {
             address: "",
             emergencyContactName: "",
             emergencyContactPhone: "",
-            fitnessGoal: "",
+            fitnessGoal: null,
             healthNote: "",
         });
 
@@ -327,7 +327,7 @@ export function useUserManagement() {
                 member.emergencyContactPhone ??
                 "",
             fitnessGoal:
-                member.fitnessGoal ?? "",
+                member.fitnessGoal ?? null,
             healthNote:
                 member.healthNote ?? "",
         });
@@ -550,7 +550,9 @@ export function useUserManagement() {
                 member.email
                     .toLowerCase()
                     .includes(keyword) ||
-                member.phone.includes(keyword) ||
+                (member.phone ?? "")
+                    .toLowerCase()
+                    .includes(keyword) ||
                 member.memberCode
                     ?.toLowerCase()
                     .includes(keyword) === true
