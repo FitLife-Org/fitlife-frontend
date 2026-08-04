@@ -535,7 +535,8 @@ export default function AccountManagementPage() {
               onSubmit={handleFormSubmit}
               className="space-y-4"
           >
-            <Input
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
                 label="Họ và tên"
                 value={formValues.fullName}
                 onChange={(event) =>
@@ -676,8 +677,9 @@ export default function AccountManagementPage() {
                 Bị khóa
               </option>
             </select>
+            </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
               <Button
                   type="button"
                   variant="outline"

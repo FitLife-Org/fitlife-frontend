@@ -56,7 +56,7 @@ export default function CreateMaintenancePage() {
     };
 
     return (
-        <div className="space-y-6 max-w-3xl mx-auto">
+        <div className="space-y-4 max-w-3xl mx-auto">
             <div className="flex items-center gap-4">
                 <button onClick={() => navigate(-1)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                     <ArrowLeft className="w-5 h-5" />
@@ -68,8 +68,8 @@ export default function CreateMaintenancePage() {
             </div>
 
             <Card className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-slate-700">Loại hình</label>
                             <select
@@ -95,9 +95,7 @@ export default function CreateMaintenancePage() {
                                 />
                             </div>
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-slate-700">Chi phí dự kiến (VND)</label>
                             <input
@@ -129,7 +127,7 @@ export default function CreateMaintenancePage() {
                     <div className="space-y-1.5">
                         <label className="text-sm font-medium text-slate-700">Mô tả tình trạng / Hạng mục thực hiện</label>
                         <textarea
-                            rows={4}
+                            rows={2}
                             required
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}

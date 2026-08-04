@@ -31,7 +31,7 @@ export const publicService = {
       const response = await apiClient.get<ApiResponse<any>>("/gym-packages", {
         params: { page: 1, size: 100 }
       });
-      const data = response.data.data;
+      const data = requireData(response.data, "Không thể tải danh sách gói tập");
       const content = data.content ? data.content : data;
       return content.map((pkg: any) => ({
         id: pkg.id?.toString(),

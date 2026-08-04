@@ -89,12 +89,12 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-5">
           <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {!isEditMode && (
                 <>
-                  <div className="col-span-1">
+                  <div>
                     <Input 
                       label="Tên đăng nhập *" 
                       name="username"
@@ -104,7 +104,7 @@ export default function UserManagementPage() {
                       required
                     />
                   </div>
-                  <div className="col-span-1">
+                  <div>
                     <Input 
                       label="Mật khẩu *" 
                       name="password"
@@ -117,7 +117,7 @@ export default function UserManagementPage() {
                   </div>
                 </>
               )}
-              <div className="col-span-2">
+              <div className="md:col-span-2">
                 <Input 
                   label="Họ và tên *" 
                   name="fullName"
@@ -176,7 +176,7 @@ export default function UserManagementPage() {
                 />
               </div>
 
-              <div className="col-span-2">
+              <div className="md:col-span-3">
                 <Input 
                   label="Địa chỉ" 
                   name="address"

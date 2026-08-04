@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 
-import type { SpringPage } from "../types/common.type";
+import type { SpringPage, ApiResponse } from "../types/common.type";
 import type {
     NutritionPlan,
     NutritionPlanRequest,
@@ -30,7 +30,7 @@ export const nutritionService = {
         size = 10,
     ): Promise<SpringPage<NutritionPlan>> {
         const response = await apiClient.get<
-            SpringPage<NutritionPlan>
+            ApiResponse<SpringPage<NutritionPlan>>
         >(`${BASE_URL}/me`, {
             params: {
                 page,
@@ -39,48 +39,50 @@ export const nutritionService = {
             },
         });
 
+        const data = response.data.data;
+
         return {
-            ...response.data,
+            ...data,
             content:
-                response.data.content?.map(normalizePlan) ?? [],
+                data.content?.map(normalizePlan) ?? [],
         };
     },
 
     async getPlanById(planId: number): Promise<NutritionPlan> {
         validatePositiveId(planId, "Nutrition Plan ID");
 
-        const response = await apiClient.get<NutritionPlan>(
+        const response = await apiClient.get<ApiResponse<NutritionPlan>>(
             `${BASE_URL}/${planId}`,
         );
 
-        return normalizePlan(response.data);
+        return normalizePlan(response.data.data);
     },
 
     async getActivePlan(): Promise<NutritionPlan> {
-        const response = await apiClient.get<NutritionPlan>(
+        const response = await apiClient.get<ApiResponse<NutritionPlan>>(
             `${BASE_URL}/me/active`,
         );
 
-        return normalizePlan(response.data);
+        return normalizePlan(response.data.data);
     },
 
     async getTodayPlan(): Promise<NutritionPlan> {
-        const response = await apiClient.get<NutritionPlan>(
+        const response = await apiClient.get<ApiResponse<NutritionPlan>>(
             `${BASE_URL}/me/today`,
         );
 
-        return normalizePlan(response.data);
+        return normalizePlan(response.data.data);
     },
 
     async createPlan(
         request: NutritionPlanRequest,
     ): Promise<NutritionPlan> {
-        const response = await apiClient.post<NutritionPlan>(
+        const response = await apiClient.post<ApiResponse<NutritionPlan>>(
             BASE_URL,
             request,
         );
 
-        return normalizePlan(response.data);
+        return normalizePlan(response.data.data);
     },
 
     async updatePlan(
@@ -89,12 +91,12 @@ export const nutritionService = {
     ): Promise<NutritionPlan> {
         validatePositiveId(planId, "Nutrition Plan ID");
 
-        const response = await apiClient.put<NutritionPlan>(
+        const response = await apiClient.put<ApiResponse<NutritionPlan>>(
             `${BASE_URL}/${planId}`,
             request,
         );
 
-        return normalizePlan(response.data);
+        return normalizePlan(response.data.data);
     },
 
     async activatePlan(planId: number): Promise<void> {
@@ -124,11 +126,11 @@ export const nutritionService = {
     async clonePlan(planId: number): Promise<NutritionPlan> {
         validatePositiveId(planId, "Nutrition Plan ID");
 
-        const response = await apiClient.post<NutritionPlan>(
+        const response = await apiClient.post<ApiResponse<NutritionPlan>>(
             `${BASE_URL}/${planId}/clone`,
         );
 
-        return normalizePlan(response.data);
+        return normalizePlan(response.data.data);
     },
 
     async deletePlan(planId: number): Promise<void> {

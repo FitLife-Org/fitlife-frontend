@@ -434,9 +434,17 @@ apiClient.interceptors.request.use(
  * Response interceptor
  */
 apiClient.interceptors.response.use(
-    (
-        response: AxiosResponse,
-    ) => response,
+    (response: AxiosResponse) => {
+        const data = response.data;
+        if (data && typeof data === "object" && !("code" in data && "message" in data)) {
+            response.data = {
+                code: response.status || 200,
+                message: "Success (Auto-wrapped)",
+                data: data,
+            };
+        }
+        return response;
+    },
 
     async (
         error: AxiosError,
