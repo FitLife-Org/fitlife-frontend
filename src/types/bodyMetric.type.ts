@@ -28,82 +28,58 @@ export interface BodyMetric {
     updatedAt?: string | null;
 }
 
-export interface BodyMetricSummary {
-    id: number;
-
-    memberId: number;
-    memberCode?: string | null;
-    fullName?: string | null;
-
+export interface CreateMyBodyMetricRequest {
     weightKg: number;
-    heightCm: number;
-    bmi: number;
 
+    /**
+     * Lần đo đầu tiên bắt buộc có chiều cao.
+     * Những lần sau có thể bỏ trống để backend dùng chiều cao gần nhất.
+     */
+    heightCm?: number;
+
+    bodyFatPercent?: number;
+    muscleMassKg?: number;
+
+    note?: string;
+
+    /**
+     * Nếu không truyền, backend dùng thời điểm hiện tại.
+     */
+    recordedAt?: string;
+}
+
+export interface BodyMetricHistoryParams {
+    from: string;
+    to: string;
+}
+
+export interface BodyMetricListParams {
+    page?: number;
+    size?: number;
+    sort?: string;
+}
+
+export interface BodyMetricFormState {
+    weightKg: string;
+    heightCm: string;
+    bodyFatPercent: string;
+    muscleMassKg: string;
+    note: string;
     recordedAt: string;
 }
 
-export interface BodyMetricCreateRequest {
-    memberId: number;
-
+export interface BodyMetricChartPoint {
+    id: number;
+    label: string;
+    recordedAt: string;
     weightKg: number;
-    heightCm: number;
-
-    bodyFatPercent?: number;
-    muscleMassKg?: number;
-
-    note?: string;
-    recordedAt?: string;
-}
-
-export interface BodyMetricUpdateRequest {
-    weightKg?: number;
-    heightCm?: number;
-
+    bmi: number;
     bodyFatPercent?: number | null;
     muscleMassKg?: number | null;
-
-    note?: string | null;
-    recordedAt?: string;
 }
 
-export interface MyBodyMetricCreateRequest {
-    weightKg: number;
-    heightCm?: number;
-
-    bodyFatPercent?: number;
-    muscleMassKg?: number;
-
-    note?: string;
-}
-
-export type BodyMetricName =
-    | "weightKg"
-    | "bodyFatPercent"
-    | "muscleMassKg"
-    | "bmi";
-
-export type BodyMetricTrend =
-    | "up"
-    | "down"
-    | "stable";
-
-export interface BodyMetricProgress {
-    metric: BodyMetricName;
-
-    startValue: number;
-    currentValue: number;
-    change: number;
-
-    trend: BodyMetricTrend;
-}
-
-export interface BodyMetricSearchParams {
-    memberId?: number;
-    keyword?: string;
-
-    from?: string;
-    to?: string;
-
-    page?: number;
-    size?: number;
-}
+export type BmiLevel =
+    | "UNDERWEIGHT"
+    | "NORMAL"
+    | "OVERWEIGHT"
+    | "OBESE";

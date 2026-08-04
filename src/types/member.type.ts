@@ -111,33 +111,6 @@ export interface AdminMemberUpdateRequest {
   status?: Status;
 }
 
-export interface BodyMetric {
-  id: number;
-  memberId: number;
-
-  memberCode: string;
-  fullName: string;
-  email: string;
-  phone?: string | null;
-
-  weightKg: number;
-  heightCm: number;
-  bmi: number;
-
-  bodyFatPercent?: number | null;
-  muscleMassKg?: number | null;
-
-  note?: string | null;
-  recordedAt: string;
-
-  createdById?: number;
-  createdByName?: string;
-
-  isDeleted?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface BodyMetricProgress {
   metric:
       | "weightKg"

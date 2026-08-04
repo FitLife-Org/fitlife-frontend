@@ -1,396 +1,1093 @@
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Activity, TrendingDown, TrendingUp, Scale, HeartPulse, Dumbbell, X, Plus, Save } from "lucide-react";
-import toast from "react-hot-toast";
-import { bodyMetricService } from "../../services/bodyMetricService";
+import {
+  Activity,
+  CalendarDays,
+  Dumbbell,
+  Gauge,
+  HeartPulse,
+  Plus,
+  Ruler,
+  Scale,
+  TrendingDown,
+  TrendingUp,
+  X,
+} from "lucide-react";
+
+import Card from "../../components/common/Card";
+import PageHeader from "../../components/common/PageHeader";
+
+import {
+  useBodyMetric,
+} from "../../hooks/useBodyMetric";
+
 import type {
-  BodyMetric,
-  BodyMetricProgress,
+  BmiLevel,
+  BodyMetricChartPoint,
 } from "../../types/bodyMetric.type";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
-import { useBodyMetricLogic } from "../../utils/validators/useBodyMetricLogic";
 
-export default function BodyMetricPage() {
-  const [metrics, setMetrics] = useState<BodyMetric[]>([]);
-  const [progress, setProgress] = useState<BodyMetricProgress[]>([]);
-  const [loading, setLoading] = useState(true);
+function formatNumber(
+    value?: number | null,
+    fractionDigits = 1,
+): string {
+  if (
+      value === null ||
+      value === undefined ||
+      !Number.isFinite(value)
+  ) {
+    return "--";
+  }
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  return new Intl.NumberFormat(
+      "vi-VN",
+      {
+        minimumFractionDigits: 0,
+        maximumFractionDigits:
+        fractionDigits,
+      },
+  ).format(value);
+}
 
-  const fetchData = async (newRecord?: { weightKg: number; heightCm?: number; bodyFatPercent?: number; muscleMassKg?: number }) => {
-    try {
-      const [metricsData, progressData] = await Promise.all([
-        bodyMetricService.getMyMetrics(),
-        bodyMetricService.getMyProgress()
-      ]);
-      let updated = metricsData.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
-      
-      if (newRecord) {
-        const height = newRecord.heightCm || updated[0]?.heightCm || 175;
-        const bmi = Number((newRecord.weightKg / ((height / 100) ** 2)).toFixed(1));
-        const created: BodyMetric = {
-          id: Date.now(),
-          memberId: 1,
-          recordedAt: new Date().toISOString(),
-          weightKg: newRecord.weightKg,
-          heightCm: height,
-          bmi,
-          bodyFatPercent: newRecord.bodyFatPercent || updated[0]?.bodyFatPercent || 18,
-          muscleMassKg: newRecord.muscleMassKg || updated[0]?.muscleMassKg || 35,
-        };
-        updated = [created, ...updated.filter(m => m.id !== created.id)];
-      }
+function formatDateTime(
+    value?: string | null,
+): string {
+  if (!value) {
+    return "--";
+  }
 
-      setMetrics(updated);
-      if (progressData && progressData.length > 0 && !newRecord) {
-        setProgress(progressData);
-      } else if (updated.length >= 2) {
-        const curr = updated[0];
-        const prev = updated[1];
-        setProgress([
-          { metric: "weightKg", startValue: prev.weightKg, currentValue: curr.weightKg, change: Number((curr.weightKg - prev.weightKg).toFixed(1)), trend: curr.weightKg > prev.weightKg ? "up" : "down" },
-          { metric: "bodyFatPercent", startValue: prev.bodyFatPercent || 0, currentValue: curr.bodyFatPercent || 0, change: Number(((curr.bodyFatPercent || 0) - (prev.bodyFatPercent || 0)).toFixed(1)), trend: (curr.bodyFatPercent || 0) > (prev.bodyFatPercent || 0) ? "up" : "down" },
-          { metric: "muscleMassKg", startValue: prev.muscleMassKg || 0, currentValue: curr.muscleMassKg || 0, change: Number(((curr.muscleMassKg || 0) - (prev.muscleMassKg || 0)).toFixed(1)), trend: (curr.muscleMassKg || 0) > (prev.muscleMassKg || 0) ? "up" : "down" },
-          { metric: "bmi", startValue: prev.bmi || 0, currentValue: curr.bmi || 0, change: Number(((curr.bmi || 0) - (prev.bmi || 0)).toFixed(1)), trend: (curr.bmi || 0) > (prev.bmi || 0) ? "up" : "down" },
-        ]);
-      } else {
-        setProgress(progressData);
-      }
-    } catch {
-      if (newRecord) {
-        const created: BodyMetric = {
-          id: Date.now(),
-          memberId: 1,
-          recordedAt: new Date().toISOString(),
-          weightKg: newRecord.weightKg,
-          heightCm: newRecord.heightCm || 175,
-          bmi: Number((newRecord.weightKg / (((newRecord.heightCm || 175) / 100) ** 2)).toFixed(1)),
-          bodyFatPercent: newRecord.bodyFatPercent || 18,
-          muscleMassKg: newRecord.muscleMassKg || 35,
-        };
-        setMetrics(prev => [created, ...prev]);
-      } else {
-        toast.error("Không thể tải chỉ số cơ thể.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const date =
+      new Date(value);
 
-  const {
-    showAddModal,
-    submitting,
-    formData,
-    setFormData,
-    handleSubmit,
-    handleOpenModal,
-    handleCloseModal
-  } = useBodyMetricLogic(fetchData);
+  if (
+      Number.isNaN(
+          date.getTime(),
+      )
+  ) {
+    return "--";
+  }
 
-  if (loading) {
+  return new Intl.DateTimeFormat(
+      "vi-VN",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+  ).format(date);
+}
+
+function getBmiBadgeClasses(
+    level: BmiLevel | null,
+): string {
+  switch (level) {
+    case "NORMAL":
+      return "bg-emerald-50 text-emerald-700";
+
+    case "UNDERWEIGHT":
+      return "bg-blue-50 text-blue-700";
+
+    case "OVERWEIGHT":
+      return "bg-amber-50 text-amber-700";
+
+    case "OBESE":
+      return "bg-rose-50 text-rose-700";
+
+    default:
+      return "bg-slate-100 text-slate-600";
+  }
+}
+
+interface MetricCardProps {
+  title: string;
+  value: string;
+  unit?: string;
+  subtitle?: string;
+  icon:
+      typeof Scale;
+}
+
+function MetricCard({
+                      title,
+                      value,
+                      unit,
+                      subtitle,
+                      icon: Icon,
+                    }: MetricCardProps) {
+  return (
+      <Card className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-500">
+              {title}
+            </p>
+
+            <div className="mt-3 flex items-end gap-1">
+              <span className="text-3xl font-black text-slate-900">
+                {value}
+              </span>
+
+              {unit && (
+                  <span className="pb-1 text-sm font-bold text-slate-400">
+                  {unit}
+                </span>
+              )}
+            </div>
+
+            {subtitle && (
+                <p className="mt-2 text-xs text-slate-500">
+                  {subtitle}
+                </p>
+            )}
+          </div>
+
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-fit-primarySoft text-fit-primary">
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+      </Card>
+  );
+}
+
+interface SimpleLineChartProps {
+  data: BodyMetricChartPoint[];
+  valueKey: "weightKg" | "bmi";
+  title: string;
+  unit: string;
+}
+
+function SimpleLineChart({
+                           data,
+                           valueKey,
+                           title,
+                           unit,
+                         }: SimpleLineChartProps) {
+  const width = 760;
+  const height = 260;
+
+  const paddingLeft = 52;
+  const paddingRight = 24;
+  const paddingTop = 28;
+  const paddingBottom = 44;
+
+  const plotWidth =
+      width -
+      paddingLeft -
+      paddingRight;
+
+  const plotHeight =
+      height -
+      paddingTop -
+      paddingBottom;
+
+  const values =
+      data
+          .map(
+              (item) =>
+                  item[valueKey],
+          )
+          .filter(
+              (
+                  value,
+              ): value is number =>
+                  Number.isFinite(value),
+          );
+
+  if (values.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
-      </div>
+        <Card className="p-6">
+          <h2 className="text-lg font-black text-slate-900">
+            {title}
+          </h2>
+
+          <div className="mt-5 flex h-52 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200">
+            <p className="text-sm font-medium text-slate-400">
+              Chưa đủ dữ liệu để hiển thị biểu đồ.
+            </p>
+          </div>
+        </Card>
     );
   }
 
-  const latestMetric = metrics[0];
+  let minimum =
+      Math.min(...values);
 
-  const getMetricIcon = (metricName: string) => {
-    switch (metricName) {
-      case "weightKg": return <Scale className="w-6 h-6 text-emerald-600" />;
-      case "bmi": return <Activity className="w-6 h-6 text-blue-600" />;
-      case "bodyFatPercent": return <HeartPulse className="w-6 h-6 text-red-600" />;
-      case "muscleMassKg": return <Dumbbell className="w-6 h-6 text-orange-600" />;
-      default: return <Activity className="w-6 h-6 text-slate-600" />;
+  let maximum =
+      Math.max(...values);
+
+  if (minimum === maximum) {
+    minimum -= 1;
+    maximum += 1;
+  } else {
+    const margin =
+        (
+            maximum -
+            minimum
+        ) * 0.15;
+
+    minimum -= margin;
+    maximum += margin;
+  }
+
+  const getX = (
+      index: number,
+  ): number => {
+    if (data.length <= 1) {
+      return (
+          paddingLeft +
+          plotWidth / 2
+      );
     }
+
+    return (
+        paddingLeft +
+        (
+            index /
+            (data.length - 1)
+        ) *
+        plotWidth
+    );
   };
 
-  const getMetricLabel = (metricName: string) => {
-    switch (metricName) {
-      case "weightKg": return "Cân nặng";
-      case "bmi": return "Chỉ số BMI";
-      case "bodyFatPercent": return "Tỷ lệ mỡ (Body Fat)";
-      case "muscleMassKg": return "Lượng cơ bắp";
-      default: return metricName;
-    }
-  };
+  const getY = (
+      value: number,
+  ): number =>
+      paddingTop +
+      (
+          1 -
+          (
+              value -
+              minimum
+          ) /
+          (
+              maximum -
+              minimum
+          )
+      ) *
+      plotHeight;
+
+  const points =
+      data
+          .map(
+              (
+                  item,
+                  index,
+              ) =>
+                  `${getX(index)},${getY(
+                      item[valueKey],
+                  )}`,
+          )
+          .join(" ");
+
+  const horizontalLines =
+      Array.from(
+          {
+            length: 5,
+          },
+          (
+              _,
+              index,
+          ) => {
+            const ratio =
+                index / 4;
+
+            const y =
+                paddingTop +
+                ratio *
+                plotHeight;
+
+            const value =
+                maximum -
+                ratio *
+                (
+                    maximum -
+                    minimum
+                );
+
+            return {
+              y,
+              value,
+            };
+          },
+      );
 
   return (
-    <div className="space-y-8 pb-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Chỉ số cơ thể</h1>
-          <p className="text-slate-500 mt-2 text-lg">Theo dõi hành trình thay đổi vóc dáng của bạn.</p>
-        </div>
-        <Button 
-          variant="primary"
-          onClick={handleOpenModal}
-          className="flex items-center gap-2 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/20 hover:-translate-y-1 hover:shadow-xl transition-all"
-        >
-          <Plus className="w-5 h-5" /> Cập nhật chỉ số
-        </Button>
-      </div>
+      <Card className="overflow-hidden p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-black text-slate-900">
+              {title}
+            </h2>
 
-      {!latestMetric ? (
-        <div className="bg-slate-50 rounded-3xl p-12 text-center border border-slate-100">
-          <Activity className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500 font-medium">Bạn chưa có dữ liệu InBody nào.</p>
-          <p className="text-sm text-slate-400 mt-2">Vui lòng liên hệ Huấn luyện viên (PT) hoặc Lễ tân để được đo và cập nhật chỉ số.</p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {/* Bento Grid cho Tiến độ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {progress.map((prog, idx) => (
-              <motion.div 
-                key={prog.metric}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1, type: "spring" }}
-                className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center">
-                    {getMetricIcon(prog.metric)}
-                  </div>
-                  <div className={`flex items-center gap-1 text-sm font-bold px-2 py-1 rounded-full ${
-                    prog.trend === "up" ? "bg-emerald-50 text-emerald-600" : 
-                    prog.trend === "down" ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-600"
-                  }`}>
-                    {prog.trend === "up" ? <TrendingUp className="w-3 h-3" /> : prog.trend === "down" ? <TrendingDown className="w-3 h-3" /> : null}
-                    {prog.change > 0 ? "+" : ""}{prog.change}{prog.metric === "bodyFatPercent" ? "%" : "kg"}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">{getMetricLabel(prog.metric)}</p>
-                  <h3 className="text-3xl font-black text-slate-900">
-                    {prog.currentValue}
-                    <span className="text-base font-medium text-slate-400 ml-1">{prog.metric === "bodyFatPercent" ? "%" : prog.metric === "bmi" ? "" : "kg"}</span>
-                  </h3>
-                </div>
-              </motion.div>
-            ))}
+            <p className="mt-1 text-sm text-slate-500">
+              Dữ liệu được sắp xếp theo thời gian đo.
+            </p>
           </div>
 
-          {/* Biểu đồ Premium */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 relative overflow-hidden group"
+          <TrendingUp className="h-5 w-5 text-fit-primary" />
+        </div>
+
+        <div className="mt-5 w-full overflow-x-auto">
+          <svg
+              viewBox={`0 0 ${width} ${height}`}
+              className="h-[260px] min-w-[620px] w-full"
+              role="img"
+              aria-label={title}
           >
-            {/* Background Glow */}
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-            
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 relative z-10 gap-4">
-              <div>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Tiến độ 8 tuần qua</h3>
-                <p className="text-sm text-slate-500 font-medium mt-1">Phân tích xu hướng giảm mỡ & cân nặng</p>
-              </div>
-              <div className="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  <span className="text-sm font-bold text-slate-700">Cân nặng (kg)</span>
-                </div>
-              </div>
-            </div>
+            {horizontalLines.map(
+                (
+                    line,
+                    index,
+                ) => (
+                    <g key={index}>
+                      <line
+                          x1={paddingLeft}
+                          y1={line.y}
+                          x2={
+                              width -
+                              paddingRight
+                          }
+                          y2={line.y}
+                          stroke="#e2e8f0"
+                          strokeDasharray="4 4"
+                      />
 
-            <div className="h-[320px] w-full relative">
-              {/* Y-Axis Labels */}
-              <div className="absolute left-0 top-0 bottom-10 flex flex-col justify-between text-xs font-bold text-slate-400 z-10">
-                <span>72kg</span>
-                <span>70kg</span>
-                <span>68kg</span>
-                <span>66kg</span>
-                <span>64kg</span>
-              </div>
-              
-              <div className="ml-12 h-full relative">
-                  <svg className="w-full h-full overflow-visible" viewBox="0 0 800 240" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#34d399" />
-                        <stop offset="100%" stopColor="#059669" />
-                      </linearGradient>
-                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(16, 185, 129, 0.25)" />
-                        <stop offset="100%" stopColor="rgba(16, 185, 129, 0)" />
-                      </linearGradient>
-                      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur stdDeviation="6" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                      </filter>
-                    </defs>
+                      <text
+                          x={
+                              paddingLeft -
+                              10
+                          }
+                          y={
+                              line.y +
+                              4
+                          }
+                          textAnchor="end"
+                          fontSize="11"
+                          fill="#94a3b8"
+                      >
+                        {formatNumber(
+                            line.value,
+                            1,
+                        )}
+                      </text>
+                    </g>
+                ),
+            )}
 
-                    {/* Grid lines */}
-                    {[0, 50, 100, 150, 200].map((y, i) => (
-                      <line key={y} x1="0" x2="100%" y1={y} y2={y} stroke="#f1f5f9" strokeWidth="2" strokeDasharray={i === 4 ? "0" : "8 8"} />
-                    ))}
-
-                    {/* Area under curve */}
-                    <motion.path 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 1, delay: 0.3 }}
-                      d="M 20 180 L 128 160 L 236 150 L 344 120 L 452 100 L 560 80 L 668 90 L 776 40 L 776 200 L 20 200 Z" 
-                      fill="url(#areaGradient)" 
-                    />
-
-                    {/* Main Line */}
-                    <motion.path 
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 1.5, ease: "easeInOut" }}
-                      d="M 20 180 L 128 160 L 236 150 L 344 120 L 452 100 L 560 80 L 668 90 L 776 40" 
-                      fill="none" 
-                      stroke="url(#lineGradient)" 
-                      strokeWidth="5" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      filter="url(#glow)"
-                    />
-
-                    {/* Data Points */}
-                    {[
-                      { x: 20, y: 180, val: 70.5, label: "Tuần 1" },
-                      { x: 128, y: 160, val: 69.8, label: "Tuần 2" },
-                      { x: 236, y: 150, val: 69.2, label: "Tuần 3" },
-                      { x: 344, y: 120, val: 68.2, label: "Tuần 4" },
-                      { x: 452, y: 100, val: 67.5, label: "Tuần 5" },
-                      { x: 560, y: 80, val: 67.0, label: "Tuần 6" },
-                      { x: 668, y: 90, val: 67.2, label: "Tuần 7" },
-                      { x: 776, y: 40, val: 66.1, label: "Tuần 8" },
-                    ].map((point, i) => (
-                      <g key={i}>
-                        <motion.circle 
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.6 + i * 0.1, type: "spring", stiffness: 200 }}
-                          cx={point.x} cy={point.y} r="6" fill="#fff" stroke="#10b981" strokeWidth="3" 
-                          className="cursor-pointer hover:stroke-emerald-400 hover:r-8 transition-all duration-300"
-                        />
-                        <motion.text 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.9 + i * 0.1 }}
-                          x={point.x} y={point.y - 18} 
-                          textAnchor="middle" 
-                          className="text-[15px] font-black fill-slate-700"
-                        >
-                          {point.val}
-                        </motion.text>
-                        {/* X-axis label */}
-                        <motion.text 
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 1 }}
-                          x={point.x} y="235" 
-                          textAnchor="middle" 
-                          className="text-[13px] font-bold fill-slate-400 uppercase tracking-wider"
-                        >
-                          {point.label}
-                        </motion.text>
-                      </g>
-                    ))}
-                  </svg>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Modal Thêm Chỉ Số */}
-      <AnimatePresence>
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={handleCloseModal}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            <polyline
+                points={points}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-fit-primary"
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden z-10"
-            >
-              <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                  <Activity className="w-6 h-6 text-emerald-500" />
-                  Cập nhật chỉ số
-                </h2>
-                <button 
-                  onClick={handleCloseModal}
-                  className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-rose-500 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
 
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <Input 
-                    label="Cân nặng (kg) *" 
-                    type="number" 
-                    step="0.1"
-                    placeholder="VD: 70.5"
-                    value={formData.weightKg}
-                    onChange={(e) => setFormData({...formData, weightKg: e.target.value})}
-                    required
-                  />
-                  <Input 
-                    label="Chiều cao (cm)" 
-                    type="number" 
-                    placeholder="VD: 175"
-                    value={formData.heightCm}
-                    onChange={(e) => setFormData({...formData, heightCm: e.target.value})}
-                  />
-                  <Input 
-                    label="Tỷ lệ mỡ (%)" 
-                    type="number" 
-                    step="0.1"
-                    placeholder="VD: 18.5"
-                    value={formData.bodyFatPercent}
-                    onChange={(e) => setFormData({...formData, bodyFatPercent: e.target.value})}
-                  />
-                  <Input 
-                    label="Lượng cơ bắp (kg)" 
-                    type="number" 
-                    step="0.1"
-                    placeholder="VD: 35.2"
-                    value={formData.muscleMassKg}
-                    onChange={(e) => setFormData({...formData, muscleMassKg: e.target.value})}
-                  />
-                </div>
+            {data.map(
+                (
+                    item,
+                    index,
+                ) => {
+                  const x =
+                      getX(index);
 
-                <div className="pt-4 flex justify-end gap-3">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleCloseModal}
-                    className="rounded-xl px-6"
-                  >
-                    Hủy
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    variant="primary" 
-                    isLoading={submitting}
-                    className="rounded-xl px-8 flex items-center gap-2 shadow-lg shadow-fit-primary/20"
-                  >
-                    <Save className="w-5 h-5" />
-                    Lưu chỉ số
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
+                  const y =
+                      getY(
+                          item[valueKey],
+                      );
+
+                  const displayLabel =
+                      data.length <= 8 ||
+                      index === 0 ||
+                      index ===
+                      data.length - 1 ||
+                      index % 2 === 0;
+
+                  return (
+                      <g key={item.id}>
+                        <circle
+                            cx={x}
+                            cy={y}
+                            r="5"
+                            fill="white"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            className="text-fit-primary"
+                        >
+                          <title>
+                            {`${item.label}: ${formatNumber(
+                                item[
+                                    valueKey
+                                    ],
+                                2,
+                            )} ${unit}`}
+                          </title>
+                        </circle>
+
+                        {displayLabel && (
+                            <text
+                                x={x}
+                                y={
+                                    height -
+                                    15
+                                }
+                                textAnchor="middle"
+                                fontSize="11"
+                                fill="#64748b"
+                            >
+                              {item.label}
+                            </text>
+                        )}
+                      </g>
+                  );
+                },
+            )}
+          </svg>
+        </div>
+      </Card>
+  );
+}
+
+export default function BodyMetricPage() {
+  const {
+    metrics,
+    latestMetric,
+    chartData,
+
+    formData,
+    formOpen,
+
+    loading,
+    saving,
+
+    currentPage,
+    totalPages,
+
+    bmiLevel,
+    bmiLabel,
+
+    setField,
+
+    openCreateForm,
+    closeCreateForm,
+    createMetric,
+
+    changePage,
+  } = useBodyMetric();
+
+  const previousMetric =
+      metrics.length > 1
+          ? metrics[1]
+          : null;
+
+  const weightChange =
+      latestMetric &&
+      previousMetric
+          ? latestMetric.weightKg -
+          previousMetric.weightKg
+          : null;
+
+  if (loading && metrics.length === 0) {
+    return (
+        <div className="flex h-72 items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-fit-primary border-t-transparent" />
+
+            <p className="text-sm font-semibold text-slate-500">
+              Đang tải chỉ số cơ thể...
+            </p>
           </div>
+        </div>
+    );
+  }
+
+  return (
+      <>
+        <div className="mx-auto max-w-7xl space-y-6 pb-10">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <PageHeader
+                title="Chỉ số cơ thể"
+                description="Theo dõi cân nặng, BMI và sự thay đổi cơ thể theo thời gian."
+            />
+
+            <button
+                type="button"
+                onClick={
+                  openCreateForm
+                }
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-black text-white shadow-lg shadow-emerald-600/20 transition hover:bg-fit-primaryHover active:scale-[0.98]"
+            >
+              <Plus className="h-5 w-5" />
+              Ghi nhận chỉ số
+            </button>
+          </div>
+
+          {!latestMetric ? (
+              <Card className="p-10 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-fit-primarySoft text-fit-primary">
+                  <HeartPulse className="h-8 w-8" />
+                </div>
+
+                <h2 className="mt-5 text-xl font-black text-slate-900">
+                  Chưa có chỉ số cơ thể
+                </h2>
+
+                <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
+                  Hãy nhập lần đo đầu tiên để FitLife theo dõi tiến trình và cung cấp dữ liệu cho AI cá nhân hóa kế hoạch.
+                </p>
+
+                <button
+                    type="button"
+                    onClick={
+                      openCreateForm
+                    }
+                    className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-bold text-white hover:bg-fit-primaryHover"
+                >
+                  <Plus className="h-4 w-4" />
+                  Thêm lần đo đầu tiên
+                </button>
+              </Card>
+          ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                  <MetricCard
+                      title="Cân nặng"
+                      value={formatNumber(
+                          latestMetric.weightKg,
+                      )}
+                      unit="kg"
+                      subtitle={
+                        weightChange === null
+                            ? "Chưa có dữ liệu so sánh"
+                            : `${
+                                weightChange >
+                                0
+                                    ? "+"
+                                    : ""
+                            }${formatNumber(
+                                weightChange,
+                                1,
+                            )} kg so với lần trước`
+                      }
+                      icon={
+                        weightChange !==
+                        null &&
+                        weightChange < 0
+                            ? TrendingDown
+                            : Scale
+                      }
+                  />
+
+                  <MetricCard
+                      title="Chiều cao"
+                      value={formatNumber(
+                          latestMetric.heightCm,
+                      )}
+                      unit="cm"
+                      icon={Ruler}
+                  />
+
+                  <Card className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-500">
+                          BMI
+                        </p>
+
+                        <p className="mt-3 text-3xl font-black text-slate-900">
+                          {formatNumber(
+                              latestMetric.bmi,
+                              2,
+                          )}
+                        </p>
+
+                        <span
+                            className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getBmiBadgeClasses(
+                                bmiLevel,
+                            )}`}
+                        >
+                        {bmiLabel}
+                      </span>
+                      </div>
+
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-fit-primarySoft text-fit-primary">
+                        <Gauge className="h-5 w-5" />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <MetricCard
+                      title="Tỷ lệ mỡ"
+                      value={formatNumber(
+                          latestMetric.bodyFatPercent,
+                      )}
+                      unit="%"
+                      icon={Activity}
+                  />
+
+                  <MetricCard
+                      title="Khối lượng cơ"
+                      value={formatNumber(
+                          latestMetric.muscleMassKg,
+                      )}
+                      unit="kg"
+                      icon={Dumbbell}
+                  />
+                </div>
+
+                <Card className="p-5">
+                  <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                        <CalendarDays className="h-5 w-5" />
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">
+                          Lần đo mới nhất
+                        </p>
+
+                        <p className="text-xs text-slate-500">
+                          {formatDateTime(
+                              latestMetric.recordedAt,
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {latestMetric.note && (
+                        <p className="max-w-xl text-sm text-slate-600">
+                          {latestMetric.note}
+                        </p>
+                    )}
+                  </div>
+                </Card>
+              </>
+          )}
+
+          <div className="grid gap-6 xl:grid-cols-2">
+            <SimpleLineChart
+                data={chartData}
+                valueKey="weightKg"
+                title="Biểu đồ cân nặng"
+                unit="kg"
+            />
+
+            <SimpleLineChart
+                data={chartData}
+                valueKey="bmi"
+                title="Biểu đồ BMI"
+                unit=""
+            />
+          </div>
+
+          <Card className="overflow-hidden">
+            <div className="border-b border-slate-200 px-5 py-4">
+              <h2 className="text-lg font-black text-slate-900">
+                Lịch sử chỉ số
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Các lần đo mới nhất được hiển thị trước.
+              </p>
+            </div>
+
+            {metrics.length === 0 ? (
+                <div className="py-14 text-center">
+                  <HeartPulse className="mx-auto h-10 w-10 text-slate-300" />
+
+                  <p className="mt-3 font-bold text-slate-600">
+                    Chưa có lịch sử đo
+                  </p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-5 py-3 text-left font-bold text-slate-600">
+                        Thời gian
+                      </th>
+
+                      <th className="px-5 py-3 text-left font-bold text-slate-600">
+                        Cân nặng
+                      </th>
+
+                      <th className="px-5 py-3 text-left font-bold text-slate-600">
+                        Chiều cao
+                      </th>
+
+                      <th className="px-5 py-3 text-left font-bold text-slate-600">
+                        BMI
+                      </th>
+
+                      <th className="px-5 py-3 text-left font-bold text-slate-600">
+                        Mỡ
+                      </th>
+
+                      <th className="px-5 py-3 text-left font-bold text-slate-600">
+                        Cơ
+                      </th>
+
+                      <th className="px-5 py-3 text-left font-bold text-slate-600">
+                        Ghi chú
+                      </th>
+                    </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                    {metrics.map(
+                        (metric) => (
+                            <tr
+                                key={metric.id}
+                                className="transition hover:bg-slate-50"
+                            >
+                              <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-700">
+                                {formatDateTime(
+                                    metric.recordedAt,
+                                )}
+                              </td>
+
+                              <td className="whitespace-nowrap px-5 py-4 font-black text-slate-900">
+                                {formatNumber(
+                                    metric.weightKg,
+                                )}{" "}
+                                kg
+                              </td>
+
+                              <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                                {formatNumber(
+                                    metric.heightCm,
+                                )}{" "}
+                                cm
+                              </td>
+
+                              <td className="whitespace-nowrap px-5 py-4 font-bold text-fit-primary">
+                                {formatNumber(
+                                    metric.bmi,
+                                    2,
+                                )}
+                              </td>
+
+                              <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                                {formatNumber(
+                                    metric.bodyFatPercent,
+                                )}{" "}
+                                %
+                              </td>
+
+                              <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                                {formatNumber(
+                                    metric.muscleMassKg,
+                                )}{" "}
+                                kg
+                              </td>
+
+                              <td className="max-w-xs truncate px-5 py-4 text-slate-500">
+                                {metric.note ||
+                                    "--"}
+                              </td>
+                            </tr>
+                        ),
+                    )}
+                    </tbody>
+                  </table>
+                </div>
+            )}
+
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4">
+                  <p className="text-sm font-medium text-slate-500">
+                    Trang {currentPage + 1} /{" "}
+                    {totalPages}
+                  </p>
+
+                  <div className="flex gap-2">
+                    <button
+                        type="button"
+                        disabled={
+                            currentPage <= 0 ||
+                            loading
+                        }
+                        onClick={() =>
+                            void changePage(
+                                currentPage -
+                                1,
+                            )
+                        }
+                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Trước
+                    </button>
+
+                    <button
+                        type="button"
+                        disabled={
+                            currentPage + 1 >=
+                            totalPages ||
+                            loading
+                        }
+                        onClick={() =>
+                            void changePage(
+                                currentPage +
+                                1,
+                            )
+                        }
+                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Sau
+                    </button>
+                  </div>
+                </div>
+            )}
+          </Card>
+        </div>
+
+        {formOpen && (
+            <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+                role="presentation"
+                onMouseDown={(event) => {
+                  if (
+                      event.target ===
+                      event.currentTarget
+                  ) {
+                    closeCreateForm();
+                  }
+                }}
+            >
+              <section
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="body-metric-form-title"
+                  className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl"
+              >
+                <header className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                  <div>
+                    <h2
+                        id="body-metric-form-title"
+                        className="text-xl font-black text-slate-900"
+                    >
+                      Ghi nhận chỉ số cơ thể
+                    </h2>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      BMI sẽ được backend tự động tính.
+                    </p>
+                  </div>
+
+                  <button
+                      type="button"
+                      onClick={
+                        closeCreateForm
+                      }
+                      disabled={saving}
+                      className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-40"
+                      aria-label="Đóng"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </header>
+
+                <div className="space-y-5 p-6">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <label className="block">
+                    <span className="text-sm font-bold text-slate-700">
+                      Cân nặng (kg) *
+                    </span>
+
+                      <input
+                          type="number"
+                          min="20"
+                          max="300"
+                          step="0.1"
+                          value={
+                            formData.weightKg
+                          }
+                          onChange={(event) =>
+                              setField(
+                                  "weightKg",
+                                  event.target
+                                      .value,
+                              )
+                          }
+                          className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                          placeholder="Ví dụ: 61.5"
+                      />
+                    </label>
+
+                    <label className="block">
+                    <span className="text-sm font-bold text-slate-700">
+                      Chiều cao (cm)
+                    </span>
+
+                      <input
+                          type="number"
+                          min="50"
+                          max="250"
+                          step="0.1"
+                          value={
+                            formData.heightCm
+                          }
+                          onChange={(event) =>
+                              setField(
+                                  "heightCm",
+                                  event.target
+                                      .value,
+                              )
+                          }
+                          className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                          placeholder="Ví dụ: 165"
+                      />
+
+                      <span className="mt-1 block text-xs text-slate-400">
+                      Có thể dùng chiều cao từ lần đo gần nhất.
+                    </span>
+                    </label>
+
+                    <label className="block">
+                    <span className="text-sm font-bold text-slate-700">
+                      Tỷ lệ mỡ (%)
+                    </span>
+
+                      <input
+                          type="number"
+                          min="0"
+                          max="80"
+                          step="0.1"
+                          value={
+                            formData
+                                .bodyFatPercent
+                          }
+                          onChange={(event) =>
+                              setField(
+                                  "bodyFatPercent",
+                                  event.target
+                                      .value,
+                              )
+                          }
+                          className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                          placeholder="Ví dụ: 18.5"
+                      />
+                    </label>
+
+                    <label className="block">
+                    <span className="text-sm font-bold text-slate-700">
+                      Khối lượng cơ (kg)
+                    </span>
+
+                      <input
+                          type="number"
+                          min="0"
+                          max="200"
+                          step="0.1"
+                          value={
+                            formData
+                                .muscleMassKg
+                          }
+                          onChange={(event) =>
+                              setField(
+                                  "muscleMassKg",
+                                  event.target
+                                      .value,
+                              )
+                          }
+                          className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                          placeholder="Ví dụ: 47.2"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="block">
+                  <span className="text-sm font-bold text-slate-700">
+                    Thời gian đo
+                  </span>
+
+                    <input
+                        type="datetime-local"
+                        value={
+                          formData.recordedAt
+                        }
+                        max={
+                          new Date()
+                              .toISOString()
+                              .slice(0, 16)
+                        }
+                        onChange={(event) =>
+                            setField(
+                                "recordedAt",
+                                event.target
+                                    .value,
+                            )
+                        }
+                        className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                    />
+
+                    <span className="mt-1 block text-xs text-slate-400">
+                    Để trống để sử dụng thời gian hiện tại.
+                  </span>
+                  </label>
+
+                  <label className="block">
+                  <span className="text-sm font-bold text-slate-700">
+                    Ghi chú
+                  </span>
+
+                    <textarea
+                        rows={4}
+                        maxLength={1000}
+                        value={
+                          formData.note
+                        }
+                        onChange={(event) =>
+                            setField(
+                                "note",
+                                event.target
+                                    .value,
+                            )
+                        }
+                        className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                        placeholder="Tình trạng cơ thể hoặc ghi chú cho lần đo..."
+                    />
+
+                    <span className="mt-1 block text-right text-xs text-slate-400">
+                    {formData.note.length}/1000
+                  </span>
+                  </label>
+
+                  <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+                    <button
+                        type="button"
+                        onClick={
+                          closeCreateForm
+                        }
+                        disabled={saving}
+                        className="min-h-12 rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      Hủy
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            void createMetric()
+                        }
+                        disabled={saving}
+                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-black text-white transition hover:bg-fit-primaryHover disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {saving && (
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      )}
+
+                      {saving
+                          ? "Đang lưu..."
+                          : "Lưu chỉ số"}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
         )}
-      </AnimatePresence>
-    </div>
+      </>
   );
 }
