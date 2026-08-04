@@ -1,120 +1,199 @@
 import apiClient from "./apiClient";
-import type { ApiResponse, PageResponse } from "../types/common.type";
+
+import type {
+  ApiResponse,
+  PageResponse,
+} from "../types/common.type";
+
 import type {
   BodyMetric,
-  BodyMetricCreateRequest,
-  BodyMetricProgress,
-  BodyMetricSearchParams,
-  BodyMetricUpdateRequest,
-  MyBodyMetricCreateRequest,
+  BodyMetricHistoryParams,
+  BodyMetricListParams,
+  CreateMyBodyMetricRequest,
 } from "../types/bodyMetric.type";
 
-export const bodyMetricService = {
-  demoBmi: async (data: { heightCm: number; weightKg: number }): Promise<number> => {
-    return Number((data.weightKg / ((data.heightCm / 100) ** 2)).toFixed(1));
-  },
-
-  getMyMetrics: async (page = 0, size = 10): Promise<BodyMetric[]> => {
-    try {
-      const response = await apiClient.get<ApiResponse<PageResponse<BodyMetric>>>(`/body-metrics/me?page=${page}&size=${size}`);
-      return response.data.data?.content || [];
-    } catch {
-      return [];
-    }
-  },
-
-  createMyMetric: async (data: { weightKg: number; heightCm?: number; bodyFatPercent?: number; muscleMassKg?: number }): Promise<BodyMetric> => {
-    const response = await apiClient.post<ApiResponse<BodyMetric>>(`/body-metrics/me`, data);
-    return response.data.data;
-  },
-
-  getMyProgress: async (): Promise<BodyMetricProgress[]> => {
-    try {
-      const response = await apiClient.get<ApiResponse<PageResponse<BodyMetric>>>(`/body-metrics/me?page=0&size=2`);
-      const metrics = response.data.data?.content || [];
-      
-      if (metrics.length < 2) {
-        return [];
-      }
-
-      const current = metrics[0];
-      const previous = metrics[1];
-
-      const calcTrend = (change: number): "up" | "down" | "stable" => {
-        if (Math.abs(change) < 0.1) return "stable";
-        return change > 0 ? "up" : "down";
-      };
-
-      return [
-        { 
-          metric: "weightKg", 
-          startValue: previous.weightKg, 
-          currentValue: current.weightKg, 
-          change: Number((current.weightKg - previous.weightKg).toFixed(1)), 
-          trend: calcTrend(current.weightKg - previous.weightKg) 
-        },
-        { 
-          metric: "bodyFatPercent", 
-          startValue: previous.bodyFatPercent || 0, 
-          currentValue: current.bodyFatPercent || 0, 
-          change: Number(((current.bodyFatPercent || 0) - (previous.bodyFatPercent || 0)).toFixed(1)), 
-          trend: calcTrend((current.bodyFatPercent || 0) - (previous.bodyFatPercent || 0)) 
-        },
-        { 
-          metric: "muscleMassKg", 
-          startValue: previous.muscleMassKg || 0, 
-          currentValue: current.muscleMassKg || 0, 
-          change: Number(((current.muscleMassKg || 0) - (previous.muscleMassKg || 0)).toFixed(1)), 
-          trend: calcTrend((current.muscleMassKg || 0) - (previous.muscleMassKg || 0)) 
-        },
-        { 
-          metric: "bmi", 
-          startValue: previous.bmi || 0, 
-          currentValue: current.bmi || 0, 
-          change: Number(((current.bmi || 0) - (previous.bmi || 0)).toFixed(1)), 
-          trend: calcTrend((current.bmi || 0) - (previous.bmi || 0)) 
-        },
-      ];
-    } catch {
-      return [];
-    }
-  },
-
-  getMetrics: async (params?: Record<string, unknown>): Promise<BodyMetric[]> => {
-    const response = await apiClient.get<ApiResponse<PageResponse<BodyMetric>>>("/admin/body-metrics", { params });
-    return response.data.data.content;
-  },
-
-  getMetricById: async (id: number): Promise<BodyMetric> => {
-    const response = await apiClient.get<ApiResponse<BodyMetric>>(`/admin/body-metrics/${id}`);
-    return response.data.data;
-  },
-
-  getMetricsByMemberId: async (memberId: string, page = 0, size = 10): Promise<BodyMetric[]> => {
-    const response = await apiClient.get<ApiResponse<PageResponse<BodyMetric>>>(`/admin/body-metrics/member/${memberId}?page=${page}&size=${size}`);
-    return response.data.data.content;
-  },
-
-  getLatestMetricByMemberId: async (memberId: string): Promise<BodyMetric> => {
-    const response = await apiClient.get<ApiResponse<BodyMetric>>(`/admin/body-metrics/member/${memberId}/latest`);
-    return response.data.data;
-  },
-
-  createMetricForMember: async (data: import("../types/member.type").BodyMetricCreateRequest): Promise<BodyMetric> => {
-    const response = await apiClient.post<ApiResponse<BodyMetric>>(`/admin/body-metrics`, data);
-    return response.data.data;
-  },
-
-  updateMetric: async (id: number, data: import("../types/member.type").BodyMetricUpdateRequest): Promise<BodyMetric> => {
-    const response = await apiClient.put<ApiResponse<BodyMetric>>(`/admin/body-metrics/${id}`, data);
-    return response.data.data;
-  },
-
-  deleteMetric: async (id: number): Promise<void> => {
-    await apiClient.delete(`/admin/body-metrics/${id}`);
-  },
-  async getAdminLatestMetric(memberId: number): Promise<BodyMetric | null> {
-    const response = await apiClient.get<ApiResponse<BodyMetric | null>>(`/admin/body-metrics/member/${memberId}/latest`);
-    return response.data.data;
+function requireData<T>(
+    response: ApiResponse<T>,
+    message: string,
+): T {
+  if (
+      response.data === null ||
+      response.data === undefined
+  ) {
+    throw new Error(message);
   }
+
+  return response.data;
+}
+
+export const bodyMetricService = {
+  /**
+   * Danh sách Body Metric của Member hiện tại.
+   *
+   * Backend sắp xếp mặc định:
+   * recordedAt DESC.
+   */
+  async getMyBodyMetrics(
+      params: BodyMetricListParams = {},
+  ): Promise<PageResponse<BodyMetric>> {
+    const response =
+        await apiClient.get<
+            ApiResponse<
+                PageResponse<BodyMetric>
+            >
+        >(
+            "/body-metrics/me",
+            {
+              params: {
+                page:
+                    params.page ?? 0,
+
+                size:
+                    params.size ?? 20,
+
+                sort:
+                    params.sort ??
+                    "recordedAt,desc",
+              },
+            },
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được lịch sử chỉ số cơ thể.",
+    );
+  },
+
+  /**
+   * Metric mới nhất theo recordedAt.
+   */
+  async getLatestMyBodyMetric():
+      Promise<BodyMetric> {
+    const response =
+        await apiClient.get<
+            ApiResponse<BodyMetric>
+        >(
+            "/body-metrics/me/latest",
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được chỉ số cơ thể mới nhất.",
+    );
+  },
+
+  /**
+   * Chi tiết một Body Metric của Member hiện tại.
+   */
+  async getMyBodyMetricById(
+      id: number,
+  ): Promise<BodyMetric> {
+    const response =
+        await apiClient.get<
+            ApiResponse<BodyMetric>
+        >(
+            `/body-metrics/me/${id}`,
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được chi tiết chỉ số cơ thể.",
+    );
+  },
+
+  /**
+   * Lịch sử trong khoảng thời gian.
+   *
+   * Backend trả theo recordedAt ASC,
+   * phù hợp để dựng biểu đồ.
+   */
+  async getMyBodyMetricHistory(
+      params: BodyMetricHistoryParams,
+  ): Promise<BodyMetric[]> {
+    const response =
+        await apiClient.get<
+            ApiResponse<BodyMetric[]>
+        >(
+            "/body-metrics/me/history",
+            {
+              params: {
+                from: params.from,
+                to: params.to,
+              },
+            },
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được dữ liệu biểu đồ.",
+    );
+  },
+
+  /**
+   * Tạo lần đo mới.
+   *
+   * Không gửi memberId vì backend resolve Member
+   * từ access token.
+   */
+  async createMyBodyMetric(
+      request:
+      CreateMyBodyMetricRequest,
+  ): Promise<BodyMetric> {
+    const payload:
+        CreateMyBodyMetricRequest = {
+      weightKg:
+      request.weightKg,
+
+      ...(request.heightCm !==
+      undefined
+          ? {
+            heightCm:
+            request.heightCm,
+          }
+          : {}),
+
+      ...(request.bodyFatPercent !==
+      undefined
+          ? {
+            bodyFatPercent:
+            request.bodyFatPercent,
+          }
+          : {}),
+
+      ...(request.muscleMassKg !==
+      undefined
+          ? {
+            muscleMassKg:
+            request.muscleMassKg,
+          }
+          : {}),
+
+      ...(request.note?.trim()
+          ? {
+            note:
+                request.note.trim(),
+          }
+          : {}),
+
+      ...(request.recordedAt
+          ? {
+            recordedAt:
+            request.recordedAt,
+          }
+          : {}),
+    };
+
+    const response =
+        await apiClient.post<
+            ApiResponse<BodyMetric>
+        >(
+            "/body-metrics/me",
+            payload,
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được chỉ số cơ thể vừa tạo.",
+    );
+  },
 };
