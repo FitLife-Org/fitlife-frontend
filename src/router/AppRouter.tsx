@@ -61,6 +61,8 @@ import UserManagementPage from "../pages/admin/UserManagementPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
+import TrainerFormPage from "../pages/admin/TrainerFormPage";
+import GymPackageFormPage from "../pages/admin/GymPackageFormPage";
 import ReportPage from "../pages/admin/ReportPage";
 
 import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
@@ -122,6 +124,8 @@ import SubscriptionSupportPage from "../pages/staff/SubscriptionSupportPage";
 import TrainerSchedulePage from "../pages/trainer/TrainerSchedulePage";
 import MyMembersPage from "../pages/trainer/MyMembersPage";
 import WorkoutTrackingPage from "../pages/trainer/WorkoutTrackingPage";
+import TrainerNutritionPage from "../pages/trainer/TrainerNutritionPage";
+import TrainerNutritionFormPage from "../pages/trainer/TrainerNutritionFormPage";
 
 // =====================================================
 // ROUTE LAYOUT
@@ -433,10 +437,46 @@ export default function AppRouter() {
                         />
 
                         <Route
+                            path={`${ROUTES.ADMIN_PACKAGES}/add`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <GymPackageFormPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_PACKAGES}/:id/edit`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <GymPackageFormPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
                             path={ROUTES.ADMIN_TRAINERS}
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
                                     <TrainerManagementPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_TRAINERS}/add`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <TrainerFormPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_TRAINERS}/:id/edit`}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <TrainerFormPage />
                                 </RoleGuard>
                             }
                         />
@@ -678,6 +718,50 @@ export default function AppRouter() {
                                     ]}
                                 >
                                     <WorkoutTrackingPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Trainer Nutrition */}
+
+                        <Route
+                            path="/trainer/members/:memberId/nutrition"
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <TrainerNutritionPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path="/trainer/members/:memberId/nutrition/create"
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <TrainerNutritionFormPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path="/trainer/members/:memberId/nutrition/:planId/edit"
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <TrainerNutritionFormPage />
                                 </RoleGuard>
                             }
                         />

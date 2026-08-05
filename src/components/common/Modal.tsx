@@ -7,6 +7,8 @@ import {
 } from "react";
 
 import { X } from "lucide-react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 import Button from "./Button";
 
@@ -119,10 +121,6 @@ export default function Modal({
     open,
   ]);
 
-  if (!open) {
-    return null;
-  }
-
   const handleBackdropMouseDown = (
       event: MouseEvent<HTMLDivElement>,
   ) => {
@@ -141,9 +139,28 @@ export default function Modal({
     }
   };
 
+  useGSAP(() => {
+    if (open) {
+      gsap.fromTo(
+        ".gsap-backdrop",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power2.out" }
+      );
+      gsap.fromTo(
+        dialogRef.current,
+        { scale: 0.9, opacity: 0, y: 20 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.5)" }
+      );
+    }
+  }, [open]);
+
+  if (!open) {
+    return null;
+  }
+
   return (
       <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-[2px]"
+          className="gsap-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-[2px]"
           role="presentation"
           onMouseDown={
             handleBackdropMouseDown

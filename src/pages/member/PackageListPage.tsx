@@ -352,7 +352,13 @@ export default function PackageListPage() {
               }
 
               if (isCurrent) {
-                btnClass = "bg-slate-100 text-slate-500 border-0 cursor-not-allowed";
+                if (isPremium) {
+                  btnClass = "bg-yellow-500 text-black border-2 border-yellow-500 cursor-not-allowed hover:bg-yellow-400 hover:border-yellow-400 disabled:opacity-100 shadow-[0_0_15px_rgba(234,179,8,0.5)]";
+                } else if (isPopular) {
+                  btnClass = "bg-fit-primary text-white border-2 border-fit-primary cursor-not-allowed hover:bg-emerald-500 hover:border-emerald-500 disabled:opacity-100 shadow-[0_0_15px_rgba(16,185,129,0.5)]";
+                } else {
+                  btnClass = "bg-slate-800 text-white border-2 border-slate-800 cursor-not-allowed hover:bg-slate-700 hover:border-slate-700 disabled:opacity-100 shadow-md";
+                }
               }
 
               return (

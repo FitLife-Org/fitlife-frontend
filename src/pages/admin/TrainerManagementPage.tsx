@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "../../components/common/PageHeader";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
-import Modal from "../../components/common/Modal";
+import { useNavigate } from "react-router-dom";
 
 import { useTrainerManagement } from "../../hooks/useTrainerManagement";
 
@@ -13,18 +13,11 @@ export default function TrainerManagementPage() {
     loading,
     search,
     setSearch,
-    isModalOpen,
-    editingTrainer,
-    formData,
-    formErrors,
-    isSubmitting,
     filteredTrainers,
-    openModal,
-    closeModal,
-    handleFormChange,
-    handleSubmit,
     handleDelete
   } = useTrainerManagement();
+
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-8">
@@ -43,7 +36,7 @@ export default function TrainerManagementPage() {
           />
         </div>
         <button 
-          onClick={() => openModal()}
+          onClick={() => navigate("/admin/trainers/add")}
           className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-950 text-white font-medium rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20"
         >
           <Plus className="w-5 h-5" />
@@ -96,7 +89,7 @@ export default function TrainerManagementPage() {
                     </div>
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
-                        onClick={() => openModal(trainer)}
+                        onClick={() => navigate(`/admin/trainers/${trainer.id}/edit`)}
                         className="p-2 text-slate-400 hover:text-slate-950 hover:bg-slate-100 rounded-lg transition-colors"
                         title="Sửa"
                       >
@@ -142,75 +135,6 @@ export default function TrainerManagementPage() {
           </AnimatePresence>
         </motion.div>
       )}
-
-      <Modal 
-        title={editingTrainer ? "Chỉnh sửa Thông tin PT" : "Thêm PT Mới"} 
-        open={isModalOpen} 
-        onClose={closeModal}
-      >
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          <Input 
-            label="Họ và Tên *"
-            name="userId"
-            placeholder="Ví dụ: Nguyễn Văn A"
-            value={formData.userId}
-            onChange={handleFormChange}
-            error={formErrors.userId}
-            icon={<User className="w-4 h-4" />}
-          />
-          
-          <Input 
-            label="Chuyên môn *"
-            name="specialty"
-            placeholder="Ví dụ: Yoga, Weightlifting..."
-            value={formData.specialty}
-            onChange={handleFormChange}
-            error={formErrors.specialty}
-            icon={<Activity className="w-4 h-4" />}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input 
-              label="Số điện thoại"
-              name="trainerCode"
-              placeholder="0912345678"
-              value={formData.trainerCode}
-              onChange={handleFormChange}
-              error={formErrors.trainerCode}
-              icon={<Phone className="w-4 h-4" />}
-            />
-            
-            <Input 
-              label="Email"
-              name="specialty"
-              type="text"
-              placeholder="example@fitlife.vn"
-              value={formData.specialty}
-              onChange={handleFormChange}
-              error={formErrors.specialty}
-              icon={<Mail className="w-4 h-4" />}
-            />
-          </div>
-
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 mt-6">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              Hủy bỏ
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2.5 text-sm font-medium text-white bg-slate-950 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-md transition-colors flex items-center gap-2"
-            >
-              {isSubmitting && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-              {editingTrainer ? "Lưu thay đổi" : "Tạo mới"}
-            </button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }

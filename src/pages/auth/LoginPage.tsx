@@ -157,11 +157,11 @@ export default function LoginPage() {
     return (
         <main
             ref={containerRef}
-            className="relative h-screen w-full overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
+            className="relative min-h-screen w-full bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
         >
             <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]" />
 
-            <div className="relative z-10 grid h-screen w-full lg:grid-cols-2">
+            <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-2 py-8 lg:py-0">
                 <section
                     ref={introRef}
                     className="hidden flex-col justify-center p-12 text-slate-900 lg:flex lg:pl-24"
@@ -205,7 +205,7 @@ export default function LoginPage() {
                 <section className="flex items-center justify-center p-4 lg:p-12">
                     <div
                         ref={formRef}
-                        className="relative w-full max-w-md max-h-full flex flex-col overflow-hidden rounded-[2rem] border border-fit-border bg-white/95 p-8 shadow-auth lg:p-10"
+                        className="relative w-full max-w-md flex flex-col overflow-hidden rounded-[2rem] border border-fit-border bg-white/95 p-8 shadow-auth lg:p-10 my-auto"
                     >
                         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,_rgba(16,185,129,0.15)_0%,_transparent_70%)]" />
 

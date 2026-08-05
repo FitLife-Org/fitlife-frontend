@@ -7,6 +7,7 @@ import type {
 } from "../types/nutrition.type";
 
 const BASE_URL = "/nutrition-plans";
+const TRAINER_BASE_URL = "/trainer/nutrition-plans";
 
 function validatePositiveId(
     value: number,
@@ -139,5 +140,63 @@ export const nutritionService = {
         await apiClient.delete(
             `${BASE_URL}/${planId}`,
         );
+    },
+
+    // ==========================================
+    // TRAINER ENDPOINTS
+    // ==========================================
+
+    async getTrainerPlans(
+        memberId: number,
+        page = 0,
+        size = 10,
+    ): Promise<SpringPage<NutritionPlan>> {
+        validatePositiveId(memberId, "Member ID");
+
+        const response = await apiClient.get<
+            ApiResponse<SpringPage<NutritionPlan>>
+        >(`${TRAINER_BASE_URL}/members/${memberId}`, {
+            params: {
+                page,
+                size,
+                sort: "createdAt,desc",
+            },
+        });
+
+        const data = response.data.data;
+        return {
+            ...data,
+            content: data.content?.map(normalizePlan) ?? [],
+        };
+    },
+
+    async createTrainerPlan(
+        memberId: number,
+        request: NutritionPlanRequest,
+    ): Promise<NutritionPlan> {
+        validatePositiveId(memberId, "Member ID");
+
+        const response = await apiClient.post<ApiResponse<NutritionPlan>>(
+            `${TRAINER_BASE_URL}/members/${memberId}`,
+            request,
+        );
+
+        return normalizePlan(response.data.data);
+    },
+
+    async updateTrainerPlan(
+        planId: number,
+        memberId: number,
+        request: NutritionPlanRequest,
+    ): Promise<NutritionPlan> {
+        validatePositiveId(planId, "Nutrition Plan ID");
+        validatePositiveId(memberId, "Member ID");
+
+        const response = await apiClient.put<ApiResponse<NutritionPlan>>(
+            `${TRAINER_BASE_URL}/${planId}/members/${memberId}`,
+            request,
+        );
+
+        return normalizePlan(response.data.data);
     },
 };

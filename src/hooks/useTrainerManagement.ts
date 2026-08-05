@@ -3,23 +3,11 @@ import Swal from "sweetalert2";
 import toast from "react-hot-toast";
 import { trainerService } from "../services/trainerService";
 import type { Trainer } from "../types/trainer.type";
-import { validateTrainerForm, type TrainerFormData } from "../utils/validators/trainerValidator";
 
 export function useTrainerManagement() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
-  
-  const [formData, setFormData] = useState<TrainerFormData>({
-    userId: "",
-    trainerCode: "",
-    specialty: "",
-  });
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof TrainerFormData, string>>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchTrainers = async () => {
     try {
@@ -36,70 +24,6 @@ export function useTrainerManagement() {
   useEffect(() => {
     fetchTrainers();
   }, []);
-
-  const openModal = (trainer?: Trainer) => {
-    if (trainer) {
-      setEditingTrainer(trainer);
-      setFormData({
-        userId: trainer.userId?.toString() || "",
-        trainerCode: trainer.trainerCode || "",
-        specialty: trainer.specialty || "",
-      });
-    } else {
-      setEditingTrainer(null);
-      setFormData({ userId: "", trainerCode: "", specialty: "" });
-    }
-    setFormErrors({});
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setTimeout(() => {
-      setEditingTrainer(null);
-      setFormData({ userId: "", trainerCode: "", specialty: "" });
-      setFormErrors({});
-    }, 200);
-  };
-
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (formErrors[name as keyof TrainerFormData]) {
-      setFormErrors(prev => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const validation = validateTrainerForm(formData);
-    
-    if (!validation.isValid) {
-      setFormErrors(validation.errors);
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      if (editingTrainer) {
-        await trainerService.updateTrainer(editingTrainer.id, { specialty: formData.specialty });
-        toast.success("Cập nhật PT thành công!");
-      } else {
-        await trainerService.createTrainer({
-          userId: Number(formData.userId),
-          trainerCode: formData.trainerCode,
-          specialty: formData.specialty,
-        });
-        toast.success("Thêm PT thành công!");
-      }
-      fetchTrainers();
-      closeModal();
-    } catch {
-      toast.error("Có lỗi xảy ra khi lưu PT.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleDelete = async (id: number, name: string) => {
     const result = await Swal.fire({
@@ -136,16 +60,7 @@ export function useTrainerManagement() {
     loading,
     search,
     setSearch,
-    isModalOpen,
-    editingTrainer,
-    formData,
-    formErrors,
-    isSubmitting,
     filteredTrainers,
-    openModal,
-    closeModal,
-    handleFormChange,
-    handleSubmit,
     handleDelete
   };
 }
