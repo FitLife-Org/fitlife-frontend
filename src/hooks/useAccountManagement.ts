@@ -242,7 +242,7 @@ export function useAccountManagement() {
       ...INITIAL_FORM_VALUES,
     });
 
-    setshowFormView(true);
+    setShowFormView(true);
   };
 
   const handleOpenEdit = (
@@ -274,7 +274,7 @@ export function useAccountManagement() {
       user.status,
     });
 
-    setshowFormView(true);
+    setShowFormView(true);
   };
 
   const handleOpenRoleEdit = (
@@ -620,7 +620,7 @@ export function useAccountManagement() {
     roleModalOpen,
 
     setDetailModalOpen,
-    setshowFormView,
+    setShowFormView,
     setRoleModalOpen,
 
     selectedUser,

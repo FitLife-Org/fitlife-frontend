@@ -71,6 +71,7 @@ import AdminInvoiceDetailPage from "../pages/admin/AdminInvoiceDetailPage";
 // =====================================================
 
 import EquipmentManagementPage from "../pages/admin/equipment/EquipmentManagementPage";
+import EquipmentAreaManagementPage from "../pages/admin/equipment/EquipmentAreaManagementPage";
 import AddEquipmentPage from "../pages/admin/equipment/AddEquipmentPage";
 import EditEquipmentPage from "../pages/admin/equipment/EditEquipmentPage";
 import EquipmentDetailPage from "../pages/admin/equipment/EquipmentDetailPage";
@@ -501,6 +502,20 @@ export default function AppRouter() {
                                     ]}
                                 >
                                     <EquipmentManagementPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.ADMIN_EQUIPMENT}/areas`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <EquipmentAreaManagementPage />
                                 </RoleGuard>
                             }
                         />

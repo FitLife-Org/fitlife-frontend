@@ -50,7 +50,7 @@ export default function AccountManagementPage() {
     roleModalOpen,
 
     setDetailModalOpen,
-    setshowFormView,
+    setShowFormView,
     setRoleModalOpen,
 
     selectedUser,
