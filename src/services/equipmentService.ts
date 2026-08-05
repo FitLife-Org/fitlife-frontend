@@ -60,7 +60,7 @@ export const EquipmentService = {
             ApiResponse<PageResponse<Equipment>>
         >(PUBLIC_API_BASE, {
           params: {
-            page: (params.page ?? 0) + 1,
+            page: params.page ?? 0,
             size: params.size ?? 20,
 
             ...(params.keyword?.trim()
@@ -210,7 +210,7 @@ export const EquipmentService = {
             {
               params: {
                 ...params,
-                page: ((params.page as number) ?? 0) + 1,
+                page: (params.page as number) ?? 0,
               },
             },
         );

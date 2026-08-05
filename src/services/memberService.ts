@@ -178,7 +178,7 @@ export const memberService = {
                 "/admin/members",
                 {
                     params: {
-                        page: (params.page ?? 0) + 1,
+                        page: params.page ?? 0,
                         size: params.size ?? 20,
 
                         ...(params.keyword?.trim()

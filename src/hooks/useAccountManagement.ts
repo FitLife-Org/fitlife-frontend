@@ -98,8 +98,8 @@ export function useAccountManagement() {
   ] = useState(false);
 
   const [
-    formModalOpen,
-    setFormModalOpen,
+    showFormView,
+    setShowFormView,
   ] = useState(false);
 
   const [
@@ -242,7 +242,7 @@ export function useAccountManagement() {
       ...INITIAL_FORM_VALUES,
     });
 
-    setFormModalOpen(true);
+    setshowFormView(true);
   };
 
   const handleOpenEdit = (
@@ -274,7 +274,7 @@ export function useAccountManagement() {
       user.status,
     });
 
-    setFormModalOpen(true);
+    setshowFormView(true);
   };
 
   const handleOpenRoleEdit = (
@@ -429,7 +429,7 @@ export function useAccountManagement() {
             );
           }
 
-          setFormModalOpen(false);
+          setShowFormView(false);
 
           await fetchUsers();
         } catch (
@@ -616,11 +616,11 @@ export function useAccountManagement() {
     setCurrentPage,
 
     detailModalOpen,
-    formModalOpen,
+    showFormView,
     roleModalOpen,
 
     setDetailModalOpen,
-    setFormModalOpen,
+    setshowFormView,
     setRoleModalOpen,
 
     selectedUser,

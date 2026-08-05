@@ -97,20 +97,20 @@ export default function RegisterPage() {
   return (
       <main
           ref={containerRef}
-          className="relative h-screen w-full overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
+          className="relative h-screen w-full overflow-y-auto overflow-x-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center bg-fixed [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]" />
 
-        <div className="relative z-10 grid h-screen w-full lg:grid-cols-2">
+        <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-2 py-10 lg:py-0">
           <section className="order-2 flex items-center justify-center p-4 lg:order-1 lg:p-10">
             <div
                 ref={formRef}
-                className="relative w-full max-w-lg max-h-full flex flex-col overflow-hidden rounded-3xl border border-fit-border bg-white/95 shadow-auth"
+                className="relative w-full max-w-lg flex flex-col rounded-3xl border border-fit-border bg-white/95 shadow-auth"
             >
               <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,_rgba(16,185,129,0.15)_0%,_transparent_70%)]" />
               <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,_rgba(20,184,166,0.15)_0%,_transparent_70%)]" />
 
-              <div className="relative z-10 px-8 py-5 lg:px-10 lg:py-7 overflow-y-auto">
+              <div className="relative z-10 px-8 py-8 lg:px-10 lg:py-10">
                 <div className="gsap-form-element mb-4 text-center">
                   <div className="mb-3 inline-block rounded-xl bg-fit-primarySoft px-3 py-1 lg:hidden">
                   <span className="text-sm font-bold text-fit-primary">
