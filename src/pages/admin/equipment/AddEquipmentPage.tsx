@@ -90,7 +90,7 @@ export default function AddEquipmentPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-4 max-w-4xl mx-auto">
             <div className="flex items-center gap-4">
                 <button onClick={() => navigate(-1)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                     <ArrowLeft className="w-5 h-5" />
@@ -102,8 +102,8 @@ export default function AddEquipmentPage() {
             </div>
 
             <Card className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-slate-700">Mã thiết bị <span className="text-red-500">*</span></label>
                             <input
@@ -194,12 +194,12 @@ export default function AddEquipmentPage() {
                         <textarea
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary h-24 resize-none"
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary h-16 resize-none"
                             placeholder="Ghi chú về thiết bị..."
                         />
                     </div>
 
-                     <div className="space-y-3">
+                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">Hình ảnh thiết bị</label>
                         <div className="flex gap-4 border-b border-slate-100 pb-2">
                             <button
@@ -231,8 +231,8 @@ export default function AddEquipmentPage() {
                         ) : (
                             <div className="space-y-3">
                                 <div className="flex items-center gap-4">
-                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 hover:border-fit-primary rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-50/50 transition-colors">
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-slate-200 hover:border-fit-primary rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-50/50 transition-colors">
+                                        <div className="flex flex-col items-center justify-center pt-2 pb-2">
                                             <svg className="w-8 h-8 text-slate-400 mb-2 group-hover:text-fit-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                             </svg>
@@ -253,7 +253,7 @@ export default function AddEquipmentPage() {
                         )}
 
                         {formData.image && (
-                            <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-slate-200 mt-2">
+                            <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200 mt-2">
                                 <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
                                 <button
                                     type="button"

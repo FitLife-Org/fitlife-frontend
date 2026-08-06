@@ -14,6 +14,7 @@ import {
     Wrench,
     XCircle,
     CalendarClock,
+    MapPin,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -243,6 +244,13 @@ export default function EquipmentManagementPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <Link to="/admin/equipment/areas">
+                        <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20">
+                            <MapPin className="h-4 w-4" />
+                            Quản lý khu vực
+                        </Button>
+                    </Link>
+
                     <Link to="/admin/equipment/maintenance-schedules">
                         <Button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20">
                             <CalendarClock className="h-4 w-4" />

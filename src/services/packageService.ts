@@ -4,7 +4,11 @@ import type { GymPackage, PackageDuration, AdminPackageCreateRequest, AdminPacka
 
 export const packageService = {
   async getPublicPackages(params?: Record<string, unknown>): Promise<GymPackage[]> {
-    const response = await apiClient.get<ApiResponse<GymPackage[] | { content?: GymPackage[]; data?: GymPackage[] }>>("/gym-packages", { params });
+    const updatedParams = {
+        ...params,
+        page: (Number(params?.page) || 0) + 1,
+    };
+    const response = await apiClient.get<ApiResponse<GymPackage[] | { content?: GymPackage[]; data?: GymPackage[] }>>("/gym-packages", { params: updatedParams });
     const responseData = response.data.data;
     if (responseData && typeof responseData === 'object' && 'content' in responseData && Array.isArray((responseData as { content: GymPackage[] }).content)) {
       return (responseData as { content: GymPackage[] }).content;
@@ -22,7 +26,11 @@ export const packageService = {
   },
 
   async getAdminPackages(params?: Record<string, unknown>): Promise<GymPackage[]> {
-    const response = await apiClient.get<ApiResponse<GymPackage[] | { content?: GymPackage[]; data?: GymPackage[] }>>("/admin/gym-packages", { params });
+    const updatedParams = {
+        ...params,
+        page: (Number(params?.page) || 0) + 1,
+    };
+    const response = await apiClient.get<ApiResponse<GymPackage[] | { content?: GymPackage[]; data?: GymPackage[] }>>("/admin/gym-packages", { params: updatedParams });
     const responseData = response.data.data;
     if (responseData && typeof responseData === 'object' && 'content' in responseData && Array.isArray((responseData as { content: GymPackage[] }).content)) {
       return (responseData as { content: GymPackage[] }).content;

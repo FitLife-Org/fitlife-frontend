@@ -46,11 +46,11 @@ export default function AccountManagementPage() {
     setCurrentPage,
 
     detailModalOpen,
-    formModalOpen,
+    showFormView,
     roleModalOpen,
 
     setDetailModalOpen,
-    setFormModalOpen,
+    setShowFormView,
     setRoleModalOpen,
 
     selectedUser,
@@ -141,6 +141,107 @@ export default function AccountManagementPage() {
         );
     }
   };
+
+  if (showFormView) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 mb-2">
+          <Button variant="outline" onClick={() => setShowFormView(false)}>
+            Quay lại
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {isEditMode ? "Chỉnh sửa tài khoản" : "Thêm tài khoản nội bộ"}
+            </h1>
+          </div>
+        </div>
+
+        <Card className="p-5">
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input
+                label="Họ và tên *"
+                value={formValues.fullName}
+                onChange={(event) => setFormValues((previous) => ({ ...previous, fullName: event.target.value }))}
+                required
+              />
+
+              <Input
+                label="Username *"
+                value={formValues.username}
+                onChange={(event) => setFormValues((previous) => ({ ...previous, username: event.target.value }))}
+                required
+              />
+
+              <Input
+                label="Email *"
+                type="email"
+                value={formValues.email}
+                onChange={(event) => setFormValues((previous) => ({ ...previous, email: event.target.value }))}
+                required
+              />
+
+              <Input
+                label="Số điện thoại *"
+                value={formValues.phone}
+                onChange={(event) => setFormValues((previous) => ({ ...previous, phone: event.target.value }))}
+                required
+              />
+
+              {!isEditMode && (
+                <Input
+                  label="Mật khẩu *"
+                  type="password"
+                  value={formValues.password}
+                  onChange={(event) => setFormValues((previous) => ({ ...previous, password: event.target.value }))}
+                  required
+                />
+              )}
+
+              {!isEditMode && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">Vai trò</label>
+                  <select
+                    value={formValues.roleCode}
+                    onChange={(event) => setFormValues((previous) => ({ ...previous, roleCode: event.target.value as Role }))}
+                    className="w-full rounded-xl border px-4 py-2 border-slate-200 outline-none focus:border-fit-primary"
+                  >
+                    <option value="ROLE_STAFF">Nhân viên</option>
+                    <option value="ROLE_TRAINER">Huấn luyện viên</option>
+                    <option value="ROLE_ADMIN">Quản trị viên</option>
+                    <option value="ROLE_MEMBER">Hội viên</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Trạng thái</label>
+                <select
+                  value={formValues.status}
+                  onChange={(event) => setFormValues((previous) => ({ ...previous, status: event.target.value as UserStatus }))}
+                  className="w-full rounded-xl border px-4 py-2 border-slate-200 outline-none focus:border-fit-primary"
+                >
+                  <option value="PENDING">Chờ xác minh</option>
+                  <option value="ACTIVE">Hoạt động</option>
+                  <option value="INACTIVE">Không hoạt động</option>
+                  <option value="LOCKED">Bị khóa</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-slate-100">
+              <Button type="button" variant="outline" onClick={() => setShowFormView(false)}>
+                Hủy
+              </Button>
+              <Button type="submit" isLoading={formLoading}>
+                {isEditMode ? "Lưu thay đổi" : "Tạo mới"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </div>
+    );
+  }
 
   return (
       <div className="space-y-6">
@@ -520,185 +621,7 @@ export default function AccountManagementPage() {
           )}
         </Modal>
 
-        <Modal
-            title={
-              isEditMode
-                  ? "Chỉnh sửa tài khoản"
-                  : "Tạo tài khoản nội bộ"
-            }
-            open={formModalOpen}
-            onClose={() =>
-                setFormModalOpen(false)
-            }
-        >
-          <form
-              onSubmit={handleFormSubmit}
-              className="space-y-4"
-          >
-            <Input
-                label="Họ và tên"
-                value={formValues.fullName}
-                onChange={(event) =>
-                    setFormValues(
-                        (previous) => ({
-                          ...previous,
-                          fullName:
-                          event.target.value,
-                        }),
-                    )
-                }
-                required
-            />
 
-            <Input
-                label="Username"
-                value={formValues.username}
-                onChange={(event) =>
-                    setFormValues(
-                        (previous) => ({
-                          ...previous,
-                          username:
-                          event.target.value,
-                        }),
-                    )
-                }
-                required
-            />
-
-            <Input
-                label="Email"
-                type="email"
-                value={formValues.email}
-                onChange={(event) =>
-                    setFormValues(
-                        (previous) => ({
-                          ...previous,
-                          email:
-                          event.target.value,
-                        }),
-                    )
-                }
-                required
-            />
-
-            <Input
-                label="Số điện thoại"
-                value={formValues.phone}
-                onChange={(event) =>
-                    setFormValues(
-                        (previous) => ({
-                          ...previous,
-                          phone:
-                          event.target.value,
-                        }),
-                    )
-                }
-                required
-            />
-
-            {!isEditMode && (
-                <Input
-                    label="Mật khẩu"
-                    type="password"
-                    value={
-                      formValues.password
-                    }
-                    onChange={(event) =>
-                        setFormValues(
-                            (previous) => ({
-                              ...previous,
-                              password:
-                              event.target
-                                  .value,
-                            }),
-                        )
-                    }
-                    required
-                />
-            )}
-
-            {!isEditMode && (
-                <select
-                    value={
-                      formValues.roleCode
-                    }
-                    onChange={(event) =>
-                        setFormValues(
-                            (previous) => ({
-                              ...previous,
-                              roleCode:
-                                  event.target
-                                      .value as Role,
-                            }),
-                        )
-                    }
-                    className="w-full rounded-xl border px-4 py-3"
-                >
-                  <option value="ROLE_STAFF">
-                    Nhân viên
-                  </option>
-                  <option value="ROLE_TRAINER">
-                    Huấn luyện viên
-                  </option>
-                  <option value="ROLE_ADMIN">
-                    Quản trị viên
-                  </option>
-                  <option value="ROLE_MEMBER">
-                    Hội viên
-                  </option>
-                </select>
-            )}
-
-            <select
-                value={formValues.status}
-                onChange={(event) =>
-                    setFormValues(
-                        (previous) => ({
-                          ...previous,
-                          status:
-                              event.target
-                                  .value as UserStatus,
-                        }),
-                    )
-                }
-                className="w-full rounded-xl border px-4 py-3"
-            >
-              <option value="PENDING">
-                Chờ xác minh
-              </option>
-              <option value="ACTIVE">
-                Hoạt động
-              </option>
-              <option value="INACTIVE">
-                Không hoạt động
-              </option>
-              <option value="LOCKED">
-                Bị khóa
-              </option>
-            </select>
-
-            <div className="flex justify-end gap-3">
-              <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                      setFormModalOpen(false)
-                  }
-              >
-                Hủy
-              </Button>
-
-              <Button
-                  type="submit"
-                  isLoading={formLoading}
-              >
-                {isEditMode
-                    ? "Lưu thay đổi"
-                    : "Tạo mới"}
-              </Button>
-            </div>
-          </form>
-        </Modal>
 
         <Modal
             title="Gán vai trò"

@@ -65,11 +65,10 @@ export default function UserManagementPage() {
 
   const filteredMembers = members.filter(m => {
     const matchesSearch = 
-      m.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.phone ?? "")
-            .includes(searchTerm) ||
-      (m.memberCode && m.memberCode.toLowerCase().includes(searchTerm.toLowerCase()));
+      (m.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.phone ?? "").includes(searchTerm) ||
+      (m.memberCode || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === "ALL" || m.status === statusFilter;
 
@@ -90,12 +89,12 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-5">
           <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {!isEditMode && (
                 <>
-                  <div className="col-span-1">
+                  <div>
                     <Input 
                       label="Tên đăng nhập *" 
                       name="username"
@@ -105,7 +104,7 @@ export default function UserManagementPage() {
                       required
                     />
                   </div>
-                  <div className="col-span-1">
+                  <div>
                     <Input 
                       label="Mật khẩu *" 
                       name="password"
@@ -118,7 +117,7 @@ export default function UserManagementPage() {
                   </div>
                 </>
               )}
-              <div className="col-span-2">
+              <div className="md:col-span-2">
                 <Input 
                   label="Họ và tên *" 
                   name="fullName"
@@ -177,7 +176,7 @@ export default function UserManagementPage() {
                 />
               </div>
 
-              <div className="col-span-2">
+              <div className="md:col-span-3">
                 <Input 
                   label="Địa chỉ" 
                   name="address"
@@ -426,7 +425,7 @@ export default function UserManagementPage() {
                             {member.avatarUrl ? (
                               <img src={member.avatarUrl} alt={member.fullName} className="w-full h-full object-cover" />
                             ) : (
-                              <span>{member.fullName.charAt(0)}</span>
+                              <span>{(member.fullName || "?").charAt(0)}</span>
                             )}
                           </div>
                           <div>
@@ -539,7 +538,7 @@ export default function UserManagementPage() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
                       <div className="w-14 h-14 rounded-full bg-fit-primarySoft flex items-center justify-center text-fit-primary font-bold text-lg">
-                        {selectedMember.fullName.charAt(0)}
+                        {(selectedMember.fullName || "?").charAt(0)}
                       </div>
                       <div>
                         <h4 className="font-bold text-slate-900">{selectedMember.fullName}</h4>

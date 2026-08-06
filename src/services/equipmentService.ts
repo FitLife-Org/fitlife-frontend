@@ -10,6 +10,8 @@ import type {
   AdminEquipmentCreateRequest,
   AdminEquipmentUpdateRequest,
   EquipmentSummary,
+  EquipmentAreaRequest,
+  EquipmentAreaResponse,
 } from "../types/equipment.type";
 
 const PUBLIC_API_BASE = "/equipment";
@@ -208,7 +210,10 @@ export const EquipmentService = {
         >(
             `${ADMIN_API_BASE}/maintenance-schedules`,
             {
-              params,
+              params: {
+                ...params,
+                page: (params.page as number) ?? 0,
+              },
             },
         );
 
@@ -243,15 +248,50 @@ export const EquipmentService = {
     return response.data.data;
   },
 
-  async getAreas(): Promise<any[]> {
+  async getAreas(): Promise<EquipmentAreaResponse[]> {
     const response =
         await apiClient.get<
-            ApiResponse<any[]>
+            ApiResponse<EquipmentAreaResponse[]>
         >(
             `/admin/equipment-areas`,
         );
 
     return response.data.data || [];
+  },
+
+  async createEquipmentArea(
+      data: EquipmentAreaRequest,
+  ): Promise<EquipmentAreaResponse> {
+    const response =
+        await apiClient.post<
+            ApiResponse<EquipmentAreaResponse>
+        >(
+            `/admin/equipment-areas`,
+            data,
+        );
+
+    return requireData(
+        response.data,
+        "Không thể tạo khu vực thiết bị mới.",
+    );
+  },
+
+  async updateEquipmentAreaInfo(
+      id: number | string,
+      data: EquipmentAreaRequest,
+  ): Promise<EquipmentAreaResponse> {
+    const response =
+        await apiClient.patch<
+            ApiResponse<EquipmentAreaResponse>
+        >(
+            `/admin/equipment-areas/${id}`,
+            data,
+        );
+
+    return requireData(
+        response.data,
+        "Không thể cập nhật thông tin khu vực thiết bị.",
+    );
   },
 
   async updateArea(

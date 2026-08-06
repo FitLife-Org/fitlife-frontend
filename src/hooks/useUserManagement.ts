@@ -168,7 +168,7 @@ export function useUserManagement() {
                 setTotalPages(
                     data.totalPages,
                 );
-                setCurrentPage(data.page);
+                setCurrentPage(data.page ?? (data as any).number ?? page);
             } catch (error: unknown) {
                 console.error(
                     "API error fetching members:",

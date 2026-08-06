@@ -97,18 +97,18 @@ export default function RegisterPage() {
   return (
       <main
           ref={containerRef}
-          className="relative min-h-screen w-full overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
+          className="relative min-h-screen w-full bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
       >
         <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]" />
 
-        <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-2">
+        <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-2 py-8 lg:py-0">
           <section className="order-2 flex items-center justify-center p-4 lg:order-1 lg:p-10">
             <div
                 ref={formRef}
-                className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-fit-border bg-white/90 shadow-auth backdrop-blur-2xl"
+                className="relative w-full max-w-lg flex flex-col overflow-hidden rounded-3xl border border-fit-border bg-white/95 shadow-auth my-auto"
             >
-              <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl" />
+              <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,_rgba(16,185,129,0.15)_0%,_transparent_70%)]" />
+              <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,_rgba(20,184,166,0.15)_0%,_transparent_70%)]" />
 
               <div className="relative z-10 px-8 py-5 lg:px-10 lg:py-7">
                 <div className="gsap-form-element mb-4 text-center">

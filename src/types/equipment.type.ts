@@ -45,3 +45,16 @@ export interface AdminEquipmentUpdateRequest {
   description?: string;
   image?: string;
 }
+
+export interface EquipmentAreaRequest {
+  name: string;
+  description?: string;
+}
+
+export interface EquipmentAreaResponse {
+  id: number;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}

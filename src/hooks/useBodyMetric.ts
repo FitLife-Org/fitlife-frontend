@@ -227,7 +227,7 @@ export function useBodyMetric() {
                 );
 
                 setCurrentPage(
-                    result.page,
+                    result.page ?? (result as any).number ?? page,
                 );
 
                 setTotalPages(

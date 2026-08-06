@@ -2,6 +2,7 @@ import apiClient from "./apiClient";
 
 import type {
   SpringPage,
+  ApiResponse,
 } from "../types/common.type";
 
 import type {
@@ -57,11 +58,11 @@ export const workoutService = {
       Promise<WorkoutPlan[]> {
     const response =
         await apiClient.get<
-            WorkoutPlansResponse
+            ApiResponse<WorkoutPlansResponse>
         >("/workout-plans");
 
     return extractPlans(
-        response.data,
+        response.data.data,
     );
   },
 
@@ -74,12 +75,14 @@ export const workoutService = {
     );
 
     const response =
-        await apiClient.get<WorkoutPlan>(
+        await apiClient.get<
+            ApiResponse<WorkoutPlan>
+        >(
             `/workout-plans/${id}`,
         );
 
     return normalizePlan(
-        response.data,
+        response.data.data,
     );
   },
 
@@ -87,13 +90,15 @@ export const workoutService = {
       data: Partial<WorkoutPlan>,
   ): Promise<WorkoutPlan> {
     const response =
-        await apiClient.post<WorkoutPlan>(
+        await apiClient.post<
+            ApiResponse<WorkoutPlan>
+        >(
             "/trainers/workout-plans",
             data,
         );
 
     return normalizePlan(
-        response.data,
+        response.data.data,
     );
   },
 
@@ -107,13 +112,15 @@ export const workoutService = {
     );
 
     const response =
-        await apiClient.put<WorkoutPlan>(
+        await apiClient.put<
+            ApiResponse<WorkoutPlan>
+        >(
             `/trainers/workout-plans/${id}`,
             data,
         );
 
     return normalizePlan(
-        response.data,
+        response.data.data,
     );
   },
 
@@ -121,7 +128,7 @@ export const workoutService = {
       Promise<WorkoutPlan[]> {
     const response =
         await apiClient.get<
-            WorkoutPlansResponse
+            ApiResponse<WorkoutPlansResponse>
         >("/workout-plans/me", {
           params: {
             page: 0,
@@ -131,7 +138,7 @@ export const workoutService = {
         });
 
     return extractPlans(
-        response.data,
+        response.data.data,
     );
   },
 
@@ -145,11 +152,13 @@ export const workoutService = {
     );
 
     const response =
-        await apiClient.patch<WorkoutSession>(
+        await apiClient.patch<
+            ApiResponse<WorkoutSession>
+        >(
             `/workout-sessions/${sessionId}/complete`,
             data,
         );
 
-    return response.data;
+    return response.data.data;
   },
 };

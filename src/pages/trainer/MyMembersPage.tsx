@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Users, Search, Activity, UserCircle2 } from "lucide-react";
+import { Users, Search, Activity, UserCircle2, Salad } from "lucide-react";
+import { Link } from "react-router-dom";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
@@ -27,8 +28,8 @@ export default function MyMembersPage() {
   }, []);
 
   const filteredMembers = members.filter(m => 
-    m.fullName.toLowerCase().includes(search.toLowerCase()) || 
-    m.phone?.includes(search)
+    (m.fullName || "").toLowerCase().includes(search.toLowerCase()) || 
+    (m.phone || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -100,11 +101,17 @@ export default function MyMembersPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-fit-primary bg-fit-primary/10 rounded-lg hover:bg-fit-primary hover:text-white transition-colors duration-300">
+                <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
+                  <button className="flex-[2] flex items-center justify-center gap-2 py-2 text-sm font-semibold text-fit-primary bg-fit-primary/10 rounded-lg hover:bg-fit-primary hover:text-white transition-colors duration-300">
                     <Activity className="w-4 h-4" />
-                    Xem tiến độ & Chỉ số
+                    Tiến độ
                   </button>
+                  <Link to={`/trainer/members/${member.id}/nutrition`} className="flex-1">
+                    <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-orange-500 bg-orange-50 rounded-lg hover:bg-orange-500 hover:text-white transition-colors duration-300">
+                      <Salad className="w-4 h-4" />
+                      Dinh dưỡng
+                    </button>
+                  </Link>
                 </div>
               </div>
             </Card>

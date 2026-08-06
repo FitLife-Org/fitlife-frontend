@@ -1,4 +1,7 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 import Footer from "./Footer";
 import Header from "./Header";
@@ -21,6 +24,19 @@ export default function DashboardLayout({
         (state) => state.setSidebarOpen,
     );
 
+    const location = useLocation();
+    const mainRef = useRef<HTMLElement>(null);
+
+    useGSAP(() => {
+        if (mainRef.current) {
+            gsap.fromTo(
+                mainRef.current,
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, ease: "power2.out", clearProps: "all" }
+            );
+        }
+    }, [location.pathname]);
+
     return (
         <div className="min-h-screen bg-fit-bg lg:flex">
             {sidebarOpen && (
@@ -39,7 +55,7 @@ export default function DashboardLayout({
             <div className="flex min-h-screen min-w-0 flex-1 flex-col">
                 <Header />
 
-                <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+                <main ref={mainRef} className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
                     {children}
                 </main>
 
