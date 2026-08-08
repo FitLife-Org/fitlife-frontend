@@ -243,7 +243,7 @@ const menuItems:
         icon: ClipboardCheck,
         roles: [
             "ROLE_STAFF",
-            "ROLE_ADMIN",
+
         ],
     },
 

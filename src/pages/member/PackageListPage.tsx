@@ -3,12 +3,10 @@ import {
   Check,
   Dumbbell,
   Loader2,
-  ChevronRight,
-  ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { showAlert } from "../../utils/alert";
 import Button from "../../components/common/Button";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -328,14 +326,13 @@ export default function PackageListPage() {
                   item.basePrice > 500000;
 
               const priceInfo = calculatePrice(item);
-              const pricePerMonth = priceInfo.finalPrice / (selectedDuration?.months || 1);
 
               // STYLING VARIANTS
               let cardBg = "bg-white border-slate-200";
               let titleColor = "text-slate-900";
               let badgeColor = "bg-slate-100 text-slate-600";
               let priceColor = "text-slate-900";
-              let btnClass = "bg-white text-slate-900 border-2 border-slate-900 hover:bg-slate-900 hover:text-white";
+              let btnClass = "bg-slate-950 text-white border-0 transition-transform duration-300 hover:scale-[1.02] active:scale-95";
               
               if (isPremium) {
                 cardBg = "bg-zinc-900 border-zinc-800 text-white shadow-2xl shadow-zinc-900/50";

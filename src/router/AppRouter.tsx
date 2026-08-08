@@ -640,7 +640,7 @@ export default function AppRouter() {
                                 <RoleGuard
                                     roles={[
                                         "ROLE_STAFF",
-                                        "ROLE_ADMIN",
+
                                     ]}
                                 >
                                     <CheckinPage />
@@ -655,7 +655,8 @@ export default function AppRouter() {
                                     roles={[
                                         "ROLE_STAFF",
                                         "ROLE_ADMIN",
-                                    ]}
+                                        ]
+                                    }
                                 >
                                     <StaffCheckinHistoryPage />
                                 </RoleGuard>
