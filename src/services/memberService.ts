@@ -489,4 +489,9 @@ export const memberService = {
             `/admin/members/${id}/restore`,
         );
     },
+
+    async getMyQr(): Promise<{ memberCode: string; qrData: string }> {
+        const response = await apiClient.get<ApiResponse<{ memberCode: string; qrData: string }>>("/members/me/qr");
+        return response.data.data;
+    },
 };
