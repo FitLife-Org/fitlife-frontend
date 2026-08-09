@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Calendar, CreditCard, CheckCircle2, Clock, XCircle, Dumbbell, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Badge from "../../components/common/Badge";
@@ -6,8 +5,10 @@ import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { useMySubscription } from "../../hooks/useMySubscription";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 
 export default function MySubscriptionPage() {
+  const containerRef = usePageAnimation();
   const { subscriptions, loading, activeSubscription, calculateDaysLeft } = useMySubscription();
 
   const getStatusBadge = (status: string) => {
@@ -32,7 +33,7 @@ export default function MySubscriptionPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div ref={containerRef} className="space-y-8">
       <div className="flex items-center justify-between">
         <PageHeader 
           title="Gói hội viên của tôi" 
@@ -48,11 +49,7 @@ export default function MySubscriptionPage() {
       </div>
 
       {activeSubscription ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="gsap-animate">
           <Card className="p-0 overflow-hidden border-none shadow-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
@@ -95,7 +92,7 @@ export default function MySubscriptionPage() {
               </div>
             </div>
           </Card>
-        </motion.div>
+        </div>
       ) : (
         <Card className="p-10 text-center border-dashed border-2 border-slate-200">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
@@ -117,11 +114,9 @@ export default function MySubscriptionPage() {
           <h3 className="text-xl font-bold text-slate-900 mb-6">Lịch sử đăng ký</h3>
           <div className="grid gap-4">
             {subscriptions.map((sub, idx) => (
-              <motion.div
+              <div
                 key={sub.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: idx * 0.1 }}
+                className="gsap-animate"
               >
                 <Card className="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all hover:shadow-md hover:border-fit-primary/30">
                   <div className="flex items-center gap-4">
@@ -154,7 +149,7 @@ export default function MySubscriptionPage() {
                     )}
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

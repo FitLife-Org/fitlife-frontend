@@ -9,11 +9,6 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  AnimatePresence,
-  motion,
-} from "framer-motion";
-
 import Button from "../common/Button";
 import Input from "../common/Input";
 
@@ -210,42 +205,18 @@ export default function AiAdvancedPlanModal({
               : Wand2;
 
   return (
-      <AnimatePresence>
+      <>
         {open && (
             <>
-              <motion.div
-                  initial={{
-                    opacity: 0,
-                  }}
-                  animate={{
-                    opacity: 1,
-                  }}
-                  exit={{
-                    opacity: 0,
-                  }}
+              <div
                   onClick={handleClose}
                   className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm"
               />
 
-              <motion.section
+              <section
                   role="dialog"
                   aria-modal="true"
                   aria-labelledby="ai-plan-modal-title"
-                  initial={{
-                    opacity: 0,
-                    scale: 0.95,
-                    y: 20,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    y: 0,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: 0.95,
-                    y: 20,
-                  }}
                   className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8"
               >
                 <div className="flex items-start justify-between gap-4">
@@ -591,9 +562,9 @@ export default function AiAdvancedPlanModal({
                     lần.
                   </p>
                 </div>
-              </motion.section>
+              </section>
             </>
         )}
-      </AnimatePresence>
+      </>
   );
 }

@@ -243,7 +243,7 @@ const menuItems:
         icon: ClipboardCheck,
         roles: [
             "ROLE_STAFF",
-            "ROLE_ADMIN",
+
         ],
     },
 
@@ -320,8 +320,7 @@ export default function Sidebar() {
     const location =
         useLocation();
 
-    const userRoles =
-        user?.roles ?? [];
+    const userRoles = useMemo(() => user?.roles ?? [], [user?.roles]);
 
     const [
         expandedMenus,
@@ -406,6 +405,7 @@ export default function Sidebar() {
             },
         );
 
+        // eslint-disable-next-line
         setExpandedMenus(
             (previous) => ({
                 ...previous,

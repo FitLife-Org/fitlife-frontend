@@ -1,7 +1,6 @@
 
 import { Link } from "react-router-dom";
 import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone, QrCode, ShieldCheck } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import Input from "../../components/common/Input";
 import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
 import GymQrManager from "../admin/components/GymQrManager";
@@ -51,12 +50,8 @@ export default function CheckinPage() {
 
       <div className="w-full md:w-5/12 lg:w-1/3 flex flex-col gap-6">
         <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
-          <AnimatePresence mode="wait">
-              <motion.div
-                key="MANUAL"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+          <>
+              <div
                 className="flex flex-col h-full"
               >
                 <form onSubmit={handleSearch} className="flex gap-2 mb-6">
@@ -91,8 +86,8 @@ export default function CheckinPage() {
                     <p className="text-center text-sm text-fit-muted mt-10">Không có kết quả trùng khớp.</p>
                   )}
                 </div>
-              </motion.div>
-          </AnimatePresence>
+              </div>
+          </>
         </div>
       </div>
 
@@ -102,13 +97,9 @@ export default function CheckinPage() {
         <div className="fit-card p-8 flex flex-col items-center justify-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-fit-staffSoft rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
           
-          <AnimatePresence mode="wait">
+          <>
             {selectedMember ? (
-              <motion.div
-                key="member-info"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+              <div
                 className="w-full h-full flex flex-col z-10"
               >
                 <div className="flex items-start justify-between mb-8">
@@ -164,13 +155,9 @@ export default function CheckinPage() {
                     </span>
                   )}
                 </button>
-              </motion.div>
+              </div>
             ) : (
-              <motion.div
-                key="EMPTY"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+              <div
                 className="text-center z-10"
               >
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -180,9 +167,9 @@ export default function CheckinPage() {
                 <p className="text-slate-500 max-w-sm mx-auto text-sm">
                   Vui lòng quét thẻ Hội viên qua mã QR hoặc tra cứu thủ công bằng mã/SĐT ở cột bên trái.
                 </p>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

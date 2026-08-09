@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 import { Link } from "react-router-dom";
 import { 
   Activity, Calendar as CalendarIcon, CreditCard, Dumbbell, 
@@ -10,6 +10,7 @@ import Badge from "../../components/common/Badge";
 import { useMemberHome } from "../../hooks/useMemberHome";
 
 export default function MemberHomePage() {
+  const containerRef = usePageAnimation();
   const { user, activeSub, loading, calculateDaysLeft } = useMemberHome();
 
   const statCards = [
@@ -28,7 +29,7 @@ export default function MemberHomePage() {
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-8 pb-10" ref={containerRef}>
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <PageHeader 
           title={`Chào mừng trở lại, ${user?.fullName?.split(" ").pop() || "Hội viên"}! 👋`}
@@ -47,11 +48,9 @@ export default function MemberHomePage() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
         {statCards.map((stat, idx) => (
-          <motion.div
+          <div
             key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.1 }}
+            className="gsap-animate"
           >
             <Card className="p-5 h-full overflow-hidden relative group cursor-pointer border-none shadow-md hover:shadow-lg transition-all">
               <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${stat.color} opacity-10 transition-transform group-hover:scale-150`}></div>
@@ -64,7 +63,7 @@ export default function MemberHomePage() {
                 <span className="text-xs font-medium text-fit-muted">{stat.unit}</span>
               </div>
             </Card>
-          </motion.div>
+          </div>
         ))}
       </div>
 

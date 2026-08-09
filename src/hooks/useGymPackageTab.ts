@@ -54,6 +54,7 @@ export function useGymPackageTab() {
     deleteId,
     setDeleteId,
     handleDelete,
-    handleToggleStatus
+    handleToggleStatus,
+    fetchPackages
   };
 }

@@ -61,6 +61,7 @@ export function useTrainerManagement() {
     search,
     setSearch,
     filteredTrainers,
-    handleDelete
+    handleDelete,
+    fetchTrainers
   };
 }

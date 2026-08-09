@@ -16,12 +16,15 @@ const extractPageContent = <T>(data: PageResponse<T> | T[]): T[] => {
 };
 
 export const paymentService = {
-  async createPayment(data: PaymentRequest): Promise<PaymentResult> {
+  async createOfflinePayment(data: {
+    invoiceId: number;
+    paymentMethod: "CASH" | "BANK_TRANSFER";
+    note?: string;
+  }): Promise<PaymentResult> {
     const response = await apiClient.post<ApiResponse<PaymentResult>>(
-        "/payments",
+        "/admin/payments/offline",
         data
     );
-
     return response.data.data;
   },
 
@@ -40,7 +43,7 @@ export const paymentService = {
           paymentUrl: string;
           amount: number;
         }>
-    >("/payments/vnpay/create-url", data);
+    >("/payments/vnpay/create", data);
 
     return response.data.data;
   },
@@ -49,7 +52,7 @@ export const paymentService = {
     try {
       const response = await apiClient.get<
           ApiResponse<PageResponse<PaymentResult> | PaymentResult[]>
-      >("/payments/my");
+      >("/payments/me");
 
       return extractPageContent<PaymentResult>(response.data.data);
 

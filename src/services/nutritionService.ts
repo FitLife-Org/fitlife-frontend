@@ -7,7 +7,7 @@ import type {
 } from "../types/nutrition.type";
 
 const BASE_URL = "/nutrition-plans";
-const TRAINER_BASE_URL = "/trainer/nutrition-plans";
+const TRAINER_BASE_URL = "/trainer/members";
 
 function validatePositiveId(
     value: number,
@@ -155,7 +155,7 @@ export const nutritionService = {
 
         const response = await apiClient.get<
             ApiResponse<SpringPage<NutritionPlan>>
-        >(`${TRAINER_BASE_URL}/members/${memberId}`, {
+        >(`${TRAINER_BASE_URL}/${memberId}/nutrition-plans`, {
             params: {
                 page,
                 size,
@@ -177,7 +177,7 @@ export const nutritionService = {
         validatePositiveId(memberId, "Member ID");
 
         const response = await apiClient.post<ApiResponse<NutritionPlan>>(
-            `${TRAINER_BASE_URL}/members/${memberId}`,
+            `${TRAINER_BASE_URL}/${memberId}/nutrition-plans`,
             request,
         );
 
@@ -192,8 +192,8 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
         validatePositiveId(memberId, "Member ID");
 
-        const response = await apiClient.put<ApiResponse<NutritionPlan>>(
-            `${TRAINER_BASE_URL}/${planId}/members/${memberId}`,
+        const response = await apiClient.patch<ApiResponse<NutritionPlan>>(
+            `${TRAINER_BASE_URL}/${memberId}/nutrition-plans/${planId}`,
             request,
         );
 

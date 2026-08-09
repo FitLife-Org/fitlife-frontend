@@ -14,7 +14,7 @@ import type {
   EquipmentAreaResponse,
 } from "../types/equipment.type";
 
-const PUBLIC_API_BASE = "/equipment";
+const PUBLIC_API_BASE = "/staff/equipment";
 const ADMIN_API_BASE = "/admin/equipment";
 
 export interface EquipmentQueryParams {
@@ -104,7 +104,7 @@ export const EquipmentService = {
     const response =
         await apiClient.get<
             ApiResponse<EquipmentSummary>
-        >(`${ADMIN_API_BASE}/summary`);
+        >(`/admin/reports/equipment/summary`);
 
     return requireData(
         response.data,
@@ -145,7 +145,7 @@ export const EquipmentService = {
       data: AdminEquipmentUpdateRequest,
   ): Promise<Equipment> {
     const response =
-        await apiClient.put<
+        await apiClient.patch<
             ApiResponse<Equipment>
         >(
             `${ADMIN_API_BASE}/${id}`,
@@ -181,9 +181,9 @@ export const EquipmentService = {
   async delete(
       id: number | string,
   ): Promise<void> {
-    await apiClient.delete<
+    await apiClient.post<
         ApiResponse<void>
-    >(`${ADMIN_API_BASE}/${id}`);
+    >(`${ADMIN_API_BASE}/${id}/retire`);
   },
 
   async createMaintenance(
@@ -208,7 +208,7 @@ export const EquipmentService = {
         await apiClient.get<
             ApiResponse<unknown>
         >(
-            `${ADMIN_API_BASE}/maintenance-schedules`,
+            `/admin/maintenance-requests`,
             {
               params: {
                 ...params,
@@ -223,12 +223,9 @@ export const EquipmentService = {
   async completeMaintenance(
       id: number | string,
   ): Promise<unknown> {
-    const response =
-        await apiClient.patch<
-            ApiResponse<unknown>
-        >(
-            `${ADMIN_API_BASE}/maintenance-schedules/${id}/complete`,
-        );
+    const response = await apiClient.post<ApiResponse<unknown>>(
+        `/admin/maintenance-requests/${id}/complete`
+    );
 
     return response.data.data;
   },

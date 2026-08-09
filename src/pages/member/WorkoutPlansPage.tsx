@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 import {
   Activity,
   Calendar,
@@ -23,6 +23,7 @@ function buildWorkoutDetailRoute(planId: string | number): string {
 }
 
 export default function WorkoutPlansPage() {
+  const containerRef = usePageAnimation();
   const navigate = useNavigate();
 
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
@@ -85,28 +86,8 @@ export default function WorkoutPlansPage() {
     );
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring" as const,
-        stiffness: 100,
-      },
-    },
-  };
-
   return (
-      <div className="space-y-8 pb-10">
+      <div className="space-y-8 pb-10" ref={containerRef}>
         <div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900">
             Giáo án của tôi
@@ -134,11 +115,8 @@ export default function WorkoutPlansPage() {
               </Button>
             </div>
         ) : (
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-8"
+            <div
+                className="space-y-8 gsap-animate"
             >
               {plans.map((plan) => {
                 const sessions = plan.sessions ?? [];
@@ -151,10 +129,9 @@ export default function WorkoutPlansPage() {
                         : 0;
 
                 return (
-                    <motion.div
+                    <div
                         key={plan.id}
-                        variants={itemVariants}
-                        className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm md:p-8"
+                        className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm md:p-8 gsap-animate"
                     >
                       <div className="mb-8 flex flex-col justify-between gap-6 border-b border-slate-100 pb-8 lg:flex-row">
                         <div className="min-w-0">
@@ -225,10 +202,9 @@ export default function WorkoutPlansPage() {
                               const exercises = session.exercises ?? [];
 
                               return (
-                                  <motion.div
+                                  <div
                                       key={session.id}
-                                      whileHover={{ y: -5 }}
-                                      className={`relative rounded-2xl border p-6 transition-all duration-300 ${
+                                      className={`relative rounded-2xl border p-6 transition-all duration-300 gsap-animate ${
                                           session.isCompleted
                                               ? "border-emerald-100 bg-emerald-50/50"
                                               : "border-slate-200 bg-white shadow-sm hover:shadow-md"
@@ -294,15 +270,15 @@ export default function WorkoutPlansPage() {
                                           Hoàn thành buổi tập
                                         </Button>
                                     )}
-                                  </motion.div>
+                                  </div>
                               );
                             })}
                           </div>
                       )}
-                    </motion.div>
+                    </div>
                 );
               })}
-            </motion.div>
+            </div>
         )}
       </div>
   );

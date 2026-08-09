@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
     Plus, 
@@ -28,7 +28,7 @@ export default function TrainerNutritionPage() {
     const [plans, setPlans] = useState<NutritionPlan[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchPlans = async () => {
+    const fetchPlans = useCallback(async () => {
         if (!memberId) return;
         try {
             setLoading(true);
@@ -39,11 +39,11 @@ export default function TrainerNutritionPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [memberId]);
 
     useEffect(() => {
         void fetchPlans();
-    }, [memberId]);
+    }, [fetchPlans]);
 
     useGSAP(() => {
         if (!loading && plans.length >= 0) {

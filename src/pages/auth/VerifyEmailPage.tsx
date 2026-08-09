@@ -3,9 +3,10 @@ import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, XCircle, Loader2, MailCheck, ArrowRight } from "lucide-react";
 import { ROUTES } from "../../config/routes";
 import { authService } from "../../services/authService";
-import { motion, AnimatePresence } from "framer-motion";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 
 export default function VerifyEmailPage() {
+    const containerRef = usePageAnimation();
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token");
 
@@ -42,19 +43,14 @@ export default function VerifyEmailPage() {
     const activeMessage = !token ? "Không tìm thấy mã xác minh. Vui lòng kiểm tra lại đường dẫn trong email." : message;
 
     return (
-        <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center px-4">
+        <main ref={containerRef} className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center px-4">
             <div className="absolute inset-0 bg-white/50 backdrop-blur-[3px]" />
 
             <section className="relative z-10 w-full max-w-md rounded-[2rem] border border-fit-border bg-white/90 p-8 text-center shadow-auth backdrop-blur-2xl">
                 
-                <AnimatePresence mode="wait">
                     {activeStatus === "loading" && (
-                        <motion.div
-                            key="loading"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="flex flex-col items-center"
+                        <div
+                            className="flex flex-col items-center gsap-animate"
                         >
                             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 shadow-sm border border-slate-200">
                                 <Loader2 className="h-10 w-10 text-fit-muted animate-spin" />
@@ -65,16 +61,12 @@ export default function VerifyEmailPage() {
                             <p className="mt-3 fit-subtitle text-center">
                                 Vui lòng đợi trong giây lát...
                             </p>
-                        </motion.div>
+                        </div>
                     )}
 
                     {activeStatus === "success" && (
-                        <motion.div
-                            key="success"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="flex flex-col items-center"
+                        <div
+                            className="flex flex-col items-center gsap-animate"
                         >
                             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-fit-primarySoft shadow-sm border border-fit-primary/20">
                                 <MailCheck className="h-10 w-10 text-fit-primary" />
@@ -92,16 +84,12 @@ export default function VerifyEmailPage() {
                             >
                                 Đăng nhập ngay <ArrowRight className="h-5 w-5" />
                             </Link>
-                        </motion.div>
+                        </div>
                     )}
 
                     {activeStatus === "error" && (
-                        <motion.div
-                            key="error"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="flex flex-col items-center"
+                        <div
+                            className="flex flex-col items-center gsap-animate"
                         >
                             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-fit-dangerSoft shadow-sm border border-fit-danger/20">
                                 <XCircle className="h-10 w-10 text-fit-danger" />
@@ -124,9 +112,8 @@ export default function VerifyEmailPage() {
                             >
                                 Quay về trang chủ
                             </Link>
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
                 
             </section>
         </main>

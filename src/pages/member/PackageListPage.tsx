@@ -3,12 +3,10 @@ import {
   Check,
   Dumbbell,
   Loader2,
-  ChevronRight,
-  ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 import { showAlert } from "../../utils/alert";
 import Button from "../../components/common/Button";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -24,6 +22,7 @@ type PriceInfo = {
 };
 
 export default function PackageListPage() {
+  const containerRef = usePageAnimation();
   const navigate = useNavigate();
 
   const [packages, setPackages] = useState<GymPackage[]>([]);
@@ -163,23 +162,6 @@ export default function PackageListPage() {
     }
   };
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15 },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100, damping: 15 },
-    },
-  };
-
   const renderFeatures = (pkg: GymPackage): string[] => {
     let features: string[] = [];
 
@@ -234,7 +216,7 @@ export default function PackageListPage() {
   }
 
   return (
-      <div className="bg-slate-50 min-h-screen pb-16 font-sans">
+      <div className="bg-slate-50 min-h-screen pb-16 font-sans" ref={containerRef}>
 
         <div className="relative bg-slate-950 text-white pt-20 pb-28 mb-12 rounded-[2rem] mx-4 mt-4 overflow-hidden shadow-2xl border border-slate-800">
           {/* Subtle luxury glows */}
@@ -242,11 +224,7 @@ export default function PackageListPage() {
           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-[120px] mix-blend-screen -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
           
           <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            >
+            <div className="gsap-animate">
               <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-slate-600 bg-slate-800/80 backdrop-blur-sm">
                 <span className="text-xs font-bold uppercase tracking-widest text-white">
                   Thẻ Hội Viên Cao Cấp
@@ -258,7 +236,7 @@ export default function PackageListPage() {
               <p className="text-slate-200 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed drop-shadow-sm">
                 Đặc quyền thượng lưu tại hệ thống phòng tập 5 sao. Không gian sang trọng, thiết bị tối tân và dịch vụ chuyên nghiệp.
               </p>
-            </motion.div>
+            </div>
           </div>
         </div>
 
@@ -266,11 +244,8 @@ export default function PackageListPage() {
         <div className="max-w-6xl mx-auto px-4 mt-8 relative z-20">
           {/* DURATION SELECTOR (SLEEK & COMPACT TABS) */}
           {durations.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-2 max-w-2xl mx-auto mb-12 flex items-center border border-slate-100"
+            <div 
+              className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-2 max-w-2xl mx-auto mb-12 flex items-center border border-slate-100 gsap-animate"
             >
               {durations.map((duration) => {
                 const isActive = selectedDurationId === duration.id;
@@ -283,10 +258,8 @@ export default function PackageListPage() {
                     }`}
                   >
                     {isActive && (
-                      <motion.div
-                        layoutId="duration-tab-indicator"
-                        className="absolute inset-0 bg-fit-primary rounded-xl"
-                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      <div
+                        className="absolute inset-0 bg-fit-primary rounded-xl gsap-animate"
                       />
                     )}
                     <div className="relative z-10 flex items-center justify-center gap-2">
@@ -300,15 +273,12 @@ export default function PackageListPage() {
                   </button>
                 );
               })}
-            </motion.div>
+            </div>
           )}
 
           {/* PACKAGE CARDS */}
-          <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-end"
+          <div
+              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-end gsap-animate"
           >
             {packages.map((item, index) => {
               const isCurrent =
@@ -328,14 +298,13 @@ export default function PackageListPage() {
                   item.basePrice > 500000;
 
               const priceInfo = calculatePrice(item);
-              const pricePerMonth = priceInfo.finalPrice / (selectedDuration?.months || 1);
 
               // STYLING VARIANTS
               let cardBg = "bg-white border-slate-200";
               let titleColor = "text-slate-900";
               let badgeColor = "bg-slate-100 text-slate-600";
               let priceColor = "text-slate-900";
-              let btnClass = "bg-white text-slate-900 border-2 border-slate-900 hover:bg-slate-900 hover:text-white";
+              let btnClass = "bg-slate-950 text-white border-0 transition-transform duration-300 hover:scale-[1.02] active:scale-95";
               
               if (isPremium) {
                 cardBg = "bg-zinc-900 border-zinc-800 text-white shadow-2xl shadow-zinc-900/50";
@@ -362,10 +331,9 @@ export default function PackageListPage() {
               }
 
               return (
-                  <motion.div
-                      variants={itemVariants}
+                  <div
                       key={item.id}
-                      className="relative h-full"
+                      className="relative h-full gsap-animate"
                   >
                     {isPopular && !isPremium && (
                       <div className="absolute -top-4 left-0 right-0 flex justify-center z-20">
@@ -438,7 +406,7 @@ export default function PackageListPage() {
                         {isCurrent ? "Đang sử dụng" : "Đăng ký gói này"}
                       </Button>
                     </div>
-                  </motion.div>
+                  </div>
               );
             })}
 
@@ -451,7 +419,7 @@ export default function PackageListPage() {
                   <p className="mt-2 text-sm">Vui lòng quay lại sau.</p>
                 </div>
             )}
-          </motion.div>
+          </div>
         </div>
 
         {/* COMPARISON TABLE */}

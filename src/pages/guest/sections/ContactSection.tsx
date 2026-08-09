@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { usePageAnimation } from "../../../hooks/usePageAnimation";
 import { Send, PhoneCall, Mail, MapPin } from "lucide-react";
 import toast from "react-hot-toast";
 import { publicService } from "../../../services/publicService";
@@ -8,6 +8,7 @@ import Button from "../../../components/common/Button";
 import Input from "../../../components/common/Input";
 
 export default function ContactSection() {
+  const containerRef = usePageAnimation();
   const [formData, setFormData] = useState<ContactRequestForm>({
     fullName: "",
     phoneNumber: "",
@@ -36,18 +37,15 @@ export default function ContactSection() {
   };
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden" id="contact">
+    <section ref={containerRef} className="py-24 bg-white relative overflow-hidden" id="contact">
       <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-emerald-50 rounded-full blur-3xl opacity-50" />
       
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           
           {/* Left Info */}
-          <motion.div 
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="space-y-8"
+          <div 
+            className="space-y-8 gsap-animate"
           >
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Sẵn sàng thay đổi<br />cùng FitLife?</h2>
@@ -85,14 +83,11 @@ export default function ContactSection() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Right Form */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-white rounded-3xl shadow-xl p-8 md:p-10 border border-slate-100"
+          <div 
+            className="bg-white rounded-3xl shadow-xl p-8 md:p-10 border border-slate-100 gsap-animate"
           >
             <h3 className="text-2xl font-black text-slate-900 mb-6">Gửi yêu cầu tư vấn</h3>
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -136,7 +131,7 @@ export default function ContactSection() {
                 )}
               </Button>
             </form>
-          </motion.div>
+          </div>
 
         </div>
       </div>

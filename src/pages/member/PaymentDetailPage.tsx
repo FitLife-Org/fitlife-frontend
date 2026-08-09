@@ -209,6 +209,7 @@ export default function PaymentDetailPage() {
               paymentMethod ===
               "VNPAY"
           ) {
+            setProcessing(true);
             const result =
                 await paymentService
                     .createVnpayPaymentUrl({
@@ -227,21 +228,17 @@ export default function PaymentDetailPage() {
             window.location.assign(
                 result.paymentUrl,
             );
-
             return;
           }
 
-          await paymentService
-              .createPayment(
-                  payload,
-              );
-
+          // For CASH and BANK_TRANSFER, we do not call the API because members cannot create offline payments directly.
+          // Staff will create the offline payment via /admin/payments/offline
           await showAlert.success(
-              "Tạo yêu cầu thành công",
+              "Hướng dẫn thanh toán",
               paymentMethod ===
               "CASH"
-                  ? "Vui lòng thanh toán tại quầy và chờ Admin/Staff xác nhận."
-                  : "Vui lòng hoàn tất chuyển khoản và chờ Admin/Staff xác nhận.",
+                  ? "Vui lòng thanh toán trực tiếp tại quầy lễ tân để được xác nhận."
+                  : "Vui lòng hoàn tất chuyển khoản và liên hệ nhân viên tại quầy để được xác nhận.",
           );
 
           navigate(
