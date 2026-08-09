@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import Html5QrcodePlugin from "../common/Html5QrcodePlugin";
 import { useGymQrScanner } from "../../hooks/useGymQrScanner";
 
@@ -10,10 +9,7 @@ export default function GymQrScanner({ onSuccess }: GymQrScannerProps) {
   const { isProcessing, handleScanSuccess } = useGymQrScanner(onSuccess);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
+    <div
       className="h-full flex flex-col items-center justify-center space-y-4"
     >
       <div className={`w-full aspect-square relative rounded-2xl overflow-hidden border-2 border-dashed ${isProcessing ? 'border-emerald-500' : 'border-slate-300'} p-2 transition-colors duration-300`}>
@@ -34,15 +30,13 @@ export default function GymQrScanner({ onSuccess }: GymQrScannerProps) {
           </div>
         )}
 
-        <motion.div 
-          animate={{ top: ["0%", "100%", "0%"] }} 
-          transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+        <div 
           className="absolute left-0 right-0 h-0.5 bg-fit-primary/50 shadow-[0_0_15px_rgba(109,40,217,0.8)] z-20 pointer-events-none"
         />
       </div>
       <p className="text-center text-sm text-slate-500 font-medium mt-4">
         Đưa mã QR của hội viên vào giữa khung hình.
       </p>
-    </motion.div>
+    </div>
   );
 }

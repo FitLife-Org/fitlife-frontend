@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Plus, Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
 import Card from "../../../components/common/Card";
 import Table from "../../../components/common/Table";
@@ -7,7 +8,7 @@ import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import type { GymPackage } from "../../../types/package.type";
 import { useGymPackageTab } from "../../../hooks/useGymPackageTab";
-import { useNavigate } from "react-router-dom";
+import { GymPackageFormModal } from "./GymPackageFormModal";
 
 export default function GymPackageTab() {
   const {
@@ -16,10 +17,22 @@ export default function GymPackageTab() {
     deleteId,
     setDeleteId,
     handleDelete,
-    handleToggleStatus
+    handleToggleStatus,
+    fetchPackages
   } = useGymPackageTab();
 
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<GymPackage | null>(null);
+
+  const handleOpenAddModal = () => {
+    setSelectedPackage(null);
+    setModalOpen(true);
+  };
+
+  const handleOpenEditModal = (pkg: GymPackage) => {
+    setSelectedPackage(pkg);
+    setModalOpen(true);
+  };
 
   const columns = [
     {
@@ -81,10 +94,18 @@ export default function GymPackageTab() {
       header: "Thao tác",
       render: (row: GymPackage) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => handleToggleStatus(row)} className={`p-2 rounded-lg transition-colors ${row.status === 'ACTIVE' ? 'text-red-500 hover:bg-red-50' : 'text-emerald-500 hover:bg-emerald-50'}`} title={row.status === 'ACTIVE' ? 'Khóa' : 'Kích hoạt'}>
-            {row.status === 'ACTIVE' ? <XCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+          <button 
+            onClick={() => handleToggleStatus(row)} 
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${row.status === 'ACTIVE' ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} 
+            title={row.status === 'ACTIVE' ? 'Khóa gói tập' : 'Kích hoạt gói tập'}
+          >
+            {row.status === 'ACTIVE' ? (
+              <><XCircle className="w-4 h-4" /> Khóa</>
+            ) : (
+              <><CheckCircle className="w-4 h-4" /> Active</>
+            )}
           </button>
-          <button onClick={() => navigate(`/admin/packages/${row.id}/edit`)} className="p-2 text-fit-blue hover:bg-fit-blueSoft rounded-lg transition-colors" title="Chỉnh sửa">
+          <button onClick={() => handleOpenEditModal(row)} className="p-2 text-fit-blue hover:bg-fit-blueSoft rounded-lg transition-colors" title="Chỉnh sửa">
             <Edit className="w-5 h-5" />
           </button>
           <button onClick={() => setDeleteId(row.id)} className="p-2 text-fit-danger hover:bg-fit-dangerSoft rounded-lg transition-colors" title="Xóa">
@@ -102,7 +123,7 @@ export default function GymPackageTab() {
           <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fit-primary to-blue-600">Danh sách Gói tập Gym</h2>
           <p className="text-slate-600 text-sm mt-1 font-medium">Quản lý dịch vụ, giá tiền và quyền lợi của các gói tập (VIP, BASIC...)</p>
         </div>
-        <Button onClick={() => navigate("/admin/packages/add")} className="bg-gradient-to-r from-fit-primary to-blue-600 hover:from-blue-600 hover:to-indigo-600 border-0 shadow-lg shadow-fit-primary/30 transition-all duration-300 hover:-translate-y-0.5 whitespace-nowrap">
+        <Button onClick={handleOpenAddModal} className="bg-gradient-to-r from-fit-primary to-blue-600 hover:from-blue-600 hover:to-indigo-600 border-0 shadow-lg shadow-fit-primary/30 transition-all duration-300 hover:-translate-y-0.5 whitespace-nowrap">
           <Plus className="w-5 h-5 mr-2" />
           Tạo gói mới
         </Button>
@@ -119,6 +140,13 @@ export default function GymPackageTab() {
         title="Xóa gói tập"
         message="Bạn có chắc chắn muốn xóa gói tập này không? Nếu đã có người đăng ký, gói này chỉ bị khóa lại chứ không bị xóa."
         confirmText="Xóa"
+      />
+
+      <GymPackageFormModal 
+        open={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        onSuccess={fetchPackages} 
+        pkg={selectedPackage} 
       />
     </div>
   );

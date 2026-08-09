@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { publicService } from "../../../services/publicService";
 import type { PublicTrainer } from "../../../types/public.type";
+import { usePageAnimation } from "../../../hooks/usePageAnimation";
 
 export default function TrainersSection() {
+  const containerRef = usePageAnimation();
   const [trainers, setTrainers] = useState<PublicTrainer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +31,7 @@ export default function TrainersSection() {
   if (trainers.length === 0) return null;
 
   return (
-    <section className="py-24 bg-slate-50">
+    <section ref={containerRef} className="py-24 bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl mb-4">
@@ -43,13 +44,9 @@ export default function TrainersSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {trainers.map((trainer, idx) => (
-            <motion.div
+            <div
               key={trainer.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1, type: "spring" }}
-              className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+              className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 gsap-animate"
             >
               <div className="relative h-80 overflow-hidden">
                 <img 
@@ -73,7 +70,7 @@ export default function TrainersSection() {
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

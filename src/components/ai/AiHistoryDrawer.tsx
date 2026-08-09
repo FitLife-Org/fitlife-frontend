@@ -8,11 +8,6 @@ import {
     X,
 } from "lucide-react";
 
-import {
-    AnimatePresence,
-    motion,
-} from "framer-motion";
-
 import Button from "../common/Button";
 
 import type {
@@ -115,38 +110,15 @@ export default function AiHistoryDrawer({
                                             onSelect,
                                         }: AiHistoryDrawerProps) {
     return (
-        <AnimatePresence>
+        <>
             {open && (
                 <>
-                    <motion.div
-                        initial={{
-                            opacity: 0,
-                        }}
-                        animate={{
-                            opacity: 1,
-                        }}
-                        exit={{
-                            opacity: 0,
-                        }}
+                    <div
                         onClick={onClose}
                         className="absolute inset-0 z-40 rounded-3xl bg-slate-950/30 backdrop-blur-sm"
                     />
 
-                    <motion.aside
-                        initial={{
-                            x: "100%",
-                        }}
-                        animate={{
-                            x: 0,
-                        }}
-                        exit={{
-                            x: "100%",
-                        }}
-                        transition={{
-                            type: "spring",
-                            damping: 28,
-                            stiffness: 240,
-                        }}
+                    <aside
                         className="absolute bottom-0 right-0 top-0 z-50 flex w-full max-w-sm flex-col overflow-hidden rounded-r-3xl border-l border-slate-200 bg-white shadow-2xl"
                     >
                         <div className="flex items-center justify-between border-b border-slate-200 p-5">
@@ -306,9 +278,9 @@ export default function AiHistoryDrawer({
                                 </div>
                             )}
                         </div>
-                    </motion.aside>
+                    </aside>
                 </>
             )}
-        </AnimatePresence>
+        </>
     );
 }

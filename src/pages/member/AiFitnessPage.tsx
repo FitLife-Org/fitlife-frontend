@@ -19,10 +19,7 @@ import {
     X,
 } from "lucide-react";
 
-import {
-    AnimatePresence,
-    motion,
-} from "framer-motion";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 
 import toast from "react-hot-toast";
 
@@ -185,6 +182,8 @@ function createPlanRequestMessage(
 }
 
 export default function AiFitnessPage() {
+    const containerRef = usePageAnimation();
+
     const [messages, setMessages] =
         useState<AiChatMessageModel[]>([
             INITIAL_MESSAGE,
@@ -737,7 +736,7 @@ export default function AiFitnessPage() {
         };
 
     return (
-        <div className="relative flex min-h-[calc(100vh-8rem)] flex-col">
+        <div ref={containerRef} className="relative flex min-h-[calc(100vh-8rem)] flex-col">
             <PageHeader
                 title="FitLife AI"
                 description="Trợ lý thông minh tạo kế hoạch tập luyện và dinh dưỡng dựa trên dữ liệu cá nhân."
@@ -942,20 +941,10 @@ export default function AiFitnessPage() {
                 }}
             />
 
-            <AnimatePresence>
                 {(selectedHistoryItem ||
                     detailLoading) && (
                     <>
-                        <motion.div
-                            initial={{
-                                opacity: 0,
-                            }}
-                            animate={{
-                                opacity: 1,
-                            }}
-                            exit={{
-                                opacity: 0,
-                            }}
+                        <div
                             onClick={() => {
                                 if (
                                     !detailLoading
@@ -965,26 +954,11 @@ export default function AiFitnessPage() {
                                     );
                                 }
                             }}
-                            className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm"
+                            className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm gsap-animate"
                         />
 
-                        <motion.section
-                            initial={{
-                                opacity: 0,
-                                scale: 0.96,
-                                y: 20,
-                            }}
-                            animate={{
-                                opacity: 1,
-                                scale: 1,
-                                y: 0,
-                            }}
-                            exit={{
-                                opacity: 0,
-                                scale: 0.96,
-                                y: 20,
-                            }}
-                            className="fixed inset-3 z-50 flex flex-col overflow-hidden rounded-3xl bg-slate-50 shadow-2xl sm:inset-8"
+                        <section
+                            className="fixed inset-3 z-50 flex flex-col overflow-hidden rounded-3xl bg-slate-50 shadow-2xl sm:inset-8 gsap-animate"
                         >
                             <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
                                 <div>
@@ -1057,10 +1031,9 @@ export default function AiFitnessPage() {
                                     )
                                 )}
                             </div>
-                        </motion.section>
+                        </section>
                     </>
                 )}
-            </AnimatePresence>
         </div>
     );
 }

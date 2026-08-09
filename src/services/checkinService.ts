@@ -14,19 +14,19 @@ import type {
 
 export const adminQrService = {
   async getAllGymQrs(): Promise<AdminCheckInQrResponse[]> {
-    const response = await apiClient.get<ApiResponse<AdminCheckInQrResponse[]>>("/admin/check-in-qrs");
+    const response = await apiClient.get<ApiResponse<AdminCheckInQrResponse[]>>("/admin/checkin-qr-codes");
     return response.data.data;
   },
 
   async regenerateGymQrToken(id: number): Promise<AdminCheckInQrResponse> {
-    const response = await apiClient.post<ApiResponse<AdminCheckInQrResponse>>(`/admin/check-in-qrs/${id}/regenerate`);
+    const response = await apiClient.post<ApiResponse<AdminCheckInQrResponse>>(`/admin/checkin-qr-codes/${id}/rotate`);
     return response.data.data;
   }
 };
 
 export const staffCheckinService = {
   async lookupMember(query: string): Promise<MemberLookupResult> {
-    const response = await apiClient.get<ApiResponse<MemberLookupResult>>(`/check-ins/lookup?keyword=${encodeURIComponent(query)}`);
+    const response = await apiClient.get<ApiResponse<MemberLookupResult>>(`/staff/members/lookup?keyword=${encodeURIComponent(query)}`);
     return response.data.data;
   },
 
@@ -36,7 +36,7 @@ export const staffCheckinService = {
   },
 
   async scanMemberQr(data: StaffMemberQrCheckInRequest): Promise<CheckinRecord> {
-    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/member-qr", data);
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/staff/check-ins/member-qr", data);
     return response.data.data;
   },
 
@@ -66,7 +66,7 @@ export const staffCheckinService = {
   },
 
   async cancelCheckin(id: number, data: CheckInCancelRequest): Promise<CheckinRecord> {
-    const response = await apiClient.patch<ApiResponse<CheckinRecord>>(`/check-ins/${id}/cancel`, data);
+    const response = await apiClient.patch<ApiResponse<CheckinRecord>>(`/admin/check-ins/${id}/void`, data);
     return response.data.data;
   },
 
@@ -78,7 +78,7 @@ export const staffCheckinService = {
 
 export const memberCheckinService = {
   async selfCheckin(data: MemberCheckInRequest): Promise<CheckinRecord> {
-    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/member/check-ins/qr", data);
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/scan-gym-qr", data);
     return response.data.data;
   },
 
@@ -88,12 +88,12 @@ export const memberCheckinService = {
   },
 
   async getMyCurrentStatus(): Promise<CheckinRecord> {
-    const response = await apiClient.get<ApiResponse<CheckinRecord>>("/member/check-ins/current");
+    const response = await apiClient.get<ApiResponse<CheckinRecord>>("/check-ins/me/latest");
     return response.data.data;
   },
 
   async getMyHistory(params?: Record<string, unknown>): Promise<CheckinRecord[]> {
-    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>("/member/check-ins/history", { params });
+    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>("/check-ins/me", { params });
     const data = response.data?.data;
     if (Array.isArray(data)) return data;
     if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<CheckinRecord>).content)) {

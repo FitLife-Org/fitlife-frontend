@@ -43,7 +43,7 @@ export const subscriptionService = {
         try {
             const response = await apiClient.get<
                 ApiResponse<PageResponse<Subscription> | Subscription[]>
-            >("/subscriptions/my");
+            >("/subscriptions/me");
 
             return extractPageContent<Subscription>(response.data.data);
         } catch (error: unknown) {
@@ -63,7 +63,7 @@ export const subscriptionService = {
     async getMySubscription(): Promise<Subscription | null> {
         try {
             const response = await apiClient.get<ApiResponse<Subscription | null>>(
-                "/subscriptions/my/active"
+                "/subscriptions/me/active"
             );
 
             return response.data.data;

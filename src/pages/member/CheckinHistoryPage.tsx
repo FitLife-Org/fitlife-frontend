@@ -1,10 +1,11 @@
-import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, History, X, ScanLine, XCircle } from "lucide-react";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 import Button from "../../components/common/Button";
 import GymQrScanner from "../../components/checkin/GymQrScanner";
 import { useCheckinHistory } from "../../hooks/useCheckinHistory";
 
 export default function CheckinHistoryPage() {
+  const containerRef = usePageAnimation();
 
   const {
     history,
@@ -23,7 +24,7 @@ export default function CheckinHistoryPage() {
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-8 pb-10" ref={containerRef}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Check-in</h1>
@@ -81,14 +82,10 @@ export default function CheckinHistoryPage() {
         )}
       </div>
 
-      <AnimatePresence>
         {showScanner && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-6 w-full max-w-md relative"
+            <div 
+              className="bg-white rounded-3xl p-6 w-full max-w-md relative gsap-animate"
             >
               <button 
                 onClick={() => setShowScanner(false)}
@@ -108,10 +105,9 @@ export default function CheckinHistoryPage() {
               <p className="text-center text-sm font-medium text-slate-500 mt-4">
                 Sử dụng Camera để quét mã đặt tại quầy Lễ tân
               </p>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
     </div>
   );
 }

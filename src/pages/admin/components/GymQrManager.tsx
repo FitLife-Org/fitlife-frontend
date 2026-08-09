@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import QRCode from "react-qr-code";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, RefreshCw, Smartphone } from "lucide-react";
 import toast from "react-hot-toast";
 import { checkinService } from "../../../services/checkinService";
@@ -90,13 +89,10 @@ export default function GymQrManager({ isOpen, onClose }: GymQrManagerProps) {
   };
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+          <div
             className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 p-4">
@@ -175,9 +171,9 @@ export default function GymQrManager({ isOpen, onClose }: GymQrManagerProps) {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }

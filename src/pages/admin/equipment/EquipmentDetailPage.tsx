@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit2, Wrench, Calendar, MapPin, Tag, AlertTriangle, Trash2, Edit, DollarSign, History } from "lucide-react";
 import Button from "../../../components/common/Button";
@@ -42,7 +42,7 @@ export default function EquipmentDetailPage() {
         fetchDetail();
     }, [id]);
 
-    const fetchHistory = async () => {
+    const fetchHistory = useCallback(async () => {
         if (!id) return;
         setFetchingHistory(true);
         try {
@@ -53,12 +53,12 @@ export default function EquipmentDetailPage() {
         } finally {
             setFetchingHistory(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         if (!id) return;
         fetchHistory();
-    }, [id]);
+    }, [id, fetchHistory]);
 
     useEffect(() => {
         const fetchAreas = async () => {

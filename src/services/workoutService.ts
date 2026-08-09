@@ -86,14 +86,15 @@ export const workoutService = {
     );
   },
 
-  async createWorkoutPlan(
+  async createTrainerWorkoutPlan(
+      memberId: string | number,
       data: Partial<WorkoutPlan>,
   ): Promise<WorkoutPlan> {
     const response =
         await apiClient.post<
             ApiResponse<WorkoutPlan>
         >(
-            "/trainers/workout-plans",
+            `/trainer/members/${memberId}/workout-plans`,
             data,
         );
 
@@ -102,20 +103,25 @@ export const workoutService = {
     );
   },
 
-  async updateWorkoutPlan(
-      id: string | number,
+  async updateTrainerWorkoutPlan(
+      planId: string | number,
+      memberId: string | number,
       data: Partial<WorkoutPlan>,
   ): Promise<WorkoutPlan> {
     validateId(
-        id,
+        planId,
         "Workout Plan ID",
+    );
+    validateId(
+        memberId,
+        "Member ID",
     );
 
     const response =
-        await apiClient.put<
+        await apiClient.patch<
             ApiResponse<WorkoutPlan>
         >(
-            `/trainers/workout-plans/${id}`,
+            `/trainer/members/${memberId}/workout-plans/${planId}`,
             data,
         );
 

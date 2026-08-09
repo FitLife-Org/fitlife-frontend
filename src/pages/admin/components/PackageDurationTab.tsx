@@ -79,8 +79,16 @@ export default function PackageDurationTab() {
       header: "Thao tác",
       render: (row: PackageDuration) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => handleToggleStatus(row)} className={`p-2 rounded-lg transition-colors ${row.status === 'ACTIVE' ? 'text-red-500 hover:bg-red-50' : 'text-emerald-500 hover:bg-emerald-50'}`} title={row.status === 'ACTIVE' ? 'Khóa' : 'Kích hoạt'}>
-            {row.status === 'ACTIVE' ? <XCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+          <button 
+            onClick={() => handleToggleStatus(row)} 
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${row.status === 'ACTIVE' ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} 
+            title={row.status === 'ACTIVE' ? 'Khóa' : 'Kích hoạt'}
+          >
+            {row.status === 'ACTIVE' ? (
+              <><XCircle className="w-4 h-4" /> Khóa</>
+            ) : (
+              <><CheckCircle className="w-4 h-4" /> Active</>
+            )}
           </button>
           <button onClick={() => handleOpenModal(row)} className="p-2 text-fit-blue hover:bg-fit-blueSoft rounded-lg transition-colors" title="Chỉnh sửa">
             <Edit className="w-5 h-5" />

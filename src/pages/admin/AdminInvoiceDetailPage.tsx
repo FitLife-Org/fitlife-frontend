@@ -23,6 +23,7 @@ import Badge from "../../components/common/Badge";
 import InvoiceDocument from "../../components/invoice/InvoiceDocument";
 
 import { invoiceService } from "../../services/invoiceService";
+import { paymentService } from "../../services/paymentService";
 import { showAlert } from "../../utils/alert";
 import { getApiErrorMessage } from "../../utils/apiError";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -300,6 +301,85 @@ export default function AdminInvoiceDetailPage() {
             }
         };
 
+    const handleOfflinePayment =
+        async (): Promise<void> => {
+            if (
+                !invoice ||
+                invoice.status !== "UNPAID" ||
+                actionLoading
+            ) {
+                return;
+            }
+
+            const result =
+                await showAlert.info(
+                    "Xác nhận thanh toán thủ công",
+                    "Gói tập sẽ được kích hoạt ngay sau khi xác nhận.",
+                    {
+                        html: `
+                            <div class="text-left mt-4 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Phương thức thanh toán</label>
+                                    <select id="swal-payment-method" class="w-full rounded-md border-gray-300 shadow-sm focus:border-fit-primary focus:ring-fit-primary sm:text-sm p-2 border">
+                                        <option value="CASH">Tiền mặt</option>
+                                        <option value="BANK_TRANSFER">Chuyển khoản ngân hàng</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+                                    <textarea id="swal-payment-note" class="w-full rounded-md border-gray-300 shadow-sm focus:border-fit-primary focus:ring-fit-primary sm:text-sm p-2 border" rows="3" placeholder="Nhập mã giao dịch hoặc ghi chú..."></textarea>
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: "Xác nhận đã nhận tiền",
+                        cancelButtonText: "Hủy",
+                        preConfirm: () => {
+                            const methodEl = document.getElementById("swal-payment-method") as HTMLSelectElement;
+                            const noteEl = document.getElementById("swal-payment-note") as HTMLTextAreaElement;
+                            return {
+                                paymentMethod: methodEl.value as "CASH" | "BANK_TRANSFER",
+                                note: noteEl.value
+                            };
+                        }
+                    },
+                );
+
+            if (!result.isConfirmed || !result.value) {
+                return;
+            }
+
+            try {
+                setActionLoading(true);
+
+                await paymentService.createOfflinePayment({
+                    invoiceId: invoice.id,
+                    paymentMethod: result.value.paymentMethod,
+                    note: result.value.note
+                });
+
+                await showAlert.success(
+                    "Thành công",
+                    "Đã xác nhận thanh toán và kích hoạt gói tập.",
+                );
+
+                await loadData();
+            } catch (error: unknown) {
+                console.error(
+                    "CREATE_OFFLINE_PAYMENT_ERROR:",
+                    error,
+                );
+
+                await showAlert.error(
+                    "Lỗi xác nhận thanh toán",
+                    getApiErrorMessage(error),
+                );
+            } finally {
+                setActionLoading(false);
+            }
+        };
+
+
     const handleRefund =
         async (): Promise<void> => {
             if (
@@ -559,6 +639,20 @@ export default function AdminInvoiceDetailPage() {
 
                         {invoice.status ===
                             "UNPAID" && (
+                                <>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        void handleOfflinePayment()
+                                    }
+                                    disabled={
+                                        actionLoading
+                                    }
+                                    className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                    <Printer className="h-4 w-4" />
+                                    Thanh toán Offline
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() =>
@@ -572,6 +666,7 @@ export default function AdminInvoiceDetailPage() {
                                     <XCircle className="h-4 w-4" />
                                     Hủy hóa đơn
                                 </button>
+                                </>
                             )}
 
                         {invoice.status ===
