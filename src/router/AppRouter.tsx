@@ -448,7 +448,12 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.ADMIN_INVOICES}
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
                                     <InvoiceManagementPage />
                                 </RoleGuard>
                             }
@@ -457,7 +462,12 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.ADMIN_INVOICE_DETAIL}
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
                                     <AdminInvoiceDetailPage />
                                 </RoleGuard>
                             }
