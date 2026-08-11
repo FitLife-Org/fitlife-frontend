@@ -7,7 +7,7 @@ import type {
 
 import type {
   WorkoutPlan,
-  WorkoutSession,
+  WorkoutPlanCreateRequest,
 } from "../types/workout.type";
 
 type WorkoutPlansResponse =
@@ -19,7 +19,7 @@ function normalizePlan(
 ): WorkoutPlan {
   return {
     ...plan,
-    sessions: plan.sessions ?? [],
+    days: plan.days ?? [],
   };
 }
 
@@ -86,9 +86,29 @@ export const workoutService = {
     );
   },
 
+  async getTrainerWorkoutPlans(
+      memberId: string | number,
+  ): Promise<WorkoutPlan[]> {
+    validateId(
+        memberId,
+        "Member ID",
+    );
+
+    const response =
+        await apiClient.get<
+            ApiResponse<WorkoutPlansResponse>
+        >(
+            `/trainer/members/${memberId}/workout-plans`,
+        );
+
+    return extractPlans(
+        response.data.data,
+    );
+  },
+
   async createTrainerWorkoutPlan(
       memberId: string | number,
-      data: Partial<WorkoutPlan>,
+      data: WorkoutPlanCreateRequest,
   ): Promise<WorkoutPlan> {
     const response =
         await apiClient.post<
@@ -106,7 +126,7 @@ export const workoutService = {
   async updateTrainerWorkoutPlan(
       planId: string | number,
       memberId: string | number,
-      data: Partial<WorkoutPlan>,
+      data: Partial<WorkoutPlanCreateRequest>,
   ): Promise<WorkoutPlan> {
     validateId(
         planId,
@@ -151,17 +171,17 @@ export const workoutService = {
   async completeSession(
       sessionId: string | number,
       data?: unknown,
-  ): Promise<WorkoutSession> {
+  ): Promise<any> {
     validateId(
         sessionId,
         "Workout Session ID",
     );
 
     const response =
-        await apiClient.patch<
-            ApiResponse<WorkoutSession>
+        await apiClient.post<
+            ApiResponse<any>
         >(
-            `/workout-sessions/${sessionId}/complete`,
+            `/workout-plans/${sessionId}/complete`,
             data,
         );
 

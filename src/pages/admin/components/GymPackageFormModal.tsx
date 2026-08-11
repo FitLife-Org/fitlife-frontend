@@ -192,6 +192,38 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
                 value={formData.ptSessionsPerMonth}
                 onChange={(e) => setFormData({ ...formData, ptSessionsPerMonth: Number(e.target.value) })}
               />
+
+              <div className="md:col-span-2">
+                <Input
+                  label="Đường dẫn ảnh đại diện (Thumbnail URL)"
+                  type="url"
+                  placeholder="VD: https://example.com/image.jpg"
+                  value={formData.thumbnailUrl}
+                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Mô tả gói tập</label>
+                <textarea
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary shadow-sm hover:border-slate-300"
+                  rows={3}
+                  placeholder="VD: Gói tập tiêu chuẩn phù hợp cho người mới bắt đầu..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                ></textarea>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Quyền lợi (cách nhau bởi dấu phẩy hoặc xuống dòng)</label>
+                <textarea
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary shadow-sm hover:border-slate-300"
+                  rows={3}
+                  placeholder="VD: Truy cập 24/7, Tủ đồ miễn phí, Xông hơi..."
+                  value={formData.benefits}
+                  onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+                ></textarea>
+              </div>
             </div>
 
             <div className="flex gap-8 mt-4 pt-4 border-t border-slate-100">

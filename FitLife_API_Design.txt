@@ -1,0 +1,2041 @@
+﻿FitLife — API Design & Integration Specification
+FITLIFE
+TÀI LIỆU THIẾT KẾ API
+API Design & Integration Specification
+
+
+Base URL
+	/api/v1
+	Authentication
+	Bearer JWT
+	Mục đích
+	Chuẩn hóa API cho Backend, Frontend, QA, Demo và tài liệu bảo vệ.
+	Phạm vi
+	19 nhóm API, các luồng demo, gap analysis và Definition of Done.
+	Phiên bản
+	v2.0
+	Ngày cập nhật
+	30/07/2026
+	Trạng thái tài liệu
+	WORKING BASELINE - cần đối chiếu controller thật trước khi APPROVED
+	________________
+
+
+MỤC LỤC
+1. Auth API
+2. User & Role API
+3. Member API
+4. Trainer API
+5. Gym Package API
+6. Package Duration API
+7. Subscription API
+8. Payment API
+9. Invoice API
+10. Check-in API
+11. Body Metric API
+12. AI Suggestion API
+13. Workout Plan API
+14. Nutrition Plan API
+15. Equipment API
+16. Maintenance API
+17. Notification API
+18. Report API
+19. API dùng trong demo chính
+20. API Gap Analysis
+21. Các API cần audit đầu tiên
+22. Template cập nhật trạng thái API
+23. Definition of Done của một API
+24. Phụ lục: Quy ước Request/Response/Error
+________________
+
+
+1. Tổng quan và quy ước API
+1.1. Mục tiêu tài liệu
+Tài liệu này là nguồn tham chiếu API thống nhất của FitLife. Mỗi API phải được đối chiếu giữa yêu cầu chức năng, Controller thực tế, Frontend service, kiểm thử và luồng demo. Trạng thái trong tài liệu không thay thế kiểm chứng bằng source code và test evidence.
+1.2. Nguyên tắc thiết kế
+* RESTful, ưu tiên danh từ số nhiều và endpoint thể hiện rõ phạm vi actor.
+* Không nhận memberId từ client đối với API /me; backend resolve từ JWT.
+* Các thao tác thay đổi trạng thái phải kiểm tra quyền, ownership, trạng thái hiện tại và tính idempotent.
+* API tài chính và callback phải dùng transaction, kiểm tra chữ ký và chống xử lý lặp.
+* Không trả entity trực tiếp; sử dụng request/response DTO và ApiResponse chuẩn.
+* Xóa dữ liệu nghiệp vụ quan trọng ưu tiên soft delete hoặc chuyển trạng thái.
+1.3. Trạng thái API
+Trạng thái
+	Ý nghĩa
+	PLANNED
+	Có trong phạm vi nhưng chưa code
+	IMPLEMENTED
+	Backend đã code
+	FE_INTEGRATED
+	Frontend đã tích hợp
+	TESTED
+	Đã test và có evidence
+	DEMO_READY
+	Đã sẵn sàng cho demo
+	NEED_AUDIT
+	Chưa đối chiếu controller/source thật
+	DEPRECATED
+	Không còn sử dụng
+	OUT_OF_SCOPE
+	Loại khỏi phạm vi bảo vệ
+	1.4. Mức ưu tiên
+P0
+	Bắt buộc cho luồng chính, demo hoặc bảo vệ.
+	P1
+	Quan trọng nhưng có thể giảm phạm vi nếu thiếu thời gian.
+	P2
+	Nâng cao; không được chặn P0/P1.
+	1.5. Response contract đề xuất
+{ "code": 0, "message": "Success", "data": { ... }, "timestamp": "2026-07-30T10:00:00+07:00" }
+Với danh sách phân trang, data nên chứa items/content, page, size, totalElements và totalPages. Lỗi phải trả code nghiệp vụ ổn định, message dễ hiểu và fieldErrors khi validation thất bại.
+________________
+
+
+2. Auth API
+Mô tả chức năng: Xác thực, phát hành token, xác minh email và khôi phục quyền truy cập tài khoản.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	AUTH-01
+	POST
+	/auth/register
+	Guest
+	P0
+	Implemented
+	Đăng ký tài khoản mới và khởi tạo hồ sơ người dùng.
+	AUTH-02
+	POST
+	/auth/login
+	Guest
+	P0
+	Implemented
+	Xác thực thông tin đăng nhập và trả về token cùng quyền truy cập.
+	AUTH-03
+	GET/POST
+	/auth/verify-email
+	Guest
+	P0
+	Need Audit
+	Xác minh email bằng token hoặc mã xác thực.
+	AUTH-04
+	POST
+	/auth/resend-verification
+	Guest
+	P1
+	Need Audit
+	Gửi lại thông tin xác minh email.
+	AUTH-05
+	POST
+	/auth/forgot-password
+	Guest
+	P0
+	Implemented/Need Audit
+	Khởi tạo quy trình quên mật khẩu và gửi OTP/token.
+	AUTH-06
+	POST
+	/auth/reset-password
+	Guest
+	P0
+	Implemented/Need Audit
+	Đặt mật khẩu mới sau khi xác thực OTP/token.
+	AUTH-07
+	POST
+	/auth/refresh-token
+	Authenticated
+	P1
+	Need Audit
+	Cấp access token mới từ refresh token hợp lệ.
+	AUTH-08
+	POST
+	/auth/logout
+	Authenticated
+	P1
+	Need Audit
+	Kết thúc phiên đăng nhập hoặc vô hiệu hóa refresh token.
+	AUTH-09
+	GET
+	/oauth2/authorization/google
+	Guest
+	P1
+	Need Audit
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	AUTH-10
+	GET
+	/auth/check-email
+	Guest
+	P1
+	Frontend flow
+	Kiểm tra email đã tồn tại hoặc có thể đăng ký.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu URL thật của controller.
+* Chốt verify email dùng GET hay POST.
+* Xác nhận refresh token và logout có trong scope.
+* Chốt Google Login có giữ trong phiên bản bảo vệ.
+* Kiểm tra ErrorCode cho LOCKED/INACTIVE và quy tắc emailVerified.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+3. User & Role API
+Mô tả chức năng: Quản lý tài khoản dùng chung, hồ sơ cá nhân, trạng thái tài khoản và vai trò hệ thống.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	USER-01
+	GET
+	/users/me
+	Authenticated
+	P0
+	Implemented
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	USER-02
+	PATCH
+	/users/me/profile
+	Authenticated
+	P0
+	Need Audit
+	Xem hoặc cập nhật hồ sơ cá nhân.
+	USER-03
+	PATCH
+	/users/me/password
+	Authenticated
+	P0
+	Need Audit
+	Đổi mật khẩu cho tài khoản hiện tại.
+	USER-04
+	GET
+	/admin/users
+	Admin
+	P0
+	Implemented
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	USER-05
+	GET
+	/admin/users/{id}
+	Admin
+	P0
+	Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	USER-06
+	POST
+	/admin/users
+	Admin
+	P0
+	Implemented
+	Tạo bản ghi mới hoặc thực hiện nghiệp vụ tương ứng.
+	USER-07
+	PATCH
+	/admin/users/{id}/status
+	Admin
+	P0
+	Implemented
+	Cập nhật trạng thái nghiệp vụ.
+	USER-08
+	PATCH
+	/admin/users/{id}/roles
+	Admin
+	P0
+	Implemented
+	Cập nhật vai trò và quyền của tài khoản.
+	USER-09
+	GET
+	/admin/roles
+	Admin
+	P1
+	Need Audit
+	Cập nhật vai trò và quyền của tài khoản.
+	Quy tắc và điểm cần kiểm tra
+* Chốt profile nằm ở User hay Member.
+* Xác nhận method đổi mật khẩu.
+* Search hỗ trợ keyword, role và status.
+* Chuẩn hóa enum ROLE_TRAINER.
+* Bảo vệ tài khoản admin cuối cùng khi thay đổi role.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+4. Member API
+Mô tả chức năng: Quản lý hồ sơ hội viên, thông tin thể chất, lịch sử hoạt động và dữ liệu phục vụ subscription, check-in và AI.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	MEMBER-01
+	GET
+	/members/me
+	Member
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	MEMBER-02
+	PATCH
+	/members/me
+	Member
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	MEMBER-03
+	GET
+	/admin/members
+	Admin/Staff
+	P0
+	Implemented/Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	MEMBER-04
+	GET
+	/admin/members/{id}
+	Admin/Staff
+	P0
+	Implemented/Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	MEMBER-05
+	POST
+	/admin/members
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	MEMBER-06
+	PATCH
+	/admin/members/{id}
+	Admin/Staff
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	MEMBER-07
+	GET
+	/admin/members/{id}/timeline
+	Admin/Staff
+	P1
+	Planned
+	Lấy dòng thời gian hoạt động của hội viên.
+	MEMBER-08
+	GET
+	/members/me/timeline
+	Member
+	P1
+	Planned
+	Lấy dòng thời gian hoạt động của hội viên.
+	MEMBER-09
+	GET
+	/staff/members/lookup
+	Staff
+	P0
+	Planned/Need Audit
+	Tra cứu nhanh dữ liệu.
+	MEMBER-10
+	GET
+	/members/me/qr
+	Member
+	P0
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+5. Trainer API
+Mô tả chức năng: Quản lý hồ sơ huấn luyện viên, danh sách hội viên phụ trách và quan hệ phân công trainer-member.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	TRAINER-01
+	GET
+	/trainers
+	Authenticated/Admin
+	P1
+	Need Audit
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	TRAINER-02
+	GET
+	/trainers/{id}
+	Authenticated/Admin
+	P1
+	Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	TRAINER-03
+	POST
+	/admin/trainers
+	Admin
+	P1
+	Need Audit
+	Tạo bản ghi mới hoặc thực hiện nghiệp vụ tương ứng.
+	TRAINER-04
+	PATCH
+	/admin/trainers/{id}
+	Admin
+	P1
+	Need Audit
+	Cập nhật bản ghi theo định danh sau khi kiểm tra quyền và validation.
+	TRAINER-05
+	GET
+	/trainer/members
+	Trainer
+	P0
+	Planned/Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	TRAINER-06
+	POST
+	/admin/trainer-assignments
+	Admin
+	P1
+	Planned
+	Phân công người hoặc đơn vị xử lý.
+	TRAINER-07
+	GET
+	/admin/trainer-assignments
+	Admin
+	P1
+	Planned
+	Phân công người hoặc đơn vị xử lý.
+	TRAINER-08
+	DELETE/PATCH
+	/admin/trainer-assignments/{id}
+	Admin
+	P1
+	Planned
+	Phân công người hoặc đơn vị xử lý.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+6. Gym Package API
+Mô tả chức năng: Công khai và quản trị các gói dịch vụ phòng gym.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	PACKAGE-01
+	GET
+	/gym-packages
+	Guest/Member
+	P0
+	Implemented
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	PACKAGE-02
+	GET
+	/gym-packages/{id}
+	Guest/Member
+	P0
+	Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	PACKAGE-03
+	GET
+	/admin/gym-packages
+	Admin
+	P0
+	Need Audit
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	PACKAGE-04
+	POST
+	/admin/gym-packages
+	Admin
+	P0
+	Implemented
+	Tạo bản ghi mới hoặc thực hiện nghiệp vụ tương ứng.
+	PACKAGE-05
+	PATCH/PUT
+	/admin/gym-packages/{id}
+	Admin
+	P0
+	Implemented/Need Audit
+	Cập nhật bản ghi theo định danh sau khi kiểm tra quyền và validation.
+	PACKAGE-06
+	PATCH
+	/admin/gym-packages/{id}/status
+	Admin
+	P0
+	Need Audit
+	Cập nhật trạng thái nghiệp vụ.
+	PACKAGE-07
+	DELETE
+	/admin/gym-packages/{id}
+	Admin
+	P1
+	Need Audit
+	Xóa mềm hoặc ngừng sử dụng bản ghi theo định danh.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+7. Package Duration API
+Mô tả chức năng: Quản lý thời hạn, mức giá và trạng thái bán của từng biến thể gói tập.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	DURATION-01
+	GET
+	/gym-packages/{packageId}/durations
+	Guest/Member
+	P0
+	Implemented
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	DURATION-02
+	GET
+	/package-durations/active
+	Guest/Member
+	P0
+	Implemented/Need Audit
+	Lấy bản ghi đang hoạt động.
+	DURATION-03
+	POST
+	/admin/gym-packages/{packageId}/durations
+	Admin
+	P0
+	Implemented
+	Tạo bản ghi mới hoặc thực hiện nghiệp vụ tương ứng.
+	DURATION-04
+	PATCH/PUT
+	/admin/package-durations/{id}
+	Admin
+	P0
+	Implemented
+	Cập nhật bản ghi theo định danh sau khi kiểm tra quyền và validation.
+	DURATION-05
+	PATCH
+	/admin/package-durations/{id}/status
+	Admin
+	P0
+	Implemented/Need Audit
+	Cập nhật trạng thái nghiệp vụ.
+	DURATION-06
+	DELETE
+	/admin/package-durations/{id}
+	Admin
+	P1
+	Need Audit
+	Xóa mềm hoặc ngừng sử dụng bản ghi theo định danh.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+8. Subscription API
+Mô tả chức năng: Quản lý vòng đời quyền sử dụng gói tập của hội viên: tạo, kích hoạt, gia hạn, nâng cấp, đổi và hủy.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	SUB-01
+	POST
+	/subscriptions
+	Member
+	P0
+	Need Audit
+	Tạo bản ghi mới hoặc thực hiện nghiệp vụ tương ứng.
+	SUB-02
+	GET
+	/subscriptions/me
+	Member
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	SUB-03
+	GET
+	/subscriptions/me/active
+	Member
+	P0
+	Need Audit
+	Lấy bản ghi đang hoạt động.
+	SUB-04
+	GET
+	/subscriptions/{id}
+	Member Owner
+	P0
+	Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	SUB-05
+	POST
+	/subscriptions/{id}/renew
+	Member
+	P0
+	Planned/In Progress
+	Gia hạn subscription hiện tại theo thời hạn đã chọn.
+	SUB-06
+	POST
+	/subscriptions/{id}/upgrade
+	Member
+	P0
+	Planned/In Progress
+	Nâng cấp subscription sang gói hoặc quyền lợi cao hơn.
+	SUB-07
+	POST
+	/subscriptions/{id}/change-package
+	Member
+	P1
+	Planned
+	Đổi subscription sang gói khác theo quy tắc nghiệp vụ.
+	SUB-08
+	POST
+	/staff/members/{memberId}/subscriptions
+	Staff/Admin
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	SUB-09
+	GET
+	/admin/subscriptions
+	Admin/Staff
+	P0
+	Need Audit
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	SUB-10
+	GET
+	/admin/subscriptions/{id}
+	Admin/Staff
+	P0
+	Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	SUB-11
+	PATCH
+	/admin/subscriptions/{id}/status
+	Admin
+	P1
+	Need Audit
+	Cập nhật trạng thái nghiệp vụ.
+	Quy tắc và điểm cần kiểm tra
+* Chốt subscription được tạo trước hay sau payment.
+* Chuẩn hóa status enum.
+* Chốt quan hệ replacement khi renew/upgrade.
+* Một member chỉ có tối đa một subscription active trong MVP.
+* Chuẩn hóa quy tắc startDate/endDate.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+9. Payment API
+Mô tả chức năng: Tạo và theo dõi giao dịch thanh toán, tích hợp VNPay, xác minh callback và đồng bộ subscription/invoice.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	PAYMENT-01
+	POST
+	/payments/vnpay/create
+	Member
+	P0
+	In Progress
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	PAYMENT-02
+	GET
+	/payments/vnpay/return
+	VNPay/Browser
+	P0
+	In Progress
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	PAYMENT-03
+	GET/POST
+	/payments/vnpay/ipn
+	VNPay
+	P0
+	In Progress
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	PAYMENT-04
+	GET
+	/payments/me
+	Member
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	PAYMENT-05
+	GET
+	/payments/{id}
+	Member Owner
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	PAYMENT-06
+	GET
+	/payments/result
+	Member
+	P0
+	Frontend route
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	PAYMENT-07
+	GET
+	/admin/payments
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	PAYMENT-08
+	GET
+	/admin/payments/{id}
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	PAYMENT-09
+	POST
+	/payments/{id}/retry
+	Member
+	P1
+	Planned
+	Thử lại thao tác trước đó.
+	PAYMENT-10
+	POST
+	/admin/payments/offline
+	Admin/Staff
+	P1
+	Planned
+	Ghi nhận thanh toán ngoại tuyến.
+	Quy tắc và điểm cần kiểm tra
+* Test create URL, signature, amount, transaction reference.
+* Test return và IPN độc lập.
+* Test SUCCESS, FAILED, CANCELLED và callback lặp.
+* Xác nhận kích hoạt subscription và tạo invoice chỉ xảy ra một lần.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+10. Invoice API
+Mô tả chức năng: Tra cứu hóa đơn được sinh tự động sau khi thanh toán thành công.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	INVOICE-01
+	GET
+	/invoices/me
+	Member
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	INVOICE-02
+	GET
+	/invoices/{id}
+	Member Owner
+	P0
+	Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	INVOICE-03
+	GET
+	/invoices/by-payment/{paymentId}
+	Member/Admin
+	P0
+	Need Audit
+	Tra cứu hóa đơn theo giao dịch thanh toán.
+	INVOICE-04
+	GET
+	/admin/invoices
+	Admin
+	P0
+	Need Audit
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	INVOICE-05
+	GET
+	/admin/invoices/{id}
+	Admin
+	P0
+	Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	INVOICE-06
+	GET
+	/invoices/{id}/download
+	Member/Admin
+	P1
+	Planned
+	Tải tệp hóa đơn.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+11. Check-in API
+Mô tả chức năng: Kiểm soát quyền vào phòng tập bằng QR hoặc mã hội viên, lưu lịch sử và hỗ trợ vận hành tại quầy.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	CHECKIN-01
+	POST
+	/check-ins/scan-gym-qr
+	Member
+	P0
+	Planned/In Progress
+	Check-in khi hội viên quét QR của phòng gym.
+	CHECKIN-02
+	GET
+	/check-ins/me
+	Member
+	P0
+	Planned/In Progress
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	CHECKIN-03
+	GET
+	/check-ins/me/latest
+	Member
+	P0
+	Planned
+	Lấy bản ghi mới nhất.
+	CHECKIN-04
+	GET
+	/members/me/qr
+	Member
+	P0
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	CHECKIN-05
+	GET
+	/staff/check-ins/member-preview
+	Staff/Admin
+	P0
+	Planned
+	Tra cứu nhanh hội viên và điều kiện check-in trước khi ghi nhận.
+	CHECKIN-06
+	POST
+	/staff/check-ins/member-qr
+	Staff/Admin
+	P0
+	Planned
+	Check-in hộ bằng QR của hội viên.
+	CHECKIN-07
+	POST
+	/staff/check-ins/member-code
+	Staff/Admin
+	P0
+	Planned
+	Check-in hộ bằng mã hội viên.
+	CHECKIN-08
+	GET
+	/staff/check-ins/today
+	Staff/Admin
+	P0
+	Planned
+	Lấy dữ liệu của ngày hiện tại.
+	CHECKIN-09
+	GET
+	/admin/check-ins
+	Admin
+	P0
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	CHECKIN-10
+	GET
+	/admin/check-ins/{id}
+	Admin
+	P0
+	Planned
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	CHECKIN-11
+	POST
+	/admin/checkin-qr-codes
+	Admin
+	P0
+	Planned
+	Quản lý QR check-in của phòng gym.
+	CHECKIN-12
+	GET
+	/admin/checkin-qr-codes
+	Admin
+	P0
+	Planned
+	Quản lý QR check-in của phòng gym.
+	CHECKIN-13
+	PATCH
+	/admin/checkin-qr-codes/{id}/status
+	Admin
+	P0
+	Planned
+	Quản lý QR check-in của phòng gym.
+	CHECKIN-14
+	POST
+	/admin/checkin-qr-codes/{id}/rotate
+	Admin
+	P1
+	Planned
+	Quản lý QR check-in của phòng gym.
+	CHECKIN-15
+	PATCH
+	/admin/check-ins/{id}/void
+	Admin
+	P1
+	Planned
+	Vô hiệu hóa bản ghi check-in sai hoặc không hợp lệ.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+12. Body Metric API
+Mô tả chức năng: Ghi nhận và theo dõi chỉ số cơ thể của hội viên; cung cấp dữ liệu đầu vào cho AI.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	BODY-01
+	POST
+	/body-metrics
+	Member
+	P0
+	Implemented
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	BODY-02
+	GET
+	/body-metrics
+	Member
+	P0
+	Implemented
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	BODY-03
+	GET
+	/body-metrics/{id}
+	Member Owner
+	P0
+	Implemented
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	BODY-04
+	GET
+	/body-metrics/latest
+	Member
+	P0
+	Implemented
+	Lấy bản ghi mới nhất.
+	BODY-05
+	GET
+	/body-metrics/history
+	Member
+	P0
+	Implemented
+	Lấy lịch sử dữ liệu theo thời gian.
+	BODY-06
+	PATCH
+	/body-metrics/{id}
+	Member Owner
+	P0
+	Implemented
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	BODY-07
+	DELETE
+	/body-metrics/{id}
+	Member Owner
+	P1
+	Implemented/Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	BODY-08
+	POST
+	/admin/members/{memberId}/body-metrics
+	Admin/Staff
+	P0
+	Implemented
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	BODY-09
+	GET
+	/admin/members/{memberId}/body-metrics
+	Admin/Staff
+	P0
+	Implemented
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	BODY-10
+	GET
+	/admin/members/{memberId}/body-metrics/latest
+	Admin/Staff
+	P0
+	Implemented
+	Lấy bản ghi mới nhất.
+	Quy tắc và điểm cần kiểm tra
+* Kiểm tra base URL thực tế.
+* Delete phải là soft delete.
+* Chốt quyền Trainer.
+* History sắp xếp theo recordedAt.
+* BMI chỉ tính ở backend.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+13. AI Suggestion API
+Mô tả chức năng: Tạo, lưu, truy xuất và phản hồi gợi ý AI dựa trên hồ sơ, body metric và kho kiến thức Qdrant.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	AI-01
+	POST
+	/ai/suggestions/full-plan
+	Member
+	P0
+	Implemented
+	Tạo gợi ý tổng hợp gồm kế hoạch tập luyện và dinh dưỡng.
+	AI-02
+	GET
+	/ai/suggestions/my
+	Member
+	P0
+	Implemented
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	AI-03
+	GET
+	/ai/suggestions/{id}
+	Member Owner
+	P0
+	Implemented
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	AI-04
+	POST
+	/ai/suggestions/{id}/feedback
+	Member Owner
+	P1
+	Implemented/Need Audit
+	Gửi đánh giá của hội viên cho gợi ý AI.
+	AI-05
+	POST
+	/ai/suggestions/body-analysis
+	Member
+	P1
+	Planned
+	Phân tích chỉ số cơ thể và xu hướng cơ bản.
+	AI-06
+	POST
+	/ai/suggestions/{id}/retry
+	Member
+	P1
+	Planned
+	Thử lại thao tác trước đó.
+	AI-07
+	GET
+	/admin/ai/suggestions
+	Admin
+	P1
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	AI-08
+	GET
+	/admin/ai/suggestions/{id}
+	Admin
+	P1
+	Planned
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	Quy tắc và điểm cần kiểm tra
+* Kiểm tra resolve current member.
+* Giới hạn số lần gọi AI mỗi ngày.
+* Kiểm thử tiếng Việt và tiếng Anh.
+* Kiểm tra Gemini config, Qdrant context, parser và validator.
+* Xác nhận persistence Workout/Nutrition.
+* Theo dõi Error 12003 và suggestion FAILED.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+14. Workout Plan API
+Mô tả chức năng: Quản lý kế hoạch tập luyện, cấu trúc tuần/ngày/bài tập, vòng đời và quyền truy cập.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	WORKOUT-01
+	POST
+	/workout-plans
+	Member
+	P1
+	Planned
+	Tạo bản ghi mới hoặc thực hiện nghiệp vụ tương ứng.
+	WORKOUT-02
+	GET
+	/workout-plans/me
+	Member
+	P0
+	Planned/Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	WORKOUT-03
+	GET
+	/workout-plans/me/active
+	Member
+	P0
+	Planned
+	Lấy bản ghi đang hoạt động.
+	WORKOUT-04
+	GET
+	/workout-plans/{id}
+	Member Owner
+	P0
+	Planned/Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	WORKOUT-05
+	PATCH
+	/workout-plans/{id}
+	Member Owner
+	P1
+	Planned
+	Cập nhật bản ghi theo định danh sau khi kiểm tra quyền và validation.
+	WORKOUT-06
+	PUT
+	/workout-plans/{id}/structure
+	Member Owner
+	P1
+	Planned
+	Cập nhật cấu trúc chi tiết của kế hoạch.
+	WORKOUT-07
+	POST
+	/workout-plans/{id}/activate
+	Member Owner
+	P0
+	Planned
+	Kích hoạt bản ghi hoặc kế hoạch.
+	WORKOUT-08
+	POST
+	/workout-plans/{id}/complete
+	Member Owner
+	P1
+	Planned
+	Đánh dấu hoàn tất quy trình hoặc kế hoạch.
+	WORKOUT-09
+	POST
+	/workout-plans/{id}/archive
+	Member Owner
+	P1
+	Planned
+	Lưu trữ và ngừng sử dụng bản ghi.
+	WORKOUT-10
+	POST
+	/workout-plans/{id}/clone
+	Member Owner
+	P1
+	Planned
+	Sao chép bản ghi thành một bản mới.
+	WORKOUT-11
+	GET
+	/workout-plans/me/today
+	Member
+	P1
+	Planned
+	Lấy dữ liệu của ngày hiện tại.
+	WORKOUT-12
+	POST
+	/trainer/members/{memberId}/workout-plans
+	Trainer
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	WORKOUT-13
+	GET
+	/trainer/members/{memberId}/workout-plans
+	Trainer
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	WORKOUT-14
+	PATCH
+	/trainer/members/{memberId}/workout-plans/{id}
+	Trainer
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	WORKOUT-15
+	GET
+	/admin/workout-plans
+	Admin
+	P1
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+15. Nutrition Plan API
+Mô tả chức năng: Quản lý kế hoạch dinh dưỡng, bữa ăn theo ngày, vòng đời và quyền truy cập.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	NUTRITION-01
+	POST
+	/nutrition-plans
+	Member
+	P1
+	Planned
+	Tạo bản ghi mới hoặc thực hiện nghiệp vụ tương ứng.
+	NUTRITION-02
+	GET
+	/nutrition-plans/me
+	Member
+	P0
+	Planned/Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	NUTRITION-03
+	GET
+	/nutrition-plans/me/active
+	Member
+	P0
+	Planned
+	Lấy bản ghi đang hoạt động.
+	NUTRITION-04
+	GET
+	/nutrition-plans/{id}
+	Member Owner
+	P0
+	Planned/Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	NUTRITION-05
+	PATCH
+	/nutrition-plans/{id}
+	Member Owner
+	P1
+	Planned
+	Cập nhật bản ghi theo định danh sau khi kiểm tra quyền và validation.
+	NUTRITION-06
+	PUT
+	/nutrition-plans/{id}/structure
+	Member Owner
+	P1
+	Planned
+	Cập nhật cấu trúc chi tiết của kế hoạch.
+	NUTRITION-07
+	POST
+	/nutrition-plans/{id}/activate
+	Member Owner
+	P0
+	Planned
+	Kích hoạt bản ghi hoặc kế hoạch.
+	NUTRITION-08
+	POST
+	/nutrition-plans/{id}/complete
+	Member Owner
+	P1
+	Planned
+	Đánh dấu hoàn tất quy trình hoặc kế hoạch.
+	NUTRITION-09
+	POST
+	/nutrition-plans/{id}/archive
+	Member Owner
+	P1
+	Planned
+	Lưu trữ và ngừng sử dụng bản ghi.
+	NUTRITION-10
+	POST
+	/nutrition-plans/{id}/clone
+	Member Owner
+	P1
+	Planned
+	Sao chép bản ghi thành một bản mới.
+	NUTRITION-11
+	GET
+	/nutrition-plans/me/today
+	Member
+	P1
+	Planned
+	Lấy dữ liệu của ngày hiện tại.
+	NUTRITION-12
+	POST
+	/trainer/members/{memberId}/nutrition-plans
+	Trainer
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	NUTRITION-13
+	GET
+	/trainer/members/{memberId}/nutrition-plans
+	Trainer
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	NUTRITION-14
+	PATCH
+	/trainer/members/{memberId}/nutrition-plans/{id}
+	Trainer
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	NUTRITION-15
+	GET
+	/admin/nutrition-plans
+	Admin
+	P1
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+16. Equipment API
+Mô tả chức năng: Quản lý thiết bị, khu vực, trạng thái vận hành, báo hỏng và lịch sử thay đổi.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	EQUIP-01
+	GET
+	/staff/equipment
+	Staff/Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-02
+	GET
+	/staff/equipment/{id}
+	Staff/Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-03
+	POST
+	/staff/equipment/{id}/report-broken
+	Staff/Admin
+	P0
+	Planned/Need Audit
+	Ghi nhận thiết bị bị hỏng và mở yêu cầu bảo trì.
+	EQUIP-04
+	POST
+	/admin/equipment-areas
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-05
+	GET
+	/admin/equipment-areas
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-06
+	PATCH
+	/admin/equipment-areas/{id}
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-07
+	POST
+	/admin/equipment
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-08
+	GET
+	/admin/equipment
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-09
+	GET
+	/admin/equipment/{id}
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-10
+	PATCH
+	/admin/equipment/{id}
+	Admin
+	P0
+	Need Audit
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-11
+	PATCH
+	/admin/equipment/{id}/status
+	Admin
+	P0
+	Planned
+	Cập nhật trạng thái nghiệp vụ.
+	EQUIP-12
+	PATCH
+	/admin/equipment/{id}/area
+	Admin
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	EQUIP-13
+	POST
+	/admin/equipment/{id}/retire
+	Admin
+	P1
+	Planned
+	Ngừng sử dụng thiết bị.
+	EQUIP-14
+	GET
+	/admin/equipment/{id}/history
+	Admin
+	P1
+	Planned
+	Lấy lịch sử dữ liệu theo thời gian.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+17. Maintenance API
+Mô tả chức năng: Quản lý yêu cầu bảo trì thiết bị từ khi tiếp nhận, phân công, bắt đầu đến hoàn tất hoặc hủy.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	MAINT-01
+	GET
+	/staff/maintenance-requests
+	Staff/Admin
+	P0
+	Planned/Need Audit
+	Quản lý danh sách và trạng thái yêu cầu bảo trì.
+	MAINT-02
+	GET
+	/admin/maintenance-requests
+	Admin
+	P0
+	Planned/Need Audit
+	Quản lý danh sách và trạng thái yêu cầu bảo trì.
+	MAINT-03
+	GET
+	/admin/maintenance-requests/{id}
+	Admin
+	P0
+	Planned
+	Quản lý danh sách và trạng thái yêu cầu bảo trì.
+	MAINT-04
+	PATCH
+	/admin/maintenance-requests/{id}/assign
+	Admin
+	P0
+	Planned
+	Quản lý danh sách và trạng thái yêu cầu bảo trì.
+	MAINT-05
+	POST
+	/admin/maintenance-requests/{id}/start
+	Admin
+	P0
+	Planned
+	Quản lý danh sách và trạng thái yêu cầu bảo trì.
+	MAINT-06
+	POST
+	/admin/maintenance-requests/{id}/complete
+	Admin
+	P0
+	Planned
+	Quản lý danh sách và trạng thái yêu cầu bảo trì.
+	MAINT-07
+	POST
+	/admin/maintenance-requests/{id}/cancel
+	Admin
+	P1
+	Planned
+	Quản lý danh sách và trạng thái yêu cầu bảo trì.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+18. Notification API
+Mô tả chức năng: Cung cấp thông báo trong ứng dụng, số lượng chưa đọc và thao tác đọc/lưu trữ.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	NOTI-01
+	GET
+	/notifications
+	Authenticated
+	P1
+	Need Audit
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	NOTI-02
+	GET
+	/notifications/unread-count
+	Authenticated
+	P1
+	Need Audit
+	Lấy số lượng thông báo chưa đọc.
+	NOTI-03
+	GET
+	/notifications/{id}
+	Owner
+	P1
+	Need Audit
+	Lấy chi tiết bản ghi theo định danh và kiểm tra quyền truy cập.
+	NOTI-04
+	PATCH
+	/notifications/{id}/read
+	Owner
+	P1
+	Need Audit
+	Cập nhật bản ghi theo định danh sau khi kiểm tra quyền và validation.
+	NOTI-05
+	PATCH
+	/notifications/read-all
+	Authenticated
+	P1
+	Need Audit
+	Đánh dấu toàn bộ thông báo của người dùng là đã đọc.
+	NOTI-06
+	PATCH
+	/notifications/{id}/archive
+	Owner
+	P1
+	Planned
+	Lưu trữ và ngừng sử dụng bản ghi.
+	NOTI-07
+	GET
+	/admin/notifications
+	Admin
+	P1
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	NOTI-08
+	POST
+	/admin/notifications/send
+	Admin
+	P1
+	Planned
+	Gửi thông báo tới người nhận cụ thể.
+	NOTI-09
+	POST
+	/admin/notifications/broadcast
+	Admin
+	P2
+	Planned
+	Gửi thông báo tới một nhóm người dùng.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+19. Report API
+Mô tả chức năng: Tổng hợp dữ liệu vận hành, doanh thu, hội viên, check-in, AI, kế hoạch và thiết bị cho dashboard quản trị.
+Phạm vi chức năng
+Nhóm API này cung cấp các thao tác đọc/ghi phù hợp với actor được chỉ định. Backend phải kiểm tra authentication, authorization, ownership, validation và trạng thái nghiệp vụ trước khi xử lý.
+Danh sách API
+Mã
+	Method
+	Endpoint
+	Actor
+	Priority
+	Trạng thái
+	Mô tả chức năng
+	REPORT-01
+	GET
+	/admin/reports/dashboard
+	Admin
+	P0
+	Planned
+	Lấy số liệu tổng hợp phục vụ dashboard.
+	REPORT-02
+	GET
+	/admin/reports/revenue/summary
+	Admin
+	P0
+	Planned
+	Lấy tổng quan doanh thu trong khoảng thời gian.
+	REPORT-03
+	GET
+	/admin/reports/revenue/trend
+	Admin
+	P0
+	Planned
+	Lấy xu hướng doanh thu theo thời gian.
+	REPORT-04
+	GET
+	/admin/reports/payments/status
+	Admin
+	P0
+	Planned
+	Cập nhật trạng thái nghiệp vụ.
+	REPORT-05
+	GET
+	/admin/reports/subscriptions/summary
+	Admin
+	P0
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	REPORT-06
+	GET
+	/admin/reports/subscriptions/expiring
+	Admin/Staff
+	P0
+	Planned
+	Lấy danh sách subscription sắp hết hạn.
+	REPORT-07
+	GET
+	/admin/reports/members/summary
+	Admin
+	P0
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	REPORT-08
+	GET
+	/admin/reports/checkins/summary
+	Admin/Staff
+	P0
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	REPORT-09
+	GET
+	/admin/reports/checkins/trend
+	Admin/Staff
+	P0
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	REPORT-10
+	GET
+	/admin/reports/checkins/peak-hours
+	Admin/Staff
+	P1
+	Planned
+	Phân tích khung giờ check-in cao điểm.
+	REPORT-11
+	GET
+	/admin/reports/ai/summary
+	Admin
+	P0
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	REPORT-12
+	GET
+	/admin/reports/plans/summary
+	Admin
+	P1
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	REPORT-13
+	GET
+	/admin/reports/equipment/summary
+	Admin/Staff
+	P0
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	REPORT-14
+	GET
+	/admin/reports/maintenance/summary
+	Admin/Staff
+	P0
+	Planned
+	Lấy danh sách dữ liệu theo quyền truy cập và bộ lọc hỗ trợ.
+	REPORT-15
+	GET
+	/staff/reports/dashboard
+	Staff
+	P1
+	Planned
+	Lấy số liệu tổng hợp phục vụ dashboard.
+	REPORT-16
+	GET
+	/trainer/reports/members
+	Trainer
+	P1
+	Planned
+	Truy xuất dữ liệu thuộc người dùng hiện tại.
+	REPORT-17
+	POST
+	/admin/reports/export
+	Admin
+	P2
+	Planned
+	Xuất báo cáo theo bộ lọc.
+	Quy tắc và điểm cần kiểm tra
+* Đối chiếu method/path với Controller thật.
+* Xác minh request DTO, response DTO và ErrorCode.
+* Kiểm tra role/ownership và dữ liệu biên.
+* Đảm bảo Frontend service và test evidence khớp contract.
+Điều kiện hoàn thành nhóm API
+Các API P0 của module chỉ được xem là hoàn thành khi Backend implemented, Frontend tích hợp nếu có màn hình, QA test cả success/failure, Swagger cập nhật và luồng demo không còn blocker mức High/Critical.
+________________
+
+
+20. API dùng trong Demo chính
+Flow 1 — Authentication
+* POST /auth/login
+* GET /users/me
+* POST /auth/register (tùy chọn)
+* POST /auth/verify-email (tùy chọn)
+Flow 2 — Subscription và Payment
+* GET /gym-packages
+* GET /gym-packages/{packageId}/durations
+* POST /subscriptions
+* POST /payments/vnpay/create
+* GET /payments/vnpay/return
+* GET/POST /payments/vnpay/ipn
+* GET /subscriptions/me/active
+* GET /invoices/by-payment/{paymentId}
+Flow 3 — Check-in
+* POST /check-ins/scan-gym-qr
+* GET /check-ins/me/latest
+* GET /staff/check-ins/member-preview
+* POST /staff/check-ins/member-code
+Flow 4 — Body Metric và AI
+* POST /body-metrics
+* GET /body-metrics/latest
+* GET /body-metrics/history
+* POST /ai/suggestions/full-plan
+* GET /ai/suggestions/{id}
+* GET /workout-plans/{id}
+* POST /workout-plans/{id}/activate
+* GET /nutrition-plans/{id}
+* POST /nutrition-plans/{id}/activate
+Flow 5 — Equipment và Maintenance
+* GET /staff/equipment
+* POST /staff/equipment/{id}/report-broken
+* GET /admin/maintenance-requests
+* POST /admin/maintenance-requests/{id}/start
+* POST /admin/maintenance-requests/{id}/complete
+Flow 6 — Report
+* GET /admin/reports/dashboard
+* GET /admin/reports/revenue/trend
+* GET /admin/reports/checkins/summary
+* GET /admin/reports/ai/summary
+* GET /admin/reports/equipment/summary
+* GET /admin/reports/maintenance/summary
+________________
+
+
+21. API Gap Analysis
+Nhóm
+	Tình trạng
+	Gap chính
+	Priority
+	Auth
+	Khá hoàn chỉnh
+	Test email/status/token
+	P0
+	User
+	Có API chính
+	Profile/change password cần audit
+	P0
+	Member
+	Backend có
+	FE và timeline chưa đủ
+	P0/P1
+	Trainer
+	Chưa rõ
+	Assignment và access
+	P1
+	Package
+	Có
+	FE và test
+	P0
+	Subscription
+	Có cơ bản
+	Renew/Upgrade/Change
+	P0
+	Payment
+	Đang làm
+	Return/IPN/idempotency
+	P0 Critical
+	Invoice
+	Chưa rõ
+	Auto create và detail
+	P0
+	Check-in
+	Chưa hoàn chỉnh
+	QR, duplicate, staff flow
+	P0 Critical
+	Body Metric
+	Gần hoàn chỉnh
+	FE/test
+	P0
+	AI
+	Có cơ bản
+	Qdrant/parser/plan persistence
+	P0 Critical
+	Workout Plan
+	Chưa xác nhận
+	List/detail/activate
+	P0
+	Nutrition Plan
+	Chưa xác nhận
+	List/detail/activate
+	P0
+	Equipment
+	Có cơ bản
+	Maintenance flow
+	P0
+	Notification
+	Chưa rõ
+	Chỉ giữ event cần thiết
+	P1
+	Report
+	Chưa có đủ
+	Dashboard API
+	P0
+	Testing
+	Thiếu
+	Actual Result và evidence
+	P0
+	Nguyên tắc xử lý gap: P0 Critical phải được giải quyết trước khi code freeze; P0 còn lại phải có quyết định rõ ràng (fix, workaround hoặc loại khỏi demo). P1/P2 không được làm chậm luồng P0.
+22. Các API cần audit đầu tiên
+1. Payment Controller
+2. Subscription Controller
+3. Invoice Controller
+4. Check-in Controller
+5. AI Suggestion Controller
+6. Workout Plan Controller
+7. Nutrition Plan Controller
+8. Equipment/Maintenance Controller
+9. Report Controller
+Với mỗi Controller cần ghi: class name, base RequestMapping, method/path, role, request DTO, response DTO, service method, ErrorCode, frontend service và HTTP/Postman test.
+23. Template cập nhật trạng thái API
+Field
+	Giá trị
+	API Code
+	
+
+	Module
+	
+
+	Mô tả chức năng
+	
+
+	Method
+	
+
+	Endpoint tài liệu
+	
+
+	Endpoint Controller thật
+	
+
+	Actor/Role
+	
+
+	Request DTO
+	
+
+	Response DTO
+	
+
+	Service method
+	
+
+	ErrorCode
+	
+
+	Backend
+	
+
+	Frontend
+	
+
+	Test
+	
+
+	Demo
+	
+
+	Gap
+	
+
+	Next Action
+	
+
+	Owner
+	
+
+	Due Date
+	
+
+	Evidence/Link
+	
+
+	24. Definition of Done của một API
+* URL và HTTP method khớp Controller.
+* Mô tả chức năng và contract được chốt.
+* Request validation đúng.
+* Response DTO và HTTP status đúng.
+* Authentication/authorization/ownership đúng.
+* ErrorCode rõ ràng và ổn định.
+* Transaction và idempotency đúng với API ghi dữ liệu.
+* Frontend tích hợp nếu thuộc màn hình.
+* Success case và failure case đã pass.
+* Không còn lỗi High/Critical.
+* Swagger/OpenAPI cập nhật.
+* Có dữ liệu và evidence demo.
+25. Phụ lục: Quy ước Request/Response/Error
+25.1. HTTP status
+200 OK
+	Đọc/cập nhật thành công.
+	201 Created
+	Tạo tài nguyên thành công.
+	204 No Content
+	Xóa hoặc thao tác không cần body.
+	400 Bad Request
+	Request hoặc validation không hợp lệ.
+	401 Unauthorized
+	Thiếu hoặc token không hợp lệ.
+	403 Forbidden
+	Không đủ quyền hoặc ownership.
+	404 Not Found
+	Không tìm thấy tài nguyên.
+	409 Conflict
+	Xung đột trạng thái, dữ liệu trùng hoặc callback đã xử lý.
+	422 Unprocessable Entity
+	Dữ liệu hợp lệ cú pháp nhưng vi phạm business rule.
+	500 Internal Server Error
+	Lỗi hệ thống chưa xử lý.
+	25.2. Pagination và filter
+Các API danh sách nên thống nhất page bắt đầu từ 0 hoặc 1, size có giới hạn, sort theo cú pháp field,direction và filter được mô tả rõ. Mặc định không trả bản ghi soft-deleted.
+25.3. Bảo mật
+* Không ghi access token, refresh token, API key hoặc dữ liệu nhạy cảm vào log.
+* Các API admin/staff/trainer phải kiểm tra role ở SecurityConfig và/hoặc method security.
+* API /me luôn resolve người dùng từ SecurityContext.
+* Callback VNPay kiểm tra signature, amount, transaction reference và idempotency.
+Internal Project Documentation — v2.0

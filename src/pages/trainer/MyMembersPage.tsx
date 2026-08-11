@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Search, Activity, UserCircle2, Salad } from "lucide-react";
+import { Users, Search, Activity, UserCircle2, Salad, Dumbbell } from "lucide-react";
 import { Link } from "react-router-dom";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
@@ -106,8 +106,14 @@ export default function MyMembersPage() {
                     <Activity className="w-4 h-4" />
                     Tiến độ
                   </button>
+                  <Link to={`/trainer/members/${member.id}/workouts`} className="flex-1">
+                    <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-600 hover:text-white transition-colors duration-300" title="Lịch tập">
+                      <Dumbbell className="w-4 h-4" />
+                      Lịch tập
+                    </button>
+                  </Link>
                   <Link to={`/trainer/members/${member.id}/nutrition`} className="flex-1">
-                    <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-orange-500 bg-orange-50 rounded-lg hover:bg-orange-500 hover:text-white transition-colors duration-300">
+                    <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-orange-500 bg-orange-50 rounded-lg hover:bg-orange-500 hover:text-white transition-colors duration-300" title="Dinh dưỡng">
                       <Salad className="w-4 h-4" />
                       Dinh dưỡng
                     </button>

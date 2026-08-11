@@ -233,6 +233,20 @@ const menuItems:
         roles: ["ROLE_ADMIN"],
     },
 
+    {
+        label: "Gói tập (Subs)",
+        path: ROUTES.ADMIN_SUBSCRIPTIONS,
+        icon: CreditCard,
+        roles: ["ROLE_ADMIN", "ROLE_STAFF"],
+    },
+
+    {
+        label: "AI Suggestion",
+        path: ROUTES.ADMIN_AI_SUGGESTIONS,
+        icon: Bot,
+        roles: ["ROLE_ADMIN"],
+    },
+
     // =====================================================
     // STAFF
     // =====================================================

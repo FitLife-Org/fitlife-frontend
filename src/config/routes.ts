@@ -25,14 +25,16 @@ export const ROUTES = {
   ADMIN_MEMBERS: "/admin/members",
   ADMIN_PACKAGES:
       "/admin/packages",
-  ADMIN_PAYMENTS:
-      "/admin/payments",
+  ADMIN_PAYMENTS: "/admin/payments",
+  ADMIN_SUBSCRIPTIONS: "/admin/subscriptions",
   ADMIN_EQUIPMENT:
       "/admin/equipment",
   ADMIN_TRAINERS:
       "/admin/trainers",
   ADMIN_REPORTS:
       "/admin/reports",
+  ADMIN_AI_SUGGESTIONS:
+      "/admin/ai-suggestions",
 
   ADMIN_INVOICES:
       "/admin/invoices",
@@ -88,8 +90,7 @@ export const ROUTES = {
   MEMBER_NUTRITION_TODAY:
       "/member/nutrition/today",
 
-  MEMBER_BOOKING:
-      "/member/booking",
+
   MEMBER_SCHEDULE:
       "/member/schedule",
 

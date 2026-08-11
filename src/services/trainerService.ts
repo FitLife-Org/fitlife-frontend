@@ -37,9 +37,24 @@ export const trainerService = {
     return response.data.data;
   },
 
-  async assignTrainerToMember(trainerId: number | string, memberId: number | string): Promise<unknown> {
-    const response = await apiClient.post<ApiResponse<unknown>>(`/admin/trainers/${trainerId}/members`, { memberId });
+  // Trainer Assignments (Admin)
+  async getTrainerAssignments(params?: Record<string, unknown>): Promise<unknown[]> {
+    const response = await apiClient.get<ApiResponse<unknown[]>>("/admin/trainer-assignments", { params });
     return response.data.data;
+  },
+
+  async assignTrainerToMember(data: { trainerId: number | string; memberId: number | string }): Promise<unknown> {
+    const response = await apiClient.post<ApiResponse<unknown>>("/admin/trainer-assignments", data);
+    return response.data.data;
+  },
+
+  async updateTrainerAssignment(id: number | string, data: Record<string, unknown>): Promise<unknown> {
+    const response = await apiClient.patch<ApiResponse<unknown>>(`/admin/trainer-assignments/${id}`, data);
+    return response.data.data;
+  },
+
+  async deleteTrainerAssignment(id: number | string): Promise<void> {
+    await apiClient.delete<ApiResponse<void>>(`/admin/trainer-assignments/${id}`);
   },
 
   async getMe(): Promise<Trainer> {

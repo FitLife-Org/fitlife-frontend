@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import { trainerService } from "./trainerService";
 
 import type { SpringPage, ApiResponse } from "../types/common.type";
 import type {
@@ -153,10 +154,12 @@ export const nutritionService = {
     ): Promise<SpringPage<NutritionPlan>> {
         validatePositiveId(memberId, "Member ID");
 
+        const trainer = await trainerService.getMe();
         const response = await apiClient.get<
             ApiResponse<SpringPage<NutritionPlan>>
-        >(`${TRAINER_BASE_URL}/${memberId}/nutrition-plans`, {
+        >(`/trainer/nutrition-plans/members/${memberId}`, {
             params: {
+                trainerId: trainer.id,
                 page,
                 size,
                 sort: "createdAt,desc",
@@ -176,9 +179,15 @@ export const nutritionService = {
     ): Promise<NutritionPlan> {
         validatePositiveId(memberId, "Member ID");
 
+        const trainer = await trainerService.getMe();
         const response = await apiClient.post<ApiResponse<NutritionPlan>>(
-            `${TRAINER_BASE_URL}/${memberId}/nutrition-plans`,
+            `/trainer/nutrition-plans/members/${memberId}`,
             request,
+            {
+                params: {
+                    trainerId: trainer.id
+                }
+            }
         );
 
         return normalizePlan(response.data.data);
@@ -192,9 +201,15 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
         validatePositiveId(memberId, "Member ID");
 
-        const response = await apiClient.patch<ApiResponse<NutritionPlan>>(
-            `${TRAINER_BASE_URL}/${memberId}/nutrition-plans/${planId}`,
+        const trainer = await trainerService.getMe();
+        const response = await apiClient.put<ApiResponse<NutritionPlan>>(
+            `/trainer/nutrition-plans/${planId}/members/${memberId}`,
             request,
+            {
+                params: {
+                    trainerId: trainer.id
+                }
+            }
         );
 
         return normalizePlan(response.data.data);

@@ -43,7 +43,7 @@ export const paymentService = {
           paymentUrl: string;
           amount: number;
         }>
-    >("/payments/vnpay/create", data);
+    >("/payments/vnpay/create-url", data);
 
     return response.data.data;
   },
@@ -52,7 +52,7 @@ export const paymentService = {
     try {
       const response = await apiClient.get<
           ApiResponse<PageResponse<PaymentResult> | PaymentResult[]>
-      >("/payments/me");
+      >("/payments/my");
 
       return extractPageContent<PaymentResult>(response.data.data);
 

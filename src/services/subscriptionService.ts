@@ -94,5 +94,16 @@ export const subscriptionService = {
   async cancelSubscriptionAdmin(id: number): Promise<Subscription> {
     const response = await apiClient.patch<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/cancel`);
     return response.data.data;
+  },
+
+  async createSubscriptionForMemberByStaff(
+      memberId: number,
+      data: CreateSubscriptionRequest
+  ): Promise<Subscription> {
+      const response = await apiClient.post<ApiResponse<Subscription>>(
+          `/staff/members/${memberId}/subscriptions`,
+          data
+      );
+      return response.data.data;
   }
 };
