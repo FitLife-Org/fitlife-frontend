@@ -32,6 +32,20 @@ export function useMySubscription() {
     return days > 0 ? days : 0;
   };
 
+    const handleRenew = async (id: number) => {
+    try {
+      setLoading(true);
+      const newSub = await subscriptionService.renewSubscription(id);
+      await fetchSubscriptions();
+      return newSub;
+    } catch (error) {
+      console.error("Failed to renew subscription:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const activeSubscription = subscriptions.find((s) => s.status === "ACTIVE");
 
   return {
@@ -39,5 +53,6 @@ export function useMySubscription() {
     loading,
     activeSubscription,
     calculateDaysLeft,
+    handleRenew,
   };
 }

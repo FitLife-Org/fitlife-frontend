@@ -28,6 +28,7 @@ export default function GuestFooter() {
           </div>
 
           <div>
+
             <h4 className="font-bold text-slate-900 mb-4">Sản phẩm</h4>
             <ul className="space-y-3 text-sm text-slate-600">
               <li><a href="#features" className="hover:text-fit-primary transition-colors">Tính năng</a></li>

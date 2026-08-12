@@ -1,43 +1,71 @@
 export type WorkoutPlanStatus = "ACTIVE" | "COMPLETED" | "DRAFT" | "CANCELLED";
 
-export interface Exercise {
-  id: string;
-  name: string;
-  targetMuscle: string;
-  sets: number;
-  reps: number;
-  restSeconds: number;
-  notes?: string;
+export interface WorkoutExercise {
+  id?: number;
+  exerciseName: string;
+  targetMuscle?: string;
+  equipmentId?: number;
+  sets?: number;
+  reps?: string;
+  weightKg?: number;
+  durationMinutes?: number;
+  distanceKm?: number;
+  restSeconds?: number;
+  tempo?: string;
+  rpe?: number;
+  instruction?: string;
+  note?: string;
   videoUrl?: string;
+  sortOrder?: number;
+  isOptional?: boolean;
 }
 
-export interface WorkoutSession {
-  id: string;
-  name: string;
-  dayOfWeek: number;
-  isCompleted: boolean;
-  exercises: Exercise[];
+export interface WorkoutPlanDay {
+  id?: number;
+  weekNo?: number;
+  dayNo?: number;
+  dayOfWeek?: string;
+  name?: string;
+  focusArea?: string;
+  estimatedMinutes?: number;
+  note?: string;
+  sortOrder?: number;
+  isRestDay?: boolean;
+  exercises: WorkoutExercise[];
 }
 
 export interface WorkoutPlan {
-  id: string;
-  memberId: string;
-  memberName: string;
-  trainerId: string;
-  trainerName: string;
+  id: number;
+  memberId: number;
+  memberName?: string;
+  trainerId?: number;
+  trainerName?: string;
+  
   name: string;
-  goal: string;
-  startDate: string;
-  endDate: string;
+  goal?: string;
+  experienceLevel?: string;
+  durationWeeks?: number;
+  workoutDaysPerWeek?: number;
+  workoutDurationMinutes?: number;
+  description?: string;
+  note?: string;
+  
+  startDate?: string;
+  endDate?: string;
   status: WorkoutPlanStatus;
-  sessions: WorkoutSession[];
+  
+  days: WorkoutPlanDay[];
 }
 
-export interface CreateWorkoutPlanRequest {
-  memberId: string;
+export interface WorkoutPlanCreateRequest {
+  memberId: number;
   name: string;
-  goal: string;
-  startDate: string;
-  endDate: string;
-  sessions: Omit<WorkoutSession, "id" | "isCompleted">[];
+  goal?: string;
+  experienceLevel?: string;
+  durationWeeks?: number;
+  workoutDaysPerWeek?: number;
+  workoutDurationMinutes?: number;
+  description?: string;
+  note?: string;
+  days: WorkoutPlanDay[];
 }

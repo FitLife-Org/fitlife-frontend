@@ -326,4 +326,91 @@ export const aiService = {
             "Không thể gửi đánh giá AI.",
         );
     },
+
+    async retryAiSuggestion(
+        suggestionId: number,
+    ): Promise<AiSuggestionResponse> {
+        validateSuggestionId(
+            suggestionId,
+        );
+
+        const response =
+            await apiClient.post<
+                ApiResponse<AiSuggestionResponse>
+            >(
+                `${AI_BASE_URL}/${suggestionId}/retry`,
+                undefined,
+                {
+                    timeout:
+                    AI_GENERATE_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
+            response.data,
+            "Không thể thử lại gợi ý AI.",
+        );
+    },
+
+    async getAdminAiSuggestions(
+        page = 0,
+        size = 10,
+    ): Promise<
+        PageResponse<AiSuggestionResponse>
+    > {
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    PageResponse<AiSuggestionResponse>
+                >
+            >(
+                `/admin/ai/suggestions`,
+                {
+                    params: {
+                        page,
+                        size,
+                    },
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
+            response.data,
+            "Không thể tải danh sách gợi ý AI (Admin).",
+        );
+    },
+
+    async getAdminAiSuggestionDetail(
+        suggestionId: number,
+    ): Promise<AiSuggestionDetailResponse> {
+        validateSuggestionId(
+            suggestionId,
+        );
+
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    AiSuggestionDetailResponse
+                >
+            >(
+                `/admin/ai/suggestions/${suggestionId}`,
+                {
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        const detail =
+            requireApiData(
+                response.data,
+                "Không thể tải chi tiết kế hoạch AI (Admin).",
+            );
+
+        return {
+            ...detail,
+            items:
+                detail.items ?? [],
+        };
+    },
 };

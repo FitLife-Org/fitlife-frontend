@@ -61,6 +61,10 @@ import UserManagementPage from "../pages/admin/UserManagementPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
+
+import AdminSubscriptionPage from "../pages/admin/subscription/AdminSubscriptionPage";
+import AdminAiSuggestionPage from "../pages/admin/ai/AdminAiSuggestionPage";
+import StaffCheckinPage from "../pages/admin/checkin/StaffCheckinPage";
 import ReportPage from "../pages/admin/ReportPage";
 
 import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
@@ -85,6 +89,7 @@ import MaintenanceSchedulesPage from "../pages/admin/equipment/MaintenanceSchedu
 import MemberHomePage from "../pages/member/MemberHomePage";
 import MemberProfilePage from "../pages/member/MemberProfilePage";
 import BodyMetricPage from "../pages/member/BodyMetricPage";
+import MemberQRPage from "../pages/member/MemberQRPage";
 
 import PackageListPage from "../pages/member/PackageListPage";
 import MySubscriptionPage from "../pages/member/MySubscriptionPage";
@@ -96,8 +101,7 @@ import PaymentResultPage from "../pages/member/PaymentResultPage";
 import MemberInvoiceListPage from "../pages/member/MemberInvoiceListPage";
 import MemberInvoiceDetailPage from "../pages/member/MemberInvoiceDetailPage";
 
-import CheckinHistoryPage from "../pages/member/CheckinHistoryPage";
-import BookingPage from "../pages/member/BookingPage";
+    import CheckinHistoryPage from "../pages/member/CheckinHistoryPage";
 
 import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
 import WorkoutPlanDetailPage from "../pages/member/WorkoutPlanDetailPage";
@@ -124,6 +128,8 @@ import MyMembersPage from "../pages/trainer/MyMembersPage";
 import WorkoutTrackingPage from "../pages/trainer/WorkoutTrackingPage";
 import TrainerNutritionPage from "../pages/trainer/TrainerNutritionPage";
 import TrainerNutritionFormPage from "../pages/trainer/TrainerNutritionFormPage";
+import TrainerWorkoutPage from "../pages/trainer/TrainerWorkoutPage";
+import TrainerWorkoutFormPage from "../pages/trainer/TrainerWorkoutFormPage";
 
 // =====================================================
 // ROUTE LAYOUT
@@ -241,6 +247,15 @@ export default function AppRouter() {
                         />
 
                         <Route
+                            path={ROUTES.MEMBER_QR}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MemberQRPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
                             path={ROUTES.MEMBER_PROFILE}
                             element={
                                 <RoleGuard roles={["ROLE_MEMBER"]}>
@@ -334,14 +349,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        <Route
-                            path={ROUTES.MEMBER_BOOKING}
-                            element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
-                                    <BookingPage />
-                                </RoleGuard>
-                            }
-                        />
+
 
                         {/* Member Workout */}
 
@@ -443,6 +451,24 @@ export default function AppRouter() {
                             }
                         />
 
+                        <Route
+                            path={ROUTES.ADMIN_AI_SUGGESTIONS}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <AdminAiSuggestionPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.ADMIN_CHECKIN}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <StaffCheckinPage />
+                                </RoleGuard>
+                            }
+                        />
+
                         {/* Admin Invoice */}
 
                         <Route
@@ -469,6 +495,35 @@ export default function AppRouter() {
                                     ]}
                                 >
                                     <AdminInvoiceDetailPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path="/admin/payments"
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <PaymentManagementPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Admin Subscriptions */}
+                        <Route
+                            path="/admin/subscriptions"
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <AdminSubscriptionPage />
                                 </RoleGuard>
                             }
                         />
@@ -691,6 +746,50 @@ export default function AppRouter() {
                                     ]}
                                 >
                                     <WorkoutTrackingPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Trainer Workout */}
+
+                        <Route
+                            path="/trainer/members/:memberId/workouts"
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <TrainerWorkoutPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path="/trainer/members/:memberId/workouts/create"
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <TrainerWorkoutFormPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path="/trainer/members/:memberId/workouts/:planId/edit"
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <TrainerWorkoutFormPage />
                                 </RoleGuard>
                             }
                         />

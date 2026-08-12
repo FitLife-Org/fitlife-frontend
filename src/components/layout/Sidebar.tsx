@@ -13,6 +13,7 @@ import {
     History,
     Home,
     Package,
+    CreditCard,
     QrCode,
     Receipt,
     Settings,
@@ -21,6 +22,7 @@ import {
     Users,
     Utensils,
     WalletCards,
+    ScanLine,
     type LucideIcon,
 } from "lucide-react";
 
@@ -74,6 +76,13 @@ const menuItems:
         label: "Dashboard",
         path: ROUTES.MEMBER_HOME,
         icon: Home,
+        roles: ["ROLE_MEMBER"],
+    },
+
+    {
+        label: "Mã QR của tôi",
+        path: ROUTES.MEMBER_QR,
+        icon: ScanLine,
         roles: ["ROLE_MEMBER"],
     },
 
@@ -199,11 +208,20 @@ const menuItems:
 
     {
         label: "Trang thiết bị",
-        path: ROUTES.ADMIN_EQUIPMENT,
         icon: Dumbbell,
         roles: [
             "ROLE_ADMIN",
             "ROLE_STAFF",
+        ],
+        children: [
+            {
+                label: "Danh sách",
+                path: ROUTES.ADMIN_EQUIPMENT,
+            },
+            {
+                label: "Lịch bảo trì",
+                path: `${ROUTES.ADMIN_EQUIPMENT}/maintenance-schedules`,
+            },
         ],
     },
 
@@ -233,9 +251,30 @@ const menuItems:
         roles: ["ROLE_ADMIN"],
     },
 
+    {
+        label: "Gói tập (Subs)",
+        path: ROUTES.ADMIN_SUBSCRIPTIONS,
+        icon: CreditCard,
+        roles: ["ROLE_ADMIN", "ROLE_STAFF"],
+    },
+
+    {
+        label: "AI Suggestion",
+        path: ROUTES.ADMIN_AI_SUGGESTIONS,
+        icon: Bot,
+        roles: ["ROLE_ADMIN"],
+    },
+
     // =====================================================
     // STAFF
     // =====================================================
+
+    {
+        label: "Quét mã Check-in",
+        path: ROUTES.ADMIN_CHECKIN,
+        icon: ScanLine,
+        roles: ["ROLE_ADMIN", "ROLE_STAFF"],
+    },
 
     {
         label: "Điểm danh quầy",

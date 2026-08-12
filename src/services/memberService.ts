@@ -71,6 +71,10 @@ function mapMember(
 }
 
 export const memberService = {
+    async getMyQr(): Promise<{ memberCode: string; qrData: string }> {
+        const response = await apiClient.get<ApiResponse<{ memberCode: string; qrData: string }>>("/members/me/qr");
+        return requireData(response.data, "Không nh?n ðý?c m? QR.");
+    },
     async getMyProfile():
         Promise<MemberProfile> {
         const response =
