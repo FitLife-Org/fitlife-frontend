@@ -61,9 +61,11 @@ import UserManagementPage from "../pages/admin/UserManagementPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
-import AdminInvoicePage from "../pages/admin/invoice/AdminInvoicePage";
+
 import AdminSubscriptionPage from "../pages/admin/subscription/AdminSubscriptionPage";
 import AdminAiSuggestionPage from "../pages/admin/ai/AdminAiSuggestionPage";
+import StaffCheckinPage from "../pages/admin/checkin/StaffCheckinPage";
+import ReportPage from "../pages/admin/ReportPage";
 
 import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
 import AdminInvoiceDetailPage from "../pages/admin/AdminInvoiceDetailPage";
@@ -87,6 +89,7 @@ import MaintenanceSchedulesPage from "../pages/admin/equipment/MaintenanceSchedu
 import MemberHomePage from "../pages/member/MemberHomePage";
 import MemberProfilePage from "../pages/member/MemberProfilePage";
 import BodyMetricPage from "../pages/member/BodyMetricPage";
+import MemberQRPage from "../pages/member/MemberQRPage";
 
 import PackageListPage from "../pages/member/PackageListPage";
 import MySubscriptionPage from "../pages/member/MySubscriptionPage";
@@ -239,6 +242,15 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_MEMBER"]}>
                                     <MemberHomePage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_QR}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MemberQRPage />
                                 </RoleGuard>
                             }
                         />
@@ -448,6 +460,15 @@ export default function AppRouter() {
                             }
                         />
 
+                        <Route
+                            path={ROUTES.ADMIN_CHECKIN}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                    <StaffCheckinPage />
+                                </RoleGuard>
+                            }
+                        />
+
                         {/* Admin Invoice */}
 
                         <Route
@@ -477,7 +498,7 @@ export default function AppRouter() {
                                         "ROLE_STAFF",
                                     ]}
                                 >
-                                    <AdminInvoicePage />
+                                    <PaymentManagementPage />
                                 </RoleGuard>
                             }
                         />

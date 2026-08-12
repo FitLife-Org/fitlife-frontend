@@ -11,6 +11,8 @@ import Loading from "../../components/common/Loading";
 import { useUserManagement } from "../../hooks/useUserManagement";
 import type { MemberProfile } from "../../types/member.type";
 import type { Status } from "../../types/common.type";
+import { useMemberTimeline } from "../../hooks/useMemberTimeline";
+import MemberTimeline from "../../components/member/MemberTimeline";
 
 export default function UserManagementPage() {
   const {
@@ -40,6 +42,18 @@ export default function UserManagementPage() {
     handleFormSubmit,
     handleToggleStatus,
   } = useUserManagement();
+
+  const {
+    items: timelineItems,
+    loading: timelineLoading,
+    loadingMore: timelineLoadingMore,
+    error: timelineError,
+    hasMore: timelineHasMore,
+    loadMore: loadMoreTimeline
+  } = useMemberTimeline({
+    memberId: selectedMember?.id,
+    adminMode: true
+  });
 
   const renderStatusBadge = (status: MemberProfile["status"]) => {
     switch (status) {
@@ -527,6 +541,16 @@ export default function UserManagementPage() {
               >
                 Lịch sử Check-in
               </button>
+              <button 
+                onClick={() => setDetailTab("timeline")}
+                className={`flex-1 py-2 text-center text-sm font-semibold border-b-2 transition-all ${
+                  detailTab === "timeline" 
+                    ? "border-fit-primary text-fit-primary" 
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Dòng thời gian
+              </button>
             </div>
 
             {detailLoading ? (
@@ -657,6 +681,21 @@ export default function UserManagementPage() {
                         </table>
                       </div>
                     )}
+                  </div>
+                )}
+                
+                {/* TAB 4: Timeline */}
+                {detailTab === "timeline" && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 pl-1">Dòng thời gian hoạt động</h4>
+                    <MemberTimeline 
+                        items={timelineItems}
+                        loading={timelineLoading}
+                        loadingMore={timelineLoadingMore}
+                        error={timelineError}
+                        hasMore={timelineHasMore}
+                        onLoadMore={() => void loadMoreTimeline()}
+                    />
                   </div>
                 )}
               </div>

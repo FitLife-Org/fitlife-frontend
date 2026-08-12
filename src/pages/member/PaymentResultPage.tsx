@@ -11,24 +11,29 @@ export default function PaymentResultPage() {
     const paymentId = searchParams.get("paymentId");
 
     const success = status === "SUCCESS";
+    const isCancelled = status === "FAILED" && code === "24";
 
     return (
         <div className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center">
             <Card className="w-full p-8 text-center">
                 {success ? (
                     <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
+                ) : isCancelled ? (
+                    <XCircle className="mx-auto h-16 w-16 text-amber-500" />
                 ) : (
                     <XCircle className="mx-auto h-16 w-16 text-red-500" />
                 )}
 
                 <h1 className="mt-6 text-2xl font-black text-slate-900">
-                    {success ? "Thanh toán thành công" : "Thanh toán thất bại"}
+                    {success ? "Thanh toán thành công" : isCancelled ? "Đã hủy thanh toán" : "Thanh toán thất bại"}
                 </h1>
 
                 <p className="mt-3 text-sm text-slate-500">
                     {success
-                        ? "Gói tập của bạn đã được kích hoạt."
-                        : `Giao dịch không thành công. Mã lỗi: ${code || "-"}`}
+                        ? "Giao dịch của bạn đã được ghi nhận. Hóa đơn sẽ được sinh tự động."
+                        : isCancelled 
+                            ? "Bạn đã hủy giao dịch thanh toán."
+                            : `Giao dịch không thành công. Mã lỗi: ${code || "-"}`}
                 </p>
 
                 {paymentId && (

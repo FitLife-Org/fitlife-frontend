@@ -33,7 +33,8 @@ const PAGE_SIZE = 20;
 type MemberDetailTab =
     | "profile"
     | "subscription"
-    | "checkin";
+    | "checkin"
+    | "timeline";
 
 type MemberFormValues =
     Partial<MemberProfile> & {

@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+﻿import apiClient from "./apiClient";
 import type { ApiResponse, PageResponse } from "../types/common.type";
 import type {
     Subscription,
@@ -17,6 +17,15 @@ const extractPageContent = <T>(data: PageResponse<T> | T[]): T[] => {
 };
 
 export const subscriptionService = {
+    async renewSubscription(id: number): Promise<Subscription> {
+        const response = await apiClient.post<ApiResponse<Subscription>>(`/subscriptions/${id}/renew`);
+        return response.data.data;
+    },
+
+    async upgradeSubscription(id: number, newPackageDurationId: number): Promise<Subscription> {
+        const response = await apiClient.post<ApiResponse<Subscription>>(`/subscriptions/${id}/upgrade`, { newPackageDurationId });
+        return response.data.data;
+    },
     async previewPrice(
         data: PreviewPriceRequest
     ): Promise<PreviewPriceResponse> {
@@ -107,3 +116,5 @@ export const subscriptionService = {
       return response.data.data;
   }
 };
+
+
