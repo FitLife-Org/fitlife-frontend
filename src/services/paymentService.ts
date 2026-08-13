@@ -106,12 +106,5 @@ export const paymentService = {
     return response.data.data;
   },
 
-  async cancelPayment(id: number, reason: string): Promise<PaymentResult> {
-    const response = await apiClient.patch<ApiResponse<PaymentResult>>(
-        `/admin/payments/${id}/cancel`,
-        { reason }
-    );
-
-    return response.data.data;
-  },
+  
 };

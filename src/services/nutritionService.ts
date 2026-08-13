@@ -146,12 +146,10 @@ export const nutritionService = {
     ): Promise<SpringPage<NutritionPlan>> {
         validatePositiveId(memberId, "Member ID");
 
-        const trainer = await trainerService.getMe();
         const response = await apiClient.get<
             ApiResponse<SpringPage<NutritionPlan>>
         >(`/trainer/members/${memberId}/nutrition-plans`, {
             params: {
-                trainerId: trainer.id,
                 page,
                 size,
                 sort: "createdAt,desc",
@@ -171,15 +169,9 @@ export const nutritionService = {
     ): Promise<NutritionPlan> {
         validatePositiveId(memberId, "Member ID");
 
-        const trainer = await trainerService.getMe();
         const response = await apiClient.post<ApiResponse<NutritionPlan>>(
             `/trainer/members/${memberId}/nutrition-plans`,
-            request,
-            {
-                params: {
-                    trainerId: trainer.id
-                }
-            }
+            request
         );
 
         return normalizePlan(response.data.data);
@@ -193,15 +185,9 @@ export const nutritionService = {
         validatePositiveId(planId, "Nutrition Plan ID");
         validatePositiveId(memberId, "Member ID");
 
-        const trainer = await trainerService.getMe();
         const response = await apiClient.patch<ApiResponse<NutritionPlan>>(
             `/trainer/members/${memberId}/nutrition-plans/${planId}`,
-            request,
-            {
-                params: {
-                    trainerId: trainer.id
-                }
-            }
+            request
         );
 
         return normalizePlan(response.data.data);

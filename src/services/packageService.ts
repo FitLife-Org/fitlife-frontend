@@ -72,7 +72,7 @@ export const packageService = {
   },
 
   async getPackageDurations(): Promise<PackageDuration[]> {
-    const response = await apiClient.get<ApiResponse<PackageDuration[] | { content?: PackageDuration[]; data?: PackageDuration[] }>>("/package-durations");
+    const response = await apiClient.get<ApiResponse<PackageDuration[] | { content?: PackageDuration[]; data?: PackageDuration[] }>>("/package-durations/active");
     const responseData = response.data.data;
     if (responseData && typeof responseData === 'object' && 'content' in responseData && Array.isArray((responseData as { content: PackageDuration[] }).content)) {
       return (responseData as { content: PackageDuration[] }).content;
@@ -100,7 +100,7 @@ export const packageService = {
   },
 
   async getAdminPackageDurationById(id: number): Promise<PackageDuration> {
-    const response = await apiClient.get<ApiResponse<PackageDuration>>(`/package-durations/${id}`);
+    const response = await apiClient.get<ApiResponse<PackageDuration>>(`/admin/package-durations/${id}`);
     if (response.data.data) {
       return response.data.data as PackageDuration;
     }

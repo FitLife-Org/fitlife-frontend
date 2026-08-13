@@ -57,15 +57,9 @@ export const trainerService = {
     await apiClient.delete<ApiResponse<void>>(`/admin/trainer-assignments/${id}`);
   },
 
-  async getMe(): Promise<Trainer> {
-    const response = await apiClient.get<ApiResponse<Trainer>>("/trainers/me");
-    return response.data.data;
-  },
+  
 
-  async updateMe(data: Partial<Trainer> | Record<string, unknown>): Promise<Trainer> {
-    const response = await apiClient.put<ApiResponse<Trainer>>("/trainers/me", data);
-    return response.data.data;
-  },
+  
 
   async getMyMembers(): Promise<TrainerMember[]> {
     const response = await apiClient.get<ApiResponse<TrainerMember[]>>("/trainer/members");
