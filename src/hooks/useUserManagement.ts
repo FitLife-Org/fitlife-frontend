@@ -502,9 +502,9 @@ export function useUserManagement() {
         try {
             const updatedMember =
                 await memberService
-                    .updateMemberStatus(
+                    .updateMember(
                         member.id,
-                        newStatus,
+                        { status: newStatus },
                     );
 
             setMembers((previous) =>

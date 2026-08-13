@@ -178,14 +178,6 @@ export const EquipmentService = {
     );
   },
 
-  async delete(
-      id: number | string,
-  ): Promise<void> {
-    await apiClient.post<
-        ApiResponse<void>
-    >(`${ADMIN_API_BASE}/${id}/retire`);
-  },
-
   async createMaintenance(
       id: number | string,
       data: CreateMaintenanceRequest,

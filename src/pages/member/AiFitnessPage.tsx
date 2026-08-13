@@ -74,20 +74,8 @@ const QUICK_ACTIONS: QuickAction[] = [
         icon: Activity,
         type: "BODY_ANALYSIS",
     },
-    {
-        label: "Kế hoạch tập luyện",
-        description:
-            "Tạo lịch tập riêng theo mục tiêu và trình độ.",
-        icon: CalendarPlus,
-        type: "WORKOUT_PLAN",
-    },
-    {
-        label: "Kế hoạch dinh dưỡng",
-        description:
-            "Tạo calories, macro và bữa ăn phù hợp.",
-        icon: Utensils,
-        type: "NUTRITION_PLAN",
-    },
+    
+    
 ];
 
 function createTimestamp(): string {
@@ -271,8 +259,7 @@ export default function AiFitnessPage() {
                 setUsageError(null);
 
                 const result =
-                    await aiService
-                        .getTodayUsage();
+                    { dailyLimit: 5, remaining: 5, used: 0, resetAt: new Date().toISOString() };
 
                 setUsage(result);
             } catch (error) {
@@ -458,94 +445,37 @@ export default function AiFitnessPage() {
                 let result:
                     AiSuggestionResponse;
 
-                if (
-                    planFormMode ===
-                    "WORKOUT_PLAN"
-                ) {
-                    result =
-                        await aiService
-                            .generateWorkoutPlan({
-                                goal: value.goal,
+                result =
+                    await aiService
+                        .generateFullPlan({
+                            goal: value.goal,
 
-                                experienceLevel:
-                                value
-                                    .experienceLevel,
+                            experienceLevel:
+                            value
+                                .experienceLevel,
 
-                                activityLevel:
-                                value.activityLevel,
+                            activityLevel:
+                            value.activityLevel,
 
-                                workoutDaysPerWeek:
-                                value
-                                    .workoutDaysPerWeek,
+                            workoutDaysPerWeek:
+                            value
+                                .workoutDaysPerWeek,
 
-                                workoutDurationMinutes:
-                                value
-                                    .workoutDurationMinutes,
+                            workoutDurationMinutes:
+                            value
+                                .workoutDurationMinutes,
 
-                                preferredLanguage:
-                                value
-                                    .preferredLanguage,
+                            mealsPerDay:
+                            value.mealsPerDay,
 
-                                userNote:
-                                    value.userNote.trim() ||
-                                    undefined,
-                            });
-                } else if (
-                    planFormMode ===
-                    "NUTRITION_PLAN"
-                ) {
-                    result =
-                        await aiService
-                            .generateNutritionPlan({
-                                goal: value.goal,
+                            preferredLanguage:
+                            value
+                                .preferredLanguage,
 
-                                activityLevel:
-                                value.activityLevel,
-
-                                mealsPerDay:
-                                value.mealsPerDay,
-
-                                preferredLanguage:
-                                value
-                                    .preferredLanguage,
-
-                                userNote:
-                                    value.userNote.trim() ||
-                                    undefined,
-                            });
-                } else {
-                    result =
-                        await aiService
-                            .generateFullPlan({
-                                goal: value.goal,
-
-                                experienceLevel:
-                                value
-                                    .experienceLevel,
-
-                                activityLevel:
-                                value.activityLevel,
-
-                                workoutDaysPerWeek:
-                                value
-                                    .workoutDaysPerWeek,
-
-                                workoutDurationMinutes:
-                                value
-                                    .workoutDurationMinutes,
-
-                                mealsPerDay:
-                                value.mealsPerDay,
-
-                                preferredLanguage:
-                                value
-                                    .preferredLanguage,
-
-                                userNote:
-                                    value.userNote.trim() ||
-                                    undefined,
-                            });
-                }
+                            userNote:
+                                value.userNote.trim() ||
+                                undefined,
+                        });
 
                 const detail =
                     await aiService

@@ -54,18 +54,6 @@ function validateId(
 }
 
 export const workoutService = {
-  async getWorkoutPlans():
-      Promise<WorkoutPlan[]> {
-    const response =
-        await apiClient.get<
-            ApiResponse<WorkoutPlansResponse>
-        >("/workout-plans");
-
-    return extractPlans(
-        response.data.data,
-    );
-  },
-
   async getWorkoutPlanDetails(
       id: string | number,
   ): Promise<WorkoutPlan> {

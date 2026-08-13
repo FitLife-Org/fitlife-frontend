@@ -40,18 +40,11 @@ export function useCheckinHistory() {
   const handleScanSuccess = async (decodedText: string) => {
     setShowScanner(false);
     try {
-      const isInside = currentStatus && currentStatus.isInside;
-
       let record;
       let actionName = "";
 
-      if (isInside) {
-        record = await memberCheckinService.selfCheckout({ qrToken: decodedText });
-        actionName = "Check-out";
-      } else {
-        record = await memberCheckinService.selfCheckin({ qrToken: decodedText });
-        actionName = "Check-in";
-      }
+      record = await memberCheckinService.selfCheckin({ qrToken: decodedText });
+      actionName = "Check-in";
 
       toast.success(`${actionName} thành công lúc ${new Date(record.checkInTime).toLocaleTimeString('vi-VN')}`);
       await fetchHistory();

@@ -68,14 +68,6 @@ export const nutritionService = {
         return normalizePlan(response.data.data);
     },
 
-    async getTodayPlan(): Promise<NutritionPlan> {
-        const response = await apiClient.get<ApiResponse<NutritionPlan>>(
-            `${BASE_URL}/me/today`,
-        );
-
-        return normalizePlan(response.data.data);
-    },
-
     async createPlan(
         request: NutritionPlanRequest,
     ): Promise<NutritionPlan> {
@@ -93,7 +85,7 @@ export const nutritionService = {
     ): Promise<NutritionPlan> {
         validatePositiveId(planId, "Nutrition Plan ID");
 
-        const response = await apiClient.put<ApiResponse<NutritionPlan>>(
+        const response = await apiClient.patch<ApiResponse<NutritionPlan>>(
             `${BASE_URL}/${planId}`,
             request,
         );
@@ -157,7 +149,7 @@ export const nutritionService = {
         const trainer = await trainerService.getMe();
         const response = await apiClient.get<
             ApiResponse<SpringPage<NutritionPlan>>
-        >(`/trainer/nutrition-plans/members/${memberId}`, {
+        >(`/trainer/members/${memberId}/nutrition-plans`, {
             params: {
                 trainerId: trainer.id,
                 page,
@@ -181,7 +173,7 @@ export const nutritionService = {
 
         const trainer = await trainerService.getMe();
         const response = await apiClient.post<ApiResponse<NutritionPlan>>(
-            `/trainer/nutrition-plans/members/${memberId}`,
+            `/trainer/members/${memberId}/nutrition-plans`,
             request,
             {
                 params: {
@@ -202,8 +194,8 @@ export const nutritionService = {
         validatePositiveId(memberId, "Member ID");
 
         const trainer = await trainerService.getMe();
-        const response = await apiClient.put<ApiResponse<NutritionPlan>>(
-            `/trainer/nutrition-plans/${planId}/members/${memberId}`,
+        const response = await apiClient.patch<ApiResponse<NutritionPlan>>(
+            `/trainer/members/${memberId}/nutrition-plans/${planId}`,
             request,
             {
                 params: {

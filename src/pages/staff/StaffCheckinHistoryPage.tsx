@@ -68,37 +68,6 @@ export default function StaffCheckinHistoryPage() {
     void fetchData();
   }, [fetchData]);
 
-  const handleManualCheckout = async (
-      id: number,
-      memberName?: string,
-  ): Promise<void> => {
-    try {
-      setCheckingOutId(id);
-
-      await staffCheckinService
-          .manualCheckout(id);
-
-      toast.success(
-          `Đã check-out thành công cho ${
-              memberName || "hội viên"
-          }.`,
-      );
-
-      await fetchData();
-    } catch (error: unknown) {
-      console.error(
-          "Manual checkout failed:",
-          error,
-      );
-
-      toast.error(
-          "Check-out thất bại.",
-      );
-    } finally {
-      setCheckingOutId(null);
-    }
-  };
-
   const filteredHistory = historyRecords.filter(r => {
     if (!searchTerm) return true;
     const lower = searchTerm.toLowerCase();
@@ -206,18 +175,7 @@ export default function StaffCheckinHistoryPage() {
       key: "action",
       header: "Thao tác",
       render: (row: CheckinRecord) => (
-        <button
-          onClick={() => handleManualCheckout(row.id, row.memberName)}
-          disabled={checkingOutId === row.id}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-bold text-xs transition-colors disabled:opacity-50"
-        >
-          {checkingOutId === row.id ? (
-            <div className="w-4 h-4 border-2 border-rose-600 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <LogOut className="w-4 h-4" />
-          )}
-          Check-out
-        </button>
+        <span className="text-xs text-slate-400 italic">Không hỗ trợ Check-out thủ công</span>
       ),
     },
   ];

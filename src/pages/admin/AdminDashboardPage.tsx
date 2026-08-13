@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   CheckSquare, Clock, DollarSign, Users, ArrowUpRight, ArrowDownRight,
-  Filter, RefreshCw, Phone, MessageSquare, Search,
+  Filter, RefreshCw, Phone, MessageSquare, Search, Info,
   TrendingUp, TrendingDown, AlertCircle, BarChart4, AreaChart, LineChart
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -21,7 +21,6 @@ import type {
 } from "../../types/dashboard.type";
 
 import D3BarChart from "../../components/common/charts/D3BarChart";
-import D3PieChart from "../../components/common/charts/D3PieChart";
 
 // Compact Currency Formatter
 const formatCompactCurrency = (value: number) => {
@@ -31,8 +30,6 @@ const formatCompactCurrency = (value: number) => {
   return value.toString();
 };
 
-type MetricType = "members" | "checkins" | "revenue" | "expiring";
-
 export default function AdminDashboardPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartSectionRef = useRef<HTMLDivElement>(null);
@@ -40,8 +37,6 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [selectedMetric, setSelectedMetric] = useState<MetricType>("revenue");
 
   // Quick Chart Filter state
   const [chartTimeRange, setChartTimeRange] = useState<"7d" | "30d" | "all">("all");
@@ -93,13 +88,13 @@ export default function AdminDashboardPage() {
   }, { dependencies: [loading, overview], scope: containerRef });
 
   useGSAP(() => {
-    if (!loading && selectedMetric) {
+    if (!loading && overview) {
       gsap.fromTo(chartSectionRef.current,
           { opacity: 0, y: 15 },
           { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
       );
     }
-  }, { dependencies: [selectedMetric, loading], scope: containerRef });
+  }, { dependencies: [overview, loading], scope: containerRef });
 
   const handleQuickFilter = (days: number) => {
     const start = new Date();
@@ -111,43 +106,6 @@ export default function AdminDashboardPage() {
     });
     toast.success(`Đã cập nhật dữ liệu ${days} ngày qua`);
   };
-
-  const getChartDataForMetric = () => {
-    if (!overview) return { barData: [], pieData: [], barColor: "#10b981", barTitle: "", pieTitle: "", details: [] };
-    switch (selectedMetric) {
-      case "members":
-        return {
-          barColor: "#3b82f6", barTitle: "Tăng trưởng hội viên mới", pieTitle: "Trạng thái tài khoản",
-          barData: [],
-          pieData: [],
-          details: []
-        };
-      case "checkins":
-        return {
-          barColor: "#f59e0b", barTitle: "Lưu lượng check-in", pieTitle: "Phân loại Check-in",
-          barData: [],
-          pieData: [],
-          details: []
-        };
-      case "expiring":
-        return {
-          barColor: "#ef4444", barTitle: "Dự kiến hết hạn", pieTitle: "Phân bổ gói hết hạn",
-          barData: [],
-          pieData: [],
-          details: []
-        };
-      case "revenue":
-      default:
-        return {
-          barColor: "#10b981", barTitle: "Xu hướng doanh thu", pieTitle: "Tỷ trọng dịch vụ",
-          barData: revenue || [],
-          pieData: [],
-          details: []
-        };
-    }
-  };
-
-  const activeAnalytics = getChartDataForMetric();
 
   return (
       <div className="space-y-8 pb-12 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto min-h-screen bg-slate-50/30" ref={containerRef}>
@@ -219,14 +177,7 @@ export default function AdminDashboardPage() {
 
                 {/* Thẻ Doanh Thu Nổi Bật (Hero Metric) */}
                 <div className="xl:w-1/3 gsap-reveal h-full">
-                  <div
-                      onClick={() => setSelectedMetric("revenue")}
-                      className={`relative p-8 rounded-3xl cursor-pointer transition-all duration-300 h-full flex flex-col justify-between overflow-hidden group ${
-                          selectedMetric === "revenue"
-                              ? "bg-slate-900 text-white shadow-xl ring-4 ring-fit-primary/30 scale-[1.01]"
-                              : "bg-slate-800 text-white/90 hover:bg-slate-900 hover:shadow-xl hover:-translate-y-1"
-                      }`}
-                  >
+                  <div className="relative p-8 rounded-3xl transition-all duration-300 h-full flex flex-col justify-between overflow-hidden group bg-slate-900 text-white shadow-xl ring-1 ring-white/10">
                     <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-fit-primary/40 rounded-full blur-3xl pointer-events-none transition-opacity duration-500 opacity-50 group-hover:opacity-100"></div>
 
                     <div className="relative z-10 flex items-start justify-between mb-8">
@@ -254,36 +205,34 @@ export default function AdminDashboardPage() {
                     <AdminMetric
                         icon={<Users className="w-5 h-5" />} label="Tổng hội viên"
                         value={overview.totalMembers.toLocaleString("vi-VN")} growth={overview.membersGrowthPct}
-                        tone="blue" active={selectedMetric === "members"} onClick={() => setSelectedMetric("members")}
+                        tone="blue"
                     />
                   </div>
                   <div className="gsap-reveal h-full">
                     <AdminMetric
                         icon={<CheckSquare className="w-5 h-5" />} label="Check-in hôm nay"
                         value={overview.todayCheckins.toLocaleString("vi-VN")} growth={overview.checkinsGrowthPct}
-                        tone="orange" active={selectedMetric === "checkins"} onClick={() => setSelectedMetric("checkins")}
+                        tone="orange"
                     />
                   </div>
                   <div className="gsap-reveal h-full">
                     <AdminMetric
                         icon={<Clock className="w-5 h-5" />} label="Gói sắp hết hạn"
                         value={overview.expiringPackages.toLocaleString("vi-VN")} growth={0}
-                        tone="rose" active={selectedMetric === "expiring"} onClick={() => setSelectedMetric("expiring")}
+                        tone="rose"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* 3. Deep Insights Analytics Studio */}
-              <div ref={chartSectionRef} className="gsap-reveal grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-                {/* Left: Main Chart Panel (Biểu Đồ Cột) */}
-                <Card className="xl:col-span-2 p-6 sm:p-8 bg-white ring-1 ring-slate-900/5 shadow-sm rounded-3xl flex flex-col min-h-[500px]">
+              {/* 3. Main Chart Panel (Biểu Đồ Cột) */}
+              <div ref={chartSectionRef} className="gsap-reveal w-full">
+                <Card className="w-full p-6 sm:p-8 bg-white ring-1 ring-slate-900/5 shadow-sm rounded-3xl flex flex-col min-h-[500px]">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-slate-100 pb-4">
                     <div>
                       <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
                         <TrendingUp className="w-5 h-5 text-fit-primary" />
-                        {activeAnalytics.barTitle}
+                        Xu hướng doanh thu
                       </h3>
                       <p className="text-sm text-slate-500 mt-1">Biểu diễn dưới dạng biểu đồ cột (Bar Chart)</p>
                     </div>
@@ -317,11 +266,11 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <div className="flex-1 w-full flex items-center justify-center">
-                    {activeAnalytics.barData?.length > 0 ? (
+                    {revenue && revenue.length > 0 ? (
                         <D3BarChart
-                            data={activeAnalytics.barData}
+                            data={revenue}
                             height={350}
-                            color={activeAnalytics.barColor}
+                            color="#10b981"
                             yAxisFormatter={formatCompactCurrency}
                         />
                     ) : (
@@ -332,35 +281,6 @@ export default function AdminDashboardPage() {
                     )}
                   </div>
                 </Card>
-
-              {/* Bottom section: Deep Insights & Pie Chart (Now spans full width but splits internally on large screens) */}
-              <div className="grid gap-8 xl:grid-cols-1 items-stretch">
-                <Card className="w-full p-6 sm:p-10 relative overflow-hidden border border-slate-100 shadow-lg flex flex-col justify-between bg-gradient-to-tr from-white to-slate-50/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.01] to-transparent pointer-events-none" />
-                  
-                  <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900 tracking-tight">{activeAnalytics.pieTitle}</h2>
-                      <p className="text-sm text-slate-400 mt-1 font-bold">Biểu đồ phân phối tỉ lệ</p>
-                    </div>
-                  </div>
-
-                  {/* Render D3 Pie Chart dynamically */}
-                  <div className="flex justify-center items-center py-4 relative min-h-[260px]">
-                    {activeAnalytics.pieData && activeAnalytics.pieData.length > 0 ? (
-                      <D3PieChart 
-                        data={activeAnalytics.pieData} 
-                        height={240}
-                        donut={true}
-                        colors={
-                          selectedMetric === "revenue" ? ["#10b981", "#f59e0b", "#3b82f6"] :
-                          selectedMetric === "members" ? ["#3b82f6", "#f59e0b", "#ef4444"] :
-                          selectedMetric === "checkins" ? ["#f59e0b", "#8b5cf6", "#64748b"] :
-                          ["#ef4444", "#3b82f6", "#10b981"]
-                        }
-                      />
-
               </div>
 
               {/* 4. Lists & Operations */}
@@ -394,10 +314,9 @@ export default function AdminDashboardPage() {
 interface AdminMetricProps {
   icon: ReactNode; label: string; value: string; growth: number;
   tone: "green" | "blue" | "orange" | "rose";
-  active: boolean; onClick: () => void;
 }
 
-function AdminMetric({ icon, label, value, growth, tone, active, onClick }: AdminMetricProps) {
+function AdminMetric({ icon, label, value, growth, tone }: AdminMetricProps) {
   const tones = {
     green: "bg-emerald-50 text-emerald-600 ring-emerald-500/20",
     blue: "bg-blue-50 text-blue-600 ring-blue-500/20",
@@ -405,25 +324,11 @@ function AdminMetric({ icon, label, value, growth, tone, active, onClick }: Admi
     rose: "bg-rose-50 text-rose-600 ring-rose-500/20"
   };
 
-  const activeStyles = {
-    green: "ring-2 ring-emerald-500 bg-emerald-50/10",
-    blue: "ring-2 ring-blue-500 bg-blue-50/10",
-    orange: "ring-2 ring-orange-500 bg-orange-50/10",
-    rose: "ring-2 ring-rose-500 bg-rose-50/10"
-  };
-
   const isPositive = growth > 0;
   const isNeutral = growth === 0;
 
   return (
-      <div
-          onClick={onClick}
-          className={`relative p-6 rounded-3xl cursor-pointer transition-all duration-300 flex flex-col justify-between h-full group ${
-              active
-                  ? `${activeStyles[tone]} shadow-md scale-[1.02]`
-                  : `bg-white ring-1 ring-slate-900/5 hover:shadow-lg hover:-translate-y-1`
-          }`}
-      >
+      <div className="relative p-6 rounded-3xl transition-all duration-300 flex flex-col justify-between h-full group bg-white ring-1 ring-slate-900/5 hover:shadow-lg hover:-translate-y-1">
         <div className="flex items-start justify-between mb-8">
           <div className={`p-3 rounded-2xl ${tones[tone]}`}>
             {icon}
