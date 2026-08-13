@@ -117,23 +117,7 @@ export const nutritionService = {
         );
     },
 
-    async clonePlan(planId: number): Promise<NutritionPlan> {
-        validatePositiveId(planId, "Nutrition Plan ID");
-
-        const response = await apiClient.post<ApiResponse<NutritionPlan>>(
-            `${BASE_URL}/${planId}/clone`,
-        );
-
-        return normalizePlan(response.data.data);
-    },
-
-    async deletePlan(planId: number): Promise<void> {
-        validatePositiveId(planId, "Nutrition Plan ID");
-
-        await apiClient.delete(
-            `${BASE_URL}/${planId}`,
-        );
-    },
+    
 
     // ==========================================
     // TRAINER ENDPOINTS
