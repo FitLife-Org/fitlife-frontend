@@ -17,6 +17,7 @@ import Button from "../../../components/common/Button";
 import Badge from "../../../components/common/Badge";
 import Input from "../../../components/common/Input";
 import Modal from "../../../components/common/Modal";
+import Loading from "../../../components/common/Loading";
 
 import { subscriptionService } from "../../../services/subscriptionService";
 import { userService } from "../../../services/userService";
@@ -234,14 +235,12 @@ export default function AdminSubscriptionPage() {
             </Card>
 
             <Modal 
-                isOpen={isAssignModalOpen} 
+                open={isAssignModalOpen} 
                 onClose={() => setIsAssignModalOpen(false)}
                 title="Gán Gói Tập Cho Hội Viên"
             >
                 {loadingFormData ? (
-                    <div className="flex justify-center p-8">
-                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
+                    <Loading label="Đang tải danh mục gói tập..." />
                 ) : (
                     <form onSubmit={handleSubmit(onSubmitAssign)} className="space-y-5">
                         <div className="space-y-1.5">

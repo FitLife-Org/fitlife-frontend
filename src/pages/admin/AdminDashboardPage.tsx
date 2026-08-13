@@ -1,333 +1,524 @@
 import { useState, useEffect, useRef } from "react";
-import { CheckSquare, Clock, DollarSign, Users, TrendingUp, ArrowUpRight, ArrowDownRight, Filter } from "lucide-react";
+import {
+  CheckSquare, Clock, DollarSign, Users, ArrowUpRight, ArrowDownRight,
+  Filter, RefreshCw, Phone, MessageSquare, Search,
+  TrendingUp, TrendingDown, AlertCircle, BarChart4, AreaChart, LineChart
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { toast } from "react-hot-toast";
 
 import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
+import Button from "../../components/common/Button";
+import Loading from "../../components/common/Loading";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { adminDashboardService } from "../../services/adminDashboardService";
-import type { 
-  DashboardOverviewResponse,
-  DashboardRevenueResponse,
-  DashboardMemberResponse,
-  DashboardCheckinResponse,
-  DashboardPackageResponse,
-  DashboardRecentActivityResponse,
-  DashboardFilterRequest
+import type {
+  DashboardOverviewResponse, DashboardFilterRequest, ChartDataDto, RecentActivityDto
 } from "../../types/dashboard.type";
 
 import D3BarChart from "../../components/common/charts/D3BarChart";
 import D3PieChart from "../../components/common/charts/D3PieChart";
 
+// Compact Currency Formatter
+const formatCompactCurrency = (value: number) => {
+  if (value >= 1000000000) return (value / 1000000000).toFixed(1).replace(/\.0$/, "") + " Tỷ";
+  if (value >= 1000000) return (value / 1000000).toFixed(1).replace(/\.0$/, "") + " Tr";
+  if (value >= 1000) return (value / 1000).toFixed(1).replace(/\.0$/, "") + " K";
+  return value.toString();
+};
+
+type MetricType = "members" | "checkins" | "revenue" | "expiring";
+
 export default function AdminDashboardPage() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const chartSectionRef = useRef<HTMLDivElement>(null);
+
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
+  const [selectedMetric, setSelectedMetric] = useState<MetricType>("revenue");
+
+  // Quick Chart Filter state
+  const [chartTimeRange, setChartTimeRange] = useState<"7d" | "30d" | "all">("all");
+
   const [filters, setFilters] = useState<DashboardFilterRequest>({
-    startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], // 1 tháng trước
+    startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
     groupBy: "MONTH"
   });
 
-  // Data States
   const [overview, setOverview] = useState<DashboardOverviewResponse | null>(null);
-  const [revenue, setRevenue] = useState<DashboardRevenueResponse | null>(null);
-  const [members, setMembers] = useState<DashboardMemberResponse | null>(null);
-  const [checkins, setCheckins] = useState<DashboardCheckinResponse | null>(null);
-  const [packages, setPackages] = useState<DashboardPackageResponse | null>(null);
-  const [recent, setRecent] = useState<DashboardRecentActivityResponse | null>(null);
+  const [revenue, setRevenue] = useState<ChartDataDto[] | null>(null);
+  const [checkinsToday, setCheckinsToday] = useState<RecentActivityDto[] | null>(null);
+  const [expiring, setExpiring] = useState<RecentActivityDto[] | null>(null);
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [o, r, m, c, p, rec] = await Promise.all([
-          adminDashboardService.getOverview(filters),
-          adminDashboardService.getRevenueStats(filters),
-          adminDashboardService.getMemberStats(filters),
-          adminDashboardService.getCheckinStats(filters),
-          adminDashboardService.getPackageStats(filters),
-          adminDashboardService.getRecentActivities(filters)
-        ]);
-        
-        setOverview(o);
-        setRevenue(r);
-        setMembers(m);
-        setCheckins(c);
-        setPackages(p);
-        setRecent(rec);
-      } catch (err) {
-        console.error("Failed to load dashboard stats", err);
-        setError("Không thể tải dữ liệu thống kê. Vui lòng thử lại sau.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllData();
-  }, [filters]);
+  const [checkinSearch, setCheckinSearch] = useState("");
+  const [expiringSearch, setExpiringSearch] = useState("");
 
-  // GSAP Stagger Animation
+  const fetchAllData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    else setRefreshing(true);
+    setError(null);
+    try {
+      const [o, r, ct, exp] = await Promise.all([
+        adminDashboardService.getOverview(filters),
+        adminDashboardService.getRevenueStats(filters),
+        adminDashboardService.getCheckinsToday(filters),
+        adminDashboardService.getExpiringSubscriptions(filters)
+      ]);
+
+      setOverview(o); setRevenue(r); setCheckinsToday(ct); setExpiring(exp);
+    } catch (err) {
+      console.error(err);
+      setError("Không thể tải dữ liệu thống kê. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false); setRefreshing(false);
+    }
+  };
+
+  useEffect(() => { fetchAllData(); }, [filters]);
+
   useGSAP(() => {
     if (!loading && overview) {
-      gsap.from(".gsap-reveal", {
-        y: 30,
-        opacity: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: "power3.out",
-        clearProps: "all"
-      });
+      gsap.fromTo(".gsap-reveal",
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: "power3.out" }
+      );
     }
   }, { dependencies: [loading, overview], scope: containerRef });
 
-  return (
-    <div className="space-y-8 pb-8" ref={containerRef}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <PageHeader 
-          title="Dashboard Quản trị" 
-          description="Tổng quan hoạt động và doanh thu hệ thống phòng gym FitLife" 
-        />
-        
-        {/* Filter Form */}
-        <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center px-2 text-slate-500">
-            <Filter className="w-4 h-4 mr-2" />
-            <span className="text-sm font-semibold">Bộ lọc</span>
-          </div>
-          <input 
-            type="date" 
-            value={filters.startDate}
-            onChange={e => setFilters(p => ({ ...p, startDate: e.target.value }))}
-            className="text-sm border-slate-200 rounded-lg focus:ring-fit-primary"
-          />
-          <span className="text-slate-400">-</span>
-          <input 
-            type="date" 
-            value={filters.endDate}
-            onChange={e => setFilters(p => ({ ...p, endDate: e.target.value }))}
-            className="text-sm border-slate-200 rounded-lg focus:ring-fit-primary"
-          />
-          <select 
-            value={filters.groupBy}
-            onChange={e => setFilters(p => ({ ...p, groupBy: e.target.value as "DAY" | "MONTH" | "YEAR" }))}
-            className="text-sm border-slate-200 rounded-lg focus:ring-fit-primary bg-slate-50"
-          >
-            <option value="DAY">Theo Ngày</option>
-            <option value="MONTH">Theo Tháng</option>
-            <option value="YEAR">Theo Năm</option>
-          </select>
-        </div>
-      </div>
-      
-      {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-fit-primary border-t-transparent" />
-        </div>
-      ) : error || !overview ? (
-        <div className="flex flex-col h-64 items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200">
-          <p className="text-lg font-medium">{error || "Không có dữ liệu báo cáo"}</p>
-          <p className="text-sm mt-1 text-slate-400">Hệ thống có thể đang bảo trì hoặc chưa sẵn sàng.</p>
-        </div>
-      ) : (
-        <>
-          {/* Overview Cards */}
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="gsap-reveal">
-              <AdminMetric 
-                icon={<Users className="w-7 h-7" />} 
-                label="Tổng hội viên" 
-                value={overview.totalMembers.toLocaleString("vi-VN")} 
-                growth={overview.membersGrowthPct} 
-                tone="green" 
-              />
-            </div>
-            <div className="gsap-reveal">
-              <AdminMetric 
-                icon={<CheckSquare className="w-7 h-7" />} 
-                label="Check-in hôm nay" 
-                value={overview.todayCheckins.toLocaleString("vi-VN")} 
-                growth={overview.checkinsGrowthPct} 
-                tone="blue" 
-              />
-            </div>
-            <div className="gsap-reveal">
-              <AdminMetric 
-                icon={<DollarSign className="w-7 h-7" />} 
-                label="Doanh thu" 
-                value={formatCurrency(Number(overview.monthlyRevenue))} 
-                growth={overview.revenueGrowthPct} 
-                tone="purple" 
-              />
-            </div>
-            <div className="gsap-reveal">
-              <AdminMetric 
-                icon={<Clock className="w-7 h-7" />} 
-                label="Gói sắp hết hạn" 
-                value={overview.expiringPackages.toLocaleString("vi-VN")} 
-                growth={0} 
-                tone="orange" 
-              />
-            </div>
-          </div>
+  useGSAP(() => {
+    if (!loading && selectedMetric) {
+      gsap.fromTo(chartSectionRef.current,
+          { opacity: 0, y: 15 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+      );
+    }
+  }, { dependencies: [selectedMetric, loading], scope: containerRef });
 
-          {/* Revenue Section */}
-          {revenue && (
-            <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-              <Card className="p-6 sm:p-8 relative overflow-hidden group gsap-reveal">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent pointer-events-none" />
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900 tracking-tight">Biểu đồ doanh thu</h2>
-                      <p className="text-sm text-slate-500 mt-1 font-medium">Theo {filters.groupBy === 'DAY' ? 'Ngày' : filters.groupBy === 'MONTH' ? 'Tháng' : 'Năm'}</p>
+  const handleQuickFilter = (days: number) => {
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    setFilters({
+      startDate: start.toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+      groupBy: days <= 7 ? "DAY" : "MONTH"
+    });
+    toast.success(`Đã cập nhật dữ liệu ${days} ngày qua`);
+  };
+
+  const getChartDataForMetric = () => {
+    if (!overview) return { barData: [], pieData: [], barColor: "#10b981", barTitle: "", pieTitle: "", details: [] };
+    switch (selectedMetric) {
+      case "members":
+        return {
+          barColor: "#3b82f6", barTitle: "Tăng trưởng hội viên mới", pieTitle: "Trạng thái tài khoản",
+          barData: [],
+          pieData: [],
+          details: []
+        };
+      case "checkins":
+        return {
+          barColor: "#f59e0b", barTitle: "Lưu lượng check-in", pieTitle: "Phân loại Check-in",
+          barData: [],
+          pieData: [],
+          details: []
+        };
+      case "expiring":
+        return {
+          barColor: "#ef4444", barTitle: "Dự kiến hết hạn", pieTitle: "Phân bổ gói hết hạn",
+          barData: [],
+          pieData: [],
+          details: []
+        };
+      case "revenue":
+      default:
+        return {
+          barColor: "#10b981", barTitle: "Xu hướng doanh thu", pieTitle: "Tỷ trọng dịch vụ",
+          barData: revenue || [],
+          pieData: [],
+          details: []
+        };
+    }
+  };
+
+  const activeAnalytics = getChartDataForMetric();
+
+  return (
+      <div className="space-y-8 pb-12 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto min-h-screen bg-slate-50/30" ref={containerRef}>
+
+        {/* 1. Header & Filters Toolbar */}
+        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 pt-6">
+          <PageHeader
+              title="Dashboard Quản trị"
+              description="Khám phá và phân tích các chỉ số vận hành phòng tập FitLife."
+          />
+
+          <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-full ring-1 ring-slate-900/5 shadow-sm">
+            <div className="flex items-center bg-slate-50 rounded-full p-1">
+              <button onClick={() => handleQuickFilter(7)} className="px-4 py-1.5 text-xs font-semibold rounded-full text-slate-600 hover:bg-white hover:shadow-sm hover:text-fit-primary transition-all">
+                7 ngày
+              </button>
+              <button onClick={() => handleQuickFilter(30)} className="px-4 py-1.5 text-xs font-semibold rounded-full text-slate-600 hover:bg-white hover:shadow-sm hover:text-fit-primary transition-all">
+                30 ngày
+              </button>
+            </div>
+
+            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+
+            <div className="flex items-center gap-2 px-2">
+              <Filter className="w-4 h-4 text-slate-400" />
+              <input
+                  type="date" value={filters.startDate} onChange={e => setFilters(p => ({ ...p, startDate: e.target.value }))}
+                  className="text-xs font-medium border-none bg-transparent cursor-pointer focus:ring-0 p-0 text-slate-700 outline-none"
+              />
+              <span className="text-slate-300">-</span>
+              <input
+                  type="date" value={filters.endDate} onChange={e => setFilters(p => ({ ...p, endDate: e.target.value }))}
+                  className="text-xs font-medium border-none bg-transparent cursor-pointer focus:ring-0 p-0 text-slate-700 outline-none"
+              />
+            </div>
+
+            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+
+            <select
+                value={filters.groupBy} onChange={e => setFilters(p => ({ ...p, groupBy: e.target.value as any }))}
+                className="text-xs font-semibold border-none bg-transparent cursor-pointer focus:ring-0 text-slate-700 pl-2 pr-8 outline-none appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5NDkzYjgiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=')] bg-no-repeat bg-[right_4px_center] bg-[length:16px]"
+            >
+              <option value="DAY">Theo Ngày</option>
+              <option value="MONTH">Theo Tháng</option>
+              <option value="YEAR">Theo Năm</option>
+            </select>
+
+            <button
+                onClick={() => fetchAllData(true)} disabled={refreshing}
+                className="ml-auto flex items-center justify-center w-8 h-8 rounded-full bg-fit-primary/10 text-fit-primary hover:bg-fit-primary hover:text-white transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+            <Loading label="Đang đồng bộ dữ liệu..." />
+        ) : error || !overview ? (
+            <div className="flex flex-col h-64 items-center justify-center text-slate-500 bg-white rounded-3xl ring-1 ring-slate-900/5 shadow-sm">
+              <AlertCircle className="w-12 h-12 text-slate-300 mb-3" />
+              <p className="text-lg font-semibold text-slate-700">{error || "Chưa có dữ liệu thống kê"}</p>
+              <Button onClick={() => fetchAllData()} className="mt-4 bg-slate-900 text-white rounded-full px-6">Thử lại</Button>
+            </div>
+        ) : (
+            <>
+              {/* 2. Overview Metrics Grid */}
+              <div className="flex flex-col xl:flex-row gap-6">
+
+                {/* Thẻ Doanh Thu Nổi Bật (Hero Metric) */}
+                <div className="xl:w-1/3 gsap-reveal h-full">
+                  <div
+                      onClick={() => setSelectedMetric("revenue")}
+                      className={`relative p-8 rounded-3xl cursor-pointer transition-all duration-300 h-full flex flex-col justify-between overflow-hidden group ${
+                          selectedMetric === "revenue"
+                              ? "bg-slate-900 text-white shadow-xl ring-4 ring-fit-primary/30 scale-[1.01]"
+                              : "bg-slate-800 text-white/90 hover:bg-slate-900 hover:shadow-xl hover:-translate-y-1"
+                      }`}
+                  >
+                    <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-fit-primary/40 rounded-full blur-3xl pointer-events-none transition-opacity duration-500 opacity-50 group-hover:opacity-100"></div>
+
+                    <div className="relative z-10 flex items-start justify-between mb-8">
+                      <div className="p-3.5 bg-white/10 backdrop-blur-md rounded-2xl ring-1 ring-white/20 text-white">
+                        <DollarSign className="w-7 h-7" />
+                      </div>
+                      <div className="flex items-center gap-1 text-sm font-bold px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                        <ArrowUpRight className="w-4 h-4" />
+                        <span>{overview.revenueGrowthPct}%</span>
+                      </div>
+                    </div>
+
+                    <div className="relative z-10">
+                      <p className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-2">Tổng Doanh Thu</p>
+                      <p className="text-4xl font-bold text-white tracking-tight truncate">
+                        {formatCurrency(Number(overview.monthlyRevenue))}
+                      </p>
                     </div>
                   </div>
-                  <D3BarChart 
-                    data={revenue.trendChart} 
-                    height={300} 
-                    color="#10b981" 
-                    yAxisFormatter={(v) => formatCurrency(v)} 
-                  />
                 </div>
-              </Card>
 
-              <Card className="p-6 sm:p-8 relative overflow-hidden gsap-reveal">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent pointer-events-none" />
-                <div className="relative">
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Cơ cấu doanh thu</h2>
-                  <p className="text-sm text-slate-500 mt-1 font-medium mb-4">Theo gói tập</p>
-                  <D3PieChart data={revenue.structurePieChart} height={250} donut={true} />
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {/* Members & Checkins Section */}
-          <div className="grid gap-6 xl:grid-cols-2">
-            {members && (
-              <Card className="p-6 sm:p-8 gsap-reveal">
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight mb-6">Tăng trưởng Hội viên</h2>
-                <D3BarChart data={members.growthChart} height={250} color="#3b82f6" />
-              </Card>
-            )}
-            
-            {checkins && (
-              <Card className="p-6 sm:p-8 gsap-reveal">
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight mb-6">Lưu lượng Check-in</h2>
-                <D3BarChart data={checkins.trafficChart} height={250} color="#f59e0b" />
-              </Card>
-            )}
-          </div>
-
-          {/* Packages & Lists Section */}
-          <div className="grid gap-6 xl:grid-cols-[1fr_2fr]">
-            {packages && (
-              <Card className="p-6 sm:p-8 gsap-reveal">
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight mb-6">Tỷ lệ đăng ký Gói tập</h2>
-                <D3PieChart data={packages.packageRatioChart} height={250} donut={false} />
-              </Card>
-            )}
-            
-            {recent && (
-              <div className="grid gap-6 sm:grid-cols-3">
-                <div className="gsap-reveal h-full">
-                  <ListCard title="Hội viên mới" items={recent.recentMembers} />
-                </div>
-                <div className="gsap-reveal h-full">
-                  <ListCard title="Lịch PT sắp tới" items={recent.todaySchedules} />
-                </div>
-                <div className="gsap-reveal h-full">
-                  <ListCard title="Thanh toán" items={recent.recentPayments} />
+                {/* Khối 3 thẻ thống kê còn lại */}
+                <div className="xl:w-2/3 grid gap-6 sm:grid-cols-3">
+                  <div className="gsap-reveal h-full">
+                    <AdminMetric
+                        icon={<Users className="w-5 h-5" />} label="Tổng hội viên"
+                        value={overview.totalMembers.toLocaleString("vi-VN")} growth={overview.membersGrowthPct}
+                        tone="blue" active={selectedMetric === "members"} onClick={() => setSelectedMetric("members")}
+                    />
+                  </div>
+                  <div className="gsap-reveal h-full">
+                    <AdminMetric
+                        icon={<CheckSquare className="w-5 h-5" />} label="Check-in hôm nay"
+                        value={overview.todayCheckins.toLocaleString("vi-VN")} growth={overview.checkinsGrowthPct}
+                        tone="orange" active={selectedMetric === "checkins"} onClick={() => setSelectedMetric("checkins")}
+                    />
+                  </div>
+                  <div className="gsap-reveal h-full">
+                    <AdminMetric
+                        icon={<Clock className="w-5 h-5" />} label="Gói sắp hết hạn"
+                        value={overview.expiringPackages.toLocaleString("vi-VN")} growth={0}
+                        tone="rose" active={selectedMetric === "expiring"} onClick={() => setSelectedMetric("expiring")}
+                    />
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+
+              {/* 3. Deep Insights Analytics Studio */}
+              <div ref={chartSectionRef} className="gsap-reveal grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+                {/* Left: Main Chart Panel (Biểu Đồ Cột) */}
+                <Card className="xl:col-span-2 p-6 sm:p-8 bg-white ring-1 ring-slate-900/5 shadow-sm rounded-3xl flex flex-col min-h-[500px]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-fit-primary" />
+                        {activeAnalytics.barTitle}
+                      </h3>
+                      <p className="text-sm text-slate-500 mt-1">Biểu diễn dưới dạng biểu đồ cột (Bar Chart)</p>
+                    </div>
+
+                    <div className="flex items-center bg-slate-50 p-1 rounded-full ring-1 ring-slate-200 shrink-0">
+                      <button
+                          onClick={() => setChartTimeRange("7d")}
+                          className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
+                              chartTimeRange === "7d" ? "bg-white text-fit-primary shadow-sm ring-1 ring-slate-900/5" : "text-slate-500 hover:text-slate-800"
+                          }`}
+                      >
+                        7 Ngày
+                      </button>
+                      <button
+                          onClick={() => setChartTimeRange("30d")}
+                          className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
+                              chartTimeRange === "30d" ? "bg-white text-fit-primary shadow-sm ring-1 ring-slate-900/5" : "text-slate-500 hover:text-slate-800"
+                          }`}
+                      >
+                        30 Ngày
+                      </button>
+                      <button
+                          onClick={() => setChartTimeRange("all")}
+                          className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
+                              chartTimeRange === "all" ? "bg-white text-fit-primary shadow-sm ring-1 ring-slate-900/5" : "text-slate-500 hover:text-slate-800"
+                          }`}
+                      >
+                        Toàn bộ
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 w-full flex items-center justify-center">
+                    {activeAnalytics.barData?.length > 0 ? (
+                        <D3BarChart
+                            data={activeAnalytics.barData}
+                            height={350}
+                            color={activeAnalytics.barColor}
+                            yAxisFormatter={formatCompactCurrency}
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center text-slate-400 bg-slate-50 p-8 rounded-2xl border border-dashed border-slate-200">
+                          <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+                          <span className="text-sm font-medium">Chưa đủ dữ liệu biểu diễn khoảng thời gian này</span>
+                        </div>
+                    )}
+                  </div>
+                </Card>
+
+              {/* Bottom section: Deep Insights & Pie Chart (Now spans full width but splits internally on large screens) */}
+              <div className="grid gap-8 xl:grid-cols-1 items-stretch">
+                <Card className="w-full p-6 sm:p-10 relative overflow-hidden border border-slate-100 shadow-lg flex flex-col justify-between bg-gradient-to-tr from-white to-slate-50/20">
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.01] to-transparent pointer-events-none" />
+                  
+                  <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 tracking-tight">{activeAnalytics.pieTitle}</h2>
+                      <p className="text-sm text-slate-400 mt-1 font-bold">Biểu đồ phân phối tỉ lệ</p>
+                    </div>
+                  </div>
+
+                  {/* Render D3 Pie Chart dynamically */}
+                  <div className="flex justify-center items-center py-4 relative min-h-[260px]">
+                    {activeAnalytics.pieData && activeAnalytics.pieData.length > 0 ? (
+                      <D3PieChart 
+                        data={activeAnalytics.pieData} 
+                        height={240}
+                        donut={true}
+                        colors={
+                          selectedMetric === "revenue" ? ["#10b981", "#f59e0b", "#3b82f6"] :
+                          selectedMetric === "members" ? ["#3b82f6", "#f59e0b", "#ef4444"] :
+                          selectedMetric === "checkins" ? ["#f59e0b", "#8b5cf6", "#64748b"] :
+                          ["#ef4444", "#3b82f6", "#10b981"]
+                        }
+                      />
+
+              </div>
+
+              {/* 4. Lists & Operations */}
+              <div className="grid gap-6 xl:grid-cols-2 mt-6">
+                <div className="gsap-reveal h-full">
+                  <ListCard
+                      title="Lượt Check-in Gần Đây"
+                      placeholder="Tìm tên học viên..."
+                      searchValue={checkinSearch} onSearchChange={setCheckinSearch}
+                      items={checkinsToday || []} type="checkin"
+                  />
+                </div>
+                <div className="gsap-reveal h-full">
+                  <ListCard
+                      title="Cần Gia Hạn Sớm"
+                      placeholder="Tìm theo gói/tên..."
+                      searchValue={expiringSearch} onSearchChange={setExpiringSearch}
+                      items={expiring || []} type="expiring"
+                  />
+                </div>
+              </div>
+            </>
+        )}
+      </div>
   );
 }
 
+// ==========================================
+// THÀNH PHẦN: ADMIN METRIC (CÁC THẺ PHỤ)
+// ==========================================
 interface AdminMetricProps {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  growth: number;
-  tone?: "green" | "blue" | "orange" | "purple";
+  icon: ReactNode; label: string; value: string; growth: number;
+  tone: "green" | "blue" | "orange" | "rose";
+  active: boolean; onClick: () => void;
 }
 
-function AdminMetric({ icon, label, value, growth, tone = "green" }: AdminMetricProps) {
-  const tones = { 
-    green: "bg-emerald-100 text-emerald-600 ring-emerald-500/20", 
-    blue: "bg-blue-100 text-blue-600 ring-blue-500/20", 
-    orange: "bg-orange-100 text-orange-600 ring-orange-500/20",
-    purple: "bg-purple-100 text-purple-600 ring-purple-500/20"
+function AdminMetric({ icon, label, value, growth, tone, active, onClick }: AdminMetricProps) {
+  const tones = {
+    green: "bg-emerald-50 text-emerald-600 ring-emerald-500/20",
+    blue: "bg-blue-50 text-blue-600 ring-blue-500/20",
+    orange: "bg-orange-50 text-orange-600 ring-orange-500/20",
+    rose: "bg-rose-50 text-rose-600 ring-rose-500/20"
+  };
+
+  const activeStyles = {
+    green: "ring-2 ring-emerald-500 bg-emerald-50/10",
+    blue: "ring-2 ring-blue-500 bg-blue-50/10",
+    orange: "ring-2 ring-orange-500 bg-orange-50/10",
+    rose: "ring-2 ring-rose-500 bg-rose-50/10"
   };
 
   const isPositive = growth > 0;
   const isNeutral = growth === 0;
 
   return (
-    <Card className="p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1 relative overflow-hidden group h-full">
-      <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 transition-transform duration-500 group-hover:scale-150 ${tones[tone].split(' ')[1].replace('text-', 'bg-')}`} />
-      
-      <div className="flex items-start justify-between relative z-10">
-        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-1 ${tones[tone]} shadow-inner`}>
-          {icon}
-        </div>
-        
-        {!isNeutral && (
-          <div className={`flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-full ${
-            isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
-          }`}>
-            {isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-            <span>{Math.abs(growth)}%</span>
+      <div
+          onClick={onClick}
+          className={`relative p-6 rounded-3xl cursor-pointer transition-all duration-300 flex flex-col justify-between h-full group ${
+              active
+                  ? `${activeStyles[tone]} shadow-md scale-[1.02]`
+                  : `bg-white ring-1 ring-slate-900/5 hover:shadow-lg hover:-translate-y-1`
+          }`}
+      >
+        <div className="flex items-start justify-between mb-8">
+          <div className={`p-3 rounded-2xl ${tones[tone]}`}>
+            {icon}
           </div>
-        )}
-      </div>
+          {!isNeutral && (
+              <div className={`flex items-center gap-0.5 text-xs font-bold px-2.5 py-1 rounded-full ${
+                  isPositive ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+              }`}>
+                {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                <span>{Math.abs(growth)}%</span>
+              </div>
+          )}
+        </div>
 
-      <div className="mt-6 relative z-10">
-        <p className="text-sm font-semibold text-slate-500 mb-1">{label}</p>
-        <p className="text-3xl font-black text-slate-900 tracking-tight">{value}</p>
+        <div>
+          <p className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-slate-900 tracking-tight group-hover:text-fit-primary transition-colors truncate">
+            {value}
+          </p>
+        </div>
       </div>
-    </Card>
   );
 }
 
-interface ListCardItem {
-  id: number | string;
-  description: string;
-  time: string;
-  status?: string;
+// ==========================================
+// THÀNH PHẦN: LIST CARD
+// ==========================================
+function getAvatarStyle(name: string) {
+  const code = name.charCodeAt(0) + (name.charCodeAt(1) || 0);
+  const palettes = [
+    "bg-emerald-100 text-emerald-700", "bg-blue-100 text-blue-700",
+    "bg-indigo-100 text-indigo-700", "bg-purple-100 text-purple-700",
+    "bg-rose-100 text-rose-700", "bg-amber-100 text-amber-700"
+  ];
+  return palettes[code % palettes.length];
 }
 
-function ListCard({ title, items }: { title: string; items: ListCardItem[] }) {
+interface ListCardProps {
+  title: string; placeholder: string; searchValue: string;
+  onSearchChange: (v: string) => void; items: RecentActivityDto[]; type: "checkin" | "expiring";
+}
+
+function ListCard({ title, placeholder, searchValue, onSearchChange, items, type }: ListCardProps) {
+  const filtered = items.filter(item =>
+      item.description.toLowerCase().includes(searchValue.toLowerCase()) || item.time.toLowerCase().includes(searchValue.toLowerCase())
+  );
+
   return (
-    <Card className="p-6 h-full flex flex-col">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-      </div>
-      <div className="space-y-4 flex-1">
-        {items.map((item) => (
-          <div className="flex items-center justify-between group" key={item.id}>
-            <div>
-              <p className="text-sm font-bold text-slate-800 group-hover:text-fit-primary transition-colors">{item.description}</p>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">{item.time}</p>
-            </div>
-            {item.status && (
-              <Badge variant={item.status === "NEW" ? "success" : item.status === "PENDING" ? "warning" : item.status === "WARNING" ? "danger" : "info"}>
-                {item.status === "NEW" ? "Mới" : item.status === "PENDING" ? "Sắp tới" : item.status === "WARNING" ? "Chú ý" : "Hoàn tất"}
-              </Badge>
-            )}
+      <Card className="p-6 h-[420px] flex flex-col bg-white rounded-3xl ring-1 ring-slate-900/5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">{title}</h2>
+          <div className="relative w-full sm:w-56">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+                type="text" placeholder={placeholder} value={searchValue} onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full text-sm bg-slate-50 border-none rounded-full pl-9 pr-4 py-2 focus:ring-2 focus:ring-fit-primary/20 transition-all text-slate-700 outline-none"
+            />
           </div>
-        ))}
-      </div>
-    </Card>
+        </div>
+
+        <div className="space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+          {filtered.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <Search className="w-6 h-6 mb-2 opacity-50" />
+                <p className="text-sm">Không có dữ liệu</p>
+              </div>
+          ) : (
+              filtered.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-colors group cursor-default">
+                    <div className="flex items-center gap-3.5">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${getAvatarStyle(item.description)}`}>
+                        {item.description.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800 line-clamp-1 group-hover:text-fit-primary transition-colors">{item.description}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{item.time}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {type === "expiring" ? (
+                          <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button className="p-2 rounded-full bg-slate-100 hover:bg-fit-primary hover:text-white text-slate-600 transition-colors"><Phone className="w-3.5 h-3.5" /></button>
+                            <button className="p-2 rounded-full bg-slate-100 hover:bg-emerald-500 hover:text-white text-slate-600 transition-colors"><MessageSquare className="w-3.5 h-3.5" /></button>
+                          </div>
+                      ) : (
+                          <Badge variant={item.status === "NEW" ? "success" : item.status === "PENDING" ? "warning" : "info"} className="rounded-full px-2.5">
+                            {item.status === "NEW" ? "Thành công" : item.status === "PENDING" ? "Chờ xử lý" : "Khác"}
+                          </Badge>
+                      )}
+                    </div>
+                  </div>
+              ))
+          )}
+        </div>
+      </Card>
   );
 }

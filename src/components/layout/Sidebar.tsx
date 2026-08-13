@@ -271,7 +271,7 @@ const menuItems:
 
     {
         label: "Quét mã Check-in",
-        path: ROUTES.ADMIN_CHECKIN,
+        path: ROUTES.STAFF_CHECKIN,
         icon: ScanLine,
         roles: ["ROLE_ADMIN", "ROLE_STAFF"],
     },

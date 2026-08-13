@@ -21,8 +21,7 @@ export default function StaffCheckinPage() {
             
             // Assuming the QR data contains the member code or a specific token
             await checkinService.scanMemberQr({
-                qrData: qrCode.trim(),
-                facilityId: 1 // Default facility for now
+                qrData: qrCode.trim()
             });
             
             toast.success("Check-in thành công!");

@@ -31,6 +31,7 @@ export interface WorkoutPlanDay {
   note?: string;
   sortOrder?: number;
   isRestDay?: boolean;
+  isCompleted?: boolean;
   exercises: WorkoutExercise[];
 }
 

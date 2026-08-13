@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Badge from "../../components/common/Badge";
+import Loading from "../../components/common/Loading";
 import { adminDashboardService } from "../../services/adminDashboardService";
 import type { 
   DashboardOverview, 
@@ -37,10 +38,10 @@ export default function ReportPage() {
       try {
         setLoading(true);
         const [overviewRes, revenueRes, checkinsRes, expiringRes] = await Promise.all([
-          adminDashboardService.getRealOverview(),
-          adminDashboardService.getRealRevenueStats(),
-          adminDashboardService.getRealCheckinsToday(),
-          adminDashboardService.getRealExpiringSubscriptions()
+          adminDashboardService.getOverview(),
+          adminDashboardService.getRevenueStats(),
+          adminDashboardService.getCheckinsToday(),
+          adminDashboardService.getExpiringSubscriptions()
         ]);
         setOverview(overviewRes);
         setRevenueData(revenueRes);
@@ -105,10 +106,7 @@ export default function ReportPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="w-12 h-12 border-4 border-fit-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-500 font-medium">Đang tải báo cáo thống kê...</p>
-      </div>
+      <Loading label="Đang tải báo cáo thống kê..." />
     );
   }
 

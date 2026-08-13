@@ -461,7 +461,7 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path={ROUTES.ADMIN_CHECKIN}
+                            path={ROUTES.STAFF_CHECKIN}
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
                                     <StaffCheckinPage />

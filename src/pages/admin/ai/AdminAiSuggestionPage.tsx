@@ -13,6 +13,7 @@ import Table from "../../../components/common/Table";
 import Badge from "../../../components/common/Badge";
 import Button from "../../../components/common/Button";
 import Modal from "../../../components/common/Modal";
+import Loading from "../../../components/common/Loading";
 
 export default function AdminAiSuggestionPage() {
   const containerRef = usePageAnimation();
@@ -78,7 +79,7 @@ export default function AdminAiSuggestionPage() {
       case "FULL_PLAN":
         return "purple";
       case "WORKOUT_PLAN":
-        return "primary";
+        return "info";
       case "NUTRITION_PLAN":
         return "success";
       case "BODY_ANALYSIS":
@@ -169,10 +170,7 @@ export default function AdminAiSuggestionPage() {
 
       <Card className="overflow-hidden border-0 ring-1 ring-slate-200 shadow-xl shadow-slate-200/40 rounded-2xl bg-white/80 backdrop-blur-xl">
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-            <span className="ml-3 font-medium text-slate-500">Đang tải dữ liệu...</span>
-          </div>
+          <Loading label="Đang tải danh sách gợi ý..." />
         ) : (
           <>
             <Table columns={columns} data={data?.content || []} />
@@ -213,10 +211,7 @@ export default function AdminAiSuggestionPage() {
         title="Chi tiết Tư vấn AI"
       >
         {detailLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-            <span className="ml-3 font-medium text-slate-500">Đang tải chi tiết...</span>
-          </div>
+          <Loading label="Đang tải chi tiết..." />
         ) : selectedDetail ? (
           <div className="space-y-6 pb-4">
             <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
