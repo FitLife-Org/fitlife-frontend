@@ -47,10 +47,21 @@ export const adminDashboardService = {
   },
 
   async getCheckinsToday(params?: DashboardFilterRequest): Promise<RecentActivityDto[]> {
-    return [
-      { id: 1, description: "Nguyễn Văn A check-in thành công", time: "08:00", status: "OK" },
-      { id: 2, description: "Trần Thị B check-in thành công", time: "08:15", status: "OK" }
-    ];
+    try {
+      const res = await apiClient.get<ApiResponse<any[]>>("/staff/check-ins/today", { params });
+      return (res.data.data || []).slice(0, 5).map(item => {
+        let timeStr = item.checkInTime;
+        if (timeStr && timeStr.includes("T")) {
+           timeStr = timeStr.split("T")[1].substring(0, 5);
+        }
+        return {
+          id: item.id,
+          description: `${item.memberName} check-in`,
+          time: timeStr || "N/A",
+          status: item.status === 'CANCELLED' ? "WARNING" : "OK"
+        };
+      });
+    } catch { return []; }
   },
 
   async getExpiringSubscriptions(params?: DashboardFilterRequest): Promise<RecentActivityDto[]> {
