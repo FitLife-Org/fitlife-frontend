@@ -12,11 +12,12 @@ import {
     CalendarPlus,
     History,
     Loader2,
-    Send,
     Sparkles,
     Utensils,
     Wand2,
     X,
+    ClipboardList,
+    Send,
 } from "lucide-react";
 
 import { usePageAnimation } from "../../hooks/usePageAnimation";
@@ -64,7 +65,7 @@ const QUICK_ACTIONS: QuickAction[] = [
         label: "Kế hoạch toàn diện",
         description:
             "Tạo lịch tập và dinh dưỡng trong cùng một kế hoạch.",
-        icon: Sparkles,
+        icon: ClipboardList,
         type: "FULL_PLAN",
     },
     {
