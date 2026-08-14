@@ -24,7 +24,7 @@ export const adminDashboardService = {
       const d = res.data.data;
       return {
         totalMembers: d?.activeMembersCount || 0,
-        membersGrowthPct: 0,
+        membersGrowthPct: d?.newMembersThisMonth || 0, // Using new members as growth indicator
         todayCheckins: d?.todayCheckInsCount || 0,
         checkinsGrowthPct: 0,
         monthlyRevenue: d?.totalRevenueThisMonth || 0,
@@ -127,9 +127,9 @@ export const adminDashboardService = {
     try {
       const res = await apiClient.get<ApiResponse<any>>("/admin/reports/ai/summary", { params });
       return {
-        totalUsage: res.data.data?.totalPrompts || res.data.data?.totalUsage || 0,
-        successfulGenerations: res.data.data?.successfulGenerations || 0,
-        failedGenerations: res.data.data?.failedGenerations || 0
+        totalUsage: res.data.data?.totalSuggestionsGenerated || 0,
+        successfulGenerations: res.data.data?.workoutSuggestionsCount || 0,
+        failedGenerations: res.data.data?.nutritionSuggestionsCount || 0
       };
     } catch { return { totalUsage: 0, successfulGenerations: 0, failedGenerations: 0 }; }
   },
