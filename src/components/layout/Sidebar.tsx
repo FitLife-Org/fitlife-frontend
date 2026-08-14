@@ -659,7 +659,7 @@ export default function Sidebar() {
 
                         return (
                             <NavLink
-                                key={item.path}
+                                key={`${item.label}-${item.path}`}
                                 to={item.path}
                                 onClick={
                                     handleNavigate

@@ -285,15 +285,12 @@ export const aiService = {
         } catch {
             return {
                 content: [],
-                pageable: { pageNumber: page, pageSize: size },
+                page: page,
+                size: size,
                 totalElements: 0,
                 totalPages: 0,
-                last: true,
-                size: size,
-                number: page,
-                sort: { empty: true, sorted: false, unsorted: true },
-                numberOfElements: 0,
                 first: page === 0,
+                last: true,
                 empty: true
             };
         }
