@@ -13,6 +13,7 @@ import {
   Package
 } from "lucide-react";
 import D3AreaChart from "../../components/common/charts/D3AreaChart";
+import D3BarChart from "../../components/common/charts/D3BarChart";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import toast from "react-hot-toast";
@@ -109,31 +110,21 @@ export default function ReportPage() {
 
   useGSAP(() => {
     if (!loading) {
-      // Intro animations
-      gsap.from(".gsap-stat-card", {
-        y: 40,
-        opacity: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: "power3.out"
-      });
+      // Intro animations for stats
+      gsap.fromTo(".gsap-stat-card", 
+        { y: 30, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: "back.out(1.2)" }
+      );
 
-      gsap.from(".gsap-chart-card", {
-        y: 40,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.2,
-        ease: "power3.out"
-      });
+      gsap.fromTo(".gsap-chart-card", 
+        { y: 40, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" }
+      );
 
-      gsap.from(".gsap-table-card", {
-        y: 40,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.4,
-        stagger: 0.1,
-        ease: "power3.out"
-      });
+      gsap.fromTo(".gsap-table-card", 
+        { y: 40, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.8, delay: 0.4, stagger: 0.1, ease: "power3.out" }
+      );
     }
   }, [loading]);
 
@@ -154,15 +145,6 @@ export default function ReportPage() {
     }
     return value.toString();
   };
-
-  useGSAP(() => {
-    if (!loading) {
-      gsap.fromTo(".gsap-stat-card", 
-        { y: 30, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: "back.out(1.2)" }
-      );
-    }
-  }, [loading]);
 
   const handleExport = async () => {
     try {
@@ -304,12 +286,19 @@ export default function ReportPage() {
         </div>
 
         <div className="w-full h-[320px]">
-          <D3AreaChart 
-            data={revenueData} 
-            height={320} 
-            color="#3b82f6"
-            yAxisFormatter={formatShortVND}
-          />
+          {revenueData && revenueData.length > 0 ? (
+            <D3BarChart 
+              data={revenueData} 
+              height={320} 
+              color="#3b82f6"
+              yAxisFormatter={formatShortVND}
+            />
+          ) : (
+            <div className="flex flex-col h-full items-center justify-center text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+              <DollarSign className="w-10 h-10 mb-2 text-slate-300" />
+              <p className="font-medium">Chưa có dữ liệu doanh thu</p>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -399,7 +388,7 @@ export default function ReportPage() {
         <Card className="gsap-stat-card p-6 border-t-4 border-t-blue-500 hover:shadow-lg transition-shadow">
           <h3 className="text-lg font-bold mb-4 text-slate-800">Chi tiết Doanh thu</h3>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng thu:</span> <span className="font-semibold text-slate-800">{revenueSummary ? formatVND(revenueSummary.totalRevenue) : "0 ₫"}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng thu:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.totalRevenue) : "0 ₫"}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Chờ xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.pendingRevenue) : "0 ₫"}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn trả:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.refundedRevenue) : "0 ₫"}</span></div>
           </div>
@@ -447,7 +436,7 @@ export default function ReportPage() {
             <Bot className="w-5 h-5 text-teal-500" />
           </div>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng yêu cầu:</span> <span className="font-semibold text-slate-800">{aiSummary?.totalUsage ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng yêu cầu:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{aiSummary?.totalUsage ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Thành công:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{aiSummary?.successfulGenerations ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Thất bại:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{aiSummary?.failedGenerations ?? 0}</span></div>
           </div>
@@ -459,7 +448,7 @@ export default function ReportPage() {
             <Settings className="w-5 h-5 text-cyan-500" />
           </div>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng số yêu cầu:</span> <span className="font-semibold text-slate-800">{maintenanceSummary?.totalRequests ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng số yêu cầu:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{maintenanceSummary?.totalRequests ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Đang xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{maintenanceSummary?.inProgress ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn tất:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{maintenanceSummary?.completed ?? 0}</span></div>
           </div>
@@ -471,10 +460,17 @@ export default function ReportPage() {
         <Card className="gsap-stat-card p-6 lg:col-span-2 hover:shadow-lg transition-shadow">
           <h3 className="text-lg font-bold mb-4 text-slate-800">Xu hướng Check-in</h3>
           <div className="h-72">
-            <D3AreaChart 
-              data={checkinTrend.map(d => ({ label: d.date, value: d.count }))} 
-              color="#3b82f6" 
-            />
+            {checkinTrend && checkinTrend.length > 0 ? (
+              <D3BarChart 
+                data={checkinTrend.map(d => ({ label: d.date, value: d.count }))} 
+                color="#3b82f6" 
+              />
+            ) : (
+              <div className="flex flex-col h-full items-center justify-center text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <Activity className="w-10 h-10 mb-2 text-slate-300" />
+                <p className="font-medium">Chưa có dữ liệu check-in</p>
+              </div>
+            )}
           </div>
         </Card>
         
