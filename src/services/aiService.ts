@@ -260,27 +260,43 @@ export const aiService = {
     ): Promise<
         PageResponse<AiSuggestionResponse>
     > {
-        const response =
-            await apiClient.get<
-                ApiResponse<
-                    PageResponse<AiSuggestionResponse>
-                >
-            >(
-                `/admin/ai/suggestions`,
-                {
-                    params: {
-                        page,
-                        size,
+        try {
+            const response =
+                await apiClient.get<
+                    ApiResponse<
+                        PageResponse<AiSuggestionResponse>
+                    >
+                >(
+                    `/admin/ai/suggestions`,
+                    {
+                        params: {
+                            page,
+                            size,
+                        },
+                        timeout:
+                        AI_STANDARD_TIMEOUT_MS,
                     },
-                    timeout:
-                    AI_STANDARD_TIMEOUT_MS,
-                },
+                );
+    
+            return requireApiData(
+                response.data,
+                "Không thể tải danh sách gợi ý AI (Admin).",
             );
-
-        return requireApiData(
-            response.data,
-            "Không thể tải danh sách gợi ý AI (Admin).",
-        );
+        } catch {
+            return {
+                content: [],
+                pageable: { pageNumber: page, pageSize: size },
+                totalElements: 0,
+                totalPages: 0,
+                last: true,
+                size: size,
+                number: page,
+                sort: { empty: true, sorted: false, unsorted: true },
+                numberOfElements: 0,
+                first: page === 0,
+                empty: true
+            };
+        }
     },
 
     async getAdminAiSuggestionDetail(

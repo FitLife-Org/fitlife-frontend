@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+﻿import apiClient from "./apiClient";
 import type { ApiResponse } from "../types/common.type";
 import type { 
   DashboardFilterRequest,
@@ -69,7 +69,7 @@ export const adminDashboardService = {
       const res = await apiClient.get<ApiResponse<any[]>>("/admin/reports/subscriptions/expiring", { params });
       return (res.data.data || []).map(item => ({
         id: item.subscriptionId,
-        description: `Gói của ${item.memberName} sắp hết hạn vào ${item.endDate}`,
+        description: `GĂ³i cá»§a ${item.memberName} sáº¯p háº¿t háº¡n vĂ o ${item.endDate}`,
         time: item.endDate,
         status: "WARNING"
       }));
@@ -181,8 +181,8 @@ export const adminDashboardService = {
     try {
       const res = await apiClient.get<ApiResponse<any>>("/admin/reports/plans/summary", { params });
       return [
-        { planName: "Kế hoạch Tập luyện (Workout)", totalSubscribers: res.data.data?.activeWorkoutPlans || 0 },
-        { planName: "Kế hoạch Dinh dưỡng (Nutrition)", totalSubscribers: res.data.data?.activeNutritionPlans || 0 }
+        { planName: "Káº¿ hoáº¡ch Táº­p luyá»‡n (Workout)", totalSubscribers: res.data.data?.activeWorkoutPlans || 0 },
+        { planName: "Káº¿ hoáº¡ch Dinh dÆ°á»¡ng (Nutrition)", totalSubscribers: res.data.data?.activeNutritionPlans || 0 }
       ];
     } catch { return []; }
   },
