@@ -435,7 +435,7 @@ export default function ReportPage() {
             <Bot className="w-5 h-5 text-teal-500" />
           </div>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng yêu cầu:</span> <span className="font-semibold text-slate-800">{aiSummary?.totalUsage ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng yêu cầu:</span> <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{aiSummary?.totalUsage ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Thành công:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{aiSummary?.successfulGenerations ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Thất bại:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{aiSummary?.failedGenerations ?? 0}</span></div>
           </div>
@@ -447,7 +447,7 @@ export default function ReportPage() {
             <Settings className="w-5 h-5 text-cyan-500" />
           </div>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng số yêu cầu:</span> <span className="font-semibold text-slate-800">{maintenanceSummary?.totalRequests ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng số yêu cầu:</span> <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{maintenanceSummary?.totalRequests ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Đang xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{maintenanceSummary?.inProgress ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn tất:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{maintenanceSummary?.completed ?? 0}</span></div>
           </div>
