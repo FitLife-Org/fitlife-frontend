@@ -1,4 +1,4 @@
-﻿import apiClient from "./apiClient";
+import apiClient from "./apiClient";
 import type { ApiResponse } from "../types/common.type";
 import type { 
   DashboardFilterRequest,
@@ -181,8 +181,8 @@ export const adminDashboardService = {
     try {
       const res = await apiClient.get<ApiResponse<any>>("/admin/reports/plans/summary", { params });
       return [
-        { planName: "Káº¿ hoáº¡ch Táº­p luyá»‡n (Workout)", totalSubscribers: res.data.data?.activeWorkoutPlans || 0 },
-        { planName: "Káº¿ hoáº¡ch Dinh dÆ°á»¡ng (Nutrition)", totalSubscribers: res.data.data?.activeNutritionPlans || 0 }
+        { planName: "Kế hoạch Tập luyện (Workout)", totalSubscribers: res.data.data?.activeWorkoutPlans || 0 },
+        { planName: "Kế hoạch Dinh dưỡng (Nutrition)", totalSubscribers: res.data.data?.activeNutritionPlans || 0 }
       ];
     } catch { return []; }
   },
