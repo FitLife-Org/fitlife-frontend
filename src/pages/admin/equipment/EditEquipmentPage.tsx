@@ -53,7 +53,7 @@ export default function EditEquipmentPage() {
 
         setUploadingImage(true);
         try {
-            const res = await uploadService.upload(file);
+            const res = await uploadService.upload(file, "equipment");
             setFormData(prev => ({ ...prev, image: res.url }));
             showAlert.success("Thành công", "Tải ảnh lên thành công");
         } catch (error) {
