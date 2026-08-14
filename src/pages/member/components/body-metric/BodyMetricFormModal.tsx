@@ -67,8 +67,8 @@ export function BodyMetricFormModal({
             </button>
           </header>
 
-          <div className="space-y-5 p-6">
-            <div className="grid gap-5 sm:grid-cols-2">
+          <div className="space-y-4 p-5">
+            <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
                     <span className="text-sm font-bold text-slate-700">
                       Cân nặng (kg) *
@@ -81,7 +81,7 @@ export function BodyMetricFormModal({
                     step="0.1"
                     value={formData.weightKg}
                     onChange={(event) => setField("weightKg", event.target.value)}
-                    className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
                     placeholder="Ví dụ: 61.5"
                 />
               </label>
@@ -98,12 +98,12 @@ export function BodyMetricFormModal({
                     step="0.1"
                     value={formData.heightCm}
                     onChange={(event) => setField("heightCm", event.target.value)}
-                    className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
                     placeholder="Ví dụ: 165"
                 />
 
                 <span className="mt-1 block text-xs text-slate-400">
-                      Có thể dùng chiều cao từ lần đo gần nhất.
+                      Dùng số đo gần nhất nếu để trống.
                     </span>
               </label>
 
@@ -119,7 +119,7 @@ export function BodyMetricFormModal({
                     step="0.1"
                     value={formData.bodyFatPercent}
                     onChange={(event) => setField("bodyFatPercent", event.target.value)}
-                    className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
                     placeholder="Ví dụ: 18.5"
                 />
               </label>
@@ -136,29 +136,29 @@ export function BodyMetricFormModal({
                     step="0.1"
                     value={formData.muscleMassKg}
                     onChange={(event) => setField("muscleMassKg", event.target.value)}
-                    className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
                     placeholder="Ví dụ: 47.2"
                 />
               </label>
+              
+              <label className="block sm:col-span-2">
+                    <span className="text-sm font-bold text-slate-700">
+                      Thời gian đo
+                    </span>
+
+                <input
+                    type="datetime-local"
+                    value={formData.recordedAt}
+                    max={new Date().toISOString().slice(0, 16)}
+                    onChange={(event) => setField("recordedAt", event.target.value)}
+                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                />
+
+                <span className="mt-1 block text-xs text-slate-400">
+                      Để trống để sử dụng thời gian hiện tại.
+                    </span>
+              </label>
             </div>
-
-            <label className="block">
-                  <span className="text-sm font-bold text-slate-700">
-                    Thời gian đo
-                  </span>
-
-              <input
-                  type="datetime-local"
-                  value={formData.recordedAt}
-                  max={new Date().toISOString().slice(0, 16)}
-                  onChange={(event) => setField("recordedAt", event.target.value)}
-                  className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
-              />
-
-              <span className="mt-1 block text-xs text-slate-400">
-                    Để trống để sử dụng thời gian hiện tại.
-                  </span>
-            </label>
 
             <label className="block">
                   <span className="text-sm font-bold text-slate-700">
@@ -166,11 +166,11 @@ export function BodyMetricFormModal({
                   </span>
 
               <textarea
-                  rows={4}
+                  rows={2}
                   maxLength={1000}
                   value={formData.note}
                   onChange={(event) => setField("note", event.target.value)}
-                  className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
+                  className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 outline-none transition focus:border-fit-primary focus:ring-4 focus:ring-fit-primary/10"
                   placeholder="Tình trạng cơ thể hoặc ghi chú cho lần đo..."
               />
 
@@ -184,7 +184,7 @@ export function BodyMetricFormModal({
                   type="button"
                   onClick={closeCreateForm}
                   disabled={saving}
-                  className="min-h-12 rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                  className="min-h-10 rounded-xl border border-slate-200 px-5 py-2 font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
               >
                 Hủy
               </button>
@@ -193,7 +193,7 @@ export function BodyMetricFormModal({
                   type="button"
                   onClick={() => void createMetric()}
                   disabled={saving}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-black text-white transition hover:bg-fit-primaryHover disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-2 font-black text-white transition hover:bg-fit-primaryHover disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving && (
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

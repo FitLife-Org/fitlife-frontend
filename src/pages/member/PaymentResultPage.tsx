@@ -1,6 +1,9 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { CheckCircle2, XCircle, FileText } from "lucide-react";
 import Card from "../../components/common/Card";
+import { invoiceService } from "../../services/invoiceService";
+import type { Invoice } from "../../types/invoice.type";
 
 export default function PaymentResultPage() {
     const [searchParams] = useSearchParams();
@@ -10,8 +13,18 @@ export default function PaymentResultPage() {
     const code = searchParams.get("code");
     const paymentId = searchParams.get("paymentId");
 
+    const [invoice, setInvoice] = useState<Invoice | null>(null);
+
     const success = status === "SUCCESS";
     const isCancelled = status === "FAILED" && code === "24";
+
+    useEffect(() => {
+        if (success && paymentId) {
+            invoiceService.getInvoiceByPaymentId(paymentId)
+                .then(setInvoice)
+                .catch(console.error); // Silently fail if invoice not generated yet or missing
+        }
+    }, [success, paymentId]);
 
     return (
         <div className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center">
@@ -36,10 +49,25 @@ export default function PaymentResultPage() {
                             : `Giao dịch không thành công. Mã lỗi: ${code || "-"}`}
                 </p>
 
-                {paymentId && (
+                {paymentId && !invoice && (
                     <p className="mt-2 text-xs text-slate-400">
                         Mã payment: {paymentId}
                     </p>
+                )}
+
+                {invoice && (
+                    <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-2 text-slate-600">
+                            <FileText className="w-5 h-5 text-indigo-500" />
+                            <span className="font-semibold">Đã tạo hóa đơn #{invoice.id}</span>
+                        </div>
+                        <Link 
+                            to={`/member/invoices/${invoice.id}`}
+                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                        >
+                            Xem chi tiết hóa đơn
+                        </Link>
+                    </div>
                 )}
 
                 <div className="mt-8 flex justify-center gap-3">

@@ -105,6 +105,7 @@ import MemberInvoiceDetailPage from "../pages/member/MemberInvoiceDetailPage";
 
 import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
 import WorkoutPlanDetailPage from "../pages/member/WorkoutPlanDetailPage";
+import MemberSchedulePage from "../pages/member/MemberSchedulePage";
 
 import NutritionPage from "../pages/member/NutritionPage";
 import NutritionPlanDetailPage from "../pages/member/NutritionPlanDetailPage";
@@ -367,6 +368,15 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_MEMBER"]}>
                                     <WorkoutPlanDetailPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.MEMBER_SCHEDULE}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MemberSchedulePage />
                                 </RoleGuard>
                             }
                         />

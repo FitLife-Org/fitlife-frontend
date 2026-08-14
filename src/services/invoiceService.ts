@@ -82,6 +82,20 @@ export const invoiceService = {
         );
     },
 
+    async getInvoiceByPaymentId(
+        paymentId: string,
+    ): Promise<Invoice> {
+        const response =
+            await apiClient.get<
+                ApiResponse<Invoice>
+            >(`/invoices/by-payment/${paymentId}`);
+
+        return requireData(
+            response.data,
+            "Không nhận được hóa đơn từ giao dịch này.",
+        );
+    },
+
     async getMyInvoiceHistory(
         id: number,
     ): Promise<InvoiceHistory[]> {

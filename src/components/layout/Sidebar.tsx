@@ -125,7 +125,7 @@ const menuItems:
 
     {
         label: "Lịch tập",
-        path: ROUTES.MEMBER_BOOKING,
+        path: ROUTES.MEMBER_SCHEDULE,
         icon: CalendarDays,
         roles: ["ROLE_MEMBER"],
     },

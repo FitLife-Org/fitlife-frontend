@@ -6,7 +6,9 @@ import {
   Activity, 
   TrendingUp, 
   TrendingDown,
-  DollarSign
+  DollarSign,
+  Bot,
+  Settings
 } from "lucide-react";
 import D3AreaChart from "../../components/common/charts/D3AreaChart";
 import gsap from "gsap";
@@ -21,7 +23,14 @@ import { adminDashboardService } from "../../services/adminDashboardService";
 import type { 
   DashboardOverview, 
   ChartDataDto, 
-  RecentActivityDto 
+  RecentActivityDto,
+  RevenueSummaryDto,
+  PaymentStatusStatsDto,
+  SubscriptionSummaryDto,
+  MemberSummaryDto,
+  EquipmentStatusStatsDto,
+  AiSummaryDto,
+  MaintenanceSummaryDto
 } from "../../types/dashboard.type";
 import { getApiErrorMessage } from "../../utils/apiError";
 
@@ -31,22 +40,46 @@ export default function ReportPage() {
   const [revenueData, setRevenueData] = useState<ChartDataDto[]>([]);
   const [checkins, setCheckins] = useState<RecentActivityDto[]>([]);
   const [expiringSubs, setExpiringSubs] = useState<RecentActivityDto[]>([]);
+  const [revenueSummary, setRevenueSummary] = useState<RevenueSummaryDto | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusStatsDto | null>(null);
+  const [subSummary, setSubSummary] = useState<SubscriptionSummaryDto | null>(null);
+  const [memberSummary, setMemberSummary] = useState<MemberSummaryDto | null>(null);
+  const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatusStatsDto | null>(null);
+  const [aiSummary, setAiSummary] = useState<AiSummaryDto | null>(null);
+  const [maintenanceSummary, setMaintenanceSummary] = useState<MaintenanceSummaryDto | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [overviewRes, revenueRes, checkinsRes, expiringRes] = await Promise.all([
+        const [
+          overviewRes, revenueRes, checkinsRes, expiringRes,
+          revSumRes, payStatRes, subSumRes, memSumRes, eqStatRes, aiSumRes, maintSumRes
+        ] = await Promise.all([
           adminDashboardService.getOverview(),
           adminDashboardService.getRevenueStats(),
           adminDashboardService.getCheckinsToday(),
-          adminDashboardService.getExpiringSubscriptions()
+          adminDashboardService.getExpiringSubscriptions(),
+          adminDashboardService.getRevenueSummary(),
+          adminDashboardService.getPaymentStatusStats(),
+          adminDashboardService.getSubscriptionSummary(),
+          adminDashboardService.getMemberSummary(),
+          adminDashboardService.getEquipmentStatusStats(),
+          adminDashboardService.getAiSummary(),
+          adminDashboardService.getMaintenanceSummary()
         ]);
         setOverview(overviewRes);
         setRevenueData(revenueRes);
         setCheckins(checkinsRes);
         setExpiringSubs(expiringRes);
+        setRevenueSummary(revSumRes);
+        setPaymentStatus(payStatRes);
+        setSubSummary(subSumRes);
+        setMemberSummary(memSumRes);
+        setEquipmentStatus(eqStatRes);
+        setAiSummary(aiSumRes);
+        setMaintenanceSummary(maintSumRes);
       } catch (error) {
         toast.error(getApiErrorMessage(error));
       } finally {
@@ -311,6 +344,78 @@ export default function ReportPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </Card>
+      </div>
+
+      {/* Detailed Report Summaries */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-blue-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Chi tiết Doanh thu</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng thu:</span> <span className="font-semibold text-slate-800">{revenueSummary ? formatVND(revenueSummary.totalRevenue) : "0 ₫"}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Chờ xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.pendingRevenue) : "0 ₫"}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn trả:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.refundedRevenue) : "0 ₫"}</span></div>
+          </div>
+        </Card>
+        
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-indigo-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Trạng thái Giao dịch</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn tất:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{paymentStatus?.completed ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đang chờ:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{paymentStatus?.pending ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Thất bại:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{paymentStatus?.failed ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-purple-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Thống kê Gói tập</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đang HĐ:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{subSummary?.active ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hết hạn:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{subSummary?.expired ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đã hủy:</span> <span className="font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{subSummary?.cancelled ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-pink-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Tình trạng Hội viên</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đang tập:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{memberSummary?.active ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Không HĐ:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{memberSummary?.inactive ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Khách mới:</span> <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">+{memberSummary?.newThisMonth ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-amber-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Trạng thái Thiết bị</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Sẵn sàng:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{equipmentStatus?.available ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Bảo trì:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{equipmentStatus?.maintenance ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hỏng:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{equipmentStatus?.broken ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-teal-500 hover:shadow-lg transition-shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-slate-800">Sử dụng FitLife AI</h3>
+            <Bot className="w-5 h-5 text-teal-500" />
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng yêu cầu:</span> <span className="font-semibold text-slate-800">{aiSummary?.totalUsage ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Thành công:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{aiSummary?.successfulGenerations ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Thất bại:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{aiSummary?.failedGenerations ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-cyan-500 hover:shadow-lg transition-shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-slate-800">Vận hành & Bảo trì</h3>
+            <Settings className="w-5 h-5 text-cyan-500" />
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng số yêu cầu:</span> <span className="font-semibold text-slate-800">{maintenanceSummary?.totalRequests ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đang xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{maintenanceSummary?.inProgress ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn tất:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{maintenanceSummary?.completed ?? 0}</span></div>
           </div>
         </Card>
       </div>

@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import axios from "axios";
 
 import type {
   SpringPage,
@@ -138,22 +139,23 @@ export const workoutService = {
     );
   },
 
-  async getMyWorkoutPlans():
-      Promise<WorkoutPlan[]> {
-    const response =
-        await apiClient.get<
-            ApiResponse<WorkoutPlansResponse>
-        >("/workout-plans/me", {
-          params: {
-            page: 0,
-            size: 20,
-            sort: "createdAt,desc",
-          },
-        });
+  async getMyWorkoutPlans(): Promise<WorkoutPlan[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<WorkoutPlansResponse>>("/workout-plans/me", {
+        params: {
+          page: 0,
+          size: 20,
+          sort: "createdAt,desc",
+        },
+      });
 
-    return extractPlans(
-        response.data.data,
-    );
+      return extractPlans(response.data.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return [];
+      }
+      throw error;
+    }
   },
 
   async completeSession(
