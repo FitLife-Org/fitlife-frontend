@@ -387,7 +387,7 @@ export default function ReportPage() {
         <Card className="gsap-stat-card p-6 border-t-4 border-t-blue-500 hover:shadow-lg transition-shadow">
           <h3 className="text-lg font-bold mb-4 text-slate-800">Chi tiết Doanh thu</h3>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng thu:</span> <span className="font-semibold text-slate-800">{revenueSummary ? formatVND(revenueSummary.totalRevenue) : "0 ₫"}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng thu:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.totalRevenue) : "0 ₫"}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Chờ xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.pendingRevenue) : "0 ₫"}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn trả:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.refundedRevenue) : "0 ₫"}</span></div>
           </div>
@@ -435,7 +435,7 @@ export default function ReportPage() {
             <Bot className="w-5 h-5 text-teal-500" />
           </div>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng yêu cầu:</span> <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{aiSummary?.totalUsage ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng yêu cầu:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{aiSummary?.totalUsage ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Thành công:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{aiSummary?.successfulGenerations ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Thất bại:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{aiSummary?.failedGenerations ?? 0}</span></div>
           </div>
@@ -447,7 +447,7 @@ export default function ReportPage() {
             <Settings className="w-5 h-5 text-cyan-500" />
           </div>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng số yêu cầu:</span> <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{maintenanceSummary?.totalRequests ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng số yêu cầu:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{maintenanceSummary?.totalRequests ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Đang xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{maintenanceSummary?.inProgress ?? 0}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn tất:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{maintenanceSummary?.completed ?? 0}</span></div>
           </div>
