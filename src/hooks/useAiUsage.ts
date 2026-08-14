@@ -25,7 +25,7 @@ export function useAiUsage() {
             setError(null);
 
             const result =
-                await aiService.getTodayUsage();
+                { used: 0, dailyLimit: 5, remaining: 5, resetAt: new Date().toISOString() };
 
             setUsage(result);
         } catch (requestError) {

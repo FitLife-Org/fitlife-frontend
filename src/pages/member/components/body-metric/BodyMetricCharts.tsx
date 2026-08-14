@@ -89,10 +89,10 @@ function SimpleLineChart({
           <TrendingUp className="h-5 w-5 text-fit-primary" />
         </div>
 
-        <div className="mt-5 w-full overflow-x-auto">
+        <div className="mt-5 w-full">
           <svg
               viewBox={`0 0 ${width} ${height}`}
-              className="h-[260px] min-w-[620px] w-full"
+              className="w-full h-auto drop-shadow-sm"
               role="img"
               aria-label={title}
           >

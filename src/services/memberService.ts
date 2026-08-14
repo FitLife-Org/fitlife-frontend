@@ -73,7 +73,7 @@ function mapMember(
 export const memberService = {
     async getMyQr(): Promise<{ memberCode: string; qrData: string }> {
         const response = await apiClient.get<ApiResponse<{ memberCode: string; qrData: string }>>("/members/me/qr");
-        return requireData(response.data, "Kh�ng nh?n ��?c m? QR.");
+        return requireData(response.data, "Kh�ng nh?n ��?c m? QR.");
     },
     async getMyProfile():
         Promise<MemberProfile> {
@@ -244,35 +244,6 @@ export const memberService = {
         );
     },
 
-    async getMemberByCode(
-        memberCode: string,
-    ): Promise<MemberProfile> {
-        const normalizedCode =
-            memberCode.trim();
-
-        if (!normalizedCode) {
-            throw new Error(
-                "Mã hội viên không được để trống.",
-            );
-        }
-
-        const response =
-            await apiClient.get<
-                ApiResponse<MemberProfile>
-            >(
-                `/admin/members/code/${encodeURIComponent(
-                    normalizedCode,
-                )}`,
-            );
-
-        return mapMember(
-            requireData(
-                response.data,
-                "Không tìm thấy hội viên.",
-            ),
-        );
-    },
-
     async createMember(
         data: AdminMemberCreateRequest,
     ): Promise<MemberProfile> {
@@ -389,7 +360,7 @@ export const memberService = {
         };
 
         const response =
-            await apiClient.put<
+            await apiClient.patch<
                 ApiResponse<MemberProfile>
             >(
                 `/admin/members/${id}`,
@@ -402,36 +373,6 @@ export const memberService = {
                 "Không nhận được hội viên sau khi cập nhật.",
             ),
         );
-    },
-
-    async updateMemberStatus(
-        id: number,
-        status: Status,
-    ): Promise<MemberProfile> {
-        const response =
-            await apiClient.patch<
-                ApiResponse<MemberProfile>
-            >(
-                `/admin/members/${id}/status`,
-                {
-                    status,
-                },
-            );
-
-        return mapMember(
-            requireData(
-                response.data,
-                "Không nhận được trạng thái hội viên.",
-            ),
-        );
-    },
-
-    async deleteMember(
-        id: number,
-    ): Promise<void> {
-        await apiClient.delete<
-            ApiResponse<void>
-        >(`/admin/members/${id}`);
     },
 
     async getMemberSubscriptions(
@@ -484,13 +425,4 @@ export const memberService = {
         ).content;
     },
 
-    async restoreMember(
-        id: number,
-    ): Promise<void> {
-        await apiClient.patch<
-            ApiResponse<void>
-        >(
-            `/admin/members/${id}/restore`,
-        );
-    },
-};
+    };

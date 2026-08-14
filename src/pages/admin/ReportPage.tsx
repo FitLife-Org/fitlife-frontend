@@ -6,7 +6,11 @@ import {
   Activity, 
   TrendingUp, 
   TrendingDown,
-  DollarSign
+  DollarSign,
+  Bot,
+  Settings,
+  Download,
+  Package
 } from "lucide-react";
 import D3AreaChart from "../../components/common/charts/D3AreaChart";
 import gsap from "gsap";
@@ -16,11 +20,23 @@ import toast from "react-hot-toast";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Badge from "../../components/common/Badge";
+import Button from "../../components/common/Button";
+import Loading from "../../components/common/Loading";
 import { adminDashboardService } from "../../services/adminDashboardService";
 import type { 
   DashboardOverview, 
   ChartDataDto, 
-  RecentActivityDto 
+  RecentActivityDto,
+  RevenueSummaryDto,
+  PaymentStatusStatsDto,
+  SubscriptionSummaryDto,
+  MemberSummaryDto,
+  EquipmentStatusStatsDto,
+  AiSummaryDto,
+  MaintenanceSummaryDto,
+  CheckinTrendDto,
+  CheckinPeakHourDto,
+  PlanSummaryDto
 } from "../../types/dashboard.type";
 import { getApiErrorMessage } from "../../utils/apiError";
 
@@ -30,22 +46,58 @@ export default function ReportPage() {
   const [revenueData, setRevenueData] = useState<ChartDataDto[]>([]);
   const [checkins, setCheckins] = useState<RecentActivityDto[]>([]);
   const [expiringSubs, setExpiringSubs] = useState<RecentActivityDto[]>([]);
+  const [revenueSummary, setRevenueSummary] = useState<RevenueSummaryDto | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusStatsDto | null>(null);
+  const [subSummary, setSubSummary] = useState<SubscriptionSummaryDto | null>(null);
+  const [memberSummary, setMemberSummary] = useState<MemberSummaryDto | null>(null);
+  const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatusStatsDto | null>(null);
+  const [aiSummary, setAiSummary] = useState<AiSummaryDto | null>(null);
+  const [maintenanceSummary, setMaintenanceSummary] = useState<MaintenanceSummaryDto | null>(null);
+  
+  const [checkinTrend, setCheckinTrend] = useState<CheckinTrendDto[]>([]);
+  const [peakHours, setPeakHours] = useState<CheckinPeakHourDto[]>([]);
+  const [plansSummary, setPlansSummary] = useState<PlanSummaryDto[]>([]);
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [overviewRes, revenueRes, checkinsRes, expiringRes] = await Promise.all([
-          adminDashboardService.getRealOverview(),
-          adminDashboardService.getRealRevenueStats(),
-          adminDashboardService.getRealCheckinsToday(),
-          adminDashboardService.getRealExpiringSubscriptions()
+        const [
+          overviewRes, revenueRes, checkinsRes, expiringRes,
+          revSumRes, payStatRes, subSumRes, memSumRes, eqStatRes, aiSumRes, maintSumRes,
+          checkinTrendRes, peakHoursRes, plansSummaryRes
+        ] = await Promise.all([
+          adminDashboardService.getOverview(),
+          adminDashboardService.getRevenueStats(),
+          adminDashboardService.getCheckinsToday(),
+          adminDashboardService.getExpiringSubscriptions(),
+          adminDashboardService.getRevenueSummary(),
+          adminDashboardService.getPaymentStatusStats(),
+          adminDashboardService.getSubscriptionSummary(),
+          adminDashboardService.getMemberSummary(),
+          adminDashboardService.getEquipmentStatusStats(),
+          adminDashboardService.getAiSummary(),
+          adminDashboardService.getMaintenanceSummary(),
+          adminDashboardService.getCheckinTrend(),
+          adminDashboardService.getCheckinPeakHours(),
+          adminDashboardService.getPlansSummary()
         ]);
         setOverview(overviewRes);
         setRevenueData(revenueRes);
         setCheckins(checkinsRes);
         setExpiringSubs(expiringRes);
+        setRevenueSummary(revSumRes);
+        setPaymentStatus(payStatRes);
+        setSubSummary(subSumRes);
+        setMemberSummary(memSumRes);
+        setEquipmentStatus(eqStatRes);
+        setAiSummary(aiSumRes);
+        setMaintenanceSummary(maintSumRes);
+        setCheckinTrend(checkinTrendRes);
+        setPeakHours(peakHoursRes);
+        setPlansSummary(plansSummaryRes);
       } catch (error) {
         toast.error(getApiErrorMessage(error));
       } finally {
@@ -103,20 +155,45 @@ export default function ReportPage() {
     return value.toString();
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="w-12 h-12 border-4 border-fit-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-500 font-medium">Đang tải báo cáo thống kê...</p>
-      </div>
-    );
-  }
+  useGSAP(() => {
+    if (!loading) {
+      gsap.fromTo(".gsap-stat-card", 
+        { y: 30, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: "back.out(1.2)" }
+      );
+    }
+  }, [loading]);
+
+  const handleExport = async () => {
+    try {
+      const blob = await adminDashboardService.exportReport();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `FitLife_Report_${new Date().getTime()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Đã xuất báo cáo thành công");
+    } catch (error) {
+      toast.error("Xuất báo cáo thất bại");
+    }
+  };
+
+  if (loading) return <Loading />;
 
   return (
     <div ref={containerRef} className="space-y-6">
       <PageHeader 
         title="Báo cáo & Thống kê" 
         description="Theo dõi doanh thu, sự phát triển hội viên và hiệu suất vận hành hệ thống" 
+        action={
+          <Button onClick={handleExport}>
+            <Download className="h-5 w-5" />
+            Xuất báo cáo
+          </Button>
+        }
       />
 
       {/* Grid: 4 Summary Cards */}
@@ -315,6 +392,134 @@ export default function ReportPage() {
             </table>
           </div>
         </Card>
+      </div>
+
+      {/* Detailed Report Summaries */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-blue-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Chi tiết Doanh thu</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng thu:</span> <span className="font-semibold text-slate-800">{revenueSummary ? formatVND(revenueSummary.totalRevenue) : "0 ₫"}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Chờ xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.pendingRevenue) : "0 ₫"}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn trả:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{revenueSummary ? formatVND(revenueSummary.refundedRevenue) : "0 ₫"}</span></div>
+          </div>
+        </Card>
+        
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-indigo-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Trạng thái Giao dịch</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn tất:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{paymentStatus?.completed ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đang chờ:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{paymentStatus?.pending ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Thất bại:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{paymentStatus?.failed ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-purple-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Thống kê Gói tập</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đang HĐ:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{subSummary?.active ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hết hạn:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{subSummary?.expired ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đã hủy:</span> <span className="font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{subSummary?.cancelled ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-pink-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Tình trạng Hội viên</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đang tập:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{memberSummary?.active ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Không HĐ:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{memberSummary?.inactive ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Khách mới:</span> <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">+{memberSummary?.newThisMonth ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-amber-500 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Trạng thái Thiết bị</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Sẵn sàng:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{equipmentStatus?.available ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Bảo trì:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{equipmentStatus?.maintenance ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hỏng:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{equipmentStatus?.broken ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-teal-500 hover:shadow-lg transition-shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-slate-800">Sử dụng FitLife AI</h3>
+            <Bot className="w-5 h-5 text-teal-500" />
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng yêu cầu:</span> <span className="font-semibold text-slate-800">{aiSummary?.totalUsage ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Thành công:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{aiSummary?.successfulGenerations ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Thất bại:</span> <span className="font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{aiSummary?.failedGenerations ?? 0}</span></div>
+          </div>
+        </Card>
+
+        <Card className="gsap-stat-card p-6 border-t-4 border-t-cyan-500 hover:shadow-lg transition-shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-slate-800">Vận hành & Bảo trì</h3>
+            <Settings className="w-5 h-5 text-cyan-500" />
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-slate-500">Tổng số yêu cầu:</span> <span className="font-semibold text-slate-800">{maintenanceSummary?.totalRequests ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Đang xử lý:</span> <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{maintenanceSummary?.inProgress ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn tất:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{maintenanceSummary?.completed ?? 0}</span></div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Grid: Additional Reports (Checkin Trends, Peak Hours, Plans) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-8">
+        <Card className="gsap-stat-card p-6 lg:col-span-2 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Xu hướng Check-in</h3>
+          <div className="h-72">
+            <D3AreaChart 
+              data={checkinTrend.map(d => ({ label: d.date, value: d.count }))} 
+              color="#3b82f6" 
+            />
+          </div>
+        </Card>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+          <Card className="gsap-stat-card p-6 hover:shadow-lg transition-shadow">
+            <h3 className="text-lg font-bold mb-4 text-slate-800">Giờ cao điểm</h3>
+            <div className="space-y-4">
+              {peakHours.map((h, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-14 text-sm font-semibold text-slate-600">{h.hour}</div>
+                  <div className="flex-1 bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-indigo-500 h-full rounded-full" 
+                      style={{ width: `${Math.min(100, (h.count / (Math.max(...peakHours.map(p => p.count)) || 1)) * 100)}%` }} 
+                    />
+                  </div>
+                  <div className="w-8 text-right text-xs font-bold text-indigo-600">{h.count}</div>
+                </div>
+              ))}
+              {peakHours.length === 0 && (
+                <p className="text-sm text-slate-500 italic">Chưa có dữ liệu.</p>
+              )}
+            </div>
+          </Card>
+          
+          <Card className="gsap-stat-card p-6 hover:shadow-lg transition-shadow">
+            <h3 className="text-lg font-bold mb-4 text-slate-800">Thống kê Gói tập</h3>
+            <div className="space-y-3">
+              {plansSummary.map((p, i) => (
+                <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-slate-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                      <Package className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700">{p.planName}</span>
+                  </div>
+                  <Badge variant="success" className="font-bold">{p.totalSubscribers}</Badge>
+                </div>
+              ))}
+              {plansSummary.length === 0 && (
+                <p className="text-sm text-slate-500 italic">Chưa có dữ liệu.</p>
+              )}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

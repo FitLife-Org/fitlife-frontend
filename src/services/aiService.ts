@@ -49,25 +49,6 @@ function validateSuggestionId(
 }
 
 export const aiService = {
-    async getTodayUsage():
-        Promise<AiUsageTodayResponse> {
-        const response =
-            await apiClient.get<
-                ApiResponse<AiUsageTodayResponse>
-            >(
-                `${AI_BASE_URL}/usage/today`,
-                {
-                    timeout:
-                    AI_STANDARD_TIMEOUT_MS,
-                },
-            );
-
-        return requireApiData(
-            response.data,
-            "Không thể tải lượt sử dụng AI.",
-        );
-    },
-
     async generateFullPlan(
         request: AiFullPlanRequest,
     ): Promise<AiSuggestionResponse> {
@@ -86,48 +67,6 @@ export const aiService = {
         return requireApiData(
             response.data,
             "Máy chủ không trả về kế hoạch toàn diện.",
-        );
-    },
-
-    async generateWorkoutPlan(
-        request: AiWorkoutPlanRequest,
-    ): Promise<AiSuggestionResponse> {
-        const response =
-            await apiClient.post<
-                ApiResponse<AiSuggestionResponse>
-            >(
-                `${AI_BASE_URL}/workout-plan`,
-                request,
-                {
-                    timeout:
-                    AI_GENERATE_TIMEOUT_MS,
-                },
-            );
-
-        return requireApiData(
-            response.data,
-            "Máy chủ không trả về kế hoạch tập luyện.",
-        );
-    },
-
-    async generateNutritionPlan(
-        request: AiNutritionPlanRequest,
-    ): Promise<AiSuggestionResponse> {
-        const response =
-            await apiClient.post<
-                ApiResponse<AiSuggestionResponse>
-            >(
-                `${AI_BASE_URL}/nutrition-plan`,
-                request,
-                {
-                    timeout:
-                    AI_GENERATE_TIMEOUT_MS,
-                },
-            );
-
-        return requireApiData(
-            response.data,
-            "Máy chủ không trả về kế hoạch dinh dưỡng.",
         );
     },
 
@@ -169,43 +108,6 @@ export const aiService = {
                     params: {
                         page,
                         size,
-                    },
-                    timeout:
-                    AI_STANDARD_TIMEOUT_MS,
-                },
-            );
-
-        return requireApiData(
-            response.data,
-            "Không thể tải lịch sử AI.",
-        );
-    },
-
-    async getFilteredHistory(
-        filter: AiHistoryFilter,
-    ): Promise<
-        PageResponse<AiSuggestionResponse>
-    > {
-        const response =
-            await apiClient.get<
-                ApiResponse<
-                    PageResponse<AiSuggestionResponse>
-                >
-            >(
-                `${AI_BASE_URL}/my/filter`,
-                {
-                    params: {
-                        suggestionType:
-                        filter.suggestionType,
-
-                        status:
-                        filter.status,
-
-                        page:
-                            filter.page ?? 0,
-
-                        size:
-                            filter.size ?? 10,
                     },
                     timeout:
                     AI_STANDARD_TIMEOUT_MS,

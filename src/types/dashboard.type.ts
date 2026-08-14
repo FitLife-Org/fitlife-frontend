@@ -58,3 +58,62 @@ export interface DashboardFilterRequest {
   endDate?: string;
   groupBy?: "DAY" | "MONTH" | "YEAR";
 }
+
+export interface RevenueSummaryDto {
+  totalRevenue: number;
+  pendingRevenue: number;
+  refundedRevenue: number;
+}
+
+export interface PaymentStatusStatsDto {
+  completed: number;
+  pending: number;
+  failed: number;
+}
+
+export interface SubscriptionSummaryDto {
+  active: number;
+  expired: number;
+  cancelled: number;
+}
+
+export interface MemberSummaryDto {
+  active: number;
+  inactive: number;
+  newThisMonth: number;
+}
+
+export interface EquipmentStatusStatsDto {
+  available: number;
+  maintenance: number;
+  broken: number;
+}
+
+export interface AiSummaryDto {
+  totalUsage: number;
+  successfulGenerations: number;
+  failedGenerations: number;
+}
+
+export interface MaintenanceSummaryDto {
+  totalRequests: number;
+  pending: number;
+  inProgress: number;
+  completed: number;
+}
+
+export interface CheckinTrendDto {
+  date: string;
+  count: number;
+}
+
+export interface CheckinPeakHourDto {
+  hour: string;
+  count: number;
+}
+
+export interface PlanSummaryDto {
+  planName: string;
+  totalSubscribers: number;
+}
+

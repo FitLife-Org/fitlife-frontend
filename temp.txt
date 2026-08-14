@@ -1,4 +1,4 @@
-import { Calendar, CreditCard, CheckCircle2, Clock, XCircle, Dumbbell, ChevronRight } from "lucide-react";
+�import { Calendar, CreditCard, CheckCircle2, Clock, XCircle, Dumbbell, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Badge from "../../components/common/Badge";
@@ -17,22 +17,22 @@ export default function MySubscriptionPage() {
     try {
       const newSub = await handleRenew(id);
       if (newSub.invoiceId) {
-        toast.success("Đã tạo hóa đơn gia hạn.");
+        toast.success("� t�o h�a �n gia h�n.");
         navigate(`/member/payment/${newSub.invoiceId}`);
       }
     } catch (error) {
-      toast.error("Không thể gia hạn gói tập.");
+      toast.error("Kh�ng th� gia h�n g�i t�p.");
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "ACTIVE":
-        return <Badge variant="success"><CheckCircle2 className="w-3 h-3 mr-1 inline" />Đang hoạt động</Badge>;
+        return <Badge variant="success"><CheckCircle2 className="w-3 h-3 mr-1 inline" />Đang hoạt ��"ng</Badge>;
       case "PENDING_PAYMENT":
-        return <Badge variant="warning"><Clock className="w-3 h-3 mr-1 inline" />Chờ thanh toán</Badge>;
+        return <Badge variant="warning"><Clock className="w-3 h-3 mr-1 inline" />Chờ thanh to�n</Badge>;
       case "EXPIRED":
-        return <Badge variant="danger"><XCircle className="w-3 h-3 mr-1 inline" />Đã hết hạn</Badge>;
+        return <Badge variant="danger"><XCircle className="w-3 h-3 mr-1 inline" />Đ� hết hạn</Badge>;
       default:
         return <Badge variant="default">{status}</Badge>;
     }
@@ -50,15 +50,15 @@ export default function MySubscriptionPage() {
     <div ref={containerRef} className="space-y-8">
       <div className="flex items-center justify-between">
         <PageHeader 
-          title="Gói hội viên của tôi" 
-          description="Quản lý và theo dõi các gói tập luyện bạn đã đăng ký" 
+          title="G�i h�"i vi�n của t�i" 
+          description="Quản l� v� theo d�i c�c g�i tập luy�!n bạn �� �Ēng k�" 
         />
         <Link 
           to="/member/packages" 
           className="hidden md:flex items-center gap-2 rounded-xl bg-fit-primary px-6 py-3 font-bold text-white shadow-lg shadow-fit-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl"
         >
           <CreditCard className="h-5 w-5" />
-          Mua gói mới
+          Mua g�i m�:i
         </Link>
       </div>
 
@@ -74,16 +74,16 @@ export default function MySubscriptionPage() {
               <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
                 <div>
                   {getStatusBadge(activeSubscription.status)}
-                  <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight">{activeSubscription.gymPackageName || "Gói tập"}</h2>
+                  <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight">{activeSubscription.gymPackageName || "G�i tập"}</h2>
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-slate-300">
                     <span className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      Bắt đầu: {activeSubscription.startDate || "Chưa kích hoạt"}
+                      Bắt �ầu: {activeSubscription.startDate || "Chưa k�ch hoạt"}
                     </span>
 
                     <span className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Hết hạn: {activeSubscription.endDate || "Chưa kích hoạt"}
+                      Hết hạn: {activeSubscription.endDate || "Chưa k�ch hoạt"}
                     </span>
                     {activeSubscription.packageDurationName && (
                       <span className="flex items-center gap-2">
@@ -92,15 +92,15 @@ export default function MySubscriptionPage() {
                     )}
                     {activeSubscription.ptSessionsTotal !== undefined && activeSubscription.ptSessionsTotal > 0 && (
                       <span className="flex items-center gap-2 text-emerald-400">
-                        <Dumbbell className="h-4 w-4" /> PT: {activeSubscription.ptSessionsUsed} / {activeSubscription.ptSessionsTotal} buổi
+                        <Dumbbell className="h-4 w-4" /> PT: {activeSubscription.ptSessionsUsed} / {activeSubscription.ptSessionsTotal} bu�"i
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="min-w-[200px] rounded-2xl bg-white/10 p-6 backdrop-blur-md border border-white/20 text-center">
-                  <p className="text-sm font-medium text-slate-300">Thời gian còn lại</p>
+                  <p className="text-sm font-medium text-slate-300">Thời gian c�n lại</p>
                   <p className="mt-2 text-5xl font-black text-emerald-400">
-                    {calculateDaysLeft(activeSubscription.endDate)} <span className="text-xl">ngày</span>
+                    {calculateDaysLeft(activeSubscription.endDate)} <span className="text-xl">ng�y</span>
                   </p>
                 </div>
               </div>
@@ -112,20 +112,20 @@ export default function MySubscriptionPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
             <Calendar className="h-8 w-8 text-slate-400" />
           </div>
-          <h3 className="mt-4 text-xl font-bold text-slate-900">Chưa có gói tập nào đang hoạt động</h3>
-          <p className="mt-2 text-slate-500">Bạn chưa đăng ký gói tập nào hoặc gói tập đã hết hạn.</p>
+          <h3 className="mt-4 text-xl font-bold text-slate-900">Chưa c� g�i tập n�o �ang hoạt ��"ng</h3>
+          <p className="mt-2 text-slate-500">Bạn chưa �Ēng k� g�i tập n�o hoặc g�i tập �� hết hạn.</p>
           <Link 
             to="/member/packages" 
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-fit-primary px-6 py-3 font-bold text-white shadow-lg transition-all hover:-translate-y-1"
           >
-            Xem các gói tập ngay
+            Xem c�c g�i tập ngay
           </Link>
         </Card>
       )}
 
       {subscriptions.length > 0 && (
         <div className="mt-12">
-          <h3 className="text-xl font-bold text-slate-900 mb-6">Lịch sử đăng ký</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-6">L�9ch sử �Ēng k�</h3>
           <div className="grid gap-4">
             {subscriptions.map((sub, idx) => (
               <div
@@ -139,10 +139,10 @@ export default function MySubscriptionPage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-900">
-                        {sub.gymPackageName || "Gói tập"} {sub.packageDurationName && <span className="text-sm font-normal text-slate-500">({sub.packageDurationName})</span>}
+                        {sub.gymPackageName || "G�i tập"} {sub.packageDurationName && <span className="text-sm font-normal text-slate-500">({sub.packageDurationName})</span>}
                       </h4>
                       <p className="text-sm text-slate-500">
-                        {sub.startDate || "Chưa kích hoạt"} đến {sub.endDate || "Chưa kích hoạt"}
+                        {sub.startDate || "Chưa k�ch hoạt"} �ến {sub.endDate || "Chưa k�ch hoạt"}
                       </p>
                       {sub.finalPrice !== undefined && (
                         <p className="text-sm font-medium text-fit-primary mt-1">
@@ -158,7 +158,7 @@ export default function MySubscriptionPage() {
                         to={`/member/payment/${sub.invoiceId}`}
                         className="flex items-center gap-1 text-sm font-bold text-fit-primary hover:underline"
                       >
-                        Thanh toán <ChevronRight className="h-4 w-4" />
+                        Thanh to�n <ChevronRight className="h-4 w-4" />
                       </Link>
                     )}
                   </div>
@@ -171,3 +171,6 @@ export default function MySubscriptionPage() {
     </div>
   );
 }
+
+
+

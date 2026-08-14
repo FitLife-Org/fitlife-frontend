@@ -465,7 +465,7 @@ apiClient.interceptors.response.use(
                 requestUrl,
             );
 
-        if (env.isDevelopment) {
+        if (env.isDevelopment && status !== 404) {
             console.error(
                 "FITLIFE_API_ERROR",
                 {

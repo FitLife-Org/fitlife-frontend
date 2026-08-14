@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import Button from "../../components/common/Button";
+import Loading from "../../components/common/Loading";
 import { ROUTES } from "../../config/routes";
 import { workoutService } from "../../services/workoutService";
 import type { WorkoutPlan } from "../../types/workout.type";
@@ -62,7 +63,7 @@ export default function WorkoutPlansPage() {
       setPlans((previousPlans) =>
           previousPlans.map((plan) => ({
             ...plan,
-            sessions: (plan.sessions ?? []).map((session) =>
+            sessions: (plan.days ?? []).map((session: any) =>
                 String(session.id) === sessionId
                     ? { ...session, isCompleted: true }
                     : session,
@@ -80,9 +81,7 @@ export default function WorkoutPlansPage() {
 
   if (loading) {
     return (
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
-        </div>
+        <Loading label="Đang tải danh sách giáo án..." />
     );
   }
 
@@ -119,13 +118,13 @@ export default function WorkoutPlansPage() {
                 className="space-y-8 gsap-animate"
             >
               {plans.map((plan) => {
-                const sessions = plan.sessions ?? [];
-                const completedCount = sessions.filter(
-                    (session) => session.isCompleted,
+                const days = plan.days ?? [];
+                const completedCount = days.filter(
+                    (session: any) => session.isCompleted,
                 ).length;
                 const progress =
-                    sessions.length > 0
-                        ? (completedCount / sessions.length) * 100
+                    days.length > 0
+                        ? (completedCount / days.length) * 100
                         : 0;
 
                 return (
@@ -179,7 +178,7 @@ export default function WorkoutPlansPage() {
                             />
                           </div>
                           <p className="mt-2 text-right text-xs text-slate-400">
-                            Đã tập {completedCount}/{sessions.length} buổi
+                            Đã tập {completedCount}/{days.length} buổi
                           </p>
                         </div>
                       </div>
@@ -189,7 +188,7 @@ export default function WorkoutPlansPage() {
                         Lịch tập trong tuần
                       </h3>
 
-                      {sessions.length === 0 ? (
+                      {days.length === 0 ? (
                           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
                             <Dumbbell className="mx-auto h-10 w-10 text-slate-300" />
                             <p className="mt-3 font-bold text-slate-700">
@@ -198,7 +197,7 @@ export default function WorkoutPlansPage() {
                           </div>
                       ) : (
                           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                            {sessions.map((session) => {
+                            {days.map((session: any) => {
                               const exercises = session.exercises ?? [];
 
                               return (
@@ -230,14 +229,14 @@ export default function WorkoutPlansPage() {
                                             Chưa có bài tập trong buổi này.
                                           </p>
                                       ) : (
-                                          exercises.map((exercise) => (
+                                          exercises.map((exercise: any) => (
                                               <div
                                                   key={exercise.id}
                                                   className="flex items-center justify-between border-b border-slate-100 pb-2 text-sm last:border-0"
                                               >
                                                 <div>
                                                   <p className="font-semibold text-slate-700">
-                                                    {exercise.name}
+                                                    {exercise.exerciseName}
                                                   </p>
                                                   <p className="text-xs text-slate-400">
                                                     {exercise.targetMuscle || "Toàn thân"}

@@ -25,6 +25,7 @@ import toast from "react-hot-toast";
 
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
+import Loading from "../../components/common/Loading";
 
 import { ROUTES } from "../../config/routes";
 import { workoutService } from "../../services/workoutService";
@@ -161,9 +162,7 @@ export default function WorkoutPlanDetailPage() {
 
     if (loading) {
         return (
-            <div className="flex min-h-[500px] items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
-            </div>
+            <Loading label="Đang tải chi tiết giáo án..." />
         );
     }
 
@@ -206,21 +205,21 @@ export default function WorkoutPlanDetailPage() {
         );
     }
 
-    const sessions =
-        plan.sessions ?? [];
+    const days =
+        plan.days ?? [];
 
     const completedCount =
-        sessions.filter(
-            (session) =>
+        days.filter(
+            (session: any) =>
                 session.isCompleted,
         ).length;
 
     const progress =
-        sessions.length > 0
+        days.length > 0
             ? Math.round(
                 (
                     completedCount /
-                    sessions.length
+                    days.length
                 ) * 100,
             )
             : 0;
@@ -293,7 +292,7 @@ export default function WorkoutPlanDetailPage() {
                     </p>
 
                     <p className="mt-1 text-2xl font-black text-slate-900">
-                        {sessions.length}
+                        {days.length}
                     </p>
                 </Card>
 
@@ -320,7 +319,7 @@ export default function WorkoutPlanDetailPage() {
                         <p className="mt-1 text-sm text-slate-500">
                             Đã hoàn thành{" "}
                             {completedCount}/
-                            {sessions.length} buổi.
+                            {days.length} buổi.
                         </p>
                     </div>
 
@@ -350,7 +349,7 @@ export default function WorkoutPlanDetailPage() {
                     </p>
                 </div>
 
-                {sessions.length === 0 ? (
+                {days.length === 0 ? (
                     <Card className="p-10 text-center">
                         <Dumbbell className="mx-auto h-14 w-14 text-slate-300" />
 
@@ -360,8 +359,8 @@ export default function WorkoutPlanDetailPage() {
                     </Card>
                 ) : (
                     <div className="grid gap-5 lg:grid-cols-2">
-                        {sessions.map(
-                            (session) => (
+                        {days.map(
+                            (session: any) => (
                                 <Card
                                     key={session.id}
                                     className="overflow-hidden"
@@ -395,14 +394,14 @@ export default function WorkoutPlanDetailPage() {
                                     <div className="space-y-3 p-5">
                                         {(session.exercises ??
                                             []).map(
-                                            (exercise) => (
+                                            (exercise: any) => (
                                                 <div
                                                     key={exercise.id}
                                                     className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 p-3"
                                                 >
                                                     <div>
                                                         <p className="font-bold text-slate-800">
-                                                            {exercise.name}
+                                                            {exercise.exerciseName}
                                                         </p>
 
                                                         <p className="mt-1 text-xs text-slate-400">

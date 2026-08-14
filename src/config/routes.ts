@@ -78,6 +78,8 @@ export const ROUTES = {
 
   MEMBER_WORKOUTS:
       "/member/workouts",
+  MEMBER_QR: "/member/qr",
+  MEMBER_BOOKING: "/member/booking",
   MEMBER_WORKOUT_DETAIL:
       "/member/workouts/:id",
   MEMBER_WORKOUT_TODAY:

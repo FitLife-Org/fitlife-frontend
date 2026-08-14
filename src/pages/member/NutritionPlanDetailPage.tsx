@@ -168,44 +168,7 @@ export default function NutritionPlanDetailPage() {
             }
         };
 
-    const handleClone =
-        async (): Promise<void> => {
-            if (!plan) {
-                return;
-            }
 
-            try {
-                setActionLoading(true);
-
-                const cloned =
-                    await nutritionService
-                        .clonePlan(
-                            plan.id,
-                        );
-
-                toast.success(
-                    "Đã sao chép kế hoạch.",
-                );
-
-                navigate(
-                    ROUTES
-                        .MEMBER_NUTRITION_DETAIL
-                        .replace(
-                            ":id",
-                            String(cloned.id),
-                        ),
-                );
-            } catch (requestError) {
-                toast.error(
-                    getApiErrorMessage(
-                        requestError,
-                        "Không thể sao chép kế hoạch.",
-                    ),
-                );
-            } finally {
-                setActionLoading(false);
-            }
-        };
 
     if (loading) {
         return (
@@ -305,16 +268,7 @@ export default function NutritionPlanDetailPage() {
                         Tải lại
                     </Button>
 
-                    <Button
-                        variant="outline"
-                        isLoading={actionLoading}
-                        onClick={() => {
-                            void handleClone();
-                        }}
-                    >
-                        <Copy className="h-4 w-4" />
-                        Sao chép
-                    </Button>
+                    
 
                     {plan.status === "DRAFT" && (
                         <Button
