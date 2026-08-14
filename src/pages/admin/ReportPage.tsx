@@ -109,31 +109,21 @@ export default function ReportPage() {
 
   useGSAP(() => {
     if (!loading) {
-      // Intro animations
-      gsap.from(".gsap-stat-card", {
-        y: 40,
-        opacity: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: "power3.out"
-      });
+      // Intro animations for stats
+      gsap.fromTo(".gsap-stat-card", 
+        { y: 30, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: "back.out(1.2)" }
+      );
 
-      gsap.from(".gsap-chart-card", {
-        y: 40,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.2,
-        ease: "power3.out"
-      });
+      gsap.fromTo(".gsap-chart-card", 
+        { y: 40, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" }
+      );
 
-      gsap.from(".gsap-table-card", {
-        y: 40,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.4,
-        stagger: 0.1,
-        ease: "power3.out"
-      });
+      gsap.fromTo(".gsap-table-card", 
+        { y: 40, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.8, delay: 0.4, stagger: 0.1, ease: "power3.out" }
+      );
     }
   }, [loading]);
 
@@ -154,15 +144,6 @@ export default function ReportPage() {
     }
     return value.toString();
   };
-
-  useGSAP(() => {
-    if (!loading) {
-      gsap.fromTo(".gsap-stat-card", 
-        { y: 30, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: "back.out(1.2)" }
-      );
-    }
-  }, [loading]);
 
   const handleExport = async () => {
     try {
@@ -304,12 +285,19 @@ export default function ReportPage() {
         </div>
 
         <div className="w-full h-[320px]">
-          <D3AreaChart 
-            data={revenueData} 
-            height={320} 
-            color="#3b82f6"
-            yAxisFormatter={formatShortVND}
-          />
+          {revenueData && revenueData.length > 0 ? (
+            <D3AreaChart 
+              data={revenueData} 
+              height={320} 
+              color="#3b82f6"
+              yAxisFormatter={formatShortVND}
+            />
+          ) : (
+            <div className="flex flex-col h-full items-center justify-center text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+              <DollarSign className="w-10 h-10 mb-2 text-slate-300" />
+              <p className="font-medium">Chưa có dữ liệu doanh thu</p>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -471,10 +459,17 @@ export default function ReportPage() {
         <Card className="gsap-stat-card p-6 lg:col-span-2 hover:shadow-lg transition-shadow">
           <h3 className="text-lg font-bold mb-4 text-slate-800">Xu hướng Check-in</h3>
           <div className="h-72">
-            <D3AreaChart 
-              data={checkinTrend.map(d => ({ label: d.date, value: d.count }))} 
-              color="#3b82f6" 
-            />
+            {checkinTrend && checkinTrend.length > 0 ? (
+              <D3AreaChart 
+                data={checkinTrend.map(d => ({ label: d.date, value: d.count }))} 
+                color="#3b82f6" 
+              />
+            ) : (
+              <div className="flex flex-col h-full items-center justify-center text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <Activity className="w-10 h-10 mb-2 text-slate-300" />
+                <p className="font-medium">Chưa có dữ liệu check-in</p>
+              </div>
+            )}
           </div>
         </Card>
         
