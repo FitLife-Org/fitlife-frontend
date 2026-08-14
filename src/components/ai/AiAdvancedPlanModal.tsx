@@ -217,7 +217,7 @@ export default function AiAdvancedPlanModal({
                   role="dialog"
                   aria-modal="true"
                   aria-labelledby="ai-plan-modal-title"
-                  className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8"
+                  className="fixed left-1/2 top-1/2 z-50 max-h-[95vh] w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[2rem] bg-white p-5 shadow-2xl sm:p-6"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -246,9 +246,9 @@ export default function AiAdvancedPlanModal({
                   </button>
                 </div>
 
-                <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
+                <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Left Column: General Info */}
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     <div>
                       <label
                           htmlFor="ai-goal"
@@ -423,7 +423,7 @@ export default function AiAdvancedPlanModal({
                   </div>
 
                   {/* Right Column: Workout, Nutrition, Note */}
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     {showWorkoutFields && (
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <Input
@@ -513,7 +513,7 @@ export default function AiAdvancedPlanModal({
 
                       <textarea
                           id="ai-user-note"
-                          rows={showWorkoutFields && showNutritionFields ? 6 : 4}
+                          rows={showWorkoutFields && showNutritionFields ? 4 : 3}
                           maxLength={2000}
                           disabled={submitting}
                           value={formData.userNote}
@@ -546,9 +546,9 @@ export default function AiAdvancedPlanModal({
                   </div>
                 </div>
 
-                <div className="mt-8 border-t border-slate-100 pt-6">
+                <div className="mt-5 border-t border-slate-100 pt-4">
                   {validationError && (
-                      <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+                      <p className="mb-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
                         {validationError}
                       </p>
                   )}

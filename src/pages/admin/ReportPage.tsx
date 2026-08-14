@@ -8,7 +8,9 @@ import {
   TrendingDown,
   DollarSign,
   Bot,
-  Settings
+  Settings,
+  Download,
+  Package
 } from "lucide-react";
 import D3AreaChart from "../../components/common/charts/D3AreaChart";
 import gsap from "gsap";
@@ -18,6 +20,7 @@ import toast from "react-hot-toast";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Badge from "../../components/common/Badge";
+import Button from "../../components/common/Button";
 import Loading from "../../components/common/Loading";
 import { adminDashboardService } from "../../services/adminDashboardService";
 import type { 
@@ -30,7 +33,10 @@ import type {
   MemberSummaryDto,
   EquipmentStatusStatsDto,
   AiSummaryDto,
-  MaintenanceSummaryDto
+  MaintenanceSummaryDto,
+  CheckinTrendDto,
+  CheckinPeakHourDto,
+  PlanSummaryDto
 } from "../../types/dashboard.type";
 import { getApiErrorMessage } from "../../utils/apiError";
 
@@ -47,6 +53,11 @@ export default function ReportPage() {
   const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatusStatsDto | null>(null);
   const [aiSummary, setAiSummary] = useState<AiSummaryDto | null>(null);
   const [maintenanceSummary, setMaintenanceSummary] = useState<MaintenanceSummaryDto | null>(null);
+  
+  const [checkinTrend, setCheckinTrend] = useState<CheckinTrendDto[]>([]);
+  const [peakHours, setPeakHours] = useState<CheckinPeakHourDto[]>([]);
+  const [plansSummary, setPlansSummary] = useState<PlanSummaryDto[]>([]);
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,7 +66,8 @@ export default function ReportPage() {
         setLoading(true);
         const [
           overviewRes, revenueRes, checkinsRes, expiringRes,
-          revSumRes, payStatRes, subSumRes, memSumRes, eqStatRes, aiSumRes, maintSumRes
+          revSumRes, payStatRes, subSumRes, memSumRes, eqStatRes, aiSumRes, maintSumRes,
+          checkinTrendRes, peakHoursRes, plansSummaryRes
         ] = await Promise.all([
           adminDashboardService.getOverview(),
           adminDashboardService.getRevenueStats(),
@@ -67,7 +79,10 @@ export default function ReportPage() {
           adminDashboardService.getMemberSummary(),
           adminDashboardService.getEquipmentStatusStats(),
           adminDashboardService.getAiSummary(),
-          adminDashboardService.getMaintenanceSummary()
+          adminDashboardService.getMaintenanceSummary(),
+          adminDashboardService.getCheckinTrend(),
+          adminDashboardService.getCheckinPeakHours(),
+          adminDashboardService.getPlansSummary()
         ]);
         setOverview(overviewRes);
         setRevenueData(revenueRes);
@@ -80,6 +95,9 @@ export default function ReportPage() {
         setEquipmentStatus(eqStatRes);
         setAiSummary(aiSumRes);
         setMaintenanceSummary(maintSumRes);
+        setCheckinTrend(checkinTrendRes);
+        setPeakHours(peakHoursRes);
+        setPlansSummary(plansSummaryRes);
       } catch (error) {
         toast.error(getApiErrorMessage(error));
       } finally {
@@ -137,17 +155,45 @@ export default function ReportPage() {
     return value.toString();
   };
 
-  if (loading) {
-    return (
-      <Loading label="Đang tải báo cáo thống kê..." />
-    );
-  }
+  useGSAP(() => {
+    if (!loading) {
+      gsap.fromTo(".gsap-stat-card", 
+        { y: 30, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: "back.out(1.2)" }
+      );
+    }
+  }, [loading]);
+
+  const handleExport = async () => {
+    try {
+      const blob = await adminDashboardService.exportReport();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `FitLife_Report_${new Date().getTime()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Đã xuất báo cáo thành công");
+    } catch (error) {
+      toast.error("Xuất báo cáo thất bại");
+    }
+  };
+
+  if (loading) return <Loading />;
 
   return (
     <div ref={containerRef} className="space-y-6">
       <PageHeader 
         title="Báo cáo & Thống kê" 
         description="Theo dõi doanh thu, sự phát triển hội viên và hiệu suất vận hành hệ thống" 
+        action={
+          <Button onClick={handleExport}>
+            <Download className="h-5 w-5" />
+            Xuất báo cáo
+          </Button>
+        }
       />
 
       {/* Grid: 4 Summary Cards */}
@@ -418,6 +464,62 @@ export default function ReportPage() {
             <div className="flex justify-between items-center"><span className="text-slate-500">Hoàn tất:</span> <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{maintenanceSummary?.completed ?? 0}</span></div>
           </div>
         </Card>
+      </div>
+
+      {/* Grid: Additional Reports (Checkin Trends, Peak Hours, Plans) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-8">
+        <Card className="gsap-stat-card p-6 lg:col-span-2 hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-bold mb-4 text-slate-800">Xu hướng Check-in</h3>
+          <div className="h-72">
+            <D3AreaChart 
+              data={checkinTrend.map(d => ({ label: d.date, value: d.count }))} 
+              color="#3b82f6" 
+            />
+          </div>
+        </Card>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+          <Card className="gsap-stat-card p-6 hover:shadow-lg transition-shadow">
+            <h3 className="text-lg font-bold mb-4 text-slate-800">Giờ cao điểm</h3>
+            <div className="space-y-4">
+              {peakHours.map((h, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-14 text-sm font-semibold text-slate-600">{h.hour}</div>
+                  <div className="flex-1 bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-indigo-500 h-full rounded-full" 
+                      style={{ width: `${Math.min(100, (h.count / (Math.max(...peakHours.map(p => p.count)) || 1)) * 100)}%` }} 
+                    />
+                  </div>
+                  <div className="w-8 text-right text-xs font-bold text-indigo-600">{h.count}</div>
+                </div>
+              ))}
+              {peakHours.length === 0 && (
+                <p className="text-sm text-slate-500 italic">Chưa có dữ liệu.</p>
+              )}
+            </div>
+          </Card>
+          
+          <Card className="gsap-stat-card p-6 hover:shadow-lg transition-shadow">
+            <h3 className="text-lg font-bold mb-4 text-slate-800">Thống kê Gói tập</h3>
+            <div className="space-y-3">
+              {plansSummary.map((p, i) => (
+                <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-slate-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                      <Package className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700">{p.planName}</span>
+                  </div>
+                  <Badge variant="success" className="font-bold">{p.totalSubscribers}</Badge>
+                </div>
+              ))}
+              {plansSummary.length === 0 && (
+                <p className="text-sm text-slate-500 italic">Chưa có dữ liệu.</p>
+              )}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -101,3 +101,19 @@ export interface MaintenanceSummaryDto {
   inProgress: number;
   completed: number;
 }
+
+export interface CheckinTrendDto {
+  date: string;
+  count: number;
+}
+
+export interface CheckinPeakHourDto {
+  hour: string;
+  count: number;
+}
+
+export interface PlanSummaryDto {
+  planName: string;
+  totalSubscribers: number;
+}
+
