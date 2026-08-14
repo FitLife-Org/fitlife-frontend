@@ -13,6 +13,7 @@ import {
   Package
 } from "lucide-react";
 import D3AreaChart from "../../components/common/charts/D3AreaChart";
+import D3BarChart from "../../components/common/charts/D3BarChart";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import toast from "react-hot-toast";
@@ -286,7 +287,7 @@ export default function ReportPage() {
 
         <div className="w-full h-[320px]">
           {revenueData && revenueData.length > 0 ? (
-            <D3AreaChart 
+            <D3BarChart 
               data={revenueData} 
               height={320} 
               color="#3b82f6"
@@ -460,7 +461,7 @@ export default function ReportPage() {
           <h3 className="text-lg font-bold mb-4 text-slate-800">Xu hướng Check-in</h3>
           <div className="h-72">
             {checkinTrend && checkinTrend.length > 0 ? (
-              <D3AreaChart 
+              <D3BarChart 
                 data={checkinTrend.map(d => ({ label: d.date, value: d.count }))} 
                 color="#3b82f6" 
               />
