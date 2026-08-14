@@ -38,8 +38,13 @@ export const staffCheckinService = {
     return response.data.data;
   },
 
+  async manualCheckout(id: number): Promise<CheckinRecord> {
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>(`/staff/check-ins/${id}/check-out`);
+    return response.data.data;
+  },
+
   async getMembersCurrentlyInside(page = 0, size = 10): Promise<CheckinRecord[]> {
-    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>(`/staff/check-ins/today?page=${page}&size=${size}`);
+    const response = await apiClient.get<ApiResponse<PageResponse<CheckinRecord> | CheckinRecord[]>>(`/staff/check-ins/current?page=${page}&size=${size}`);
     const data = response.data?.data;
     if (Array.isArray(data)) return data;
     if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as PageResponse<CheckinRecord>).content)) {
@@ -61,12 +66,22 @@ export const staffCheckinService = {
   async cancelCheckin(id: number, data: CheckInCancelRequest): Promise<CheckinRecord> {
     const response = await apiClient.patch<ApiResponse<CheckinRecord>>(`/admin/check-ins/${id}/void`, data);
     return response.data.data;
+  },
+
+  async getTodayStatistics(): Promise<CheckInTodayStatisticsResponse> {
+    const response = await apiClient.get<ApiResponse<CheckInTodayStatisticsResponse>>("/staff/check-ins/statistics/today");
+    return response.data.data;
   }
 };
 
 export const memberCheckinService = {
   async selfCheckin(data: MemberCheckInRequest): Promise<CheckinRecord> {
     const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/scan-gym-qr", data);
+    return response.data.data;
+  },
+
+  async selfCheckout(data: MemberCheckOutRequest): Promise<CheckinRecord> {
+    const response = await apiClient.post<ApiResponse<CheckinRecord>>("/check-ins/check-out", data);
     return response.data.data;
   },
 
