@@ -6,8 +6,10 @@ import type {
   StaffManualCheckInRequest, 
   StaffMemberQrCheckInRequest, 
   MemberCheckInRequest,
+  MemberCheckOutRequest,
   MemberLookupResult,
-  CheckInCancelRequest
+  CheckInCancelRequest,
+  CheckInTodayStatisticsResponse
 } from "../types/checkin.type";
 
 export const adminQrService = {
