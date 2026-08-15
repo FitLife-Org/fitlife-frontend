@@ -73,7 +73,7 @@ export default function CheckinHistoryPage() {
         );
       }
     }
-  }, { scope: calendarRef, dependencies: [currentMonth, loading] });
+  }, { scope: containerRef, dependencies: [currentMonth, loading] });
 
   useGSAP(() => {
     if (!loading && detailRef.current) {
@@ -95,112 +95,110 @@ export default function CheckinHistoryPage() {
         );
       }
     }
-  }, { scope: detailRef, dependencies: [selectedDate, loading] });
-
-  if (loading) {
-    return (
-        <div className="flex justify-center items-center h-64">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
-        </div>
-    );
-  }
+  }, { scope: containerRef, dependencies: [selectedDate, loading] });
 
   return (
       <div className="space-y-8 pb-10" ref={containerRef}>
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Check-in</h1>
-            <p className="text-slate-500 mt-1">Sử dụng mã QR để điểm danh khi đến phòng tập.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-                variant="primary"
-                onClick={() => setShowScanner(true)}
-                className="rounded-xl bg-slate-900 text-white flex items-center gap-2 hover:bg-slate-800 shadow-lg shadow-slate-900/20 border-none"
-            >
-              <ScanLine className="w-5 h-5 text-emerald-400" /> Quét QR Phòng tập
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* --- KHU VỰC HIỂN THỊ LỊCH --- */}
-          <div ref={calendarRef} className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden p-6 md:p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
-                  <CalendarIcon className="w-6 h-6" />
-                </div>
+        {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
+            </div>
+        ) : (
+            <>
+              {/* Header */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-                    Tháng {currentMonth.getMonth() + 1}
-                  </h2>
-                  <p className="text-sm font-medium text-slate-500">Năm {currentMonth.getFullYear()}</p>
+                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">Check-in</h1>
+                  <p className="text-slate-500 mt-1">Sử dụng mã QR để điểm danh khi đến phòng tập.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                      variant="primary"
+                      onClick={() => setShowScanner(true)}
+                      className="rounded-xl bg-slate-900 text-white flex items-center gap-2 hover:bg-slate-800 shadow-lg shadow-slate-900/20 border-none"
+                  >
+                    <ScanLine className="w-5 h-5 text-emerald-400" /> Quét QR Phòng tập
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button onClick={handlePrevMonth} className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button onClick={handleNextMonth} className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-7 gap-2 mb-4">
-              {WEEKDAYS.map(day => (
-                  <div key={day} className="text-center text-xs font-bold text-slate-400 py-2 tracking-wider">
-                    {day}
-                  </div>
-              ))}
-            </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            <div className="grid grid-cols-7 gap-2">
-              {/* Render các ô trống đầu tháng */}
-              {Array.from({ length: firstDayOfMonth }).map((_, index) => (
-                  <div key={`empty-${index}`} className="p-2" />
-              ))}
-
-              {/* Render các ngày trong tháng */}
-              {Array.from({ length: daysInMonth }).map((_, index) => {
-                const dayDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
-                const dayRecords = getRecordsForDate(dayDate);
-                const isSelected = isSameDate(dayDate, selectedDate);
-                const isToday = isSameDate(dayDate, new Date());
-
-                // Xác định trạng thái của ngày (thành công/thất bại) dựa trên record
-                const hasSuccess = dayRecords.some(r => r.status === "SUCCESS");
-                const hasFailure = dayRecords.some(r => r.status !== "SUCCESS");
-
-                return (
-                    <button
-                        key={index}
-                        onClick={() => setSelectedDate(dayDate)}
-                        className={`
-                    gsap-calendar-cell relative aspect-square flex flex-col items-center justify-center rounded-2xl transition-colors duration-200 border-2
-                    ${isSelected ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/20' : 'hover:bg-slate-50 border-transparent text-slate-700 hover:border-slate-100'}
-                    ${isToday && !isSelected ? '!border-emerald-200 bg-emerald-50/50' : ''}
-                  `}
-                    >
-                      <span className={`text-base font-bold ${isToday && !isSelected ? 'text-emerald-600' : ''}`}>{index + 1}</span>
-
-                      {/* Dấu chấm báo hiệu có check-in */}
-                      <div className="flex gap-1 mt-1.5 h-1.5">
-                        {dayRecords.length > 0 && (
-                          <>
-                            {hasSuccess && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-emerald-500'}`} />}
-                            {hasFailure && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-rose-400' : 'bg-rose-500'}`} />}
-                          </>
-                        )}
+                {/* --- KHU VỰC HIỂN THỊ LỊCH --- */}
+                <div ref={calendarRef} className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden p-6 md:p-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
+                        <CalendarIcon className="w-6 h-6" />
                       </div>
-                    </button>
-                );
-              })}
-            </div>
-          </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+                          Tháng {currentMonth.getMonth() + 1}
+                        </h2>
+                        <p className="text-sm font-medium text-slate-500">Năm {currentMonth.getFullYear()}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={handlePrevMonth} className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button onClick={handleNextMonth} className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-2 mb-4">
+                    {WEEKDAYS.map(day => (
+                        <div key={day} className="text-center text-xs font-bold text-slate-400 py-2 tracking-wider">
+                          {day}
+                        </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-2">
+                    {/* Render các ô trống đầu tháng */}
+                    {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+                        <div key={`empty-${index}`} className="p-2" />
+                    ))}
+
+                    {/* Render các ngày trong tháng */}
+                    {Array.from({ length: daysInMonth }).map((_, index) => {
+                      const dayDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
+                      const dayRecords = getRecordsForDate(dayDate);
+                      const isSelected = isSameDate(dayDate, selectedDate);
+                      const isToday = isSameDate(dayDate, new Date());
+
+                      // Xác định trạng thái của ngày (thành công/thất bại) dựa trên record
+                      const hasSuccess = dayRecords.some(r => r.status === "SUCCESS");
+                      const hasFailure = dayRecords.some(r => r.status !== "SUCCESS");
+
+                      return (
+                          <button
+                              key={index}
+                              onClick={() => setSelectedDate(dayDate)}
+                              className={`
+                          gsap-calendar-cell relative aspect-square flex flex-col items-center justify-center rounded-2xl transition-colors duration-200 border-2
+                          ${isSelected ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/20' : 'hover:bg-slate-50 border-transparent text-slate-700 hover:border-slate-100'}
+                          ${isToday && !isSelected ? '!border-emerald-200 bg-emerald-50/50' : ''}
+                        `}
+                          >
+                            <span className={`text-base font-bold ${isToday && !isSelected ? 'text-emerald-600' : ''}`}>{index + 1}</span>
+
+                            {/* Dấu chấm báo hiệu có check-in */}
+                            <div className="flex gap-1 mt-1.5 h-1.5">
+                              {dayRecords.length > 0 && (
+                                <>
+                                  {hasSuccess && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-emerald-500'}`} />}
+                                  {hasFailure && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-rose-400' : 'bg-rose-500'}`} />}
+                                </>
+                              )}
+                            </div>
+                          </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
           {/* --- KHU VỰC CHI TIẾT NGÀY ĐƯỢC CHỌN --- */}
           <div ref={detailRef} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-[500px] lg:h-auto">
@@ -286,6 +284,8 @@ export default function CheckinHistoryPage() {
                 </p>
               </div>
             </div>
+        )}
+            </>
         )}
       </div>
   );
