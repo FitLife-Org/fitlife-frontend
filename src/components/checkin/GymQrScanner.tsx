@@ -21,7 +21,7 @@ export default function GymQrScanner({ onSuccess }: GymQrScannerProps) {
             qrbox={250} 
             disableFlip={false}
             qrCodeSuccessCallback={handleScanSuccess}
-            qrCodeErrorCallback={() => { /* ẩn log lỗi liên tục của qr */ }}
+            qrCodeErrorCallback={() => {  }}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-emerald-50">
