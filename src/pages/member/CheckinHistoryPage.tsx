@@ -7,7 +7,8 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  MapPin
 } from "lucide-react";
 import { usePageAnimation } from "../../hooks/usePageAnimation";
 import Button from "../../components/common/Button";
@@ -36,6 +37,9 @@ export default function CheckinHistoryPage() {
   // --- LOGIC LỊCH (CALENDAR HELPER) ---
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  
+  // Điều chỉnh để Thứ 2 là ngày đầu tuần (0: T2, 1: T3, ..., 6: CN)
+  const emptyDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
   const handlePrevMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
@@ -59,7 +63,7 @@ export default function CheckinHistoryPage() {
   };
 
   const selectedDateRecords = useMemo(() => getRecordsForDate(selectedDate), [selectedDate, history]);
-  const WEEKDAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  const WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
   // --- GSAP ANIMATION ---
   useGSAP(() => {
@@ -158,7 +162,7 @@ export default function CheckinHistoryPage() {
 
                   <div className="grid grid-cols-7 gap-2">
                     {/* Render các ô trống đầu tháng */}
-                    {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+                    {Array.from({ length: emptyDays }).map((_, index) => (
                         <div key={`empty-${index}`} className="p-2" />
                     ))}
 
@@ -229,28 +233,49 @@ export default function CheckinHistoryPage() {
                     <p className="text-sm text-slate-400 mt-1">Chọn một ngày khác trên lịch để xem.</p>
                   </div>
               ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4 px-2">
                     {selectedDateRecords.map((record) => (
                         <div key={record.id}
-                             className="gsap-detail-card p-4 rounded-2xl border border-slate-100/60 bg-white shadow-sm hover:shadow-md transition-shadow flex items-start gap-4">
+                             className="gsap-detail-card relative overflow-hidden p-5 rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-all flex items-start gap-4 group">
+
+                          {/* Thanh viền dọc tạo điểm nhấn */}
                           <div
-                              className={`p-2.5 rounded-xl flex-shrink-0 mt-0.5 ${record.status === "SUCCESS" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
-                            {record.status === "SUCCESS" ? <CheckCircle2 className="w-5 h-5"/> :
-                                <XCircle className="w-5 h-5"/>}
+                              className={`absolute left-0 top-0 bottom-0 w-1.5 ${record.status === "SUCCESS" ? "bg-emerald-400" : "bg-rose-400"}`}/>
+
+                          <div
+                              className={`p-3 rounded-2xl flex-shrink-0 shadow-sm ${record.status === "SUCCESS" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+                            {record.status === "SUCCESS" ? <CheckCircle2 className="w-6 h-6"/> :
+                                <XCircle className="w-6 h-6"/>}
                           </div>
-                          <div>
-                            <p className="font-bold text-slate-900 text-lg tracking-tight">
-                              {new Date(record.checkInTime).toLocaleTimeString('vi-VN', {
-                                hour: '2-digit',
-                                minute: '2-digit'
+
+                          <div className="flex-1 min-w-0">
+                            {/* Hàng 1: Giờ phút giây + Nhãn trạng thái nằm cạnh nhau */}
+                            <div className="flex items-center gap-3">
+                              <p className="font-black text-slate-900 text-2xl tracking-tight">
+                                {new Date(record.checkInTime).toLocaleTimeString('vi-VN', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  second: '2-digit'
+                                })}
+                              </p>
+
+                              <span
+                                  className={`flex-shrink-0 inline-flex py-1.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm ${
+                                      record.status === "SUCCESS" ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                                  }`}>
+                                  {record.status === "SUCCESS" ? "Done" : "Fail"}
+                                </span>
+                            </div>
+
+                            {/* Hàng 2: Ngày tháng nằm dưới */}
+                            <p className="text-slate-500 font-bold text-sm mt-0.5 truncate">
+                              {new Date(record.checkInTime).toLocaleDateString('vi-VN', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
                               })}
                             </p>
-                            <span
-                                className={`inline-flex items-center gap-1 mt-1.5 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
-                                    record.status === "SUCCESS" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"
-                                }`}>
-                                {record.status === "SUCCESS" ? "Thành công" : "Thất bại"}
-                            </span>
                           </div>
                         </div>
                     ))}
@@ -258,22 +283,23 @@ export default function CheckinHistoryPage() {
               )}
             </div>
           </div>
-        </div>
+              </div>
 
-        {/* --- MODAL SCANNER (Giữ nguyên) --- */}
-        {showScanner && (
-            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl p-6 w-full max-w-md relative gsap-animate">
-              <button
-                    onClick={() => setShowScanner(false)}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-rose-500 z-50 transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <ScanLine className="w-5 h-5 text-emerald-600" /> Quét mã QR Phòng tập
-                </h2>
-                <div className="rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 min-h-[300px]">
+              {/* --- MODAL SCANNER (Giữ nguyên) --- */}
+              {showScanner && (
+                  <div
+                      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-md relative gsap-animate">
+                      <button
+                          onClick={() => setShowScanner(false)}
+                          className="absolute top-4 right-4 text-slate-400 hover:text-rose-500 z-50 transition-colors"
+                      >
+                        <X className="w-6 h-6"/>
+                      </button>
+                      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <ScanLine className="w-5 h-5 text-emerald-600"/> Quét mã QR Phòng tập
+                      </h2>
+                      <div className="rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 min-h-[300px]">
                   <GymQrScanner onSuccess={(token) => {
                     setShowScanner(false);
                     handleScanSuccess(token);
