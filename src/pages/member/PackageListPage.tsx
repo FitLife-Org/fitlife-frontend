@@ -242,6 +242,24 @@ export default function PackageListPage() {
 
         {/* MAIN CONTENT AREA */}
         <div className="max-w-6xl mx-auto px-4 mt-8 relative z-20">
+          {mySubscription?.status === "ACTIVE" && (
+            <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-8 rounded-r-xl shadow-sm max-w-2xl mx-auto">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-bold text-amber-800">Thông báo</h3>
+                  <div className="mt-1 text-sm text-amber-700">
+                    <p>Bạn đang có một gói tập đang hoạt động. Hiện tại hệ thống không hỗ trợ mua thêm gói mới khi gói cũ chưa hết hạn.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* DURATION SELECTOR (SLEEK & COMPACT TABS) */}
           {durations.length > 0 && (
             <div 
@@ -399,11 +417,11 @@ export default function PackageListPage() {
                       {/* Action Button */}
                       <Button
                           className={`w-full py-4 rounded-xl text-sm uppercase tracking-wider transition-all ${btnClass}`}
-                          disabled={!selectedDurationId}
+                          disabled={!selectedDurationId || mySubscription?.status === "ACTIVE"}
                           isLoading={processingId === item.id}
                           onClick={() => handlePurchase(item.id)}
                       >
-                        {isCurrent ? "Gia hạn gói này" : mySubscription?.status === "ACTIVE" ? "Mua thêm gói này" : "Đăng ký gói này"}
+                        {isCurrent ? "Đang sử dụng" : mySubscription?.status === "ACTIVE" ? "Đã có gói tập" : "Đăng ký gói này"}
                       </Button>
                     </div>
                   </div>

@@ -92,6 +92,25 @@ export function useStaffCheckinLogic() {
     }
   };
 
+  const handleScanSuccess = async (decodedText: string) => {
+    if (isCheckingIn) return;
+    
+    try {
+      setIsCheckingIn(true);
+      await staffCheckinService.scanMemberQr({ qrData: decodedText });
+      toast.success("Quét thẻ và Check-in thành công!");
+      await fetchRecentCheckins();
+      await fetchActiveMembers();
+    } catch (error: unknown) {
+      const msg = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : null;
+      toast.error(msg || "Quét QR thất bại. Vui lòng thử lại.");
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
+
   return {
     activeTab,
     setActiveTab,
@@ -105,6 +124,7 @@ export function useStaffCheckinLogic() {
     recentCheckins,
     activeMembers,
     handleSearch,
-    handleManualConfirm
+    handleManualConfirm,
+    handleScanSuccess
   };
 }

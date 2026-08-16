@@ -37,6 +37,9 @@ import {
   showAlert,
 } from "../../utils/alert";
 
+import { notificationService } from "../../services/notificationService";
+import { NotificationDto } from "../../types/notification.type";
+
 export default function Header() {
   const navigate =
       useNavigate();
@@ -75,10 +78,43 @@ export default function Header() {
     setLogoutDialogOpen,
   ] = useState(false);
 
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationDto[]>([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
+
   const accountMenuRef =
       useRef<HTMLDivElement>(
           null,
       );
+  const notificationMenuRef = useRef<HTMLDivElement>(null);
+
+  const unreadCount = notifications.filter(n => !n.readStatus).length;
+
+  useEffect(() => {
+    if (user) {
+      loadNotifications();
+    }
+  }, [user]);
+
+  const loadNotifications = async () => {
+    setLoadingNotifs(true);
+    try {
+      const data = await notificationService.getMyNotifications();
+      setNotifications(data);
+    } finally {
+      setLoadingNotifs(false);
+    }
+  };
+
+  const handleMarkAsRead = async (id: number) => {
+    await notificationService.markAsRead(id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, readStatus: true } : n));
+  };
+
+  const handleMarkAllAsRead = async () => {
+    await notificationService.markAllAsRead();
+    setNotifications(prev => prev.map(n => ({ ...n, readStatus: true })));
+  };
 
   useEffect(() => {
     const handleOutsideClick = (
@@ -93,6 +129,15 @@ export default function Header() {
         setAccountMenuOpen(
             false,
         );
+      }
+      
+      if (
+          notificationMenuRef.current &&
+          !notificationMenuRef.current.contains(
+              event.target as Node,
+          )
+      ) {
+        setNotificationMenuOpen(false);
       }
     };
 
@@ -211,13 +256,79 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-                type="button"
-                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:text-fit-primary"
-                aria-label="Thông báo"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
+            <div className="relative" ref={notificationMenuRef}>
+              <button
+                  type="button"
+                  onClick={() => {
+                    setNotificationMenuOpen((open) => !open);
+                    setAccountMenuOpen(false);
+                  }}
+                  className="relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:text-fit-primary"
+                  aria-label="Thông báo"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute right-2 top-2 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white"></span>
+                )}
+              </button>
+
+              {notificationMenuOpen && (
+                <div className="absolute right-0 mt-3 w-80 rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <h3 className="font-bold text-slate-900">Thông báo</h3>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={handleMarkAllAsRead}
+                        className="text-xs font-semibold text-fit-primary hover:text-blue-700"
+                      >
+                        Đánh dấu đã đọc
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="max-h-96 overflow-y-auto">
+                    {loadingNotifs ? (
+                      <div className="p-4 text-center text-sm text-slate-500">Đang tải...</div>
+                    ) : notifications.length > 0 ? (
+                      <div className="flex flex-col">
+                        {notifications.map((notif) => (
+                          <div 
+                            key={notif.id} 
+                            onClick={() => handleMarkAsRead(notif.id)}
+                            className={`cursor-pointer border-b border-slate-50 p-4 transition-colors hover:bg-slate-50 ${!notif.readStatus ? 'bg-blue-50/50' : ''}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`mt-0.5 h-2 w-2 flex-shrink-0 rounded-full ${!notif.readStatus ? 'bg-fit-primary' : 'bg-transparent'}`}></div>
+                              <div>
+                                <p className={`text-sm ${!notif.readStatus ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
+                                  {notif.title}
+                                </p>
+                                <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+                                  {notif.content}
+                                </p>
+                                <p className="mt-2 text-xs font-medium text-slate-400">
+                                  {new Date(notif.createdAt).toLocaleString('vi-VN')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-sm text-slate-500">
+                        Chưa có thông báo nào
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="border-t border-slate-100 p-2">
+                    <button className="w-full rounded-xl py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                      Xem tất cả
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div
                 ref={
@@ -227,12 +338,10 @@ export default function Header() {
             >
               <button
                   type="button"
-                  onClick={() =>
-                      setAccountMenuOpen(
-                          (open) =>
-                              !open,
-                      )
-                  }
+                  onClick={() => {
+                      setAccountMenuOpen((open) => !open);
+                      setNotificationMenuOpen(false);
+                  }}
                   className="flex items-center gap-3 rounded-2xl p-1.5 pr-3 hover:bg-slate-100"
               >
                 <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-fit-primarySoft text-fit-primary">

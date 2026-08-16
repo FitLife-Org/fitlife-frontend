@@ -36,6 +36,10 @@ import {
   ROUTES,
 } from "../../config/routes";
 
+import { usePageAnimation } from "../../hooks/usePageAnimation";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+
 function getStatusBadge(
     status: InvoiceStatus,
 ) {
@@ -109,6 +113,21 @@ export default function InvoiceManagementPage() {
     handleCancelInvoice,
     handleRefundInvoice,
   } = useInvoiceManagement();
+
+  const containerRef = usePageAnimation();
+
+  useGSAP(() => {
+    if (!loading && invoices.length > 0) {
+      gsap.from("tbody tr", {
+        y: 20,
+        opacity: 0,
+        stagger: 0.05,
+        duration: 0.4,
+        ease: "power2.out",
+        clearProps: "all"
+      });
+    }
+  }, [loading, invoices.length]);
 
   const openDetail = (
       invoiceId: number,
@@ -321,11 +340,13 @@ export default function InvoiceManagementPage() {
           totalElements,
       );
 
+
+
   return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-7xl mx-auto" ref={containerRef}>
         <PageHeader
             title="Quản lý hóa đơn"
-            description="Tra cứu, theo dõi trạng thái và quản lý hóa đơn của hội viên"
+            description="Tìm kiếm, theo dõi và xử lý tất cả hóa đơn trên hệ thống."
         />
 
         <Card className="p-5">

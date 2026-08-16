@@ -64,7 +64,6 @@ import TrainerManagementPage from "../pages/admin/TrainerManagementPage";
 
 import AdminSubscriptionPage from "../pages/admin/subscription/AdminSubscriptionPage";
 import AdminAiSuggestionPage from "../pages/admin/ai/AdminAiSuggestionPage";
-import StaffCheckinPage from "../pages/admin/checkin/StaffCheckinPage";
 import ReportPage from "../pages/admin/ReportPage";
 
 import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
@@ -470,15 +469,6 @@ export default function AppRouter() {
                             }
                         />
 
-                        <Route
-                            path={ROUTES.STAFF_CHECKIN}
-                            element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
-                                    <StaffCheckinPage />
-                                </RoleGuard>
-                            }
-                        />
-
                         {/* Admin Invoice */}
 
                         <Route
@@ -677,7 +667,7 @@ export default function AppRouter() {
                                 <RoleGuard
                                     roles={[
                                         "ROLE_STAFF",
-
+                                        "ROLE_ADMIN",
                                     ]}
                                 >
                                     <CheckinPage />

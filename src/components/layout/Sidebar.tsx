@@ -150,11 +150,7 @@ const menuItems:
         roles: ["ROLE_MEMBER"],
         children: [
             {
-                label: "Thanh toán",
-                path: ROUTES.MEMBER_PAYMENT,
-            },
-            {
-                label: "Hóa đơn",
+                label: "Hóa đơn của tôi",
                 path: ROUTES.MEMBER_INVOICES,
             },
         ],
@@ -234,13 +230,9 @@ const menuItems:
         ],
         children: [
             {
-                label: "Hóa đơn",
+                label: "Xử lý thanh toán",
                 path: ROUTES.ADMIN_INVOICES,
-            },
-            {
-                label: "Thanh toán",
-                path: ROUTES.ADMIN_PAYMENTS,
-            },
+            }
         ],
     },
 
@@ -270,20 +262,10 @@ const menuItems:
     // =====================================================
 
     {
-        label: "Quét mã Check-in",
+        label: "Check In",
         path: ROUTES.STAFF_CHECKIN,
         icon: ScanLine,
         roles: ["ROLE_ADMIN", "ROLE_STAFF"],
-    },
-
-    {
-        label: "Điểm danh quầy",
-        path: ROUTES.STAFF_CHECKIN,
-        icon: ClipboardCheck,
-        roles: [
-            "ROLE_STAFF",
-
-        ],
     },
 
     {
@@ -445,12 +427,7 @@ export default function Sidebar() {
         );
 
         // eslint-disable-next-line
-        setExpandedMenus(
-            (previous) => ({
-                ...previous,
-                ...activeParents,
-            }),
-        );
+        setExpandedMenus(activeParents);
     }, [
         location.pathname,
         visibleMenuItems,

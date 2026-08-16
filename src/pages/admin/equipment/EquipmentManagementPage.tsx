@@ -147,14 +147,15 @@ export default function EquipmentManagementPage() {
                                 : statusFilter,
                     });
 
-                setEquipments(data.content);
+                const items = Array.isArray(data) ? data : ((data as any).content || []);
+                setEquipments(items);
 
                 setTotalItems(
-                    data.totalElements,
+                    (data as any).totalElements ?? items.length,
                 );
 
                 setTotalPages(
-                    data.totalPages,
+                    (data as any).totalPages ?? 1,
                 );
             } catch (error: unknown) {
                 console.error(
