@@ -109,16 +109,13 @@ export default function CheckinPage() {
       {/* TOP SECTION: SCAN & SEARCH */}
       <div className="flex flex-col max-w-4xl mx-auto gap-8 w-full">
         {/* Máy quét QR */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col h-[500px] md:h-[600px] w-full">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col w-full">
           <h3 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
             <ScanLine className="w-6 h-6 text-emerald-500" /> Quét Thẻ Tự Động
           </h3>
           <p className="text-sm text-slate-500 mb-6">Đưa mã QR của Hội viên vào giữa khung hình để quét.</p>
-          
-          <div className="flex-1 overflow-hidden relative flex flex-col items-center justify-center">
-            <div className="w-full h-full max-w-sm mx-auto">
-              <GymQrScanner onSuccess={handleScanSuccess} />
-            </div>
+          <div className="w-full max-w-sm mx-auto overflow-hidden rounded-2xl bg-slate-50">
+            <GymQrScanner onSuccess={handleScanSuccess} />
           </div>
         </div>
 

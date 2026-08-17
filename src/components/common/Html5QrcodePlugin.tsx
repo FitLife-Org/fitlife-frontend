@@ -14,9 +14,8 @@ export interface Html5QrcodePluginProps {
 
 export default function Html5QrcodePlugin(props: Html5QrcodePluginProps) {
   useEffect(() => {
-    const config = {
+    const config: any = {
       fps: props.fps || 10,
-      qrbox: props.qrbox || 250,
       aspectRatio: props.aspectRatio || 1.0,
       disableFlip: props.disableFlip || false,
       supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
