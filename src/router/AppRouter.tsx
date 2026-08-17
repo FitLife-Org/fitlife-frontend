@@ -117,7 +117,6 @@ import AiFitnessPage from "../pages/member/AiFitnessPage";
 
 import CheckinPage from "../pages/staff/CheckinPage";
 import StaffCheckinHistoryPage from "../pages/staff/StaffCheckinHistoryPage";
-import SubscriptionSupportPage from "../pages/staff/SubscriptionSupportPage";
 
 // =====================================================
 // TRAINER
@@ -686,20 +685,6 @@ export default function AppRouter() {
                                     }
                                 >
                                     <StaffCheckinHistoryPage />
-                                </RoleGuard>
-                            }
-                        />
-
-                        <Route
-                            path={ROUTES.STAFF_SUBSCRIPTION_SUPPORT}
-                            element={
-                                <RoleGuard
-                                    roles={[
-                                        "ROLE_STAFF",
-                                        "ROLE_ADMIN",
-                                    ]}
-                                >
-                                    <SubscriptionSupportPage />
                                 </RoleGuard>
                             }
                         />

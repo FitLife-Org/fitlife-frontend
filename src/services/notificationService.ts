@@ -7,13 +7,15 @@ class NotificationService {
    * Lấy danh sách thông báo của người dùng hiện tại
    */
   async getMyNotifications(): Promise<NotificationDto[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<NotificationDto[]>>("/notifications/my");
-      return res.data.data || [];
-    } catch (error) {
-      console.warn("Chưa thể tải thông báo (API có thể chưa sẵn sàng):", error);
-      return [];
-    }
+    // Tạm thời bỏ qua gọi API để tránh lỗi 500 spam console
+    // try {
+    //   const res = await apiClient.get<ApiResponse<NotificationDto[]>>("/notifications/my");
+    //   return res.data.data || [];
+    // } catch (error) {
+    //   console.warn("Chưa thể tải thông báo (API có thể chưa sẵn sàng):", error);
+    //   return [];
+    // }
+    return [];
   }
 
   /**

@@ -278,15 +278,7 @@ const menuItems:
         ],
     },
 
-    {
-        label: "Hỗ trợ gói tập",
-        path: ROUTES.STAFF_SUBSCRIPTION_SUPPORT,
-        icon: ShieldCheck,
-        roles: [
-            "ROLE_STAFF",
-            "ROLE_ADMIN",
-        ],
-    },
+
 
     // =====================================================
     // TRAINER
