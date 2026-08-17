@@ -101,8 +101,7 @@ export const ROUTES = {
       "/staff/checkin",
   STAFF_CHECKIN_HISTORY:
       "/staff/checkin-history",
-  STAFF_SUBSCRIPTION_SUPPORT:
-      "/staff/subscriptions",
+
 
   // Trainer
   TRAINER_SCHEDULE:

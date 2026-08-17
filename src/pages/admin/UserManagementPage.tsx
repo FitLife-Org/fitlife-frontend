@@ -13,8 +13,12 @@ import type { MemberProfile } from "../../types/member.type";
 import type { Status } from "../../types/common.type";
 import { useMemberTimeline } from "../../hooks/useMemberTimeline";
 import MemberTimeline from "../../components/member/MemberTimeline";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 
 export default function UserManagementPage() {
+  const containerRef = usePageAnimation();
   const {
     members,
     loading,
@@ -72,22 +76,49 @@ export default function UserManagementPage() {
     }
   };
 
+  const filteredMembers = members.filter((member) => {
+    const matchesSearch =
+        member.fullName
+            ?.toLowerCase()
+            .includes(
+                searchTerm.toLowerCase(),
+            ) ||
+        member.phone
+            ?.toLowerCase()
+            .includes(
+                searchTerm.toLowerCase(),
+            ) ||
+        member.email
+            ?.toLowerCase()
+            .includes(
+                searchTerm.toLowerCase(),
+            );
+
+    const matchesStatus =
+        statusFilter === "ALL" ||
+        member.status ===
+            statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  useGSAP(() => {
+    if (!loading && filteredMembers.length > 0) {
+      gsap.from(".member-row", {
+        y: 20,
+        opacity: 0,
+        stagger: 0.05,
+        duration: 0.4,
+        ease: "power2.out",
+        clearProps: "all"
+      });
+    }
+  }, [loading, filteredMembers.length]);
+
   const totalCount = members.length;
   const activeCount = members.filter(m => m.status === "ACTIVE").length;
   const lockedCount = members.filter(m => m.status === "LOCKED").length;
   const pendingCount = members.filter(m => m.status === "PENDING").length;
-
-  const filteredMembers = members.filter(m => {
-    const matchesSearch = 
-      (m.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (m.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (m.phone ?? "").includes(searchTerm) ||
-      (m.memberCode || "").toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter === "ALL" || m.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
 
   if (showFormView) {
     return (
@@ -267,9 +298,9 @@ export default function UserManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6" ref={containerRef}>
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Quản lý hội viên</h1>
           <p className="text-sm text-slate-500 mt-1">Danh sách tài khoản hội viên, trạng thái hoạt động, lịch sử dịch vụ phòng tập</p>
@@ -429,7 +460,7 @@ export default function UserManagementPage() {
                   </tr>
                 ) : (
                   filteredMembers.map((member) => (
-                    <tr key={member.id} className="hover:bg-slate-50/40 transition-colors group">
+                    <tr key={member.id} className="member-row hover:bg-slate-50/40 transition-colors group">
                       <td className="px-6 py-4 font-semibold text-slate-900 text-xs">
                         {member.memberCode || `MEM${String(member.id).padStart(4, "0")}`}
                       </td>

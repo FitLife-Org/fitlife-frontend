@@ -61,7 +61,7 @@ export const EquipmentService = {
       const response =
           await apiClient.get<
               ApiResponse<PageResponse<Equipment>>
-          >(PUBLIC_API_BASE, {
+          >("/staff/equipment", {
             params: {
               page: params.page ?? 0,
               size: params.size ?? 20,
@@ -99,7 +99,7 @@ export const EquipmentService = {
           "Không nhận được danh sách thiết bị.",
       );
     } catch (error) {
-      console.warn("Backend failed for equipment getAll, returning mock data");
+      console.warn("Backend failed with 500 for equipment getAll, returning mock data");
       return {
         content: [
           {
@@ -157,7 +157,7 @@ export const EquipmentService = {
           "Không nhận được dữ liệu tổng quan thiết bị.",
       );
     } catch (error) {
-      console.warn("Backend failed for equipment getSummary, returning mock data");
+      console.warn("Backend failed with 500 for equipment getSummary, returning mock data");
       return {
         total: 120,
         active: { count: 105, percentage: 87.5 },
@@ -201,7 +201,7 @@ export const EquipmentService = {
       data: AdminEquipmentUpdateRequest,
   ): Promise<Equipment> {
     const response =
-        await apiClient.put<
+        await apiClient.patch<
             ApiResponse<Equipment>
         >(
             `${ADMIN_API_BASE}/${id}`,

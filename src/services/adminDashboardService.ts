@@ -69,7 +69,7 @@ export const adminDashboardService = {
       const res = await apiClient.get<ApiResponse<any[]>>("/admin/reports/subscriptions/expiring", { params });
       return (res.data.data || []).map(item => ({
         id: item.subscriptionId,
-        description: `GĂ³i cá»§a ${item.memberName} sáº¯p háº¿t háº¡n vĂ o ${item.endDate}`,
+        description: `Gói của ${item.memberName} sắp hết hạn vào ${item.endDate}`,
         time: item.endDate,
         status: "WARNING"
       }));

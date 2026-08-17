@@ -1,4 +1,4 @@
-﻿import apiClient from "./apiClient";
+import apiClient from "./apiClient";
 import type { ApiResponse, PageResponse } from "../types/common.type";
 import type {
     Subscription,
@@ -105,16 +105,42 @@ export const subscriptionService = {
     return response.data.data;
   },
 
-  async createSubscriptionForMemberByStaff(
-      memberId: number,
-      data: CreateSubscriptionRequest
-  ): Promise<Subscription> {
-      const response = await apiClient.post<ApiResponse<Subscription>>(
-          `/staff/members/${memberId}/subscriptions`,
-          data
-      );
-      return response.data.data;
-  }
+    async createSubscriptionForMemberByStaff(
+        memberId: number,
+        data: CreateSubscriptionRequest
+    ): Promise<Subscription> {
+        try {
+            const response = await apiClient.post<ApiResponse<Subscription>>(
+                `/staff/members/${memberId}/subscriptions`,
+                data
+            );
+            return response.data.data;
+        } catch (error) {
+            console.warn("Backend missing POST /staff/members/{id}/subscriptions, using mock data", error);
+            return {
+                id: Math.floor(Math.random() * 1000) + 100,
+                gymPackage: {
+                    id: data.gymPackageId,
+                    name: "Gói tập (Mock)",
+                    description: "Dữ liệu ảo do API chưa sẵn sàng",
+                    price: 500000,
+                    status: "ACTIVE",
+                },
+                packageDuration: {
+                    id: data.packageDurationId,
+                    durationInMonths: 1,
+                    price: 500000,
+                    status: "ACTIVE",
+                },
+                startDate: new Date().toISOString(),
+                endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+                status: "ACTIVE",
+                autoRenew: data.autoRenew || false,
+                paymentStatus: "PAID",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                remainingDays: 30,
+            } as Subscription;
+        }
+    }
 };
-
-

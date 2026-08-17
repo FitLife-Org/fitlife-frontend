@@ -68,6 +68,19 @@ export default function StaffCheckinHistoryPage() {
     void fetchData();
   }, [fetchData]);
 
+  const handleManualCheckout = async (id: number) => {
+    try {
+      setCheckingOutId(id);
+      await staffCheckinService.manualCheckout(id);
+      toast.success("Check-out thành công!");
+      void fetchData();
+    } catch (error) {
+      toast.error("Lỗi khi Check-out.");
+    } finally {
+      setCheckingOutId(null);
+    }
+  };
+
   const filteredHistory = historyRecords.filter(r => {
     if (!searchTerm) return true;
     const lower = searchTerm.toLowerCase();
@@ -175,7 +188,18 @@ export default function StaffCheckinHistoryPage() {
       key: "action",
       header: "Thao tác",
       render: (row: CheckinRecord) => (
-        <span className="text-xs text-slate-400 italic">Không hỗ trợ Check-out thủ công</span>
+        <button
+          onClick={() => handleManualCheckout(row.id)}
+          disabled={checkingOutId === row.id}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+        >
+          {checkingOutId === row.id ? (
+            <div className="w-3.5 h-3.5 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin" />
+          ) : (
+            <LogOut className="w-3.5 h-3.5" />
+          )}
+          Check-out
+        </button>
       ),
     },
   ];

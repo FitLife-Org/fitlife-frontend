@@ -12,8 +12,9 @@ import {
 } from "lucide-react";
 import { usePageAnimation } from "../../hooks/usePageAnimation";
 import Button from "../../components/common/Button";
-import GymQrScanner from "../../components/checkin/GymQrScanner";
+import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
 import { useCheckinHistory } from "../../hooks/useCheckinHistory";
+import { useGymQrScanner } from "../../hooks/useGymQrScanner";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -27,8 +28,13 @@ export default function CheckinHistoryPage() {
     loading,
     showScanner,
     setShowScanner,
-    handleScanSuccess
+    handleScanSuccess: handleLogicScan
   } = useCheckinHistory();
+
+  const { isProcessing: isScannerProcessing, handleScanSuccess } = useGymQrScanner((token) => {
+    setShowScanner(false);
+    handleLogicScan(token);
+  });
 
   // Quản lý state cho Lịch
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -62,7 +68,7 @@ export default function CheckinHistoryPage() {
     return history.filter(record => isSameDate(new Date(record.checkInTime), date));
   };
 
-  const selectedDateRecords = useMemo(() => getRecordsForDate(selectedDate), [selectedDate, history]);
+  const selectedDateRecords = history.filter(record => isSameDate(new Date(record.checkInTime), selectedDate));
   const WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
   // --- GSAP ANIMATION ---
@@ -299,15 +305,25 @@ export default function CheckinHistoryPage() {
                       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                         <ScanLine className="w-5 h-5 text-emerald-600"/> Quét mã QR Phòng tập
                       </h2>
-                      <div className="rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 min-h-[300px]">
-                  <GymQrScanner onSuccess={(token) => {
-                    setShowScanner(false);
-                    handleScanSuccess(token);
-                  }} />
-                </div>
-                <p className="text-center text-sm font-medium text-slate-500 mt-4">
-                  Sử dụng Camera để quét mã đặt tại quầy Lễ tân
-                </p>
+                      <div className="rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 min-h-[300px] relative flex flex-col items-center justify-center p-2">
+                          {!isScannerProcessing ? (
+                            <Html5QrcodePlugin 
+                              fps={15} 
+                              qrbox={250} 
+                              disableFlip={false}
+                              qrCodeSuccessCallback={handleScanSuccess}
+                              qrCodeErrorCallback={() => {}}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-50/90 backdrop-blur-sm z-20">
+                              <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4 shadow-lg" />
+                              <p className="text-emerald-700 font-bold text-lg animate-pulse">Đang giải mã thẻ...</p>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-center text-sm font-medium text-slate-500 mt-4">
+                          Sử dụng Camera để quét mã đặt tại quầy Lễ tân
+                        </p>
               </div>
             </div>
         )}

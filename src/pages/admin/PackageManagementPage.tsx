@@ -3,12 +3,14 @@ import PageHeader from "../../components/common/PageHeader";
 import GymPackageTab from "./components/GymPackageTab";
 import PackageDurationTab from "./components/PackageDurationTab";
 import { usePackageManagement } from "../../hooks/usePackageManagement";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 
 export default function PackageManagementPage() {
   const { activeTab, setActiveTab } = usePackageManagement();
+  const containerRef = usePageAnimation();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={containerRef}>
       <PageHeader 
         title="Cấu hình Gói tập & Thời hạn" 
         description="Quản lý thông tin gói tập Gym và cấu hình thời hạn chung (1 tháng, 3 tháng...)" 

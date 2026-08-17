@@ -18,7 +18,6 @@ export default function GymQrScanner({ onSuccess }: GymQrScannerProps) {
         {!isProcessing ? (
           <Html5QrcodePlugin 
             fps={10} 
-            qrbox={250} 
             disableFlip={false}
             qrCodeSuccessCallback={handleScanSuccess}
             qrCodeErrorCallback={() => {  }}
