@@ -39,7 +39,9 @@ function validateSuggestionId(
     suggestionId: number,
 ): void {
     if (
-        !Number.isInteger(suggestionId) ||
+        !Number.isInteger(
+            suggestionId,
+        ) ||
         suggestionId <= 0
     ) {
         throw new Error(
@@ -49,8 +51,36 @@ function validateSuggestionId(
 }
 
 export const aiService = {
+    // =====================================================
+    // MEMBER - USAGE
+    // =====================================================
+
+    async getTodayUsage():
+        Promise<AiUsageTodayResponse> {
+        const response =
+            await apiClient.get<
+                ApiResponse<AiUsageTodayResponse>
+            >(
+                `${AI_BASE_URL}/usage/today`,
+                {
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
+            response.data,
+            "Không thể tải lượt sử dụng AI.",
+        );
+    },
+
+    // =====================================================
+    // MEMBER - GENERATE FULL PLAN
+    // =====================================================
+
     async generateFullPlan(
-        request: AiFullPlanRequest,
+        request:
+        AiFullPlanRequest,
     ): Promise<AiSuggestionResponse> {
         const response =
             await apiClient.post<
@@ -70,8 +100,65 @@ export const aiService = {
         );
     },
 
+    // =====================================================
+    // MEMBER - GENERATE WORKOUT PLAN
+    // =====================================================
+
+    async generateWorkoutPlan(
+        request:
+        AiWorkoutPlanRequest,
+    ): Promise<AiSuggestionResponse> {
+        const response =
+            await apiClient.post<
+                ApiResponse<AiSuggestionResponse>
+            >(
+                `${AI_BASE_URL}/workout-plan`,
+                request,
+                {
+                    timeout:
+                    AI_GENERATE_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
+            response.data,
+            "Máy chủ không trả về kế hoạch tập luyện.",
+        );
+    },
+
+    // =====================================================
+    // MEMBER - GENERATE NUTRITION PLAN
+    // =====================================================
+
+    async generateNutritionPlan(
+        request:
+        AiNutritionPlanRequest,
+    ): Promise<AiSuggestionResponse> {
+        const response =
+            await apiClient.post<
+                ApiResponse<AiSuggestionResponse>
+            >(
+                `${AI_BASE_URL}/nutrition-plan`,
+                request,
+                {
+                    timeout:
+                    AI_GENERATE_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
+            response.data,
+            "Máy chủ không trả về kế hoạch dinh dưỡng.",
+        );
+    },
+
+    // =====================================================
+    // MEMBER - BODY ANALYSIS
+    // =====================================================
+
     async analyzeBody(
-        request: AiBodyAnalysisRequest,
+        request:
+        AiBodyAnalysisRequest,
     ): Promise<AiSuggestionDetailResponse> {
         const response =
             await apiClient.post<
@@ -91,6 +178,10 @@ export const aiService = {
         );
     },
 
+    // =====================================================
+    // MEMBER - HISTORY
+    // =====================================================
+
     async getAiHistory(
         page = 0,
         size = 10,
@@ -109,6 +200,7 @@ export const aiService = {
                         page,
                         size,
                     },
+
                     timeout:
                     AI_STANDARD_TIMEOUT_MS,
                 },
@@ -119,6 +211,52 @@ export const aiService = {
             "Không thể tải lịch sử AI.",
         );
     },
+
+    async getFilteredHistory(
+        filter:
+        AiHistoryFilter,
+    ): Promise<
+        PageResponse<AiSuggestionResponse>
+    > {
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    PageResponse<AiSuggestionResponse>
+                >
+            >(
+                `${AI_BASE_URL}/my/filter`,
+                {
+                    params: {
+                        suggestionType:
+                        filter
+                            .suggestionType,
+
+                        status:
+                        filter.status,
+
+                        page:
+                            filter.page ??
+                            0,
+
+                        size:
+                            filter.size ??
+                            10,
+                    },
+
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
+            );
+
+        return requireApiData(
+            response.data,
+            "Không thể tải lịch sử AI.",
+        );
+    },
+
+    // =====================================================
+    // MEMBER - DETAIL
+    // =====================================================
 
     async getAiSuggestionDetail(
         suggestionId: number,
@@ -148,10 +286,16 @@ export const aiService = {
 
         return {
             ...detail,
+
             items:
-                detail.items ?? [],
+                detail.items ??
+                [],
         };
     },
+
+    // =====================================================
+    // MEMBER - APPLY WORKOUT
+    // =====================================================
 
     async applyWorkoutPlan(
         suggestionId: number,
@@ -178,6 +322,10 @@ export const aiService = {
         );
     },
 
+    // =====================================================
+    // MEMBER - APPLY NUTRITION
+    // =====================================================
+
     async applyNutritionPlan(
         suggestionId: number,
     ): Promise<AiApplyPlanResponse> {
@@ -203,9 +351,15 @@ export const aiService = {
         );
     },
 
+    // =====================================================
+    // MEMBER - FEEDBACK
+    // =====================================================
+
     async submitFeedback(
         suggestionId: number,
-        request: AiFeedbackRequest,
+
+        request:
+        AiFeedbackRequest,
     ): Promise<AiFeedbackResponse> {
         validateSuggestionId(
             suggestionId,
@@ -229,30 +383,9 @@ export const aiService = {
         );
     },
 
-    async retryAiSuggestion(
-        suggestionId: number,
-    ): Promise<AiSuggestionResponse> {
-        validateSuggestionId(
-            suggestionId,
-        );
-
-        const response =
-            await apiClient.post<
-                ApiResponse<AiSuggestionResponse>
-            >(
-                `${AI_BASE_URL}/${suggestionId}/retry`,
-                undefined,
-                {
-                    timeout:
-                    AI_GENERATE_TIMEOUT_MS,
-                },
-            );
-
-        return requireApiData(
-            response.data,
-            "Không thể thử lại gợi ý AI.",
-        );
-    },
+    // =====================================================
+    // ADMIN
+    // =====================================================
 
     async getAdminAiSuggestions(
         page = 0,
@@ -260,40 +393,28 @@ export const aiService = {
     ): Promise<
         PageResponse<AiSuggestionResponse>
     > {
-        try {
-            const response =
-                await apiClient.get<
-                    ApiResponse<
-                        PageResponse<AiSuggestionResponse>
-                    >
-                >(
-                    `/admin/ai/suggestions`,
-                    {
-                        params: {
-                            page,
-                            size,
-                        },
-                        timeout:
-                        AI_STANDARD_TIMEOUT_MS,
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    PageResponse<AiSuggestionResponse>
+                >
+            >(
+                "/admin/ai-suggestions",
+                {
+                    params: {
+                        page,
+                        size,
                     },
-                );
-    
-            return requireApiData(
-                response.data,
-                "Không thể tải danh sách gợi ý AI (Admin).",
+
+                    timeout:
+                    AI_STANDARD_TIMEOUT_MS,
+                },
             );
-        } catch {
-            return {
-                content: [],
-                page: page,
-                size: size,
-                totalElements: 0,
-                totalPages: 0,
-                first: page === 0,
-                last: true,
-                empty: true
-            };
-        }
+
+        return requireApiData(
+            response.data,
+            "Không thể tải danh sách AI Suggestion.",
+        );
     },
 
     async getAdminAiSuggestionDetail(
@@ -309,7 +430,7 @@ export const aiService = {
                     AiSuggestionDetailResponse
                 >
             >(
-                `/admin/ai/suggestions/${suggestionId}`,
+                `/admin/ai-suggestions/${suggestionId}`,
                 {
                     timeout:
                     AI_STANDARD_TIMEOUT_MS,
@@ -319,13 +440,15 @@ export const aiService = {
         const detail =
             requireApiData(
                 response.data,
-                "Không thể tải chi tiết kế hoạch AI (Admin).",
+                "Không thể tải chi tiết AI Suggestion.",
             );
 
         return {
             ...detail,
+
             items:
-                detail.items ?? [],
+                detail.items ??
+                [],
         };
     },
 };
