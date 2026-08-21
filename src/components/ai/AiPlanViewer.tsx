@@ -6,55 +6,97 @@ import {
 
 import {
     AlertTriangle,
+    BarChart3,
+    CalendarDays,
     CalendarPlus,
     CheckCircle2,
     Dumbbell,
     ExternalLink,
     FileText,
+    Flame,
     Salad,
+    Sparkles,
     Utensils,
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
+import {
+    useNavigate,
+} from "react-router-dom";
+
 import toast from "react-hot-toast";
 
 import Button from "../common/Button";
+import Badge from "../common/Badge";
 
-import { ROUTES } from "../../config/routes";
-import { aiService } from "../../services/aiService";
-import { getApiErrorMessage } from "../../utils/apiError";
+import {
+    ROUTES,
+} from "../../config/routes";
+
+import {
+    aiService,
+} from "../../services/aiService";
+
+import {
+    getApiErrorMessage,
+} from "../../utils/apiError";
 
 import type {
     AiPlanItemResponse,
     AiSuggestionDetailResponse,
+    AiSuggestionStatus,
+    AiSuggestionType,
 } from "../../types/ai.type";
 
 interface AiPlanViewerProps {
-    suggestion: AiSuggestionDetailResponse;
+    suggestion:
+        AiSuggestionDetailResponse;
+
     onChanged?: (
-        detail: AiSuggestionDetailResponse,
+        detail:
+        AiSuggestionDetailResponse,
     ) => void;
 }
 
 function sortItems(
-    items: AiPlanItemResponse[],
+    items:
+    AiPlanItemResponse[],
 ): AiPlanItemResponse[] {
-    return [...items].sort(
-        (first, second) => {
-            const firstOrder = first.sortOrder ?? 0;
-            const secondOrder = second.sortOrder ?? 0;
+    return [
+        ...items,
+    ].sort(
+        (
+            first,
+            second,
+        ) => {
+            const firstOrder =
+                first.sortOrder ??
+                0;
 
-            if (firstOrder !== secondOrder) {
-                return firstOrder - secondOrder;
+            const secondOrder =
+                second.sortOrder ??
+                0;
+
+            if (
+                firstOrder !==
+                secondOrder
+            ) {
+                return (
+                    firstOrder -
+                    secondOrder
+                );
             }
 
-            return first.id - second.id;
+            return (
+                first.id -
+                second.id
+            );
         },
     );
 }
 
 function getDayTitle(
-    day: AiPlanItemResponse,
+    day:
+    AiPlanItemResponse,
 ): string {
     return (
         day.title ||
@@ -67,562 +109,1381 @@ function buildRoute(
     route: string,
     id: number,
 ): string {
-    return route.replace(":id", String(id));
+    return route.replace(
+        ":id",
+        String(id),
+    );
+}
+
+function getTypeLabel(
+    type:
+    AiSuggestionType,
+): string {
+    switch (type) {
+        case "FULL_PLAN":
+            return "Kế hoạch toàn diện";
+
+        case "WORKOUT_PLAN":
+            return "Kế hoạch tập luyện";
+
+        case "NUTRITION_PLAN":
+            return "Kế hoạch dinh dưỡng";
+
+        case "BODY_ANALYSIS":
+            return "Phân tích cơ thể";
+
+        default:
+            return type;
+    }
+}
+
+function getStatusLabel(
+    status:
+    AiSuggestionStatus,
+): string {
+    switch (status) {
+        case "PENDING":
+            return "Đang xử lý";
+
+        case "SUCCESS":
+            return "Hoàn thành";
+
+        case "FAILED":
+            return "Thất bại";
+
+        case "APPLIED":
+            return "Đã áp dụng";
+
+        default:
+            return status;
+    }
+}
+
+function getStatusVariant(
+    status:
+    AiSuggestionStatus,
+):
+    | "success"
+    | "warning"
+    | "danger"
+    | "info"
+    | "default" {
+    switch (status) {
+        case "SUCCESS":
+        case "APPLIED":
+            return "success";
+
+        case "PENDING":
+            return "warning";
+
+        case "FAILED":
+            return "danger";
+
+        default:
+            return "default";
+    }
+}
+
+function getGoalLabel(
+    value?: string | null,
+): string {
+    if (!value) {
+        return "Kế hoạch cá nhân hóa";
+    }
+
+    const labels:
+        Record<string, string> = {
+        LOSE_WEIGHT:
+            "Giảm mỡ",
+
+        GAIN_MUSCLE:
+            "Tăng cơ",
+
+        BODY_RECOMPOSITION:
+            "Tăng cơ giảm mỡ",
+
+        MAINTAIN_FITNESS:
+            "Duy trì thể lực",
+
+        IMPROVE_ENDURANCE:
+            "Cải thiện sức bền",
+    };
+
+    return (
+        labels[value] ??
+        value
+    );
 }
 
 export default function AiPlanViewer({
                                          suggestion,
                                          onChanged,
                                      }: AiPlanViewerProps) {
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
-    const [currentSuggestion, setCurrentSuggestion] =
-        useState(suggestion);
+    const [
+        currentSuggestion,
+        setCurrentSuggestion,
+    ] =
+        useState<
+            AiSuggestionDetailResponse
+        >(
+            suggestion,
+        );
 
-    const [applyingWorkout, setApplyingWorkout] =
+    const [
+        applyingWorkout,
+        setApplyingWorkout,
+    ] =
         useState(false);
 
-    const [applyingNutrition, setApplyingNutrition] =
+    const [
+        applyingNutrition,
+        setApplyingNutrition,
+    ] =
         useState(false);
 
     useEffect(() => {
-        setCurrentSuggestion(suggestion);
-    }, [suggestion]);
+        setCurrentSuggestion(
+            suggestion,
+        );
+    }, [
+        suggestion,
+    ]);
 
-    const items = useMemo(
-        () => currentSuggestion.items ?? [],
-        [currentSuggestion.items],
-    );
+    // =====================================================
+    // ITEMS
+    // =====================================================
 
-    const workoutDays = useMemo(
-        () =>
-            sortItems(
-                items.filter(
-                    (item) => item.itemType === "WORKOUT_DAY",
+    const items =
+        useMemo(
+            () =>
+                currentSuggestion
+                    .items ??
+                [],
+            [
+                currentSuggestion
+                    .items,
+            ],
+        );
+
+    const workoutDays =
+        useMemo(
+            () =>
+                sortItems(
+                    items.filter(
+                        (
+                            item,
+                        ) =>
+                            item.itemType ===
+                            "WORKOUT_DAY",
+                    ),
                 ),
-            ),
-        [items],
-    );
+            [
+                items,
+            ],
+        );
 
-    const exercises = useMemo(
-        () =>
-            sortItems(
-                items.filter(
-                    (item) => item.itemType === "EXERCISE",
+    const exercises =
+        useMemo(
+            () =>
+                sortItems(
+                    items.filter(
+                        (
+                            item,
+                        ) =>
+                            item.itemType ===
+                            "EXERCISE",
+                    ),
                 ),
-            ),
-        [items],
-    );
+            [
+                items,
+            ],
+        );
 
-    const nutritionItems = useMemo(
-        () =>
-            sortItems(
-                items.filter(
-                    (item) =>
-                        item.itemType === "NUTRITION" ||
-                        item.itemType === "MEAL",
+    const nutritionItems =
+        useMemo(
+            () =>
+                sortItems(
+                    items.filter(
+                        (
+                            item,
+                        ) =>
+                            item.itemType ===
+                            "NUTRITION" ||
+                            item.itemType ===
+                            "MEAL",
+                    ),
                 ),
-            ),
-        [items],
-    );
+            [
+                items,
+            ],
+        );
 
-    const warningItems = useMemo(
-        () =>
-            sortItems(
-                items.filter(
-                    (item) => item.itemType === "WARNING",
+    const warningItems =
+        useMemo(
+            () =>
+                sortItems(
+                    items.filter(
+                        (
+                            item,
+                        ) =>
+                            item.itemType ===
+                            "WARNING",
+                    ),
                 ),
-            ),
-        [items],
-    );
+            [
+                items,
+            ],
+        );
 
-    const noteItems = useMemo(
-        () =>
-            sortItems(
-                items.filter(
-                    (item) => item.itemType === "NOTE",
+    const noteItems =
+        useMemo(
+            () =>
+                sortItems(
+                    items.filter(
+                        (
+                            item,
+                        ) =>
+                            item.itemType ===
+                            "NOTE",
+                    ),
                 ),
-            ),
-        [items],
-    );
+            [
+                items,
+            ],
+        );
 
-    const bodyAnalysisItems = useMemo(
-        () =>
-            sortItems(
-                items.filter(
-                    (item) => item.itemType === "BODY_ANALYSIS",
+    const bodyAnalysisItems =
+        useMemo(
+            () =>
+                sortItems(
+                    items.filter(
+                        (
+                            item,
+                        ) =>
+                            item.itemType ===
+                            "BODY_ANALYSIS",
+                    ),
                 ),
-            ),
-        [items],
-    );
+            [
+                items,
+            ],
+        );
+
+    // =====================================================
+    // STATE
+    // =====================================================
 
     const isSuccessful =
-        currentSuggestion.status === "SUCCESS" ||
-        currentSuggestion.status === "APPLIED";
+        currentSuggestion
+            .status ===
+        "SUCCESS" ||
+        currentSuggestion
+            .status ===
+        "APPLIED";
 
     const canApplyWorkout =
         isSuccessful &&
         (
-            currentSuggestion.suggestionType === "FULL_PLAN" ||
-            currentSuggestion.suggestionType === "WORKOUT_PLAN"
+            currentSuggestion
+                .suggestionType ===
+            "FULL_PLAN" ||
+            currentSuggestion
+                .suggestionType ===
+            "WORKOUT_PLAN"
         ) &&
-        !currentSuggestion.appliedWorkoutPlanId;
+        !currentSuggestion
+            .appliedWorkoutPlanId;
 
     const canApplyNutrition =
         isSuccessful &&
         (
-            currentSuggestion.suggestionType === "FULL_PLAN" ||
-            currentSuggestion.suggestionType === "NUTRITION_PLAN"
+            currentSuggestion
+                .suggestionType ===
+            "FULL_PLAN" ||
+            currentSuggestion
+                .suggestionType ===
+            "NUTRITION_PLAN"
         ) &&
-        !currentSuggestion.appliedNutritionPlanId;
+        !currentSuggestion
+            .appliedNutritionPlanId;
 
-    const reloadDetail = async (): Promise<
-        AiSuggestionDetailResponse
-    > => {
-        const updated =
-            await aiService.getAiSuggestionDetail(
-                currentSuggestion.id,
+    // =====================================================
+    // RELOAD
+    // =====================================================
+
+    const reloadDetail =
+        async (): Promise<
+            AiSuggestionDetailResponse
+        > => {
+            const updated =
+                await aiService
+                    .getAiSuggestionDetail(
+                        currentSuggestion
+                            .id,
+                    );
+
+            setCurrentSuggestion(
+                updated,
             );
 
-        setCurrentSuggestion(updated);
-        onChanged?.(updated);
-
-        return updated;
-    };
-
-    const handleApplyWorkout = async (): Promise<void> => {
-        if (!canApplyWorkout || applyingWorkout) {
-            return;
-        }
-
-        try {
-            setApplyingWorkout(true);
-
-            const result = await aiService.applyWorkoutPlan(
-                currentSuggestion.id,
+            onChanged?.(
+                updated,
             );
 
-            toast.success(
-                "Đã tạo kế hoạch tập luyện từ gợi ý AI.",
-            );
+            return updated;
+        };
 
-            const updated = await reloadDetail();
+    // =====================================================
+    // APPLY WORKOUT
+    // =====================================================
 
-            const workoutPlanId =
-                result.workoutPlanId ??
-                updated.appliedWorkoutPlanId;
+    const handleApplyWorkout =
+        async (): Promise<void> => {
+            if (
+                !canApplyWorkout ||
+                applyingWorkout
+            ) {
+                return;
+            }
 
-            if (workoutPlanId) {
+            try {
+                setApplyingWorkout(
+                    true,
+                );
+
+                const result =
+                    await aiService
+                        .applyWorkoutPlan(
+                            currentSuggestion
+                                .id,
+                        );
+
+                const updated =
+                    await reloadDetail();
+
+                const workoutPlanId =
+                    result.workoutPlanId ??
+                    updated
+                        .appliedWorkoutPlanId;
+
+                toast.success(
+                    "Đã tạo giáo án tập luyện từ FitLife AI.",
+                );
+
+                if (
+                    workoutPlanId
+                ) {
+                    navigate(
+                        buildRoute(
+                            ROUTES
+                                .MEMBER_WORKOUT_DETAIL,
+
+                            workoutPlanId,
+                        ),
+                    );
+
+                    return;
+                }
+
+                /*
+                 * Apply thành công nhưng BE chưa trả ID:
+                 * chuyển về list thay vì đứng im.
+                 */
                 navigate(
-                    buildRoute(
-                        ROUTES.MEMBER_WORKOUT_DETAIL,
-                        workoutPlanId,
+                    ROUTES
+                        .MEMBER_WORKOUTS,
+                );
+            } catch (error) {
+                toast.error(
+                    getApiErrorMessage(
+                        error,
+                        "Không thể áp dụng kế hoạch tập luyện.",
                     ),
                 );
-            }
-        } catch (error) {
-            toast.error(
-                getApiErrorMessage(
-                    error,
-                    "Không thể áp dụng kế hoạch tập luyện.",
-                ),
-            );
-        } finally {
-            setApplyingWorkout(false);
-        }
-    };
-
-    const handleApplyNutrition = async (): Promise<void> => {
-        if (!canApplyNutrition || applyingNutrition) {
-            return;
-        }
-
-        try {
-            setApplyingNutrition(true);
-
-            const result = await aiService.applyNutritionPlan(
-                currentSuggestion.id,
-            );
-
-            toast.success(
-                "Đã tạo kế hoạch dinh dưỡng từ gợi ý AI.",
-            );
-
-            const updated = await reloadDetail();
-
-            const nutritionPlanId =
-                result.nutritionPlanId ??
-                updated.appliedNutritionPlanId;
-
-            if (nutritionPlanId) {
-                navigate(
-                    buildRoute(
-                        ROUTES.MEMBER_NUTRITION_DETAIL,
-                        nutritionPlanId,
-                    ),
+            } finally {
+                setApplyingWorkout(
+                    false,
                 );
             }
-        } catch (error) {
-            toast.error(
-                getApiErrorMessage(
-                    error,
-                    "Không thể áp dụng kế hoạch dinh dưỡng.",
-                ),
-            );
-        } finally {
-            setApplyingNutrition(false);
-        }
-    };
+        };
+
+    // =====================================================
+    // APPLY NUTRITION
+    // =====================================================
+
+    const handleApplyNutrition =
+        async (): Promise<void> => {
+            if (
+                !canApplyNutrition ||
+                applyingNutrition
+            ) {
+                return;
+            }
+
+            try {
+                setApplyingNutrition(
+                    true,
+                );
+
+                const result =
+                    await aiService
+                        .applyNutritionPlan(
+                            currentSuggestion
+                                .id,
+                        );
+
+                const updated =
+                    await reloadDetail();
+
+                const nutritionPlanId =
+                    result.nutritionPlanId ??
+                    updated
+                        .appliedNutritionPlanId;
+
+                toast.success(
+                    "Đã tạo kế hoạch dinh dưỡng từ FitLife AI.",
+                );
+
+                if (
+                    nutritionPlanId
+                ) {
+                    navigate(
+                        buildRoute(
+                            ROUTES
+                                .MEMBER_NUTRITION_DETAIL,
+
+                            nutritionPlanId,
+                        ),
+                    );
+
+                    return;
+                }
+
+                navigate(
+                    ROUTES
+                        .MEMBER_NUTRITION,
+                );
+            } catch (error) {
+                toast.error(
+                    getApiErrorMessage(
+                        error,
+                        "Không thể áp dụng kế hoạch dinh dưỡng.",
+                    ),
+                );
+            } finally {
+                setApplyingNutrition(
+                    false,
+                );
+            }
+        };
+
+    // =====================================================
+    // DAY EXERCISE
+    // =====================================================
 
     const getExercisesForDay = (
-        dayNo?: number | null,
+        dayNo?:
+            number | null,
     ): AiPlanItemResponse[] => {
         return exercises.filter(
-            (exercise) => exercise.dayNo === dayNo,
+            (
+                exercise,
+            ) =>
+                exercise.dayNo ===
+                dayNo,
         );
     };
 
-    return (
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white text-left shadow-sm">
-            <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950 p-6 text-white">
-                <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-violet-100">
-            {currentSuggestion.suggestionType}
-          </span>
+    // =====================================================
+    // ERROR STATE
+    // =====================================================
 
-                    <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
-                            currentSuggestion.status === "FAILED"
-                                ? "bg-red-500/20 text-red-200"
-                                : currentSuggestion.status === "APPLIED"
-                                    ? "bg-emerald-500/20 text-emerald-200"
-                                    : currentSuggestion.status === "PENDING"
-                                        ? "bg-amber-500/20 text-amber-200"
-                                        : "bg-blue-500/20 text-blue-200"
-                        }`}
-                    >
-            {currentSuggestion.status}
-          </span>
+    if (
+        currentSuggestion
+            .status ===
+        "FAILED"
+    ) {
+        return (
+            <div
+                className="
+                    overflow-hidden
+                    rounded-3xl
+                    border
+                    border-red-200
+                    bg-white
+                    shadow-sm
+                "
+            >
+                <div
+                    className="
+                        bg-gradient-to-br
+                        from-red-950
+                        via-slate-950
+                        to-slate-900
+                        p-6
+                        text-white
+                    "
+                >
+                    <Badge variant="danger">
+                        Thất bại
+                    </Badge>
+
+                    <h3 className="mt-4 text-xl font-black">
+                        FitLife AI chưa thể hoàn thành yêu cầu
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-red-100">
+                        {currentSuggestion
+                                .errorMessage ||
+                            "Đã xảy ra lỗi khi xử lý dữ liệu AI."}
+                    </p>
                 </div>
 
-                <h3 className="mt-4 text-xl font-black sm:text-2xl">
-                    {currentSuggestion.goal
-                        ? `Kế hoạch cho mục tiêu ${currentSuggestion.goal}`
-                        : "Kế hoạch FitLife AI"}
-                </h3>
+                <div className="p-5">
+                    <div
+                        className="
+                            flex
+                            items-start
+                            gap-3
+                            rounded-2xl
+                            border
+                            border-red-200
+                            bg-red-50
+                            p-4
+                        "
+                    >
+                        <AlertTriangle className="mt-0.5 h-5 w-5 text-red-600" />
 
-                {currentSuggestion.summary && (
-                    <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-                        {currentSuggestion.summary}
-                    </p>
-                )}
+                        <div>
+                            <p className="font-bold text-red-800">
+                                Không có kế hoạch nào được áp dụng.
+                            </p>
+
+                            <p className="mt-1 text-sm text-red-700">
+                                Bạn có thể kiểm tra lại dữ liệu Body Metric và thử tạo lại yêu cầu.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // =====================================================
+    // UI
+    // =====================================================
+
+    return (
+        <div
+            className="
+                overflow-hidden
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                text-left
+                shadow-sm
+            "
+        >
+            {/* =================================================
+             * HERO
+             * ================================================= */}
+
+            <div
+                className="
+                    relative
+                    overflow-hidden
+                    bg-gradient-to-br
+                    from-slate-950
+                    via-slate-900
+                    to-violet-950
+                    p-6
+                    text-white
+                "
+            >
+                <div
+                    className="
+                        pointer-events-none
+                        absolute
+                        -right-20
+                        -top-20
+                        h-56
+                        w-56
+                        rounded-full
+                        bg-violet-500/20
+                        blur-3xl
+                    "
+                />
+
+                <div className="relative">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span
+                            className="
+                                inline-flex
+                                items-center
+                                gap-1.5
+                                rounded-full
+                                bg-white/10
+                                px-3
+                                py-1
+                                text-xs
+                                font-bold
+                                text-violet-100
+                            "
+                        >
+                            <Sparkles className="h-3 w-3" />
+
+                            {getTypeLabel(
+                                currentSuggestion
+                                    .suggestionType,
+                            )}
+                        </span>
+
+                        <Badge
+                            variant={
+                                getStatusVariant(
+                                    currentSuggestion
+                                        .status,
+                                )
+                            }
+                        >
+                            {getStatusLabel(
+                                currentSuggestion
+                                    .status,
+                            )}
+                        </Badge>
+                    </div>
+
+                    <h3
+                        className="
+                            mt-4
+                            text-xl
+                            font-black
+                            tracking-tight
+                            sm:text-2xl
+                        "
+                    >
+                        {getGoalLabel(
+                            currentSuggestion
+                                .goal,
+                        )}
+                    </h3>
+
+                    {currentSuggestion
+                        .summary && (
+                        <p
+                            className="
+                                mt-3
+                                max-w-3xl
+                                text-sm
+                                leading-6
+                                text-slate-300
+                            "
+                        >
+                            {
+                                currentSuggestion
+                                    .summary
+                            }
+                        </p>
+                    )}
+
+                    <div
+                        className="
+                            mt-5
+                            flex
+                            flex-wrap
+                            gap-2
+                            text-xs
+                            text-slate-300
+                        "
+                    >
+                        {currentSuggestion
+                                .workoutDaysPerWeek !=
+                            null && (
+                                <span className="rounded-lg bg-white/10 px-3 py-1.5">
+                                {
+                                    currentSuggestion
+                                        .workoutDaysPerWeek
+                                }{" "}
+                                    buổi/tuần
+                            </span>
+                            )}
+
+                        {currentSuggestion
+                                .workoutDurationMinutes !=
+                            null && (
+                                <span className="rounded-lg bg-white/10 px-3 py-1.5">
+                                {
+                                    currentSuggestion
+                                        .workoutDurationMinutes
+                                }{" "}
+                                    phút/buổi
+                            </span>
+                            )}
+
+                        {currentSuggestion
+                            .provider && (
+                            <span className="rounded-lg bg-white/10 px-3 py-1.5">
+                                AI:{" "}
+                                {
+                                    currentSuggestion
+                                        .provider
+                                }
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
 
-            <div className="space-y-6 p-4 sm:p-6">
-                {(currentSuggestion.warningMessage ||
-                    warningItems.length > 0) && (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            {/* =================================================
+             * CONTENT
+             * ================================================= */}
+
+            <div className="space-y-7 p-4 sm:p-6">
+                {/* =============================================
+                 * WARNING
+                 * ============================================= */}
+
+                {(
+                    currentSuggestion
+                        .warningMessage ||
+                    warningItems.length >
+                    0
+                ) && (
+                    <section
+                        className="
+                            rounded-2xl
+                            border
+                            border-amber-200
+                            bg-amber-50
+                            p-4
+                        "
+                    >
                         <div className="flex items-start gap-3">
                             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
 
                             <div>
-                                <h4 className="font-bold text-amber-900">
+                                <h4 className="font-black text-amber-900">
                                     Cảnh báo và lưu ý an toàn
                                 </h4>
 
-                                {currentSuggestion.warningMessage && (
+                                {currentSuggestion
+                                    .warningMessage && (
                                     <p className="mt-1 text-sm leading-6 text-amber-800">
-                                        {currentSuggestion.warningMessage}
+                                        {
+                                            currentSuggestion
+                                                .warningMessage
+                                        }
                                     </p>
                                 )}
 
-                                {warningItems.map((warning) => (
-                                    <p
-                                        key={warning.id}
-                                        className="mt-2 text-sm leading-6 text-amber-800"
-                                    >
-                                        {warning.title && `${warning.title}: `}
-                                        {warning.description}
-                                    </p>
-                                ))}
+                                {warningItems.map(
+                                    (
+                                        warning,
+                                    ) => (
+                                        <p
+                                            key={
+                                                warning.id
+                                            }
+                                            className="mt-2 text-sm leading-6 text-amber-800"
+                                        >
+                                            {warning.title &&
+                                                `${warning.title}: `}
+
+                                            {
+                                                warning.description
+                                            }
+                                        </p>
+                                    ),
+                                )}
                             </div>
                         </div>
-                    </div>
+                    </section>
                 )}
 
-                {workoutDays.length > 0 && (
-                    <section>
-                        <div className="mb-4 flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                                <Dumbbell className="h-5 w-5" />
+                {/* =============================================
+                 * BODY ANALYSIS
+                 * ============================================= */}
+
+                {bodyAnalysisItems.length >
+                    0 && (
+                        <section>
+                            <SectionHeader
+                                icon={
+                                    BarChart3
+                                }
+                                title="Phân tích cơ thể"
+                                subtitle="Đánh giá dựa trên Body Metric mới nhất"
+                                className="bg-blue-100 text-blue-700"
+                            />
+
+                            <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                {bodyAnalysisItems.map(
+                                    (
+                                        item,
+                                    ) => (
+                                        <article
+                                            key={
+                                                item.id
+                                            }
+                                            className="
+                                            rounded-2xl
+                                            border
+                                            border-blue-100
+                                            bg-blue-50/60
+                                            p-4
+                                        "
+                                        >
+                                            {item.title && (
+                                                <p className="font-black text-slate-900">
+                                                    {
+                                                        item.title
+                                                    }
+                                                </p>
+                                            )}
+
+                                            {item.description && (
+                                                <p className="mt-2 text-sm leading-6 text-slate-600">
+                                                    {
+                                                        item.description
+                                                    }
+                                                </p>
+                                            )}
+                                        </article>
+                                    ),
+                                )}
                             </div>
+                        </section>
+                    )}
 
-                            <div>
-                                <h4 className="font-black text-slate-900">
-                                    Kế hoạch tập luyện
-                                </h4>
+                {/* =============================================
+                 * WORKOUT
+                 * ============================================= */}
 
-                                <p className="text-xs text-slate-500">
-                                    {workoutDays.length} ngày tập được đề xuất
-                                </p>
+                {workoutDays.length >
+                    0 && (
+                        <section>
+                            <SectionHeader
+                                icon={
+                                    Dumbbell
+                                }
+                                title="Kế hoạch tập luyện"
+                                subtitle={`${workoutDays.length} ngày tập được FitLife AI đề xuất`}
+                                className="bg-emerald-100 text-emerald-700"
+                            />
+
+                            <div className="mt-4 space-y-4">
+                                {workoutDays.map(
+                                    (
+                                        day,
+                                    ) => {
+                                        const dayExercises =
+                                            getExercisesForDay(
+                                                day.dayNo,
+                                            );
+
+                                        return (
+                                            <article
+                                                key={
+                                                    day.id
+                                                }
+                                                className="
+                                                overflow-hidden
+                                                rounded-2xl
+                                                border
+                                                border-slate-200
+                                                bg-slate-50
+                                            "
+                                            >
+                                                <header
+                                                    className="
+                                                    flex
+                                                    flex-col
+                                                    gap-3
+                                                    border-b
+                                                    border-slate-200
+                                                    p-4
+
+                                                    sm:flex-row
+                                                    sm:items-center
+                                                    sm:justify-between
+                                                "
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                    <span
+                                                        className="
+                                                            flex
+                                                            h-9
+                                                            w-9
+                                                            shrink-0
+                                                            items-center
+                                                            justify-center
+                                                            rounded-xl
+                                                            bg-emerald-100
+                                                            text-sm
+                                                            font-black
+                                                            text-emerald-700
+                                                        "
+                                                    >
+                                                        {day.dayNo ??
+                                                            "-"}
+                                                    </span>
+
+                                                        <div>
+                                                            <h5 className="font-black text-slate-900">
+                                                                {getDayTitle(
+                                                                    day,
+                                                                )}
+                                                            </h5>
+
+                                                            {day.description && (
+                                                                <p className="mt-0.5 text-xs text-slate-500">
+                                                                    {
+                                                                        day.description
+                                                                    }
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {day.durationMinutes !=
+                                                        null && (
+                                                            <div
+                                                                className="
+                                                            inline-flex
+                                                            items-center
+                                                            gap-1.5
+                                                            rounded-lg
+                                                            bg-white
+                                                            px-3
+                                                            py-1.5
+                                                            text-xs
+                                                            font-bold
+                                                            text-slate-500
+                                                        "
+                                                            >
+                                                                <CalendarDays className="h-3.5 w-3.5" />
+
+                                                                {
+                                                                    day.durationMinutes
+                                                                }{" "}
+                                                                phút
+                                                            </div>
+                                                        )}
+                                                </header>
+
+                                                <div className="space-y-2 p-4">
+                                                    {dayExercises.length ===
+                                                    0 ? (
+                                                        <p
+                                                            className="
+                                                            rounded-xl
+                                                            border
+                                                            border-dashed
+                                                            border-slate-200
+                                                            bg-white
+                                                            p-3
+                                                            text-sm
+                                                            text-slate-500
+                                                        "
+                                                        >
+                                                            Chưa có bài tập cho ngày này.
+                                                        </p>
+                                                    ) : (
+                                                        dayExercises.map(
+                                                            (
+                                                                exercise,
+                                                            ) => (
+                                                                <div
+                                                                    key={
+                                                                        exercise.id
+                                                                    }
+                                                                    className="
+                                                                    flex
+                                                                    flex-col
+                                                                    gap-3
+                                                                    rounded-xl
+                                                                    border
+                                                                    border-slate-100
+                                                                    bg-white
+                                                                    p-4
+
+                                                                    sm:flex-row
+                                                                    sm:items-center
+                                                                    sm:justify-between
+                                                                "
+                                                                >
+                                                                    <div className="flex min-w-0 items-start gap-3">
+                                                                        <div
+                                                                            className="
+                                                                            flex
+                                                                            h-9
+                                                                            w-9
+                                                                            shrink-0
+                                                                            items-center
+                                                                            justify-center
+                                                                            rounded-xl
+                                                                            bg-slate-100
+                                                                            text-slate-500
+                                                                        "
+                                                                        >
+                                                                            <Dumbbell className="h-4 w-4" />
+                                                                        </div>
+
+                                                                        <div className="min-w-0">
+                                                                            <p className="font-bold text-slate-900">
+                                                                                {exercise.exerciseName ||
+                                                                                    exercise.title ||
+                                                                                    "Bài tập"}
+                                                                            </p>
+
+                                                                            {exercise.description && (
+                                                                                <p className="mt-1 text-xs leading-5 text-slate-500">
+                                                                                    {
+                                                                                        exercise.description
+                                                                                    }
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div
+                                                                        className="
+                                                                        flex
+                                                                        shrink-0
+                                                                        flex-wrap
+                                                                        gap-2
+                                                                        text-xs
+                                                                        font-bold
+                                                                        text-slate-700
+                                                                    "
+                                                                    >
+                                                                        {exercise.sets !=
+                                                                            null && (
+                                                                                <MetricChip>
+                                                                                    {
+                                                                                        exercise.sets
+                                                                                    }{" "}
+                                                                                    hiệp
+                                                                                </MetricChip>
+                                                                            )}
+
+                                                                        {exercise.reps && (
+                                                                            <MetricChip>
+                                                                                {
+                                                                                    exercise.reps
+                                                                                }{" "}
+                                                                                reps
+                                                                            </MetricChip>
+                                                                        )}
+
+                                                                        {exercise.durationMinutes !=
+                                                                            null && (
+                                                                                <MetricChip>
+                                                                                    {
+                                                                                        exercise.durationMinutes
+                                                                                    }{" "}
+                                                                                    phút
+                                                                                </MetricChip>
+                                                                            )}
+
+                                                                        {exercise.restSeconds !=
+                                                                            null && (
+                                                                                <MetricChip>
+                                                                                    Nghỉ{" "}
+                                                                                    {
+                                                                                        exercise.restSeconds
+                                                                                    }
+                                                                                    s
+                                                                                </MetricChip>
+                                                                            )}
+                                                                    </div>
+                                                                </div>
+                                                            ),
+                                                        )
+                                                    )}
+                                                </div>
+                                            </article>
+                                        );
+                                    },
+                                )}
                             </div>
-                        </div>
+                        </section>
+                    )}
 
-                        <div className="space-y-4">
-                            {workoutDays.map((day) => {
-                                const dayExercises = getExercisesForDay(
-                                    day.dayNo,
-                                );
+                {/* =============================================
+                 * NUTRITION
+                 * ============================================= */}
 
-                                return (
-                                    <article
-                                        key={day.id}
-                                        className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                                    >
-                                        <div className="flex flex-col gap-2 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
-                                            <div className="flex items-center gap-3">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-sm font-black text-emerald-700">
-                          {day.dayNo ?? "-"}
-                        </span>
+                {nutritionItems.length >
+                    0 && (
+                        <section>
+                            <SectionHeader
+                                icon={
+                                    Utensils
+                                }
+                                title="Kế hoạch dinh dưỡng"
+                                subtitle="Bữa ăn và mục tiêu dinh dưỡng được FitLife AI đề xuất"
+                                className="bg-orange-100 text-orange-700"
+                            />
 
-                                                <div>
-                                                    <h5 className="font-bold text-slate-900">
-                                                        {getDayTitle(day)}
+                            <div
+                                className="
+                                mt-4
+                                grid
+                                grid-cols-1
+                                gap-3
+                                md:grid-cols-2
+                            "
+                            >
+                                {nutritionItems.map(
+                                    (
+                                        item,
+                                    ) => (
+                                        <article
+                                            key={
+                                                item.id
+                                            }
+                                            className="
+                                            rounded-2xl
+                                            border
+                                            border-orange-100
+                                            bg-orange-50/60
+                                            p-4
+                                        "
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <div
+                                                    className="
+                                                    flex
+                                                    h-10
+                                                    w-10
+                                                    shrink-0
+                                                    items-center
+                                                    justify-center
+                                                    rounded-xl
+                                                    bg-white
+                                                    text-orange-600
+                                                    shadow-sm
+                                                "
+                                                >
+                                                    {item.itemType ===
+                                                    "MEAL" ? (
+                                                        <Salad className="h-5 w-5" />
+                                                    ) : (
+                                                        <Utensils className="h-5 w-5" />
+                                                    )}
+                                                </div>
+
+                                                <div className="min-w-0">
+                                                    <p
+                                                        className="
+                                                        text-[10px]
+                                                        font-black
+                                                        uppercase
+                                                        tracking-wider
+                                                        text-orange-600
+                                                    "
+                                                    >
+                                                        {item.mealName ||
+                                                            item.itemType}
+                                                    </p>
+
+                                                    <h5 className="mt-1 font-black text-orange-950">
+                                                        {item.title ||
+                                                            "Gợi ý dinh dưỡng"}
                                                     </h5>
 
-                                                    {day.description && (
-                                                        <p className="mt-0.5 text-xs text-slate-500">
-                                                            {day.description}
+                                                    {item.portionText && (
+                                                        <p className="mt-1 text-sm text-slate-600">
+                                                            {
+                                                                item.portionText
+                                                            }
+                                                        </p>
+                                                    )}
+
+                                                    {item.description && (
+                                                        <p className="mt-2 text-xs leading-5 text-slate-500">
+                                                            {
+                                                                item.description
+                                                            }
                                                         </p>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            {day.durationMinutes && (
-                                                <span className="text-xs font-bold text-slate-500">
-                          {day.durationMinutes} phút
-                        </span>
-                                            )}
-                                        </div>
+                                            <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+                                                {item.calories !=
+                                                    null && (
+                                                        <span
+                                                            className="
+                                                        inline-flex
+                                                        items-center
+                                                        gap-1
+                                                        rounded-lg
+                                                        bg-white
+                                                        px-2.5
+                                                        py-1.5
+                                                        text-orange-700
+                                                    "
+                                                        >
+                                                    <Flame className="h-3 w-3" />
 
-                                        <div className="mt-3 space-y-2">
-                                            {dayExercises.length === 0 ? (
-                                                <p className="rounded-xl bg-white p-3 text-sm text-slate-500">
-                                                    Chưa có bài tập cho ngày này.
-                                                </p>
-                                            ) : (
-                                                dayExercises.map((exercise) => (
-                                                    <div
-                                                        key={exercise.id}
-                                                        className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
-                                                    >
-                                                        <div className="flex items-start gap-3">
-                                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                                                                <Dumbbell className="h-4 w-4" />
-                                                            </div>
+                                                            {
+                                                                item.calories
+                                                            }{" "}
+                                                            kcal
+                                                </span>
+                                                    )}
 
-                                                            <div>
-                                                                <p className="font-bold text-slate-900">
-                                                                    {exercise.exerciseName ||
-                                                                        exercise.title ||
-                                                                        "Bài tập"}
-                                                                </p>
+                                                {item.proteinGrams !=
+                                                    null && (
+                                                        <MetricChip>
+                                                            P{" "}
+                                                            {
+                                                                item.proteinGrams
+                                                            }
+                                                            g
+                                                        </MetricChip>
+                                                    )}
 
-                                                                {exercise.description && (
-                                                                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                                                                        {exercise.description}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
+                                                {item.carbsGrams !=
+                                                    null && (
+                                                        <MetricChip>
+                                                            C{" "}
+                                                            {
+                                                                item.carbsGrams
+                                                            }
+                                                            g
+                                                        </MetricChip>
+                                                    )}
 
-                                                        <div className="flex shrink-0 flex-wrap gap-2 text-xs font-bold text-slate-700">
-                                                            {exercise.sets != null && (
-                                                                <span className="rounded-lg bg-slate-100 px-2.5 py-1.5">
-                                  {exercise.sets} hiệp
-                                </span>
-                                                            )}
-
-                                                            {exercise.reps && (
-                                                                <span className="rounded-lg bg-slate-100 px-2.5 py-1.5">
-                                  {exercise.reps} reps
-                                </span>
-                                                            )}
-
-                                                            {exercise.durationMinutes != null && (
-                                                                <span className="rounded-lg bg-slate-100 px-2.5 py-1.5">
-                                  {exercise.durationMinutes} phút
-                                </span>
-                                                            )}
-
-                                                            {exercise.restSeconds != null && (
-                                                                <span className="rounded-lg bg-slate-100 px-2.5 py-1.5">
-                                  Nghỉ {exercise.restSeconds}s
-                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
-                    </section>
-                )}
-
-                {nutritionItems.length > 0 && (
-                    <section>
-                        <div className="mb-4 flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
-                                <Utensils className="h-5 w-5" />
+                                                {item.fatGrams !=
+                                                    null && (
+                                                        <MetricChip>
+                                                            F{" "}
+                                                            {
+                                                                item.fatGrams
+                                                            }
+                                                            g
+                                                        </MetricChip>
+                                                    )}
+                                            </div>
+                                        </article>
+                                    ),
+                                )}
                             </div>
+                        </section>
+                    )}
 
-                            <div>
+                {/* =============================================
+                 * NOTES
+                 * ============================================= */}
+
+                {noteItems.length >
+                    0 && (
+                        <section
+                            className="
+                            rounded-2xl
+                            border
+                            border-slate-200
+                            bg-slate-50
+                            p-4
+                        "
+                        >
+                            <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-slate-500" />
+
                                 <h4 className="font-black text-slate-900">
-                                    Kế hoạch dinh dưỡng
+                                    Ghi chú bổ sung
                                 </h4>
-
-                                <p className="text-xs text-slate-500">
-                                    Gợi ý bữa ăn và chỉ số dinh dưỡng
-                                </p>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            {nutritionItems.map((item) => (
-                                <article
-                                    key={item.id}
-                                    className="rounded-2xl border border-orange-100 bg-orange-50 p-4"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-orange-600 shadow-sm">
-                                            {item.itemType === "MEAL" ? (
-                                                <Salad className="h-4 w-4" />
-                                            ) : (
-                                                <Utensils className="h-4 w-4" />
-                                            )}
-                                        </div>
+                            <div className="mt-3 space-y-2">
+                                {noteItems.map(
+                                    (
+                                        note,
+                                    ) => (
+                                        <p
+                                            key={
+                                                note.id
+                                            }
+                                            className="text-sm leading-6 text-slate-600"
+                                        >
+                                            {note.title &&
+                                                `${note.title}: `}
 
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-bold uppercase tracking-wider text-orange-600">
-                                                {item.mealName || item.itemType}
-                                            </p>
-
-                                            <h5 className="mt-1 font-bold text-orange-950">
-                                                {item.title || "Gợi ý dinh dưỡng"}
-                                            </h5>
-
-                                            {item.portionText && (
-                                                <p className="mt-1 text-sm text-slate-600">
-                                                    {item.portionText}
-                                                </p>
-                                            )}
-
-                                            {item.description && (
-                                                <p className="mt-2 text-xs leading-5 text-slate-500">
-                                                    {item.description}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
-                                        {item.calories != null && (
-                                            <span className="rounded-lg bg-white px-2.5 py-1.5 text-orange-700">
-                        {item.calories} kcal
-                      </span>
-                                        )}
-
-                                        {item.proteinGrams != null && (
-                                            <span className="rounded-lg bg-white px-2.5 py-1.5 text-slate-700">
-                        P {item.proteinGrams}g
-                      </span>
-                                        )}
-
-                                        {item.carbsGrams != null && (
-                                            <span className="rounded-lg bg-white px-2.5 py-1.5 text-slate-700">
-                        C {item.carbsGrams}g
-                      </span>
-                                        )}
-
-                                        {item.fatGrams != null && (
-                                            <span className="rounded-lg bg-white px-2.5 py-1.5 text-slate-700">
-                        F {item.fatGrams}g
-                      </span>
-                                        )}
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {bodyAnalysisItems.length > 0 && (
-                    <section className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                        <div className="flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-blue-600" />
-
-                            <h4 className="font-black text-blue-950">
-                                Phân tích cơ thể
-                            </h4>
-                        </div>
-
-                        <div className="mt-3 space-y-3">
-                            {bodyAnalysisItems.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="rounded-xl bg-white p-3"
-                                >
-                                    {item.title && (
-                                        <p className="font-bold text-slate-900">
-                                            {item.title}
+                                            {
+                                                note.description
+                                            }
                                         </p>
-                                    )}
-
-                                    {item.description && (
-                                        <p className="mt-1 text-sm leading-6 text-slate-600">
-                                            {item.description}
-                                        </p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {noteItems.length > 0 && (
-                    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <h4 className="font-bold text-slate-900">
-                            Ghi chú bổ sung
-                        </h4>
-
-                        <div className="mt-2 space-y-2">
-                            {noteItems.map((note) => (
-                                <p
-                                    key={note.id}
-                                    className="text-sm leading-6 text-slate-600"
-                                >
-                                    {note.title && `${note.title}: `}
-                                    {note.description}
-                                </p>
-                            ))}
-                        </div>
-                    </section>
-                )}
+                                    ),
+                                )}
+                            </div>
+                        </section>
+                    )}
             </div>
 
-            {(canApplyWorkout ||
+            {/* =================================================
+             * APPLY ACTIONS
+             * ================================================= */}
+
+            {(
+                canApplyWorkout ||
                 canApplyNutrition ||
-                currentSuggestion.appliedWorkoutPlanId ||
-                currentSuggestion.appliedNutritionPlanId) && (
-                <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:flex-wrap sm:justify-end sm:p-6">
-                    {currentSuggestion.appliedWorkoutPlanId ? (
+                currentSuggestion
+                    .appliedWorkoutPlanId ||
+                currentSuggestion
+                    .appliedNutritionPlanId
+            ) && (
+                <footer
+                    className="
+                        flex
+                        flex-col
+                        gap-3
+                        border-t
+                        border-slate-200
+                        bg-slate-50
+                        p-4
+
+                        sm:flex-row
+                        sm:flex-wrap
+                        sm:justify-end
+                        sm:p-6
+                    "
+                >
+                    {/* WORKOUT APPLIED */}
+
+                    {currentSuggestion
+                        .appliedWorkoutPlanId ? (
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                            <div
+                                className="
+                                    flex
+                                    min-h-11
+                                    items-center
+                                    gap-2
+                                    rounded-xl
+                                    border
+                                    border-emerald-200
+                                    bg-emerald-50
+                                    px-4
+                                    py-2
+                                    text-sm
+                                    font-bold
+                                    text-emerald-700
+                                "
+                            >
                                 <CheckCircle2 className="h-4 w-4" />
-                                Đã tạo lịch tập #{currentSuggestion.appliedWorkoutPlanId}
+
+                                Đã tạo giáo án #
+                                {
+                                    currentSuggestion
+                                        .appliedWorkoutPlanId
+                                }
                             </div>
 
                             <Button
@@ -630,36 +1491,69 @@ export default function AiPlanViewer({
                                 onClick={() =>
                                     navigate(
                                         buildRoute(
-                                            ROUTES.MEMBER_WORKOUT_DETAIL,
-                                            currentSuggestion.appliedWorkoutPlanId!,
+                                            ROUTES
+                                                .MEMBER_WORKOUT_DETAIL,
+
+                                            currentSuggestion
+                                                .appliedWorkoutPlanId!,
                                         ),
                                     )
                                 }
                             >
                                 <ExternalLink className="h-4 w-4" />
-                                Xem lịch tập
+
+                                Xem giáo án
                             </Button>
                         </div>
                     ) : (
                         canApplyWorkout && (
                             <Button
                                 variant="primary"
-                                isLoading={applyingWorkout}
-                                loadingText="Đang tạo lịch tập..."
-                                onClick={handleApplyWorkout}
+                                isLoading={
+                                    applyingWorkout
+                                }
+                                loadingText="Đang tạo giáo án..."
+                                onClick={
+                                    handleApplyWorkout
+                                }
                                 className="bg-slate-950 text-white hover:bg-slate-800"
                             >
                                 <CalendarPlus className="h-4 w-4" />
+
                                 Áp dụng lịch tập
                             </Button>
                         )
                     )}
 
-                    {currentSuggestion.appliedNutritionPlanId ? (
+                    {/* NUTRITION APPLIED */}
+
+                    {currentSuggestion
+                        .appliedNutritionPlanId ? (
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex min-h-11 items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700">
+                            <div
+                                className="
+                                    flex
+                                    min-h-11
+                                    items-center
+                                    gap-2
+                                    rounded-xl
+                                    border
+                                    border-orange-200
+                                    bg-orange-50
+                                    px-4
+                                    py-2
+                                    text-sm
+                                    font-bold
+                                    text-orange-700
+                                "
+                            >
                                 <CheckCircle2 className="h-4 w-4" />
-                                Đã tạo thực đơn #{currentSuggestion.appliedNutritionPlanId}
+
+                                Đã tạo thực đơn #
+                                {
+                                    currentSuggestion
+                                        .appliedNutritionPlanId
+                                }
                             </div>
 
                             <Button
@@ -667,13 +1561,17 @@ export default function AiPlanViewer({
                                 onClick={() =>
                                     navigate(
                                         buildRoute(
-                                            ROUTES.MEMBER_NUTRITION_DETAIL,
-                                            currentSuggestion.appliedNutritionPlanId!,
+                                            ROUTES
+                                                .MEMBER_NUTRITION_DETAIL,
+
+                                            currentSuggestion
+                                                .appliedNutritionPlanId!,
                                         ),
                                     )
                                 }
                             >
                                 <ExternalLink className="h-4 w-4" />
+
                                 Xem dinh dưỡng
                             </Button>
                         </div>
@@ -681,18 +1579,98 @@ export default function AiPlanViewer({
                         canApplyNutrition && (
                             <Button
                                 variant="outline"
-                                isLoading={applyingNutrition}
+                                isLoading={
+                                    applyingNutrition
+                                }
                                 loadingText="Đang tạo thực đơn..."
-                                onClick={handleApplyNutrition}
+                                onClick={
+                                    handleApplyNutrition
+                                }
                                 className="border-orange-200 text-orange-700 hover:bg-orange-50"
                             >
                                 <Utensils className="h-4 w-4" />
+
                                 Áp dụng dinh dưỡng
                             </Button>
                         )
                     )}
-                </div>
+                </footer>
             )}
+        </div>
+    );
+}
+
+// =========================================================
+// SMALL COMPONENTS
+// =========================================================
+
+function MetricChip({
+                        children,
+                    }: {
+    children:
+        React.ReactNode;
+}) {
+    return (
+        <span
+            className="
+                rounded-lg
+                bg-slate-100
+                px-2.5
+                py-1.5
+                text-xs
+                font-bold
+                text-slate-700
+            "
+        >
+            {children}
+        </span>
+    );
+}
+
+function SectionHeader({
+                           icon: Icon,
+                           title,
+                           subtitle,
+                           className,
+                       }: {
+    icon:
+        typeof Dumbbell;
+
+    title:
+        string;
+
+    subtitle:
+        string;
+
+    className:
+        string;
+}) {
+    return (
+        <div className="flex items-center gap-3">
+            <div
+                className={`
+                    flex
+                    h-10
+                    w-10
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-xl
+                    ${className}
+                `}
+            >
+                <Icon className="h-5 w-5" />
+            </div>
+
+            <div>
+                <h4 className="font-black text-slate-900">
+                    {title}
+                </h4>
+
+                <p className="text-xs text-slate-500">
+                    {subtitle}
+                </p>
+            </div>
         </div>
     );
 }
