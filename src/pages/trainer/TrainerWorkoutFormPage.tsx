@@ -1,400 +1,1347 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { 
-    ChevronLeft, 
-    Save, 
-    Plus, 
-    Trash2, 
-    Dumbbell, 
+import {
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+
+import {
+    Activity,
     Calendar,
-    Activity
+    ChevronLeft,
+    Dumbbell,
+    Plus,
+    Save,
+    Trash2,
 } from "lucide-react";
+
+import {
+    useNavigate,
+    useParams,
+} from "react-router-dom";
+
+import {
+    useFieldArray,
+    useForm,
+    type Control,
+    type UseFormRegister,
+} from "react-hook-form";
+
 import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
+
+import {
+    useGSAP,
+} from "@gsap/react";
+
 import toast from "react-hot-toast";
-import { useForm, useFieldArray } from "react-hook-form";
 
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 
-import { workoutService } from "../../services/workoutService";
-import type { WorkoutPlanCreateRequest } from "../../types/workout.type";
-import { getApiErrorMessage } from "../../utils/apiError";
+import {
+    workoutService,
+} from "../../services/workoutService";
+
+import type {
+    WorkoutPlanCreateRequest,
+} from "../../types/workout.type";
+
+import {
+    getApiErrorMessage,
+} from "../../utils/apiError";
+
+const DEFAULT_FORM:
+    WorkoutPlanCreateRequest = {
+    name: "",
+
+    goal: "",
+
+    experienceLevel:
+        "BEGINNER",
+
+    durationWeeks: 4,
+
+    workoutDaysPerWeek: 3,
+
+    workoutDurationMinutes: 60,
+
+    description: "",
+
+    note: "",
+
+    days: [
+        {
+            weekNo: 1,
+
+            dayNo: 1,
+
+            name: "Ngày 1",
+
+            estimatedMinutes:
+                60,
+
+            isRestDay:
+                false,
+
+            exercises: [],
+        },
+    ],
+};
 
 export default function TrainerWorkoutFormPage() {
-    const { memberId, planId } = useParams<{ memberId: string; planId: string }>();
-    const navigate = useNavigate();
-    const isEditMode = !!planId;
-    const containerRef = useRef<HTMLDivElement>(null);
+    const {
+        memberId,
+        planId,
+    } =
+        useParams<{
+            memberId: string;
+            planId: string;
+        }>();
 
-    const [loading, setLoading] = useState(false);
-    const [fetching, setFetching] = useState(isEditMode);
+    const navigate =
+        useNavigate();
 
-    const { register, control, handleSubmit, reset, formState: { errors } } = useForm<WorkoutPlanCreateRequest>({
-        defaultValues: {
-            memberId: Number(memberId),
-            name: "",
-            goal: "",
-            experienceLevel: "BEGINNER",
-            durationWeeks: 4,
-            workoutDaysPerWeek: 3,
-            workoutDurationMinutes: 60,
-            description: "",
-            note: "",
-            days: [
-                { weekNo: 1, dayNo: 1, name: "Ngày 1", exercises: [] }
-            ]
-        }
-    });
+    const isEditMode =
+        Boolean(planId);
 
-    const { fields: dayFields, append: appendDay, remove: removeDay } = useFieldArray({
+    const containerRef =
+        useRef<HTMLDivElement>(
+            null,
+        );
+
+    const [
+        loading,
+        setLoading,
+    ] =
+        useState(false);
+
+    const [
+        fetching,
+        setFetching,
+    ] =
+        useState(
+            isEditMode,
+        );
+
+    const {
+        register,
         control,
-        name: "days"
-    });
+        handleSubmit,
+        reset,
+
+        formState: {
+            errors,
+        },
+    } =
+        useForm<WorkoutPlanCreateRequest>({
+            defaultValues:
+            DEFAULT_FORM,
+        });
+
+    const {
+        fields:
+            dayFields,
+
+        append:
+            appendDay,
+
+        remove:
+            removeDay,
+    } =
+        useFieldArray({
+            control,
+
+            name:
+                "days",
+        });
+
+    // =====================================================
+    // VALIDATE ROUTE
+    // =====================================================
+
+    const numericMemberId =
+        Number(memberId);
+
+    const hasValidMemberId =
+        Number.isInteger(
+            numericMemberId,
+        ) &&
+        numericMemberId > 0;
+
+    // =====================================================
+    // LOAD EDIT DATA
+    // =====================================================
 
     useEffect(() => {
-        if (isEditMode && planId) {
-            const fetchPlan = async () => {
+        if (
+            !isEditMode ||
+            !planId
+        ) {
+            setFetching(
+                false,
+            );
+
+            return;
+        }
+
+        const fetchPlan =
+            async (): Promise<void> => {
                 try {
-                    const plan = await workoutService.getWorkoutPlanDetails(planId);
+                    setFetching(
+                        true,
+                    );
+
+                    const plan =
+                        await workoutService
+                            .getWorkoutPlanDetails(
+                                planId,
+                            );
+
                     reset({
-                        memberId: plan.memberId,
-                        name: plan.name,
-                        goal: plan.goal || "",
-                        experienceLevel: plan.experienceLevel || "BEGINNER",
-                        durationWeeks: plan.durationWeeks || 4,
-                        workoutDaysPerWeek: plan.workoutDaysPerWeek || 3,
-                        workoutDurationMinutes: plan.workoutDurationMinutes || 60,
-                        description: plan.description || "",
-                        note: plan.note || "",
-                        days: plan.days.map(d => ({
-                            weekNo: d.weekNo || 1,
-                            dayNo: d.dayNo || 1,
-                            name: d.name || "",
-                            focusArea: d.focusArea || "",
-                            estimatedMinutes: d.estimatedMinutes || 60,
-                            isRestDay: d.isRestDay || false,
-                            exercises: d.exercises.map(e => ({
-                                exerciseName: e.exerciseName,
-                                sets: e.sets || 3,
-                                reps: e.reps || "10",
-                                restSeconds: e.restSeconds || 60,
-                                targetMuscle: e.targetMuscle || "",
-                                weightKg: e.weightKg || 0,
-                                note: e.note || ""
-                            }))
-                        }))
+                        name:
+                        plan.name,
+
+                        goal:
+                            plan.goal ??
+                            "",
+
+                        experienceLevel:
+                            plan.experienceLevel ??
+                            "BEGINNER",
+
+                        durationWeeks:
+                            plan.durationWeeks ??
+                            4,
+
+                        workoutDaysPerWeek:
+                            plan.workoutDaysPerWeek ??
+                            3,
+
+                        workoutDurationMinutes:
+                            plan.workoutDurationMinutes ??
+                            60,
+
+                        description:
+                            plan.description ??
+                            "",
+
+                        note:
+                            plan.note ??
+                            "",
+
+                        days:
+                            (
+                                plan.days ??
+                                []
+                            ).map(
+                                (
+                                    day,
+                                    index,
+                                ) => ({
+                                    weekNo:
+                                        day.weekNo ??
+                                        1,
+
+                                    dayNo:
+                                        day.dayNo ??
+                                        index +
+                                        1,
+
+                                    dayOfWeek:
+                                        day.dayOfWeek ??
+                                        undefined,
+
+                                    name:
+                                        day.name ??
+                                        `Ngày ${index + 1}`,
+
+                                    focusArea:
+                                        day.focusArea ??
+                                        "",
+
+                                    estimatedMinutes:
+                                        day.estimatedMinutes ??
+                                        60,
+
+                                    note:
+                                        day.note ??
+                                        "",
+
+                                    sortOrder:
+                                        day.sortOrder ??
+                                        index,
+
+                                    isRestDay:
+                                        Boolean(
+                                            day.isRestDay,
+                                        ),
+
+                                    exercises:
+                                        (
+                                            day.exercises ??
+                                            []
+                                        ).map(
+                                            (
+                                                exercise,
+                                                exerciseIndex,
+                                            ) => ({
+                                                exerciseName:
+                                                exercise.exerciseName,
+
+                                                targetMuscle:
+                                                    exercise.targetMuscle ??
+                                                    "",
+
+                                                equipmentId:
+                                                    exercise.equipmentId ??
+                                                    undefined,
+
+                                                sets:
+                                                    exercise.sets ??
+                                                    3,
+
+                                                reps:
+                                                    exercise.reps ??
+                                                    "10",
+
+                                                weightKg:
+                                                    exercise.weightKg ??
+                                                    undefined,
+
+                                                durationMinutes:
+                                                    exercise.durationMinutes ??
+                                                    undefined,
+
+                                                distanceKm:
+                                                    exercise.distanceKm ??
+                                                    undefined,
+
+                                                restSeconds:
+                                                    exercise.restSeconds ??
+                                                    60,
+
+                                                tempo:
+                                                    exercise.tempo ??
+                                                    "",
+
+                                                rpe:
+                                                    exercise.rpe ??
+                                                    undefined,
+
+                                                instruction:
+                                                    exercise.instruction ??
+                                                    "",
+
+                                                note:
+                                                    exercise.note ??
+                                                    "",
+
+                                                videoUrl:
+                                                    exercise.videoUrl ??
+                                                    "",
+
+                                                sortOrder:
+                                                    exercise.sortOrder ??
+                                                    exerciseIndex,
+
+                                                isOptional:
+                                                    Boolean(
+                                                        exercise.isOptional,
+                                                    ),
+                                            }),
+                                        ),
+                                }),
+                            ),
                     });
                 } catch (error) {
-                    toast.error(getApiErrorMessage(error));
+                    toast.error(
+                        getApiErrorMessage(
+                            error,
+                            "Không thể tải giáo án.",
+                        ),
+                    );
                 } finally {
-                    setFetching(false);
+                    setFetching(
+                        false,
+                    );
                 }
             };
-            void fetchPlan();
-        }
-    }, [isEditMode, planId, reset]);
 
-    useGSAP(() => {
-        if (!fetching) {
-            gsap.from(".gsap-form-section", {
-                y: 30,
-                opacity: 0,
-                duration: 0.6,
-                stagger: 0.1,
-                ease: "power3.out",
-            });
-        }
-    }, [fetching]);
+        void fetchPlan();
+    }, [
+        isEditMode,
+        planId,
+        reset,
+    ]);
 
-    const onSubmit = async (data: WorkoutPlanCreateRequest) => {
-        if (!memberId) return;
-        try {
-            setLoading(true);
-            if (isEditMode && planId) {
-                await workoutService.updateTrainerWorkoutPlan(planId, memberId, data);
-                toast.success("Cập nhật lộ trình tập luyện thành công!");
-            } else {
-                await workoutService.createTrainerWorkoutPlan(memberId, data);
-                toast.success("Tạo lộ trình tập luyện mới thành công!");
+    // =====================================================
+    // ANIMATION
+    // =====================================================
+
+    useGSAP(
+        () => {
+            if (fetching) {
+                return;
             }
-            navigate(`/trainer/members/${memberId}/workouts`);
-        } catch (error) {
-            toast.error(getApiErrorMessage(error));
-        } finally {
-            setLoading(false);
-        }
-    };
+
+            gsap.from(
+                ".gsap-form-section",
+                {
+                    y: 20,
+
+                    opacity: 0,
+
+                    duration:
+                        0.45,
+
+                    stagger:
+                        0.08,
+
+                    ease:
+                        "power2.out",
+                },
+            );
+        },
+        {
+            dependencies: [
+                fetching,
+            ],
+
+            scope:
+            containerRef,
+        },
+    );
+
+    // =====================================================
+    // SUBMIT
+    // =====================================================
+
+    const onSubmit =
+        async (
+            data:
+            WorkoutPlanCreateRequest,
+        ): Promise<void> => {
+            if (
+                !hasValidMemberId
+            ) {
+                toast.error(
+                    "Member ID không hợp lệ.",
+                );
+
+                return;
+            }
+
+            try {
+                setLoading(
+                    true,
+                );
+
+                const normalizedData:
+                    WorkoutPlanCreateRequest = {
+                    ...data,
+
+                    name:
+                        data.name
+                            .trim(),
+
+                    goal:
+                        data.goal
+                            ?.trim(),
+
+                    experienceLevel:
+                        data.experienceLevel
+                            ?.trim(),
+
+                    description:
+                        data.description
+                            ?.trim(),
+
+                    note:
+                        data.note
+                            ?.trim(),
+
+                    days:
+                        (
+                            data.days ??
+                            []
+                        ).map(
+                            (
+                                day,
+                                dayIndex,
+                            ) => ({
+                                ...day,
+
+                                sortOrder:
+                                    day.sortOrder ??
+                                    dayIndex,
+
+                                name:
+                                    day.name
+                                        ?.trim(),
+
+                                focusArea:
+                                    day.focusArea
+                                        ?.trim(),
+
+                                note:
+                                    day.note
+                                        ?.trim(),
+
+                                exercises:
+                                    (
+                                        day.exercises ??
+                                        []
+                                    ).map(
+                                        (
+                                            exercise,
+                                            exerciseIndex,
+                                        ) => ({
+                                            ...exercise,
+
+                                            exerciseName:
+                                                exercise.exerciseName
+                                                    .trim(),
+
+                                            targetMuscle:
+                                                exercise.targetMuscle
+                                                    ?.trim(),
+
+                                            instruction:
+                                                exercise.instruction
+                                                    ?.trim(),
+
+                                            note:
+                                                exercise.note
+                                                    ?.trim(),
+
+                                            sortOrder:
+                                                exercise.sortOrder ??
+                                                exerciseIndex,
+                                        }),
+                                    ),
+                            }),
+                        ),
+                };
+
+                if (
+                    isEditMode &&
+                    planId
+                ) {
+                    /*
+                     * Controller Trainer PATCH chỉ update
+                     * metadata của plan.
+                     */
+                    await workoutService
+                        .updateTrainerWorkoutPlan(
+                            planId,
+                            numericMemberId,
+                            {
+                                name:
+                                normalizedData.name,
+
+                                goal:
+                                normalizedData.goal,
+
+                                experienceLevel:
+                                normalizedData
+                                    .experienceLevel,
+
+                                durationWeeks:
+                                normalizedData
+                                    .durationWeeks,
+
+                                workoutDaysPerWeek:
+                                normalizedData
+                                    .workoutDaysPerWeek,
+
+                                workoutDurationMinutes:
+                                normalizedData
+                                    .workoutDurationMinutes,
+
+                                description:
+                                normalizedData
+                                    .description,
+
+                                note:
+                                normalizedData.note,
+                            },
+                        );
+
+                    /*
+                     * Structure có API riêng:
+                     * PUT /workout-plans/{id}/structure
+                     *
+                     * Backend hiện endpoint này dành Member.
+                     * Nếu Trainer bị 403 thì BE cần thêm
+                     * trainer endpoint tương ứng.
+                     */
+                    if (
+                        normalizedData.days
+                    ) {
+                        await workoutService
+                            .updateWorkoutPlanStructure(
+                                planId,
+                                normalizedData.days,
+                            );
+                    }
+
+                    toast.success(
+                        "Cập nhật giáo án thành công.",
+                    );
+                } else {
+                    await workoutService
+                        .createTrainerWorkoutPlan(
+                            numericMemberId,
+                            normalizedData,
+                        );
+
+                    toast.success(
+                        "Tạo giáo án mới thành công.",
+                    );
+                }
+
+                navigate(
+                    `/trainer/members/${numericMemberId}/workouts`,
+                );
+            } catch (error) {
+                toast.error(
+                    getApiErrorMessage(
+                        error,
+                        isEditMode
+                            ? "Không thể cập nhật giáo án."
+                            : "Không thể tạo giáo án.",
+                    ),
+                );
+            } finally {
+                setLoading(
+                    false,
+                );
+            }
+        };
 
     if (fetching) {
         return (
-            <div className="flex justify-center p-12">
-                <div className="w-8 h-8 border-4 border-fit-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex min-h-80 items-center justify-center">
+                <div
+                    className="
+                        h-9
+                        w-9
+                        animate-spin
+                        rounded-full
+                        border-4
+                        border-fit-primary
+                        border-t-transparent
+                    "
+                />
             </div>
         );
     }
 
+    if (!hasValidMemberId) {
+        return (
+            <Card className="mx-auto max-w-xl p-10 text-center">
+                <h1 className="text-xl font-black text-slate-900">
+                    Member ID không hợp lệ
+                </h1>
+
+                <Button
+                    variant="outline"
+                    className="mt-6"
+                    onClick={() =>
+                        navigate(
+                            "/trainer/members",
+                        )
+                    }
+                >
+                    Quay lại danh sách hội viên
+                </Button>
+            </Card>
+        );
+    }
+
     return (
-        <div ref={containerRef} className="space-y-6 pb-24">
-            <div className="flex items-center justify-between mb-6">
+        <div
+            ref={
+                containerRef
+            }
+            className="space-y-6 pb-24"
+        >
+            {/* HEADER */}
+
+            <div
+                className="
+                    flex
+                    flex-col
+                    gap-4
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                "
+            >
                 <div className="flex items-center gap-4">
-                    <button 
-                        onClick={() => navigate(`/trainer/members/${memberId}/workouts`)}
-                        className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigate(
+                                `/trainer/members/${numericMemberId}/workouts`,
+                            )
+                        }
+                        className="
+                            flex
+                            h-10
+                            w-10
+                            items-center
+                            justify-center
+                            rounded-xl
+                            bg-white
+                            text-slate-600
+                            shadow-sm
+                            transition
+                            hover:bg-slate-100
+                        "
                     >
-                        <ChevronLeft className="w-6 h-6 text-slate-600" />
+                        <ChevronLeft className="h-5 w-5" />
                     </button>
+
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">
-                            {isEditMode ? "Chỉnh sửa Lộ trình tập luyện" : "Tạo Lộ trình mới"}
+                        <h1 className="text-2xl font-black text-slate-900">
+                            {isEditMode
+                                ? "Chỉnh sửa giáo án"
+                                : "Tạo giáo án mới"}
                         </h1>
-                        <p className="text-sm text-slate-500 mt-1">Thiết kế lộ trình tập luyện cá nhân hóa cho học viên</p>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                            Thiết kế kế hoạch tập luyện cá nhân hóa cho hội viên.
+                        </p>
                     </div>
                 </div>
-                
-                <Button 
-                    onClick={handleSubmit(onSubmit)} 
-                    disabled={loading}
-                    className="flex items-center gap-2 bg-gradient-to-r from-fit-primary to-blue-600 text-white shadow-lg shadow-fit-primary/20 hover:scale-105 transition-transform"
+
+                <Button
+                    type="button"
+                    variant="primary"
+                    isLoading={
+                        loading
+                    }
+                    loadingText={
+                        isEditMode
+                            ? "Đang lưu..."
+                            : "Đang tạo..."
+                    }
+                    onClick={() => {
+                        void handleSubmit(
+                            onSubmit,
+                        )();
+                    }}
                 >
-                    {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Save className="w-5 h-5" />}
-                    {isEditMode ? "Lưu thay đổi" : "Lưu lộ trình"}
+                    <Save className="h-4 w-4" />
+
+                    {isEditMode
+                        ? "Lưu thay đổi"
+                        : "Tạo giáo án"}
                 </Button>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                <Card className="gsap-form-section p-6 border-t-4 border-t-purple-500">
-                    <div className="flex items-center gap-2 mb-6">
-                        <Calendar className="w-6 h-6 text-purple-500" />
-                        <h2 className="text-lg font-bold text-slate-800">Thông tin chung</h2>
+            <form
+                className="space-y-6"
+                onSubmit={
+                    handleSubmit(
+                        onSubmit,
+                    )
+                }
+            >
+                {/* GENERAL */}
+
+                <Card className="gsap-form-section border-t-4 border-t-violet-500 p-6">
+                    <div className="mb-6 flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-violet-500" />
+
+                        <h2 className="text-lg font-black text-slate-800">
+                            Thông tin chung
+                        </h2>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <Input 
-                            label="Tên lộ trình (*)" 
-                            placeholder="VD: Lộ trình tăng cơ 4 tuần"
-                            {...register("name", { required: "Vui lòng nhập tên lộ trình" })}
-                            error={errors.name?.message}
+
+                    <div
+                        className="
+                            grid
+                            grid-cols-1
+                            gap-5
+                            md:grid-cols-2
+                            xl:grid-cols-3
+                        "
+                    >
+                        <Input
+                            label="Tên giáo án (*)"
+                            placeholder="VD: Tăng cơ 4 tuần"
+                            {...register(
+                                "name",
+                                {
+                                    required:
+                                        "Vui lòng nhập tên giáo án.",
+                                },
+                            )}
+                            error={
+                                errors.name
+                                    ?.message
+                            }
                         />
-                        <Input 
-                            label="Mục tiêu (*)" 
+
+                        <Input
+                            label="Mục tiêu"
                             placeholder="VD: Tăng cơ, giảm mỡ"
-                            {...register("goal", { required: "Vui lòng nhập mục tiêu" })}
-                            error={errors.goal?.message}
+                            {...register(
+                                "goal",
+                            )}
                         />
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-bold text-slate-700">Mức độ (*)</label>
-                            <select 
-                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-fit-primary focus:ring-1 focus:ring-fit-primary"
-                                {...register("experienceLevel")}
+
+                        <div>
+                            <label className="mb-2 block text-sm font-bold text-slate-700">
+                                Trình độ
+                            </label>
+
+                            <select
+                                {...register(
+                                    "experienceLevel",
+                                )}
+                                className="
+                                    h-11
+                                    w-full
+                                    rounded-xl
+                                    border
+                                    border-slate-200
+                                    bg-white
+                                    px-4
+                                    text-sm
+                                    outline-none
+                                    focus:border-fit-primary
+                                    focus:ring-4
+                                    focus:ring-emerald-500/10
+                                "
                             >
-                                <option value="BEGINNER">Người mới bắt đầu</option>
-                                <option value="INTERMEDIATE">Trung bình</option>
-                                <option value="ADVANCED">Nâng cao</option>
+                                <option value="BEGINNER">
+                                    Người mới
+                                </option>
+
+                                <option value="INTERMEDIATE">
+                                    Trung bình
+                                </option>
+
+                                <option value="ADVANCED">
+                                    Nâng cao
+                                </option>
                             </select>
                         </div>
-                        <Input 
+
+                        <Input
                             type="number"
-                            label="Thời lượng (tuần) (*)" 
-                            {...register("durationWeeks", { required: "Bắt buộc", min: 1 })}
-                            error={errors.durationWeeks?.message}
+                            min={1}
+                            label="Thời lượng (tuần)"
+                            {...register(
+                                "durationWeeks",
+                                {
+                                    valueAsNumber:
+                                        true,
+
+                                    min: {
+                                        value:
+                                            1,
+
+                                        message:
+                                            "Tối thiểu 1 tuần.",
+                                    },
+                                },
+                            )}
+                            error={
+                                errors
+                                    .durationWeeks
+                                    ?.message
+                            }
                         />
-                        <Input 
+
+                        <Input
                             type="number"
-                            label="Số buổi tập/tuần" 
-                            {...register("workoutDaysPerWeek")}
+                            min={1}
+                            max={7}
+                            label="Buổi / tuần"
+                            {...register(
+                                "workoutDaysPerWeek",
+                                {
+                                    valueAsNumber:
+                                        true,
+                                },
+                            )}
                         />
-                        <Input 
+
+                        <Input
                             type="number"
-                            label="Thời lượng/buổi (phút)" 
-                            {...register("workoutDurationMinutes")}
+                            min={10}
+                            label="Phút / buổi"
+                            {...register(
+                                "workoutDurationMinutes",
+                                {
+                                    valueAsNumber:
+                                        true,
+                                },
+                            )}
                         />
-                        <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                            <Input 
-                                label="Mô tả" 
-                                placeholder="Mô tả chi tiết lộ trình..."
-                                {...register("description")}
+
+                        <div className="md:col-span-2 xl:col-span-3">
+                            <Input
+                                label="Mô tả"
+                                placeholder="Mô tả mục đích và cấu trúc giáo án..."
+                                {...register(
+                                    "description",
+                                )}
                             />
                         </div>
-                        <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                            <Input 
-                                label="Ghi chú của PT" 
+
+                        <div className="md:col-span-2 xl:col-span-3">
+                            <Input
+                                label="Ghi chú của PT"
                                 placeholder="Dặn dò thêm cho hội viên..."
-                                {...register("note")}
+                                {...register(
+                                    "note",
+                                )}
                             />
                         </div>
                     </div>
                 </Card>
 
-                <Card className="gsap-form-section p-6 border-t-4 border-t-blue-500">
-                    <div className="flex items-center justify-between mb-6">
+                {/* DAYS */}
+
+                <Card className="gsap-form-section border-t-4 border-t-blue-500 p-6">
+                    <div
+                        className="
+                            mb-6
+                            flex
+                            flex-col
+                            gap-3
+                            sm:flex-row
+                            sm:items-center
+                            sm:justify-between
+                        "
+                    >
                         <div className="flex items-center gap-2">
-                            <Activity className="w-6 h-6 text-blue-500" />
-                            <h2 className="text-lg font-bold text-slate-800">Cấu trúc Ngày tập</h2>
+                            <Activity className="h-5 w-5 text-blue-500" />
+
+                            <h2 className="text-lg font-black text-slate-800">
+                                Cấu trúc ngày tập
+                            </h2>
                         </div>
-                        <Button 
+
+                        <Button
                             type="button"
                             variant="outline"
-                            onClick={() => appendDay({ weekNo: 1, dayNo: dayFields.length + 1, name: `Ngày ${dayFields.length + 1}`, exercises: [] })}
-                            className="flex items-center gap-2 text-fit-primary border-fit-primary hover:bg-fit-primary hover:text-white"
+                            onClick={() =>
+                                appendDay({
+                                    weekNo:
+                                        1,
+
+                                    dayNo:
+                                        dayFields.length +
+                                        1,
+
+                                    name:
+                                        `Ngày ${dayFields.length + 1}`,
+
+                                    estimatedMinutes:
+                                        60,
+
+                                    isRestDay:
+                                        false,
+
+                                    exercises:
+                                        [],
+                                })
+                            }
                         >
-                            <Plus className="w-4 h-4" />
-                            Thêm ngày tập
+                            <Plus className="h-4 w-4" />
+
+                            Thêm ngày
                         </Button>
                     </div>
 
-                    <div className="space-y-8">
-                        {dayFields.map((day, dayIndex) => (
-                            <div key={day.id} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm relative group">
-                                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                                    <div className="flex items-center gap-4 flex-1">
-                                        <div className="w-24">
-                                            <Input 
-                                                placeholder="Tuần số"
+                    <div className="space-y-6">
+                        {dayFields.map(
+                            (
+                                dayField,
+                                dayIndex,
+                            ) => (
+                                <div
+                                    key={
+                                        dayField.id
+                                    }
+                                    className="
+                                        rounded-2xl
+                                        border
+                                        border-slate-200
+                                        bg-slate-50
+                                        p-5
+                                    "
+                                >
+                                    <div
+                                        className="
+                                            flex
+                                            flex-col
+                                            gap-4
+                                            xl:flex-row
+                                            xl:items-end
+                                        "
+                                    >
+                                        <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-4">
+                                            <Input
                                                 type="number"
                                                 label="Tuần"
-                                                {...register(`days.${dayIndex}.weekNo` as const)}
-                                                className="bg-white"
+                                                {...register(
+                                                    `days.${dayIndex}.weekNo`,
+                                                    {
+                                                        valueAsNumber:
+                                                            true,
+                                                    },
+                                                )}
                                             />
-                                        </div>
-                                        <div className="w-24">
-                                            <Input 
-                                                placeholder="Ngày số"
+
+                                            <Input
                                                 type="number"
                                                 label="Ngày"
-                                                {...register(`days.${dayIndex}.dayNo` as const)}
-                                                className="bg-white"
+                                                {...register(
+                                                    `days.${dayIndex}.dayNo`,
+                                                    {
+                                                        valueAsNumber:
+                                                            true,
+                                                    },
+                                                )}
+                                            />
+
+                                            <div className="md:col-span-2">
+                                                <Input
+                                                    label="Tên buổi tập"
+                                                    placeholder="VD: Ngực - Tay sau"
+                                                    {...register(
+                                                        `days.${dayIndex}.name`,
+                                                    )}
+                                                />
+                                            </div>
+
+                                            <Input
+                                                label="Nhóm cơ chính"
+                                                placeholder="VD: Ngực"
+                                                {...register(
+                                                    `days.${dayIndex}.focusArea`,
+                                                )}
+                                            />
+
+                                            <Input
+                                                type="number"
+                                                label="Thời lượng"
+                                                {...register(
+                                                    `days.${dayIndex}.estimatedMinutes`,
+                                                    {
+                                                        valueAsNumber:
+                                                            true,
+                                                    },
+                                                )}
                                             />
                                         </div>
-                                        <div className="flex-1 min-w-[200px]">
-                                            <Input 
-                                                placeholder="Tên ngày (VD: Ngực - Tay sau)"
-                                                label="Chủ đề buổi tập"
-                                                {...register(`days.${dayIndex}.name` as const, { required: true })}
-                                                className="font-bold text-lg bg-white"
-                                            />
+
+                                        <div className="flex items-center gap-3">
+                                            <label
+                                                className="
+                                                    flex
+                                                    cursor-pointer
+                                                    items-center
+                                                    gap-2
+                                                    rounded-xl
+                                                    bg-white
+                                                    px-3
+                                                    py-2.5
+                                                    text-sm
+                                                    font-semibold
+                                                    text-slate-600
+                                                "
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    {...register(
+                                                        `days.${dayIndex}.isRestDay`,
+                                                    )}
+                                                />
+
+                                                Ngày nghỉ
+                                            </label>
+
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    removeDay(
+                                                        dayIndex,
+                                                    )
+                                                }
+                                                className="
+                                                    flex
+                                                    h-10
+                                                    w-10
+                                                    items-center
+                                                    justify-center
+                                                    rounded-xl
+                                                    bg-red-50
+                                                    text-red-500
+                                                    transition
+                                                    hover:bg-red-500
+                                                    hover:text-white
+                                                "
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
                                         </div>
                                     </div>
-                                    <div className="flex items-center mt-6">
-                                        <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer mr-4">
-                                            <input 
-                                                type="checkbox" 
-                                                {...register(`days.${dayIndex}.isRestDay` as const)}
-                                                className="w-4 h-4 text-fit-primary rounded border-slate-300 focus:ring-fit-primary"
-                                            />
-                                            Ngày nghỉ
-                                        </label>
-                                        <button 
-                                            type="button"
-                                            onClick={() => removeDay(dayIndex)}
-                                            className="text-slate-400 hover:text-red-500 transition-colors p-2"
-                                            title="Xóa ngày tập"
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
-                                    </div>
+
+                                    <ExerciseList
+                                        control={
+                                            control
+                                        }
+                                        register={
+                                            register
+                                        }
+                                        dayIndex={
+                                            dayIndex
+                                        }
+                                    />
                                 </div>
-                                
-                                <ExerciseList control={control} register={register} dayIndex={dayIndex} />
-                            </div>
-                        ))}
+                            ),
+                        )}
                     </div>
                 </Card>
+
+                <Button
+                    type="submit"
+                    variant="primary"
+                    isLoading={
+                        loading
+                    }
+                    className="w-full sm:hidden"
+                >
+                    <Save className="h-4 w-4" />
+
+                    Lưu giáo án
+                </Button>
             </form>
         </div>
     );
 }
 
-function ExerciseList({ control, register, dayIndex }: { control: any, register: any, dayIndex: number }) {
-    const { fields: exerciseFields, append: appendExercise, remove: removeExercise } = useFieldArray({
-        control,
-        name: `days.${dayIndex}.exercises`
-    });
+interface ExerciseListProps {
+    control:
+        Control<WorkoutPlanCreateRequest>;
+
+    register:
+        UseFormRegister<WorkoutPlanCreateRequest>;
+
+    dayIndex:
+        number;
+}
+
+function ExerciseList({
+                          control,
+                          register,
+                          dayIndex,
+                      }: ExerciseListProps) {
+    /*
+     * React Hook Form có giới hạn type inference với
+     * field-array lồng nhau và dynamic index.
+     *
+     * Cast name ở đây chỉ phục vụ RHF path,
+     * data cuối vẫn được kiểm soát bởi
+     * WorkoutPlanCreateRequest.
+     */
+    const {
+        fields:
+            exerciseFields,
+
+        append:
+            appendExercise,
+
+        remove:
+            removeExercise,
+    } =
+        useFieldArray({
+            control,
+
+            name:
+                `days.${dayIndex}.exercises` as
+                    `days.${number}.exercises`,
+        });
 
     return (
-        <div className="space-y-4 border-t border-slate-200 pt-4 mt-4">
-            <h4 className="font-bold text-slate-700 flex items-center gap-2">
-                <Dumbbell className="w-4 h-4 text-slate-500" />
-                Danh sách bài tập
-            </h4>
-            
-            {exerciseFields.length > 0 && (
-                <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-slate-500 px-2 uppercase tracking-wider">
-                    <div className="col-span-3">Tên bài tập</div>
-                    <div className="col-span-2">Cơ mục tiêu</div>
-                    <div className="col-span-1 text-center">Hiệp (Sets)</div>
-                    <div className="col-span-2 text-center">Số Lần (Reps)</div>
-                    <div className="col-span-2 text-center">Nghỉ (giây)</div>
-                    <div className="col-span-2 text-right">Xóa</div>
-                </div>
-            )}
-            
-            {exerciseFields.map((exercise, exerciseIndex) => (
-                <div key={exercise.id} className="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-xl border border-slate-100 shadow-sm hover:border-blue-200 transition-colors">
-                    <div className="col-span-3">
-                        <Input 
-                            placeholder="VD: Bench Press"
-                            {...register(`days.${dayIndex}.exercises.${exerciseIndex}.exerciseName` as const, { required: true })}
-                            className="bg-slate-50/50"
-                        />
-                    </div>
-                    <div className="col-span-2">
-                        <Input 
-                            placeholder="VD: Ngực"
-                            {...register(`days.${dayIndex}.exercises.${exerciseIndex}.targetMuscle` as const)}
-                            className="bg-slate-50/50"
-                        />
-                    </div>
-                    <div className="col-span-1">
-                        <Input 
-                            type="number"
-                            placeholder="3"
-                            {...register(`days.${dayIndex}.exercises.${exerciseIndex}.sets` as const)}
-                            className="bg-slate-50/50 text-center"
-                        />
-                    </div>
-                    <div className="col-span-2">
-                        <Input 
-                            placeholder="10-12"
-                            {...register(`days.${dayIndex}.exercises.${exerciseIndex}.reps` as const)}
-                            className="bg-slate-50/50 text-center"
-                        />
-                    </div>
-                    <div className="col-span-2">
-                        <Input 
-                            type="number"
-                            placeholder="60"
-                            {...register(`days.${dayIndex}.exercises.${exerciseIndex}.restSeconds` as const)}
-                            className="bg-slate-50/50 text-center"
-                        />
-                    </div>
-                    <div className="col-span-2 flex justify-end">
-                        <button 
-                            type="button"
-                            onClick={() => removeExercise(exerciseIndex)}
-                            className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                    <div className="col-span-12 mt-1">
-                        <Input 
-                            placeholder="Ghi chú thêm (VD: Giữ form chuẩn, xuống chậm...)"
-                            {...register(`days.${dayIndex}.exercises.${exerciseIndex}.note` as const)}
-                            className="bg-slate-50 text-sm"
-                        />
-                    </div>
-                </div>
-            ))}
+        <div
+            className="
+                mt-5
+                space-y-4
+                border-t
+                border-slate-200
+                pt-5
+            "
+        >
+            <div className="flex items-center gap-2">
+                <Dumbbell className="h-4 w-4 text-slate-500" />
 
-            <Button 
+                <h4 className="font-black text-slate-700">
+                    Danh sách bài tập
+                </h4>
+            </div>
+
+            {exerciseFields.map(
+                (
+                    exerciseField,
+                    exerciseIndex,
+                ) => (
+                    <div
+                        key={
+                            exerciseField.id
+                        }
+                        className="
+                            grid
+                            grid-cols-1
+                            gap-3
+                            rounded-2xl
+                            border
+                            border-slate-200
+                            bg-white
+                            p-4
+                            md:grid-cols-12
+                        "
+                    >
+                        <div className="md:col-span-4">
+                            <Input
+                                placeholder="Tên bài tập"
+                                {...register(
+                                    `days.${dayIndex}.exercises.${exerciseIndex}.exerciseName`,
+                                    {
+                                        required:
+                                            true,
+                                    },
+                                )}
+                            />
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <Input
+                                placeholder="Nhóm cơ"
+                                {...register(
+                                    `days.${dayIndex}.exercises.${exerciseIndex}.targetMuscle`,
+                                )}
+                            />
+                        </div>
+
+                        <div className="md:col-span-1">
+                            <Input
+                                type="number"
+                                placeholder="Sets"
+                                {...register(
+                                    `days.${dayIndex}.exercises.${exerciseIndex}.sets`,
+                                    {
+                                        valueAsNumber:
+                                            true,
+                                    },
+                                )}
+                            />
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <Input
+                                placeholder="Reps"
+                                {...register(
+                                    `days.${dayIndex}.exercises.${exerciseIndex}.reps`,
+                                )}
+                            />
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <Input
+                                type="number"
+                                placeholder="Nghỉ (giây)"
+                                {...register(
+                                    `days.${dayIndex}.exercises.${exerciseIndex}.restSeconds`,
+                                    {
+                                        valueAsNumber:
+                                            true,
+                                    },
+                                )}
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-end md:col-span-1">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    removeExercise(
+                                        exerciseIndex,
+                                    )
+                                }
+                                className="
+                                    flex
+                                    h-10
+                                    w-10
+                                    items-center
+                                    justify-center
+                                    rounded-xl
+                                    bg-red-50
+                                    text-red-500
+                                    transition
+                                    hover:bg-red-500
+                                    hover:text-white
+                                "
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <div className="md:col-span-12">
+                            <Input
+                                placeholder="Ghi chú bài tập..."
+                                {...register(
+                                    `days.${dayIndex}.exercises.${exerciseIndex}.note`,
+                                )}
+                            />
+                        </div>
+                    </div>
+                ),
+            )}
+
+            <Button
                 type="button"
                 variant="outline"
-                onClick={() => appendExercise({ exerciseName: "", sets: 3, reps: "10", restSeconds: 60, targetMuscle: "" })}
-                className="w-full border-dashed border-2 border-slate-300 text-slate-500 hover:bg-slate-100 hover:border-slate-400 mt-2"
+                onClick={() =>
+                    appendExercise({
+                        exerciseName:
+                            "",
+
+                        targetMuscle:
+                            "",
+
+                        sets:
+                            3,
+
+                        reps:
+                            "10",
+
+                        restSeconds:
+                            60,
+
+                        note:
+                            "",
+
+                        isOptional:
+                            false,
+                    })
+                }
+                className="
+                    w-full
+                    border-dashed
+                    border-slate-300
+                "
             >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="h-4 w-4" />
+
                 Thêm bài tập
             </Button>
         </div>

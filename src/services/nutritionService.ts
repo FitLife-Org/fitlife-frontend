@@ -1,179 +1,419 @@
-import apiClient from "./apiClient";
-import { trainerService } from "./trainerService";
+import axios from "axios";
 
-import type { SpringPage, ApiResponse } from "../types/common.type";
+import apiClient from "./apiClient";
+
 import type {
+    ApiResponse,
+    SpringPage,
+} from "../types/common.type";
+
+import type {
+    NutritionFood,
+    NutritionMeal,
     NutritionPlan,
     NutritionPlanRequest,
 } from "../types/nutrition.type";
 
-const BASE_URL = "/nutrition-plans";
-const TRAINER_BASE_URL = "/trainer/members";
+const BASE_URL =
+    "/nutrition-plans";
 
 function validatePositiveId(
     value: number,
     fieldName: string,
-): void {
-    if (!Number.isInteger(value) || value <= 0) {
-        throw new Error(`${fieldName} không hợp lệ.`);
+): number {
+    if (
+        !Number.isInteger(value) ||
+        value <= 0
+    ) {
+        throw new Error(
+            `${fieldName} không hợp lệ.`,
+        );
     }
+
+    return value;
 }
 
-function normalizePlan(plan: NutritionPlan): NutritionPlan {
+function isNotFound(
+    error: unknown,
+): boolean {
+    return (
+        axios.isAxiosError(error) &&
+        error.response?.status === 404
+    );
+}
+
+function normalizeFood(
+    food: NutritionFood,
+): NutritionFood {
+    return {
+        ...food,
+    };
+}
+
+function normalizeMeal(
+    meal: NutritionMeal,
+): NutritionMeal {
+    return {
+        ...meal,
+
+        foods:
+            meal.foods?.map(
+                normalizeFood,
+            ) ?? [],
+    };
+}
+
+function normalizePlan(
+    plan: NutritionPlan,
+): NutritionPlan {
     return {
         ...plan,
-        meals: plan.meals ?? [],
+
+        meals:
+            plan.meals?.map(
+                normalizeMeal,
+            ) ?? [],
+    };
+}
+
+function normalizePage(
+    page:
+    SpringPage<NutritionPlan>,
+): SpringPage<NutritionPlan> {
+    return {
+        ...page,
+
+        content:
+            page.content?.map(
+                normalizePlan,
+            ) ?? [],
     };
 }
 
 export const nutritionService = {
+    // =====================================================
+    // MEMBER
+    // =====================================================
+
     async getMyPlans(
         page = 0,
         size = 10,
-    ): Promise<SpringPage<NutritionPlan>> {
-        const response = await apiClient.get<
-            ApiResponse<SpringPage<NutritionPlan>>
-        >(`${BASE_URL}/me`, {
-            params: {
-                page,
-                size,
-                sort: "createdAt,desc",
-            },
-        });
+    ): Promise<
+        SpringPage<NutritionPlan>
+    > {
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    SpringPage<NutritionPlan>
+                >
+            >(
+                `${BASE_URL}/me`,
+                {
+                    params: {
+                        page,
+                        size,
+                        sort:
+                            "createdAt,desc",
+                    },
+                },
+            );
 
-        const data = response.data.data;
-
-        return {
-            ...data,
-            content:
-                data.content?.map(normalizePlan) ?? [],
-        };
+        return normalizePage(
+            response.data.data,
+        );
     },
 
-    async getPlanById(planId: number): Promise<NutritionPlan> {
-        validatePositiveId(planId, "Nutrition Plan ID");
+    async getPlanById(
+        planId: number,
+    ): Promise<NutritionPlan> {
+        const id =
+            validatePositiveId(
+                planId,
+                "Nutrition Plan ID",
+            );
 
-        const response = await apiClient.get<ApiResponse<NutritionPlan>>(
-            `${BASE_URL}/${planId}`,
+        const response =
+            await apiClient.get<
+                ApiResponse<NutritionPlan>
+            >(
+                `${BASE_URL}/${id}`,
+            );
+
+        return normalizePlan(
+            response.data.data,
         );
-
-        return normalizePlan(response.data.data);
     },
 
-    async getActivePlan(): Promise<NutritionPlan> {
-        const response = await apiClient.get<ApiResponse<NutritionPlan>>(
-            `${BASE_URL}/me/active`,
-        );
+    async getActivePlan():
+        Promise<NutritionPlan | null> {
+        try {
+            const response =
+                await apiClient.get<
+                    ApiResponse<NutritionPlan>
+                >(
+                    `${BASE_URL}/me/active`,
+                );
 
-        return normalizePlan(response.data.data);
+            return normalizePlan(
+                response.data.data,
+            );
+        } catch (error) {
+            /*
+             * Member chưa có plan ACTIVE
+             * là empty state, không phải
+             * lỗi giao diện.
+             */
+            if (
+                isNotFound(error)
+            ) {
+                return null;
+            }
+
+            throw error;
+        }
+    },
+
+    async getTodayPlan():
+        Promise<NutritionPlan | null> {
+        try {
+            const response =
+                await apiClient.get<
+                    ApiResponse<NutritionPlan>
+                >(
+                    `${BASE_URL}/me/today`,
+                );
+
+            return normalizePlan(
+                response.data.data,
+            );
+        } catch (error) {
+            if (
+                isNotFound(error)
+            ) {
+                return null;
+            }
+
+            throw error;
+        }
     },
 
     async createPlan(
-        request: NutritionPlanRequest,
+        request:
+        NutritionPlanRequest,
     ): Promise<NutritionPlan> {
-        const response = await apiClient.post<ApiResponse<NutritionPlan>>(
-            BASE_URL,
-            request,
-        );
+        const response =
+            await apiClient.post<
+                ApiResponse<NutritionPlan>
+            >(
+                BASE_URL,
+                request,
+            );
 
-        return normalizePlan(response.data.data);
+        return normalizePlan(
+            response.data.data,
+        );
     },
 
     async updatePlan(
         planId: number,
-        request: NutritionPlanRequest,
+
+        request:
+        NutritionPlanRequest,
     ): Promise<NutritionPlan> {
-        validatePositiveId(planId, "Nutrition Plan ID");
+        const id =
+            validatePositiveId(
+                planId,
+                "Nutrition Plan ID",
+            );
 
-        const response = await apiClient.patch<ApiResponse<NutritionPlan>>(
-            `${BASE_URL}/${planId}`,
-            request,
+        /*
+         * Backend NutritionPlanController:
+         * PUT /nutrition-plans/{id}
+         */
+        const response =
+            await apiClient.put<
+                ApiResponse<NutritionPlan>
+            >(
+                `${BASE_URL}/${id}`,
+                request,
+            );
+
+        return normalizePlan(
+            response.data.data,
         );
-
-        return normalizePlan(response.data.data);
     },
 
-    async activatePlan(planId: number): Promise<void> {
-        validatePositiveId(planId, "Nutrition Plan ID");
+    async activatePlan(
+        planId: number,
+    ): Promise<void> {
+        const id =
+            validatePositiveId(
+                planId,
+                "Nutrition Plan ID",
+            );
 
         await apiClient.post(
-            `${BASE_URL}/${planId}/activate`,
+            `${BASE_URL}/${id}/activate`,
         );
     },
 
-    async archivePlan(planId: number): Promise<void> {
-        validatePositiveId(planId, "Nutrition Plan ID");
+    async archivePlan(
+        planId: number,
+    ): Promise<void> {
+        const id =
+            validatePositiveId(
+                planId,
+                "Nutrition Plan ID",
+            );
 
         await apiClient.post(
-            `${BASE_URL}/${planId}/archive`,
+            `${BASE_URL}/${id}/archive`,
         );
     },
 
-    async completePlan(planId: number): Promise<void> {
-        validatePositiveId(planId, "Nutrition Plan ID");
+    async completePlan(
+        planId: number,
+    ): Promise<void> {
+        const id =
+            validatePositiveId(
+                planId,
+                "Nutrition Plan ID",
+            );
 
         await apiClient.post(
-            `${BASE_URL}/${planId}/complete`,
+            `${BASE_URL}/${id}/complete`,
         );
     },
 
-    
+    async clonePlan(
+        planId: number,
+    ): Promise<NutritionPlan> {
+        const id =
+            validatePositiveId(
+                planId,
+                "Nutrition Plan ID",
+            );
 
-    // ==========================================
-    // TRAINER ENDPOINTS
-    // ==========================================
+        const response =
+            await apiClient.post<
+                ApiResponse<NutritionPlan>
+            >(
+                `${BASE_URL}/${id}/clone`,
+            );
+
+        return normalizePlan(
+            response.data.data,
+        );
+    },
+
+    async deletePlan(
+        planId: number,
+    ): Promise<void> {
+        const id =
+            validatePositiveId(
+                planId,
+                "Nutrition Plan ID",
+            );
+
+        await apiClient.delete(
+            `${BASE_URL}/${id}`,
+        );
+    },
+
+    // =====================================================
+    // TRAINER
+    // =====================================================
 
     async getTrainerPlans(
         memberId: number,
         page = 0,
         size = 10,
-    ): Promise<SpringPage<NutritionPlan>> {
-        validatePositiveId(memberId, "Member ID");
+    ): Promise<
+        SpringPage<NutritionPlan>
+    > {
+        const id =
+            validatePositiveId(
+                memberId,
+                "Member ID",
+            );
 
-        const response = await apiClient.get<
-            ApiResponse<SpringPage<NutritionPlan>>
-        >(`/trainer/members/${memberId}/nutrition-plans`, {
-            params: {
-                page,
-                size,
-                sort: "createdAt,desc",
-            },
-        });
+        const response =
+            await apiClient.get<
+                ApiResponse<
+                    SpringPage<NutritionPlan>
+                >
+            >(
+                `/trainer/members/${id}/nutrition-plans`,
+                {
+                    params: {
+                        page,
+                        size,
+                        sort:
+                            "createdAt,desc",
+                    },
+                },
+            );
 
-        const data = response.data.data;
-        return {
-            ...data,
-            content: data.content?.map(normalizePlan) ?? [],
-        };
+        return normalizePage(
+            response.data.data,
+        );
     },
 
     async createTrainerPlan(
         memberId: number,
-        request: NutritionPlanRequest,
+
+        request:
+        NutritionPlanRequest,
     ): Promise<NutritionPlan> {
-        validatePositiveId(memberId, "Member ID");
+        const id =
+            validatePositiveId(
+                memberId,
+                "Member ID",
+            );
 
-        const response = await apiClient.post<ApiResponse<NutritionPlan>>(
-            `/trainer/members/${memberId}/nutrition-plans`,
-            request
+        const response =
+            await apiClient.post<
+                ApiResponse<NutritionPlan>
+            >(
+                `/trainer/members/${id}/nutrition-plans`,
+                request,
+            );
+
+        return normalizePlan(
+            response.data.data,
         );
-
-        return normalizePlan(response.data.data);
     },
 
     async updateTrainerPlan(
         planId: number,
+
         memberId: number,
-        request: NutritionPlanRequest,
+
+        request:
+        NutritionPlanRequest,
     ): Promise<NutritionPlan> {
-        validatePositiveId(planId, "Nutrition Plan ID");
-        validatePositiveId(memberId, "Member ID");
+        const numericPlanId =
+            validatePositiveId(
+                planId,
+                "Nutrition Plan ID",
+            );
 
-        const response = await apiClient.patch<ApiResponse<NutritionPlan>>(
-            `/trainer/members/${memberId}/nutrition-plans/${planId}`,
-            request
+        const numericMemberId =
+            validatePositiveId(
+                memberId,
+                "Member ID",
+            );
+
+        const response =
+            await apiClient.patch<
+                ApiResponse<NutritionPlan>
+            >(
+                `/trainer/members/${numericMemberId}/nutrition-plans/${numericPlanId}`,
+                request,
+            );
+
+        return normalizePlan(
+            response.data.data,
         );
-
-        return normalizePlan(response.data.data);
     },
 };
