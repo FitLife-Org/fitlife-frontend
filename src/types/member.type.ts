@@ -1,7 +1,3 @@
-import type {
-  Status,
-} from "./common.type";
-
 export type Gender =
     | "MALE"
     | "FEMALE"
@@ -13,6 +9,26 @@ export type FitnessGoal =
     | "MAINTAIN"
     | "IMPROVE_HEALTH"
     | "INCREASE_ENDURANCE";
+
+/**
+ * Trạng thái nghiệp vụ của Member.
+ *
+ * Lưu ý:
+ * - ACTIVE: hội viên đang hoạt động.
+ * - INACTIVE: hội viên không hoạt động.
+ * - SUSPENDED: hội viên bị tạm khóa.
+ *
+ * Không sử dụng LOCKED ở MemberStatus.
+ * LOCKED nếu có thuộc UserStatus.
+ */
+export type MemberStatus =
+    | "ACTIVE"
+    | "INACTIVE"
+    | "SUSPENDED";
+
+// =====================================================
+// MEMBER PROFILE
+// =====================================================
 
 export interface MemberProfile {
   id: number;
@@ -27,6 +43,14 @@ export interface MemberProfile {
   phone?: string | null;
   avatarUrl?: string | null;
 
+  /**
+   * Trạng thái xác thực email của User liên kết.
+   *
+   * Backend MemberResponse cần trả field này
+   * nếu FE sử dụng.
+   */
+  emailVerified?: boolean | null;
+
   gender?: Gender | null;
   dateOfBirth?: string | null;
   address?: string | null;
@@ -39,15 +63,20 @@ export interface MemberProfile {
   fitnessGoal?: FitnessGoal | null;
   healthNote?: string | null;
 
-  status: Status;
+  status: MemberStatus;
+
   isDeleted?: boolean;
 
   createdAt?: string;
   updatedAt?: string;
 }
 
+// =====================================================
+// MEMBER SELF UPDATE
+// =====================================================
+
 /**
- * Dữ liệu Member được phép tự cập nhật.
+ * Member tự cập nhật hồ sơ.
  *
  * Không cho phép cập nhật:
  * - username
@@ -73,12 +102,17 @@ export interface UpdateMyMemberProfileRequest {
   healthNote?: string | null;
 }
 
+// =====================================================
+// ADMIN MEMBER CREATE
+// =====================================================
+
 export interface AdminMemberCreateRequest {
   username: string;
   email: string;
   password: string;
 
   fullName: string;
+
   phone?: string | null;
 
   gender?: Gender | null;
@@ -92,8 +126,22 @@ export interface AdminMemberCreateRequest {
   healthNote?: string | null;
 }
 
+// =====================================================
+// ADMIN MEMBER UPDATE
+// =====================================================
+
+/**
+ * Admin cập nhật thông tin hồ sơ Member.
+ *
+ * status KHÔNG được gửi qua request này.
+ *
+ * Status sử dụng endpoint riêng:
+ *
+ * PATCH /admin/members/{id}/status
+ */
 export interface AdminMemberUpdateRequest {
   email?: string;
+
   fullName?: string;
 
   phone?: string | null;
@@ -107,9 +155,19 @@ export interface AdminMemberUpdateRequest {
 
   fitnessGoal?: FitnessGoal | null;
   healthNote?: string | null;
-
-  status?: Status;
 }
+
+// =====================================================
+// ADMIN MEMBER STATUS
+// =====================================================
+
+export interface AdminMemberStatusUpdateRequest {
+  status: MemberStatus;
+}
+
+// =====================================================
+// BODY METRIC
+// =====================================================
 
 export interface BodyMetricProgress {
   metric:
