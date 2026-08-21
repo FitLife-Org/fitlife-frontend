@@ -76,91 +76,163 @@ const menuItems:
         label: "Dashboard",
         path: ROUTES.MEMBER_HOME,
         icon: Home,
-        roles: ["ROLE_MEMBER"],
-    },
-
-    {
-        label: "Mã QR của tôi",
-        path: ROUTES.MEMBER_QR,
-        icon: ScanLine,
-        roles: ["ROLE_MEMBER"],
-    },
-
-    {
-        label: "Check-in QR",
-        path: ROUTES.MEMBER_CHECKINS,
-        icon: QrCode,
-        roles: ["ROLE_MEMBER"],
-    },
-
-    {
-        label: "Giáo án",
-        path: ROUTES.MEMBER_WORKOUTS,
-        icon: Dumbbell,
-        roles: ["ROLE_MEMBER"],
-    },
-
-    {
-        label: "Dinh dưỡng",
-        path: ROUTES.MEMBER_NUTRITION,
-        icon: Utensils,
-        roles: ["ROLE_MEMBER"],
-    },
-
-    {
-        label: "Gói tập",
-        icon: Package,
-        roles: ["ROLE_MEMBER"],
-        children: [
-            {
-                label: "Danh sách gói",
-                path: ROUTES.MEMBER_PACKAGES,
-            },
-            {
-                label: "Gói của tôi",
-                path: ROUTES.MEMBER_SUBSCRIPTION,
-            },
+        roles: [
+            "ROLE_MEMBER",
         ],
-    },
-
-    {
-        label: "Lịch tập",
-        path: ROUTES.MEMBER_SCHEDULE,
-        icon: CalendarDays,
-        roles: ["ROLE_MEMBER"],
-    },
-
-    {
-        label: "Chỉ số cơ thể",
-        path: ROUTES.MEMBER_BODY_METRICS,
-        icon: HeartPulse,
-        roles: ["ROLE_MEMBER"],
     },
 
     {
         label: "AI Fitness",
         path: ROUTES.MEMBER_AI,
         icon: Bot,
-        roles: ["ROLE_MEMBER"],
+        roles: [
+            "ROLE_MEMBER",
+        ],
     },
 
     {
-        label: "Tài chính",
-        icon: WalletCards,
-        roles: ["ROLE_MEMBER"],
+        label: "Chỉ số cơ thể",
+        path:
+        ROUTES.MEMBER_BODY_METRICS,
+        icon: HeartPulse,
+        roles: [
+            "ROLE_MEMBER",
+        ],
+    },
+
+    {
+        label: "Giáo án",
+        icon: Dumbbell,
+        roles: [
+            "ROLE_MEMBER",
+        ],
         children: [
             {
-                label: "Hóa đơn của tôi",
-                path: ROUTES.MEMBER_INVOICES,
+                label: "Tất cả giáo án",
+                path:
+                ROUTES.MEMBER_WORKOUTS,
+            },
+
+            {
+                label: "Tập hôm nay",
+                path:
+                ROUTES.MEMBER_WORKOUT_TODAY,
+            },
+        ],
+    },
+
+    {
+        label: "Dinh dưỡng",
+        icon: Utensils,
+        roles: [
+            "ROLE_MEMBER",
+        ],
+        children: [
+            {
+                label: "Kế hoạch",
+                path:
+                ROUTES.MEMBER_NUTRITION,
+            },
+
+            {
+                label: "Hôm nay",
+                path:
+                ROUTES.MEMBER_NUTRITION_TODAY,
+            },
+        ],
+    },
+
+    {
+        label: "Lịch tập",
+        path:
+        ROUTES.MEMBER_SCHEDULE,
+        icon:
+        CalendarDays,
+        roles: [
+            "ROLE_MEMBER",
+        ],
+    },
+
+    {
+        label: "Gói tập",
+        icon: Package,
+        roles: [
+            "ROLE_MEMBER",
+        ],
+        children: [
+            {
+                label:
+                    "Danh sách gói",
+                path:
+                ROUTES.MEMBER_PACKAGES,
+            },
+
+            {
+                label:
+                    "Gói của tôi",
+                path:
+                ROUTES.MEMBER_SUBSCRIPTION,
+            },
+        ],
+    },
+
+    {
+        label: "Mã QR của tôi",
+        path:
+        ROUTES.MEMBER_QR,
+        icon:
+        ScanLine,
+        roles: [
+            "ROLE_MEMBER",
+        ],
+    },
+
+    {
+        label:
+            "Lịch sử Check-in",
+        path:
+        ROUTES.MEMBER_CHECKINS,
+        icon:
+        QrCode,
+        roles: [
+            "ROLE_MEMBER",
+        ],
+    },
+
+    {
+        label:
+            "Tài chính",
+        icon:
+        WalletCards,
+        roles: [
+            "ROLE_MEMBER",
+        ],
+        children: [
+            {
+                label:
+                    "Hóa đơn của tôi",
+                path:
+                ROUTES.MEMBER_INVOICES,
+            },
+
+            {
+                label:
+                    "Lịch sử thanh toán",
+                path:
+                ROUTES.MEMBER_PAYMENT,
             },
         ],
     },
 
     {
         label: "Hồ sơ",
-        path: ROUTES.MEMBER_PROFILE,
-        icon: UserRound,
-        roles: ["ROLE_MEMBER"],
+        path:
+        ROUTES.MEMBER_PROFILE,
+        icon:
+        UserRound,
+        roles: [
+            "ROLE_MEMBER",
+        ],
     },
 
     // =====================================================
@@ -169,92 +241,141 @@ const menuItems:
 
     {
         label: "Tổng quan",
-        path: ROUTES.ADMIN_DASHBOARD,
-        icon: Gauge,
-        roles: ["ROLE_ADMIN"],
+        path:
+        ROUTES.ADMIN_DASHBOARD,
+        icon:
+        Gauge,
+        roles: [
+            "ROLE_ADMIN",
+        ],
     },
 
     {
         label: "Tài khoản",
-        path: ROUTES.ADMIN_USERS,
-        icon: ShieldCheck,
-        roles: ["ROLE_ADMIN"],
+        path:
+        ROUTES.ADMIN_USERS,
+        icon:
+        ShieldCheck,
+        roles: [
+            "ROLE_ADMIN",
+        ],
     },
 
     {
         label: "Hội viên",
-        path: ROUTES.ADMIN_MEMBERS,
-        icon: Users,
-        roles: ["ROLE_ADMIN"],
+        path:
+        ROUTES.ADMIN_MEMBERS,
+        icon:
+        Users,
+        roles: [
+            "ROLE_ADMIN",
+        ],
     },
 
     {
         label: "Gói tập",
-        path: ROUTES.ADMIN_PACKAGES,
-        icon: Package,
-        roles: ["ROLE_ADMIN"],
+        path:
+        ROUTES.ADMIN_PACKAGES,
+        icon:
+        Package,
+        roles: [
+            "ROLE_ADMIN",
+        ],
     },
 
     {
-        label: "Huấn luyện viên",
-        path: ROUTES.ADMIN_TRAINERS,
-        icon: UserRound,
-        roles: ["ROLE_ADMIN"],
+        label:
+            "Huấn luyện viên",
+        path:
+        ROUTES.ADMIN_TRAINERS,
+        icon:
+        UserRound,
+        roles: [
+            "ROLE_ADMIN",
+        ],
     },
 
     {
-        label: "Trang thiết bị",
-        icon: Dumbbell,
+        label:
+            "Trang thiết bị",
+        icon:
+        Dumbbell,
         roles: [
             "ROLE_ADMIN",
             "ROLE_STAFF",
         ],
         children: [
             {
-                label: "Danh sách",
-                path: ROUTES.ADMIN_EQUIPMENT,
+                label:
+                    "Danh sách",
+                path:
+                ROUTES.ADMIN_EQUIPMENT,
             },
+
             {
-                label: "Lịch bảo trì",
-                path: `${ROUTES.ADMIN_EQUIPMENT}/maintenance-schedules`,
+                label:
+                    "Lịch bảo trì",
+                path:
+                    `${ROUTES.ADMIN_EQUIPMENT}/maintenance-schedules`,
             },
         ],
     },
 
     {
-        label: "Tài chính",
-        icon: Receipt,
+        label:
+            "Tài chính",
+        icon:
+        Receipt,
         roles: [
             "ROLE_ADMIN",
             "ROLE_STAFF",
         ],
         children: [
             {
-                label: "Xử lý thanh toán",
-                path: ROUTES.ADMIN_INVOICES,
-            }
+                label:
+                    "Hóa đơn",
+                path:
+                ROUTES.ADMIN_INVOICES,
+            },
+
+            {
+                label:
+                    "Thanh toán",
+                path:
+                ROUTES.ADMIN_PAYMENTS,
+            },
+
+            {
+                label:
+                    "Đăng ký gói",
+                path:
+                ROUTES.ADMIN_SUBSCRIPTIONS,
+            },
         ],
     },
 
     {
-        label: "Báo cáo",
-        path: ROUTES.ADMIN_REPORTS,
-        icon: BarChart,
-        roles: ["ROLE_ADMIN"],
+        label:
+            "Báo cáo",
+        path:
+        ROUTES.ADMIN_REPORTS,
+        icon:
+        BarChart,
+        roles: [
+            "ROLE_ADMIN",
+        ],
     },
 
     {
-        label: "Gói tập (Subs)",
-        path: ROUTES.ADMIN_SUBSCRIPTIONS,
-        icon: CreditCard,
-        roles: ["ROLE_ADMIN", "ROLE_STAFF"],
-    },
-
-    {
-        label: "AI Suggestion",
-        path: ROUTES.ADMIN_AI_SUGGESTIONS,
-        icon: Bot,
-        roles: ["ROLE_ADMIN"],
+        label:
+            "AI Suggestion",
+        path:
+        ROUTES.ADMIN_AI_SUGGESTIONS,
+        icon:
+        Bot,
+        roles: [
+            "ROLE_ADMIN",
+        ],
     },
 
     // =====================================================
@@ -262,34 +383,82 @@ const menuItems:
     // =====================================================
 
     {
-        label: "Check In",
-        path: ROUTES.STAFF_CHECKIN,
-        icon: ScanLine,
-        roles: ["ROLE_ADMIN", "ROLE_STAFF"],
+        label:
+            "Check In",
+        path:
+        ROUTES.STAFF_CHECKIN,
+        icon:
+        ScanLine,
+        roles: [
+            "ROLE_ADMIN",
+            "ROLE_STAFF",
+        ],
     },
 
     {
-        label: "Lịch sử check-in",
-        path: ROUTES.STAFF_CHECKIN_HISTORY,
-        icon: History,
+        label:
+            "Lịch sử check-in",
+        path:
+        ROUTES.STAFF_CHECKIN_HISTORY,
+        icon:
+        History,
         roles: [
             "ROLE_STAFF",
             "ROLE_ADMIN",
         ],
     },
 
-
-
     // =====================================================
     // TRAINER
-    { label: "Lịch PT", path: ROUTES.TRAINER_SCHEDULE, icon: CalendarDays, roles: ["ROLE_TRAINER"] },
-    { label: "Hội viên của tôi", path: ROUTES.TRAINER_MEMBERS, icon: Users, roles: ["ROLE_TRAINER"] },
-    { label: "Theo dõi bài tập", path: ROUTES.TRAINER_WORKOUT_TRACKING, icon: Flame, roles: ["ROLE_TRAINER"] },
+    // =====================================================
 
     {
-        label: "Cài đặt",
-        path: ROUTES.COMMON_SETTINGS,
-        icon: Settings,
+        label:
+            "Lịch PT",
+        path:
+        ROUTES.TRAINER_SCHEDULE,
+        icon:
+        CalendarDays,
+        roles: [
+            "ROLE_TRAINER",
+        ],
+    },
+
+    {
+        label:
+            "Hội viên của tôi",
+        path:
+        ROUTES.TRAINER_MEMBERS,
+        icon:
+        Users,
+        roles: [
+            "ROLE_TRAINER",
+        ],
+    },
+
+    {
+        label:
+            "Theo dõi bài tập",
+        path:
+        ROUTES.TRAINER_WORKOUT_TRACKING,
+        icon:
+        Flame,
+        roles: [
+            "ROLE_TRAINER",
+        ],
+    },
+
+    // =====================================================
+    // COMMON
+    // =====================================================
+
+    {
+        label:
+            "Cài đặt",
+        path:
+        ROUTES.COMMON_SETTINGS,
+        icon:
+        Settings,
         roles: [
             "ROLE_MEMBER",
             "ROLE_ADMIN",

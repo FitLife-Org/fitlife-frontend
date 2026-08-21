@@ -100,14 +100,16 @@ import PaymentResultPage from "../pages/member/PaymentResultPage";
 import MemberInvoiceListPage from "../pages/member/MemberInvoiceListPage";
 import MemberInvoiceDetailPage from "../pages/member/MemberInvoiceDetailPage";
 
-    import CheckinHistoryPage from "../pages/member/CheckinHistoryPage";
+import CheckinHistoryPage from "../pages/member/CheckinHistoryPage";
 
 import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
 import WorkoutPlanDetailPage from "../pages/member/WorkoutPlanDetailPage";
+import WorkoutTodayPage from "../pages/member/WorkoutTodayPage";
 import MemberSchedulePage from "../pages/member/MemberSchedulePage";
 
 import NutritionPage from "../pages/member/NutritionPage";
 import NutritionPlanDetailPage from "../pages/member/NutritionPlanDetailPage";
+import NutritionTodayPage from "../pages/member/NutritionTodayPage";
 
 import AiFitnessPage from "../pages/member/AiFitnessPage";
 
@@ -125,8 +127,10 @@ import StaffCheckinHistoryPage from "../pages/staff/StaffCheckinHistoryPage";
 import TrainerSchedulePage from "../pages/trainer/TrainerSchedulePage";
 import MyMembersPage from "../pages/trainer/MyMembersPage";
 import WorkoutTrackingPage from "../pages/trainer/WorkoutTrackingPage";
+
 import TrainerNutritionPage from "../pages/trainer/TrainerNutritionPage";
 import TrainerNutritionFormPage from "../pages/trainer/TrainerNutritionFormPage";
+
 import TrainerWorkoutPage from "../pages/trainer/TrainerWorkoutPage";
 import TrainerWorkoutFormPage from "../pages/trainer/TrainerWorkoutFormPage";
 
@@ -143,8 +147,11 @@ function DashboardLayoutRoute() {
 }
 
 interface RoleGuardProps {
-    roles: readonly Role[];
-    children: ReactNode;
+    roles:
+        readonly Role[];
+
+    children:
+        ReactNode;
 }
 
 function RoleGuard({
@@ -152,7 +159,11 @@ function RoleGuard({
                        children,
                    }: RoleGuardProps) {
     return (
-        <RoleRoute roles={roles}>
+        <RoleRoute
+            roles={
+                roles
+            }
+        >
             {children}
         </RoleRoute>
     );
@@ -168,310 +179,545 @@ export default function AppRouter() {
             <ScrollToTop />
 
             <Routes>
-                {/* =================================================
-         * PUBLIC ROUTES
-         * ================================================= */}
+                {/* =========================================
+                 * PUBLIC
+                 * ========================================= */}
 
                 <Route
-                    path={ROUTES.HOME}
-                    element={<HomePage />}
+                    path={
+                        ROUTES.HOME
+                    }
+                    element={
+                        <HomePage />
+                    }
                 />
 
                 <Route
-                    path={ROUTES.LOGIN}
-                    element={<LoginPage />}
+                    path={
+                        ROUTES.LOGIN
+                    }
+                    element={
+                        <LoginPage />
+                    }
                 />
 
                 <Route
-                    path={ROUTES.REGISTER}
-                    element={<RegisterPage />}
+                    path={
+                        ROUTES.REGISTER
+                    }
+                    element={
+                        <RegisterPage />
+                    }
                 />
 
                 <Route
-                    path={ROUTES.CHECK_EMAIL}
-                    element={<CheckEmailPage />}
+                    path={
+                        ROUTES.CHECK_EMAIL
+                    }
+                    element={
+                        <CheckEmailPage />
+                    }
                 />
 
                 <Route
-                    path={ROUTES.VERIFY_EMAIL}
-                    element={<VerifyEmailPage />}
+                    path={
+                        ROUTES.VERIFY_EMAIL
+                    }
+                    element={
+                        <VerifyEmailPage />
+                    }
                 />
 
                 <Route
-                    path={ROUTES.FORGOT_PASSWORD}
-                    element={<ForgotPasswordPage />}
+                    path={
+                        ROUTES.FORGOT_PASSWORD
+                    }
+                    element={
+                        <ForgotPasswordPage />
+                    }
                 />
 
                 <Route
-                    path={ROUTES.RESET_PASSWORD}
-                    element={<ResetPasswordPage />}
+                    path={
+                        ROUTES.RESET_PASSWORD
+                    }
+                    element={
+                        <ResetPasswordPage />
+                    }
                 />
 
                 <Route
-                    path={ROUTES.FORBIDDEN}
-                    element={<ForbiddenPage />}
+                    path={
+                        ROUTES.FORBIDDEN
+                    }
+                    element={
+                        <ForbiddenPage />
+                    }
                 />
 
-                {/* =================================================
-         * PROTECTED ROUTES
-         * ================================================= */}
+                {/* =========================================
+                 * PROTECTED
+                 * ========================================= */}
 
-                <Route element={<ProtectedRoute />}>
-                    <Route element={<DashboardLayoutRoute />}>
-                        {/* =============================================
-             * COMMON AUTHENTICATED ROUTES
-             * ============================================= */}
+                <Route
+                    element={
+                        <ProtectedRoute />
+                    }
+                >
+                    <Route
+                        element={
+                            <DashboardLayoutRoute />
+                        }
+                    >
+                        {/* =================================
+                         * COMMON
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.DASHBOARD}
-                            element={<DashboardPage />}
-                        />
-
-                        <Route
-                            path={ROUTES.COMMON_SETTINGS}
-                            element={<SettingsPage />}
-                        />
-
-                        {/* =============================================
-             * MEMBER ROUTES
-             * ============================================= */}
-
-                        <Route
-                            path={ROUTES.MEMBER_HOME}
+                            path={
+                                ROUTES.DASHBOARD
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <DashboardPage />
+                            }
+                        />
+
+                        <Route
+                            path={
+                                ROUTES.COMMON_SETTINGS
+                            }
+                            element={
+                                <SettingsPage />
+                            }
+                        />
+
+                        {/* =================================
+                         * MEMBER - GENERAL
+                         * ================================= */}
+
+                        <Route
+                            path={
+                                ROUTES.MEMBER_HOME
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <MemberHomePage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_QR}
-                            element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
-                                    <MemberQRPage />
-                                </RoleGuard>
+                            path={
+                                ROUTES.MEMBER_PROFILE
                             }
-                        />
-
-                        <Route
-                            path={ROUTES.MEMBER_PROFILE}
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <MemberProfilePage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_BODY_METRICS}
+                            path={
+                                ROUTES.MEMBER_BODY_METRICS
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <BodyMetricPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_PACKAGES}
+                            path={
+                                ROUTES.MEMBER_QR
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
+                                    <MemberQRPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={
+                                ROUTES.MEMBER_CHECKINS
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
+                                    <CheckinHistoryPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* =================================
+                         * MEMBER - PACKAGES
+                         * ================================= */}
+
+                        <Route
+                            path={
+                                ROUTES.MEMBER_PACKAGES
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <PackageListPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_SUBSCRIPTION}
+                            path={
+                                ROUTES.MEMBER_SUBSCRIPTION
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <MySubscriptionPage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* Member Payment */}
+                        {/* =================================
+                         * MEMBER - PAYMENT
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.MEMBER_PAYMENT}
+                            path={
+                                ROUTES.MEMBER_PAYMENT
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <PaymentHistoryPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_PAYMENT_DETAIL}
+                            path={
+                                ROUTES.MEMBER_PAYMENT_DETAIL
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <PaymentDetailPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_PAYMENT_RESULT}
+                            path={
+                                ROUTES.MEMBER_PAYMENT_RESULT
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <PaymentResultPage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* Member Invoice */}
+                        {/* =================================
+                         * MEMBER - INVOICE
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.MEMBER_INVOICES}
+                            path={
+                                ROUTES.MEMBER_INVOICES
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <MemberInvoiceListPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_INVOICE_DETAIL}
+                            path={
+                                ROUTES.MEMBER_INVOICE_DETAIL
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <MemberInvoiceDetailPage />
                                 </RoleGuard>
                             }
                         />
 
+                        {/* =================================
+                         * MEMBER - AI
+                         * ================================= */}
+
                         <Route
-                            path={ROUTES.MEMBER_CHECKINS}
+                            path={
+                                ROUTES.MEMBER_AI
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
-                                    <CheckinHistoryPage />
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
+                                    <AiFitnessPage />
                                 </RoleGuard>
                             }
                         />
 
-
-
-                        {/* Member Workout */}
+                        {/* =================================
+                         * MEMBER - WORKOUT
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.MEMBER_WORKOUTS}
+                            path={
+                                ROUTES.MEMBER_WORKOUTS
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <WorkoutPlansPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_WORKOUT_DETAIL}
+                            path={
+                                ROUTES.MEMBER_WORKOUT_TODAY
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
+                                    <WorkoutTodayPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={
+                                ROUTES.MEMBER_WORKOUT_DETAIL
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <WorkoutPlanDetailPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_SCHEDULE}
+                            path={
+                                ROUTES.MEMBER_SCHEDULE
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <MemberSchedulePage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* Member Nutrition */}
+                        {/* =================================
+                         * MEMBER - NUTRITION
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.MEMBER_NUTRITION}
+                            path={
+                                ROUTES.MEMBER_NUTRITION
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <NutritionPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.MEMBER_NUTRITION_DETAIL}
+                            path={
+                                ROUTES.MEMBER_NUTRITION_TODAY
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
+                                    <NutritionTodayPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={
+                                ROUTES.MEMBER_NUTRITION_DETAIL
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
                                     <NutritionPlanDetailPage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* Member AI */}
+                        {/* =================================
+                         * ADMIN
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.MEMBER_AI}
-                            element={
-                                <RoleGuard roles={["ROLE_MEMBER"]}>
-                                    <AiFitnessPage />
-                                </RoleGuard>
+                            path={
+                                ROUTES.ADMIN_DASHBOARD
                             }
-                        />
-
-                        {/* =============================================
-             * ADMIN ROUTES
-             * ============================================= */}
-
-                        <Route
-                            path={ROUTES.ADMIN_DASHBOARD}
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
                                     <AdminDashboardPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.ADMIN_USERS}
+                            path={
+                                ROUTES.ADMIN_USERS
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
                                     <AccountManagementPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.ADMIN_MEMBERS}
+                            path={
+                                ROUTES.ADMIN_MEMBERS
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
                                     <UserManagementPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.ADMIN_PACKAGES}
+                            path={
+                                ROUTES.ADMIN_PACKAGES
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
                                     <PackageManagementPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.ADMIN_TRAINERS}
+                            path={
+                                ROUTES.ADMIN_TRAINERS
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
                                     <TrainerManagementPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={ROUTES.ADMIN_AI_SUGGESTIONS}
+                            path={
+                                ROUTES.ADMIN_AI_SUGGESTIONS
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
                                     <AdminAiSuggestionPage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* Admin Invoice */}
-
                         <Route
-                            path={ROUTES.ADMIN_INVOICES}
+                            path={
+                                ROUTES.ADMIN_INVOICES
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -485,7 +731,9 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path={ROUTES.ADMIN_INVOICE_DETAIL}
+                            path={
+                                ROUTES.ADMIN_INVOICE_DETAIL
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -499,22 +747,9 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path="/admin/payments"
-                            element={
-                                <RoleGuard
-                                    roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
-                                    ]}
-                                >
-                                    <PaymentManagementPage />
-                                </RoleGuard>
+                            path={
+                                ROUTES.ADMIN_SUBSCRIPTIONS
                             }
-                        />
-
-                        {/* Admin Subscriptions */}
-                        <Route
-                            path="/admin/subscriptions"
                             element={
                                 <RoleGuard
                                     roles={[
@@ -527,10 +762,10 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Admin/Staff Payment */}
-
                         <Route
-                            path={ROUTES.ADMIN_PAYMENTS}
+                            path={
+                                ROUTES.ADMIN_PAYMENTS
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -543,23 +778,29 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Admin Reports */}
-
                         <Route
-                            path={ROUTES.ADMIN_REPORTS}
+                            path={
+                                ROUTES.ADMIN_REPORTS
+                            }
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
                                     <ReportPage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* =============================================
-             * EQUIPMENT ROUTES
-             * ============================================= */}
+                        {/* =================================
+                         * ADMIN / STAFF - EQUIPMENT
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.ADMIN_EQUIPMENT}
+                            path={
+                                ROUTES.ADMIN_EQUIPMENT
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -656,12 +897,14 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* =============================================
-             * STAFF ROUTES
-             * ============================================= */}
+                        {/* =================================
+                         * STAFF
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.STAFF_CHECKIN}
+                            path={
+                                ROUTES.STAFF_CHECKIN
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -675,26 +918,29 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path={ROUTES.STAFF_CHECKIN_HISTORY}
+                            path={
+                                ROUTES.STAFF_CHECKIN_HISTORY
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
                                         "ROLE_STAFF",
                                         "ROLE_ADMIN",
-                                        ]
-                                    }
+                                    ]}
                                 >
                                     <StaffCheckinHistoryPage />
                                 </RoleGuard>
                             }
                         />
 
-                        {/* =============================================
-             * TRAINER ROUTES
-             * ============================================= */}
+                        {/* =================================
+                         * TRAINER
+                         * ================================= */}
 
                         <Route
-                            path={ROUTES.TRAINER_SCHEDULE}
+                            path={
+                                ROUTES.TRAINER_SCHEDULE
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -708,7 +954,9 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path={ROUTES.TRAINER_MEMBERS}
+                            path={
+                                ROUTES.TRAINER_MEMBERS
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -722,7 +970,9 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path={ROUTES.TRAINER_WORKOUT_TRACKING}
+                            path={
+                                ROUTES.TRAINER_WORKOUT_TRACKING
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -827,7 +1077,9 @@ export default function AppRouter() {
 
                         <Route
                             path="*"
-                            element={<NotFoundPage />}
+                            element={
+                                <NotFoundPage />
+                            }
                         />
                     </Route>
                 </Route>
@@ -836,7 +1088,9 @@ export default function AppRouter() {
 
                 <Route
                     path="*"
-                    element={<NotFoundPage />}
+                    element={
+                        <NotFoundPage />
+                    }
                 />
             </Routes>
         </BrowserRouter>
