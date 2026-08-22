@@ -4,10 +4,6 @@ export interface Trainer {
   trainerCode?: string;
   fullName: string;
   specialty?: string;
-  specialization?: string;
-  experienceYears?: number;
-  certifications?: string;
-  bio?: string;
   phone?: string;
   email?: string;
 }

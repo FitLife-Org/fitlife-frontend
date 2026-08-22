@@ -390,16 +390,14 @@ export const aiService = {
     async getAdminAiSuggestions(
         page = 0,
         size = 10,
-    ): Promise<
-        PageResponse<AiSuggestionResponse>
-    > {
+    ): Promise<PageResponse<AiSuggestionResponse>> {
         const response =
             await apiClient.get<
                 ApiResponse<
                     PageResponse<AiSuggestionResponse>
                 >
             >(
-                "/admin/ai-suggestions",
+                "/admin/ai/suggestions",
                 {
                     params: {
                         page,
@@ -430,25 +428,16 @@ export const aiService = {
                     AiSuggestionDetailResponse
                 >
             >(
-                `/admin/ai-suggestions/${suggestionId}`,
+                `/admin/ai/suggestions/${suggestionId}`,
                 {
                     timeout:
                     AI_STANDARD_TIMEOUT_MS,
                 },
             );
 
-        const detail =
-            requireApiData(
-                response.data,
-                "Không thể tải chi tiết AI Suggestion.",
-            );
-
-        return {
-            ...detail,
-
-            items:
-                detail.items ??
-                [],
-        };
+        return requireApiData(
+            response.data,
+            "Không thể tải chi tiết AI Suggestion.",
+        );
     },
 };

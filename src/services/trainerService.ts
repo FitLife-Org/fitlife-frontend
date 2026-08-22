@@ -24,12 +24,12 @@ export const trainerService = {
   },
 
   async updateTrainer(id: number | string, data: Partial<Trainer> | Record<string, unknown>): Promise<Trainer> {
-    const response = await apiClient.put<ApiResponse<Trainer>>(`/admin/trainers/${id}`, data);
+    const response = await apiClient.patch<ApiResponse<Trainer>>(`/admin/trainers/${id}`, data);
     return response.data.data;
   },
 
   async deleteTrainer(id: number | string): Promise<void> {
-    await apiClient.delete<ApiResponse<void>>(`/admin/trainers/${id}`);
+    await apiClient.patch<ApiResponse<void>>(`/admin/trainers/${id}/status?status=INACTIVE`);
   },
 
   async updateTrainerStatus(id: number | string, status: string): Promise<Trainer> {

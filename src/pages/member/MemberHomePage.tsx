@@ -11,19 +11,13 @@ import { useMemberHome } from "../../hooks/useMemberHome";
 
 export default function MemberHomePage() {
   const containerRef = usePageAnimation();
-  const { user, activeSub, latestMetric, loading, calculateDaysLeft } = useMemberHome();
-
-  const bmiVal = latestMetric?.bmi 
-    ? latestMetric.bmi.toFixed(1)
-    : latestMetric?.heightCm && latestMetric?.weightKg
-    ? (latestMetric.weightKg / Math.pow(latestMetric.heightCm / 100, 2)).toFixed(1)
-    : "22.4";
+  const { user, activeSub, loading, calculateDaysLeft } = useMemberHome();
 
   const statCards = [
     { title: "Ngày tập tháng này", value: "12", unit: "ngày", icon: <CalendarIcon className="h-6 w-6" />, color: "from-blue-500 to-cyan-400" },
     { title: "Calories đốt cháy", value: "3,240", unit: "kcal", icon: <Flame className="h-6 w-6" />, color: "from-orange-500 to-red-400" },
     { title: "Thời gian tập", value: "14.5", unit: "giờ", icon: <Activity className="h-6 w-6" />, color: "from-emerald-500 to-teal-400" },
-    { title: "Chỉ số BMI", value: bmiVal, unit: latestMetric ? `${latestMetric.weightKg}kg / ${latestMetric.heightCm}cm` : "Bình thường", icon: <Heart className="h-6 w-6" />, color: "from-purple-500 to-indigo-400" },
+    { title: "Chỉ số BMI", value: "22.4", unit: "Bình thường", icon: <Heart className="h-6 w-6" />, color: "from-purple-500 to-indigo-400" },
   ];
 
   if (loading) {
@@ -43,11 +37,11 @@ export default function MemberHomePage() {
         />
         <div className="flex gap-3">
           <Link 
-            to="/member/qr"
+            to="/member/checkins"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-bold text-white shadow-lg shadow-fit-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl"
           >
             <img src="https://api.iconify.design/mdi:qrcode-scan.svg?color=white" alt="Scan QR" className="w-5 h-5" />
-            Mã QR Của Tôi
+            Quét Mã Phòng Tập
           </Link>
         </div>
       </div>
