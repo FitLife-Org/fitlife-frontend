@@ -925,7 +925,7 @@ export default function UserManagementPage() {
               }
               label="Ngưng hoạt động"
               value={
-                inactiveCount
+                0
               }
               iconClass="bg-slate-100 text-slate-600"
           />
@@ -936,7 +936,7 @@ export default function UserManagementPage() {
               }
               label="Đang bị khóa"
               value={
-                suspendedCount
+                0
               }
               iconClass="bg-rose-50 text-rose-600"
           />
