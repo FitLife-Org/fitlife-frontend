@@ -43,10 +43,19 @@ export function useCheckinHistory() {
       let record;
       let actionName = "";
 
-      record = await memberCheckinService.selfCheckin({ qrToken: decodedText });
-      actionName = "Check-in";
+      if (currentStatus?.isInside) {
+        record = await memberCheckinService.selfCheckout({ qrToken: decodedText });
+        actionName = "Check-out";
+      } else {
+        record = await memberCheckinService.selfCheckin({ qrToken: decodedText });
+        actionName = "Check-in";
+      }
 
-      toast.success(`${actionName} thành công lúc ${new Date(record.checkInTime).toLocaleTimeString('vi-VN')}`);
+      const timeStr = actionName === "Check-out" && record.checkOutTime 
+        ? new Date(record.checkOutTime).toLocaleTimeString('vi-VN')
+        : new Date(record.checkInTime).toLocaleTimeString('vi-VN');
+
+      toast.success(`${actionName} thành công lúc ${timeStr}`);
       await fetchHistory();
     } catch (error: unknown) {
       const msg = error && typeof error === 'object' && 'response' in error 

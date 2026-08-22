@@ -8,7 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  MapPin
+  MapPin,
+  Clock
 } from "lucide-react";
 import { usePageAnimation } from "../../hooks/usePageAnimation";
 import Button from "../../components/common/Button";
@@ -282,6 +283,13 @@ export default function CheckinHistoryPage() {
                                 day: 'numeric'
                               })}
                             </p>
+
+                            {record.checkOutTime && (
+                              <p className="text-amber-600 font-bold text-xs mt-1.5 flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                Check-out lúc: {new Date(record.checkOutTime).toLocaleTimeString('vi-VN')}
+                              </p>
+                            )}
                           </div>
                         </div>
                     ))}
