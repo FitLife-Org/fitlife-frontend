@@ -203,8 +203,8 @@ export default function UserManagementPage() {
 
     totalCount,
     activeCount,
-    suspendedCount,
-    inactiveCount,
+    
+    
   } = useUserManagement();
 
   /* ========================================================

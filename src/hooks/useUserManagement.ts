@@ -76,8 +76,6 @@ function createEmptyForm():
          *
          * Không gửi status trong create/update profile.
          */
-        status: "ACTIVE",
-
         address: "",
 
         emergencyContactName: "",
@@ -529,9 +527,6 @@ export function useUserManagement() {
                  *
                  * Không gửi trong updatePayload.
                  */
-                status:
-                member.status,
-
                 address:
                     member.address ??
                     "",
