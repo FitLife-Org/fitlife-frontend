@@ -257,10 +257,10 @@ export function useUserManagement() {
                                     undefined,
 
                                 status:
-                                    statusFilter ===
+                                    (statusFilter ===
                                     "ALL"
                                         ? undefined
-                                        : statusFilter,
+                                        : statusFilter) as any,
                             });
 
                     setMembers(
@@ -826,12 +826,8 @@ export function useUserManagement() {
             }
 
             try {
-                const updatedMember =
-                    await memberService
-                        .updateMemberStatus(
-                            member.id,
-                            newStatus,
-                        );
+                await memberService.updateMemberStatus(member.id, { status: newStatus });
+                const updatedMember = { ...member, status: newStatus as any };
 
                 setMembers(
                     (
