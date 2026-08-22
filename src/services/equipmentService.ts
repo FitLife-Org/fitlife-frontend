@@ -61,7 +61,7 @@ export const EquipmentService = {
       const response =
           await apiClient.get<
               ApiResponse<PageResponse<Equipment>>
-          >("/staff/equipment", {
+          >("/equipment", {
             params: {
               page: params.page ?? 0,
               size: params.size ?? 20,
@@ -201,7 +201,7 @@ export const EquipmentService = {
       data: AdminEquipmentUpdateRequest,
   ): Promise<Equipment> {
     const response =
-        await apiClient.patch<
+        await apiClient.put<
             ApiResponse<Equipment>
         >(
             `${ADMIN_API_BASE}/${id}`,
