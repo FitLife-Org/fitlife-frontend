@@ -43,11 +43,11 @@ export default function MemberHomePage() {
         />
         <div className="flex gap-3">
           <Link 
-            to="/member/qr"
+            to="/member/checkins"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-bold text-white shadow-lg shadow-fit-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl"
           >
             <img src="https://api.iconify.design/mdi:qrcode-scan.svg?color=white" alt="Scan QR" className="w-5 h-5" />
-            Mã QR Của Tôi
+            Quét mã QR Phòng tập
           </Link>
         </div>
       </div>
