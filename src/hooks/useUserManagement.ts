@@ -76,8 +76,6 @@ function createEmptyForm():
          *
          * Không gửi status trong create/update profile.
          */
-        status: "ACTIVE",
-
         address: "",
 
         emergencyContactName: "",
@@ -259,10 +257,10 @@ export function useUserManagement() {
                                     undefined,
 
                                 status:
-                                    statusFilter ===
+                                    (statusFilter ===
                                     "ALL"
                                         ? undefined
-                                        : statusFilter,
+                                        : statusFilter) as any,
                             });
 
                     setMembers(
@@ -529,9 +527,6 @@ export function useUserManagement() {
                  *
                  * Không gửi trong updatePayload.
                  */
-                status:
-                member.status,
-
                 address:
                     member.address ??
                     "",
@@ -831,12 +826,8 @@ export function useUserManagement() {
             }
 
             try {
-                const updatedMember =
-                    await memberService
-                        .updateMemberStatus(
-                            member.id,
-                            newStatus,
-                        );
+                await memberService.updateMemberStatus(member.id, { status: newStatus });
+                const updatedMember = { ...member, status: newStatus as any };
 
                 setMembers(
                     (

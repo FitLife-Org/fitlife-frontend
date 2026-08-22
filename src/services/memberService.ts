@@ -3,16 +3,13 @@ import apiClient from "./apiClient";
 import type {
     ApiResponse,
     PageResponse,
+    Status,
 } from "../types/common.type";
 
 import type {
     MemberProfile,
-    MemberStatus,
-    FitnessGoal,
     AdminMemberCreateRequest,
     AdminMemberUpdateRequest,
-    AdminMemberStatusUpdateRequest,
-    UpdateMyMemberProfileRequest,
 } from "../types/member.type";
 
 import type {
@@ -27,31 +24,14 @@ import type {
     CheckinRecord,
 } from "../types/checkin.type";
 
-// =====================================================
-// TYPES
-// =====================================================
-
 export interface MemberQueryParams {
     page?: number;
     size?: number;
-
     keyword?: string;
-
-    status?: MemberStatus;
-
-    fitnessGoal?: FitnessGoal;
-
+    status?: Status;
+    fitnessGoal?: string;
     sort?: string;
 }
-
-export interface MemberQrResponse {
-    memberCode: string;
-    qrData: string;
-}
-
-// =====================================================
-// HELPERS
-// =====================================================
 
 function requireData<T>(
     response: ApiResponse<T>,
@@ -61,126 +41,46 @@ function requireData<T>(
         response.data === null ||
         response.data === undefined
     ) {
-        throw new Error(
-            message,
-        );
+        throw new Error(message);
     }
 
     return response.data;
 }
 
-function validatePositiveId(
-    value: number,
-    fieldName: string,
-): number {
-    if (
-        !Number.isInteger(
-            value,
-        ) ||
-        value <= 0
-    ) {
-        throw new Error(
-            `${fieldName} không hợp lệ.`,
-        );
-    }
-
-    return value;
-}
-
-/**
- * Chuẩn hóa optional text.
- *
- * null / undefined / "" / "   "
- * -> undefined
- *
- * " abc "
- * -> "abc"
- */
 function normalizeOptionalText(
     value?: string | null,
 ): string | undefined {
-    if (
-        value === null ||
-        value === undefined
-    ) {
+    if (value === null || value === undefined) {
         return undefined;
     }
 
-    const normalized =
-        value.trim();
+    const normalized = value.trim();
 
     return normalized.length > 0
         ? normalized
         : undefined;
 }
 
-/**
- * Chuẩn hóa email trước khi gửi backend.
- */
-function normalizeEmail(
-    value?: string | null,
-): string | undefined {
-    const email =
-        normalizeOptionalText(
-            value,
-        );
-
-    return email
-        ? email.toLowerCase()
-        : undefined;
-}
-
-/**
- * Đảm bảo Member từ backend luôn được map
- * qua một helper thống nhất.
- *
- * Có thể mở rộng normalize field tại đây
- * nếu backend thay đổi response sau này.
- */
 function mapMember(
     member: MemberProfile,
 ): MemberProfile {
     return {
         ...member,
+        status: member.status,
     };
 }
 
-// =====================================================
-// SERVICE
-// =====================================================
-
 export const memberService = {
-    // =================================================
-    // MEMBER - QR
-    // =================================================
-
-    async getMyQr():
-        Promise<MemberQrResponse> {
-        const response =
-            await apiClient.get<
-                ApiResponse<MemberQrResponse>
-            >(
-                "/members/me/qr",
-            );
-
-        return requireData(
-            response.data,
-            "Không nhận được mã QR hội viên.",
-        );
+    async getMyQr(): Promise<{ memberCode: string; qrData: string }> {
+        const response = await apiClient.get<ApiResponse<{ memberCode: string; qrData: string }>>("/members/me/qr");
+        return requireData(response.data, "Kh�ng nh?n ��?c m? QR.");
     },
-
-    // =================================================
-    // MEMBER - PROFILE
-    // =================================================
-
     async getMyProfile():
         Promise<MemberProfile> {
         const response =
             await apiClient.get<
                 ApiResponse<MemberProfile>
-            >(
-                "/members/me",
-            );
+            >("/members/me");
 
         return mapMember(
             requireData(
@@ -190,38 +90,21 @@ export const memberService = {
         );
     },
 
-    /**
-     * Member tự cập nhật hồ sơ.
-     *
-     * Không cho phép cập nhật:
-     * - username
-     * - email
-     * - memberCode
-     * - status
-     * - joinDate
-     * - avatarUrl
-     */
     async updateMyProfile(
-        data:
-        UpdateMyMemberProfileRequest,
+        data: Partial<MemberProfile>,
     ): Promise<MemberProfile> {
-        const payload:
-            UpdateMyMemberProfileRequest = {
+        const payload: Partial<MemberProfile> = {
+            ...data,
+
             fullName:
-                data.fullName.trim(),
+                normalizeOptionalText(
+                    data.fullName,
+                ),
 
             phone:
                 normalizeOptionalText(
                     data.phone,
                 ),
-
-            gender:
-                data.gender ??
-                undefined,
-
-            dateOfBirth:
-                data.dateOfBirth ??
-                undefined,
 
             address:
                 normalizeOptionalText(
@@ -239,8 +122,7 @@ export const memberService = {
                 ),
 
             fitnessGoal:
-                data.fitnessGoal ??
-                undefined,
+                data.fitnessGoal ?? undefined,
 
             healthNote:
                 normalizeOptionalText(
@@ -264,52 +146,33 @@ export const memberService = {
         );
     },
 
-    // =================================================
-    // MEMBER - BODY METRIC
-    // =================================================
-
     async getBodyMetrics():
         Promise<BodyMetric[]> {
         const response =
             await apiClient.get<
                 ApiResponse<
-                    | PageResponse<BodyMetric>
-                    | BodyMetric[]
+                    PageResponse<BodyMetric> |
+                    BodyMetric[]
                 >
-            >(
-                "/body-metrics/me",
-            );
+            >("/body-metrics/me");
 
-        const data =
-            requireData(
-                response.data,
-                "Không nhận được lịch sử chỉ số cơ thể.",
-            );
-
-        if (
-            Array.isArray(
-                data,
-            )
-        ) {
-            return data;
-        }
-
-        return (
-            data.content ??
-            []
+        const data = requireData(
+            response.data,
+            "Không nhận được lịch sử chỉ số cơ thể.",
         );
+
+        return Array.isArray(data)
+            ? data
+            : data.content;
     },
 
-    // =================================================
-    // ADMIN - MEMBER LIST
-    // =================================================
-
+    /**
+     * Admin lấy danh sách Member.
+     * page bắt đầu từ 0.
+     */
     async getMembers(
-        params:
-        MemberQueryParams = {},
-    ): Promise<
-        PageResponse<MemberProfile>
-    > {
+        params: MemberQueryParams = {},
+    ): Promise<PageResponse<MemberProfile>> {
         const response =
             await apiClient.get<
                 ApiResponse<
@@ -319,87 +182,59 @@ export const memberService = {
                 "/admin/members",
                 {
                     params: {
-                        page:
-                            params.page ??
-                            0,
+                        page: params.page ?? 0,
+                        size: params.size ?? 20,
 
-                        size:
-                            params.size ??
-                            20,
-
-                        ...(params.keyword
-                            ?.trim()
+                        ...(params.keyword?.trim()
                             ? {
                                 keyword:
-                                    params
-                                        .keyword
-                                        .trim(),
+                                    params.keyword.trim(),
                             }
                             : {}),
 
                         ...(params.status
                             ? {
-                                status:
-                                params.status,
+                                status: params.status,
                             }
                             : {}),
 
                         ...(params.fitnessGoal
                             ? {
                                 fitnessGoal:
-                                params
-                                    .fitnessGoal,
+                                params.fitnessGoal,
                             }
                             : {}),
 
                         ...(params.sort
                             ? {
-                                sort:
-                                params.sort,
+                                sort: params.sort,
                             }
                             : {}),
                     },
                 },
             );
 
-        const pageData =
-            requireData(
-                response.data,
-                "Không nhận được danh sách hội viên.",
-            );
+        const pageData = requireData(
+            response.data,
+            "Không nhận được danh sách hội viên.",
+        );
 
         return {
             ...pageData,
-
             content:
-                pageData
-                    .content
-                    ?.map(
-                        mapMember,
-                    ) ??
-                [],
+                pageData.content.map(
+                    mapMember,
+                ),
         };
     },
-
-    // =================================================
-    // ADMIN - MEMBER DETAIL
-    // =================================================
 
     async getMemberById(
         id: number,
     ): Promise<MemberProfile> {
-        const memberId =
-            validatePositiveId(
-                id,
-                "Member ID",
-            );
-
         const response =
             await apiClient.get<
                 ApiResponse<MemberProfile>
-            >(
-                `/admin/members/${memberId}`,
-            );
+            >(`/admin/members/${id}`);
 
         return mapMember(
             requireData(
@@ -409,24 +244,17 @@ export const memberService = {
         );
     },
 
-    // =================================================
-    // ADMIN - CREATE MEMBER
-    // POST /admin/members
-    // =================================================
-
     async createMember(
-        data:
-        AdminMemberCreateRequest,
+        data: AdminMemberCreateRequest,
     ): Promise<MemberProfile> {
-        const payload:
-            AdminMemberCreateRequest = {
+        const payload: AdminMemberCreateRequest = {
+            ...data,
+
             username:
                 data.username.trim(),
 
             email:
-                data.email
-                    .trim()
-                    .toLowerCase(),
+                data.email.trim().toLowerCase(),
 
             password:
             data.password,
@@ -440,12 +268,10 @@ export const memberService = {
                 ),
 
             gender:
-                data.gender ??
-                undefined,
+                data.gender ?? undefined,
 
             dateOfBirth:
-                data.dateOfBirth ??
-                undefined,
+                data.dateOfBirth ?? undefined,
 
             address:
                 normalizeOptionalText(
@@ -463,8 +289,7 @@ export const memberService = {
                 ),
 
             fitnessGoal:
-                data.fitnessGoal ??
-                undefined,
+                data.fitnessGoal ?? undefined,
 
             healthNote:
                 normalizeOptionalText(
@@ -488,56 +313,27 @@ export const memberService = {
         );
     },
 
-    // =================================================
-    // ADMIN - UPDATE MEMBER PROFILE
-    // PUT /admin/members/{id}
-    // =================================================
-
-    /**
-     * Chỉ update thông tin hồ sơ.
-     *
-     * KHÔNG update status ở API này.
-     *
-     * Status dùng:
-     *
-     * PATCH /admin/members/{id}/status
-     */
     async updateMember(
         id: number,
-
-        data:
-        AdminMemberUpdateRequest,
+        data: AdminMemberUpdateRequest,
     ): Promise<MemberProfile> {
-        const memberId =
-            validatePositiveId(
-                id,
-                "Member ID",
-            );
-
-        const payload:
-            AdminMemberUpdateRequest = {
-            email:
-                normalizeEmail(
-                    data.email,
-                ),
+        const payload: AdminMemberUpdateRequest = {
+            ...data,
 
             fullName:
                 normalizeOptionalText(
                     data.fullName,
                 ),
 
+            email:
+                normalizeOptionalText(
+                    data.email,
+                ),
+
             phone:
                 normalizeOptionalText(
                     data.phone,
                 ),
-
-            gender:
-                data.gender ??
-                undefined,
-
-            dateOfBirth:
-                data.dateOfBirth ??
-                undefined,
 
             address:
                 normalizeOptionalText(
@@ -555,8 +351,7 @@ export const memberService = {
                 ),
 
             fitnessGoal:
-                data.fitnessGoal ??
-                undefined,
+                data.fitnessGoal ?? undefined,
 
             healthNote:
                 normalizeOptionalText(
@@ -565,10 +360,10 @@ export const memberService = {
         };
 
         const response =
-            await apiClient.put<
+            await apiClient.patch<
                 ApiResponse<MemberProfile>
             >(
-                `/admin/members/${memberId}`,
+                `/admin/members/${id}`,
                 payload,
             );
 
@@ -580,72 +375,13 @@ export const memberService = {
         );
     },
 
-    // =================================================
-    // ADMIN - UPDATE MEMBER STATUS
-    // PATCH /admin/members/{id}/status
-    // =================================================
-
-    /**
-     * Contract:
-     *
-     * PATCH /admin/members/{id}/status
-     *
-     * {
-     *   "status": "ACTIVE"
-     * }
-     *
-     * hoặc
-     *
-     * {
-     *   "status": "SUSPENDED"
-     * }
-     */
-    async updateMemberStatus(
-        id: number,
-
-        status:
-        MemberStatus,
-    ): Promise<MemberProfile> {
-        const memberId =
-            validatePositiveId(
-                id,
-                "Member ID",
-            );
-
-        const payload:
-            AdminMemberStatusUpdateRequest = {
-            status,
-        };
-
-        const response =
-            await apiClient.patch<
-                ApiResponse<MemberProfile>
-            >(
-                `/admin/members/${memberId}/status`,
-                payload,
-            );
-
-        return mapMember(
-            requireData(
-                response.data,
-                "Không nhận được hội viên sau khi cập nhật trạng thái.",
-            ),
-        );
+    async updateMemberStatus(id: number, data: { status: string }): Promise<void> {
+        await apiClient.patch(`/admin/members/${id}/status`, data);
     },
-
-    // =================================================
-    // ADMIN - MEMBER SUBSCRIPTIONS
-    // =================================================
 
     async getMemberSubscriptions(
         id: number,
     ): Promise<Subscription[]> {
-        const memberId =
-            validatePositiveId(
-                id,
-                "Member ID",
-            );
-
         const response =
             await apiClient.get<
                 ApiResponse<
@@ -655,38 +391,22 @@ export const memberService = {
                 "/admin/subscriptions",
                 {
                     params: {
-                        memberId,
+                        memberId: id,
                         page: 0,
                         size: 100,
                     },
                 },
             );
 
-        const data =
-            requireData(
-                response.data,
-                "Không nhận được danh sách subscription.",
-            );
-
-        return (
-            data.content ??
-            []
-        );
+        return requireData(
+            response.data,
+            "Không nhận được danh sách subscription.",
+        ).content;
     },
-
-    // =================================================
-    // ADMIN - MEMBER CHECKINS
-    // =================================================
 
     async getMemberCheckins(
         id: number,
     ): Promise<CheckinRecord[]> {
-        const memberId =
-            validatePositiveId(
-                id,
-                "Member ID",
-            );
-
         const response =
             await apiClient.get<
                 ApiResponse<
@@ -696,22 +416,17 @@ export const memberService = {
                 "/admin/check-ins",
                 {
                     params: {
-                        memberId,
+                        memberId: id,
                         page: 0,
                         size: 100,
                     },
                 },
             );
 
-        const data =
-            requireData(
-                response.data,
-                "Không nhận được lịch sử check-in.",
-            );
-
-        return (
-            data.content ??
-            []
-        );
+        return requireData(
+            response.data,
+            "Không nhận được lịch sử check-in.",
+        ).content;
     },
-};
+
+    };

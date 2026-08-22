@@ -1,4 +1,4 @@
-export type EquipmentStatus = "ACTIVE" | "MAINTENANCE" | "INACTIVE";
+  export type EquipmentStatus = "ACTIVE" | "MAINTENANCE" | "INACTIVE";
 
 export interface Equipment {
   id: string;

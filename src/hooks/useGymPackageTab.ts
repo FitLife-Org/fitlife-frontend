@@ -16,7 +16,8 @@ export function useGymPackageTab() {
     try {
       setLoading(true);
       const data = await packageService.getAdminPackages({ size: 100 });
-      setPackages(data);
+      const sorted = [...data].sort((a, b) => a.basePrice - b.basePrice);
+      setPackages(sorted);
     } catch {
       console.error("Failed to fetch packages");
     } finally {
