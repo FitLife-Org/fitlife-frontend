@@ -49,14 +49,11 @@ export function useTrainerManagement() {
     }
   };
 
-  const filteredTrainers = trainers.filter(t => {
-    const spec = t.specialization || t.specialty || "";
-    return (
-      (t.fullName || "").toLowerCase().includes(search.toLowerCase()) || 
-      spec.toLowerCase().includes(search.toLowerCase()) ||
-      (t.email || "").toLowerCase().includes(search.toLowerCase())
-    );
-  });
+  const filteredTrainers = trainers.filter(t => 
+    (t.fullName || "").toLowerCase().includes(search.toLowerCase()) || 
+    (t.specialty && t.specialty.toLowerCase().includes(search.toLowerCase())) ||
+    (t.email || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   return {
     trainers,

@@ -203,8 +203,8 @@ export default function UserManagementPage() {
 
     totalCount,
     activeCount,
-    
-    
+    suspendedCount,
+    inactiveCount,
   } = useUserManagement();
 
   /* ========================================================
@@ -925,7 +925,7 @@ export default function UserManagementPage() {
               }
               label="Ngưng hoạt động"
               value={
-                0
+                inactiveCount
               }
               iconClass="bg-slate-100 text-slate-600"
           />
@@ -936,7 +936,7 @@ export default function UserManagementPage() {
               }
               label="Đang bị khóa"
               value={
-                0
+                suspendedCount
               }
               iconClass="bg-rose-50 text-rose-600"
           />
