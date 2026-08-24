@@ -85,9 +85,24 @@ export const subscriptionService = {
             return null;
         }
     },
-  async getAdminSubscriptions(params?: { page?: number; size?: number; status?: string; memberId?: number; gymPackageId?: number; }): Promise<Subscription[]> {
+  async getAdminSubscriptions(params?: { page?: number; size?: number; status?: string; memberId?: number; gymPackageId?: number; }): Promise<PageResponse<Subscription>> {
     const response = await apiClient.get<ApiResponse<PageResponse<Subscription> | Subscription[]>>('/admin/subscriptions', { params });
-    return extractPageContent<Subscription>(response.data.data);
+    const data = response.data.data;
+
+    if (Array.isArray(data)) {
+      return {
+        content: data,
+        page: 0,
+        size: data.length,
+        totalElements: data.length,
+        totalPages: data.length > 0 ? 1 : 0,
+        first: true,
+        last: true,
+        empty: data.length === 0,
+      };
+    }
+
+    return data;
   },
 
   async getAdminSubscriptionById(id: number): Promise<Subscription> {
@@ -109,38 +124,11 @@ export const subscriptionService = {
         memberId: number,
         data: CreateSubscriptionRequest
     ): Promise<Subscription> {
-        try {
-            const response = await apiClient.post<ApiResponse<Subscription>>(
-                `/staff/members/${memberId}/subscriptions`,
-                data
-            );
-            return response.data.data;
-        } catch (error) {
-            console.warn("Backend missing POST /staff/members/{id}/subscriptions, using mock data", error);
-            return {
-                id: Math.floor(Math.random() * 1000) + 100,
-                gymPackage: {
-                    id: data.gymPackageId,
-                    name: "Gói tập (Mock)",
-                    description: "Dữ liệu ảo do API chưa sẵn sàng",
-                    price: 500000,
-                    status: "ACTIVE",
-                },
-                packageDuration: {
-                    id: data.packageDurationId,
-                    durationInMonths: 1,
-                    price: 500000,
-                    status: "ACTIVE",
-                },
-                startDate: new Date().toISOString(),
-                endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-                status: "ACTIVE",
-                autoRenew: data.autoRenew || false,
-                paymentStatus: "PAID",
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                remainingDays: 30,
-            } as Subscription;
-        }
+        const response = await apiClient.post<ApiResponse<Subscription>>(
+            `/staff/members/${memberId}/subscriptions`,
+            data
+        );
+
+        return response.data.data;
     }
 };

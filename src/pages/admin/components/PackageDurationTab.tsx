@@ -125,20 +125,11 @@ export default function PackageDurationTab() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {!editingDuration && (
-              <Input
-                label="Mã thời hạn"
-                placeholder="VD: DUR_01"
-                required
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              />
-            )}
-            <div className={!editingDuration ? "md:col-span-1" : "md:col-span-2"}>
-               <label className="mb-1 block text-sm font-semibold text-fit-text">Gói tập áp dụng</label>
+            <div className="md:col-span-2">
+               <label className="mb-2 block text-sm font-semibold text-slate-700">Gói tập áp dụng</label>
                <select
                   disabled={!!editingDuration}
-                  className="w-full rounded-xl border border-fit-border bg-white px-4 py-2 text-sm text-fit-text transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary disabled:bg-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary shadow-sm hover:border-slate-300 disabled:bg-slate-100"
                   value={formData.gymPackageId}
                   onChange={(e) => setFormData({ ...formData, gymPackageId: e.target.value })}
                >

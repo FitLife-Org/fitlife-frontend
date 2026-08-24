@@ -658,4 +658,12 @@ export const memberService = {
             "Không nhận được lịch sử check-in.",
         ).content;
     },
+
+    async deleteMember(id: number): Promise<void> {
+        await apiClient.delete(`/admin/members/${id}`);
+    },
+
+    async restoreMember(id: number): Promise<void> {
+        await apiClient.patch(`/admin/members/${id}/restore`);
+    },
 };

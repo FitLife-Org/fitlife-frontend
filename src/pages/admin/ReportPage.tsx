@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Users, 
   CreditCard, 
@@ -16,7 +17,6 @@ import D3AreaChart from "../../components/common/charts/D3AreaChart";
 import D3BarChart from "../../components/common/charts/D3BarChart";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import toast from "react-hot-toast";
 
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
@@ -40,8 +40,26 @@ import type {
   PlanSummaryDto
 } from "../../types/dashboard.type";
 import { getApiErrorMessage } from "../../utils/apiError";
+import { showAlert } from "../../utils/alert";
+import { ROUTES } from "../../config/routes";
+import type { DashboardFilterRequest } from "../../types/dashboard.type";
+
+type ReportPeriod = "TODAY" | "LAST_7_DAYS" | "THIS_MONTH" | "CUSTOM";
+
+const formatDateInput = (date: Date) => date.toISOString().slice(0, 10);
+
+const getPeriodRange = (period: Exclude<ReportPeriod, "CUSTOM">) => {
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+
+  if (period === "LAST_7_DAYS") startDate.setDate(endDate.getDate() - 6);
+  if (period === "THIS_MONTH") startDate.setDate(1);
+
+  return { startDate: formatDateInput(startDate), endDate: formatDateInput(endDate) };
+};
 
 export default function ReportPage() {
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [revenueData, setRevenueData] = useState<ChartDataDto[]>([]);
@@ -60,6 +78,13 @@ export default function ReportPage() {
   const [plansSummary, setPlansSummary] = useState<PlanSummaryDto[]>([]);
   
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<ReportPeriod>("THIS_MONTH");
+  const [dateRange, setDateRange] = useState(() => getPeriodRange("THIS_MONTH"));
+
+  const filters: DashboardFilterRequest = {
+    ...dateRange,
+    groupBy: "DAY",
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,20 +95,20 @@ export default function ReportPage() {
           revSumRes, payStatRes, subSumRes, memSumRes, eqStatRes, aiSumRes, maintSumRes,
           checkinTrendRes, peakHoursRes, plansSummaryRes
         ] = await Promise.all([
-          adminDashboardService.getOverview(),
-          adminDashboardService.getRevenueStats(),
-          adminDashboardService.getCheckinsToday(),
-          adminDashboardService.getExpiringSubscriptions(),
-          adminDashboardService.getRevenueSummary(),
-          adminDashboardService.getPaymentStatusStats(),
-          adminDashboardService.getSubscriptionSummary(),
-          adminDashboardService.getMemberSummary(),
-          adminDashboardService.getEquipmentStatusStats(),
-          adminDashboardService.getAiSummary(),
-          adminDashboardService.getMaintenanceSummary(),
-          adminDashboardService.getCheckinTrend(),
-          adminDashboardService.getCheckinPeakHours(),
-          adminDashboardService.getPlansSummary()
+          adminDashboardService.getOverview(filters),
+          adminDashboardService.getRevenueStats(filters),
+          adminDashboardService.getCheckinsToday(filters),
+          adminDashboardService.getExpiringSubscriptions(filters),
+          adminDashboardService.getRevenueSummary(filters),
+          adminDashboardService.getPaymentStatusStats(filters),
+          adminDashboardService.getSubscriptionSummary(filters),
+          adminDashboardService.getMemberSummary(filters),
+          adminDashboardService.getEquipmentStatusStats(filters),
+          adminDashboardService.getAiSummary(filters),
+          adminDashboardService.getMaintenanceSummary(filters),
+          adminDashboardService.getCheckinTrend(filters),
+          adminDashboardService.getCheckinPeakHours(filters),
+          adminDashboardService.getPlansSummary(filters)
         ]);
         setOverview(overviewRes);
         setRevenueData(revenueRes);
@@ -100,13 +125,13 @@ export default function ReportPage() {
         setPeakHours(peakHoursRes);
         setPlansSummary(plansSummaryRes);
       } catch (error) {
-        toast.error(getApiErrorMessage(error));
+        void showAlert.error("Không thể tải báo cáo", getApiErrorMessage(error));
       } finally {
         setLoading(false);
       }
     };
     void fetchData();
-  }, []);
+  }, [dateRange.endDate, dateRange.startDate]);
 
   useGSAP(() => {
     if (!loading) {
@@ -148,19 +173,24 @@ export default function ReportPage() {
 
   const handleExport = async () => {
     try {
-      const blob = await adminDashboardService.exportReport();
+      const blob = await adminDashboardService.exportReport(filters);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `FitLife_Report_${new Date().getTime()}.xlsx`;
+      a.download = `FitLife_Report_${dateRange.startDate}_${dateRange.endDate}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success("Đã xuất báo cáo thành công");
+      await showAlert.success("Xuất báo cáo thành công", "Tệp CSV theo khoảng thời gian đã chọn đã được tải xuống.");
     } catch (error) {
-      toast.error("Xuất báo cáo thất bại");
+      void showAlert.error("Xuất báo cáo thất bại", getApiErrorMessage(error));
     }
+  };
+
+  const handlePeriodChange = (nextPeriod: ReportPeriod) => {
+    setPeriod(nextPeriod);
+    if (nextPeriod !== "CUSTOM") setDateRange(getPeriodRange(nextPeriod));
   };
 
   if (loading) return <Loading />;
@@ -170,13 +200,27 @@ export default function ReportPage() {
       <PageHeader 
         title="Báo cáo & Thống kê" 
         description="Theo dõi doanh thu, sự phát triển hội viên và hiệu suất vận hành hệ thống" 
-        action={
-          <Button onClick={handleExport}>
-            <Download className="h-5 w-5" />
-            Xuất báo cáo
-          </Button>
-        }
+        action={<Button onClick={handleExport}><Download className="h-5 w-5" />Xuất báo cáo</Button>}
       />
+
+      <Card className="p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-bold text-slate-800">Khoảng thời gian báo cáo</p>
+            <p className="mt-1 text-xs text-slate-500">Áp dụng cho doanh thu, biểu đồ check-in và tệp CSV xuất ra.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {(["TODAY", "LAST_7_DAYS", "THIS_MONTH"] as const).map((item) => (
+              <button key={item} type="button" onClick={() => handlePeriodChange(item)} className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${period === item ? "bg-fit-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                {item === "TODAY" ? "Hôm nay" : item === "LAST_7_DAYS" ? "7 ngày qua" : "Tháng này"}
+              </button>
+            ))}
+            <input type="date" value={dateRange.startDate} onChange={(event) => { setPeriod("CUSTOM"); setDateRange((current) => ({ ...current, startDate: event.target.value })); }} className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700" aria-label="Từ ngày" />
+            <span className="text-sm text-slate-400">đến</span>
+            <input type="date" value={dateRange.endDate} onChange={(event) => { setPeriod("CUSTOM"); setDateRange((current) => ({ ...current, endDate: event.target.value })); }} className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700" aria-label="Đến ngày" />
+          </div>
+        </div>
+      </Card>
 
       {/* Grid: 4 Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -197,9 +241,9 @@ export default function ReportPage() {
           <div className="flex items-center gap-2 mt-4">
             <span className="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
               <TrendingUp className="w-3.5 h-3.5 mr-1" />
-              +{overview?.membersGrowthPct}%
+              +{overview?.membersGrowthPct ?? 0}
             </span>
-            <span className="text-xs text-slate-400">so với tháng trước</span>
+            <span className="text-xs text-slate-400">hội viên mới trong kỳ</span>
           </div>
         </Card>
 
@@ -220,9 +264,9 @@ export default function ReportPage() {
           <div className="flex items-center gap-2 mt-4">
             <span className="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
               <TrendingUp className="w-3.5 h-3.5 mr-1" />
-              +{overview?.checkinsGrowthPct}%
+              {overview?.checkinsGrowthPct ?? 0}
             </span>
-            <span className="text-xs text-slate-400">tăng trưởng ngày</span>
+            <span className="text-xs text-slate-400">biến động trong kỳ</span>
           </div>
         </Card>
 
@@ -243,9 +287,9 @@ export default function ReportPage() {
           <div className="flex items-center gap-2 mt-4">
             <span className="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
               <TrendingUp className="w-3.5 h-3.5 mr-1" />
-              +{overview?.revenueGrowthPct}%
+              {(overview?.revenueGrowthPct ?? 0) >= 0 ? "+" : ""}{overview?.revenueGrowthPct ?? 0}%
             </span>
-            <span className="text-xs text-slate-400">so với mục tiêu</span>
+            <span className="text-xs text-slate-400">so với kỳ trước</span>
           </div>
         </Card>
 
@@ -281,7 +325,7 @@ export default function ReportPage() {
             <p className="text-xs text-slate-500 mt-1">Xu hướng doanh thu theo các tháng gần nhất</p>
           </div>
           <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-            Năm 2026
+            {dateRange.startDate} – {dateRange.endDate}
           </span>
         </div>
 
@@ -351,7 +395,7 @@ export default function ReportPage() {
               <h3 className="text-lg font-bold text-slate-800">Cảnh báo hết hạn gói tập</h3>
               <p className="text-xs text-slate-500 mt-1">Các mã hóa đơn/đăng ký sắp tới hạn gia hạn</p>
             </div>
-            <Badge variant="danger">Cảnh báo</Badge>
+            <button type="button" onClick={() => navigate(ROUTES.ADMIN_SUBSCRIPTIONS)} className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-100">Xem đăng kí gói</button>
           </div>
 
           <div className="overflow-x-auto">

@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
-import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone, QrCode, Keyboard, ScanLine, ScanFace } from "lucide-react";
+import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone, Keyboard, ScanLine, ScanFace } from "lucide-react";
 import Input from "../../components/common/Input";
 import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
-import GymQrManager from "../admin/components/GymQrManager";
 import { useState } from "react";
 import { ROUTES } from "../../config/routes";
 import PageHeader from "../../components/common/PageHeader";
@@ -24,8 +23,6 @@ export default function CheckinPage() {
     handleScanSuccess
   } = useStaffCheckinLogic();
 
-  const [showGymQr, setShowGymQr] = useState(false);
-
   return (
     <div className="space-y-8 pb-12 max-w-7xl mx-auto px-4 md:px-8 mt-6">
       {/* HEADER TƯƠNG TÁC */}
@@ -35,16 +32,6 @@ export default function CheckinPage() {
           title="Hệ thống Điểm Danh" 
           description="Kiểm tra thông tin hội viên tự động bằng QR Code hoặc tra cứu thủ công nhanh chóng." 
         />
-        
-        <div className="flex items-center gap-3 shrink-0 z-10">
-          <button
-            onClick={() => setShowGymQr(true)}
-            className="px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold flex items-center gap-2 shadow-lg shadow-slate-900/20 active:scale-95 text-sm"
-          >
-            <QrCode className="w-5 h-5 text-emerald-400" />
-            <span>Mã QR Phòng Tập</span>
-          </button>
-        </div>
       </div>
 
       {/* THẺ THÔNG TIN HỘI VIÊN (Hiển thị to nhất khi có kết quả) */}
@@ -277,7 +264,6 @@ export default function CheckinPage() {
         </div>
       </div>
 
-      <GymQrManager isOpen={showGymQr} onClose={() => setShowGymQr(false)} />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import { memberService } from "../../services/memberService";
 import { getApiErrorMessage } from "../../utils/apiError";
-import toast from "react-hot-toast";
+import { showAlert } from "../../utils/alert";
 
 interface QrData {
     memberCode: string;
@@ -22,7 +22,7 @@ export default function MemberQRPage() {
             const data = await memberService.getMyQr();
             setQrInfo(data);
         } catch (error) {
-            toast.error(getApiErrorMessage(error));
+            void showAlert.error("Đã xảy ra lỗi", getApiErrorMessage(error));
         } finally {
             setLoading(false);
         }

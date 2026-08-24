@@ -196,4 +196,73 @@ export const bodyMetricService = {
         "Không nhận được chỉ số cơ thể vừa tạo.",
     );
   },
+
+  async getAdminMemberBodyMetrics(
+      memberId: number,
+      params: BodyMetricListParams = {},
+  ): Promise<PageResponse<BodyMetric>> {
+    const response =
+        await apiClient.get<
+            ApiResponse<
+                PageResponse<BodyMetric>
+            >
+        >(
+            `/admin/members/${memberId}/body-metrics`,
+            {
+              params: {
+                page: params.page ?? 0,
+                size: params.size ?? 20,
+                sort: params.sort ?? "recordedAt,desc",
+              },
+            },
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được danh sách chỉ số cơ thể của hội viên.",
+    );
+  },
+
+  async getAdminMemberLatestBodyMetric(
+      memberId: number,
+  ): Promise<BodyMetric> {
+    const response =
+        await apiClient.get<
+            ApiResponse<BodyMetric>
+        >(
+            `/admin/members/${memberId}/body-metrics/latest`,
+        );
+
+    return requireData(
+        response.data,
+        "Không nhận được chỉ số cơ thể mới nhất của hội viên.",
+    );
+  },
+
+  async createAdminMemberBodyMetric(
+      memberId: number,
+      request: CreateMyBodyMetricRequest,
+  ): Promise<BodyMetric> {
+    const payload: CreateMyBodyMetricRequest = {
+      weightKg: request.weightKg,
+      ...(request.heightCm !== undefined ? { heightCm: request.heightCm } : {}),
+      ...(request.bodyFatPercent !== undefined ? { bodyFatPercent: request.bodyFatPercent } : {}),
+      ...(request.muscleMassKg !== undefined ? { muscleMassKg: request.muscleMassKg } : {}),
+      ...(request.note?.trim() ? { note: request.note.trim() } : {}),
+      ...(request.recordedAt ? { recordedAt: request.recordedAt } : {}),
+    };
+
+    const response =
+        await apiClient.post<
+            ApiResponse<BodyMetric>
+        >(
+            `/admin/members/${memberId}/body-metrics`,
+            payload,
+        );
+
+    return requireData(
+        response.data,
+        "Không tạo được chỉ số cơ thể cho hội viên.",
+    );
+  },
 };

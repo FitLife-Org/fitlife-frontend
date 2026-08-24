@@ -6,10 +6,14 @@ import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
 import type { Equipment } from "../../../types/equipment.type";
 import { showAlert } from "../../../utils/alert";
+import { useAuthStore } from "../../../store/authStore";
 
 export default function EquipmentDetailPage() {
     const navigate = useNavigate();
     const { id } = useParams();
+    
+    const user = useAuthStore((state) => state.user);
+    const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false;
 
     const [equipment, setEquipment] = useState<Equipment | null>(null);
     const [loading, setLoading] = useState(true);
@@ -56,9 +60,9 @@ export default function EquipmentDetailPage() {
     }, [id]);
 
     useEffect(() => {
-        if (!id) return;
+        if (!id || !isAdmin) return;
         fetchHistory();
-    }, [id, fetchHistory]);
+    }, [id, fetchHistory, isAdmin]);
 
     useEffect(() => {
         const fetchAreas = async () => {
@@ -112,7 +116,7 @@ export default function EquipmentDetailPage() {
             // Refresh detail and history
             const data = await EquipmentService.getById(id);
             if (data) setEquipment(data);
-            fetchHistory();
+            if (isAdmin) fetchHistory();
         } catch (error) {
             console.error("Lỗi khi báo hỏng thiết bị:", error);
             showAlert.error("Lỗi", "Không thể gửi báo cáo báo hỏng.");
@@ -159,19 +163,29 @@ export default function EquipmentDetailPage() {
                     </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <Button onClick={() => navigate(`/admin/equipment/edit/${id}`)} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm flex items-center gap-2 border-0 shadow-md shadow-amber-500/20 transition-all">
-                        <Edit2 className="w-4 h-4" /> Sửa
-                    </Button>
-                    <Button onClick={() => navigate(`/admin/equipment/${id}/maintenance`)} className="bg-fit-trainer text-white hover:bg-fit-trainer/90 px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 border-0 transition-all">
-                        <Wrench className="w-4 h-4" /> Bảo trì
-                    </Button>
+                    {isAdmin && (
+                        <>
+                            <Button onClick={() => navigate(`/admin/equipment/edit/${id}`)} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm flex items-center gap-2 border-0 shadow-md shadow-amber-500/20 transition-all">
+                                <Edit2 className="w-4 h-4" /> Sửa
+                            </Button>
+                            <Button onClick={() => navigate(`/admin/equipment/${id}/maintenance`)} className="bg-fit-trainer text-white hover:bg-fit-trainer/90 px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 border-0 transition-all">
+                                <Wrench className="w-4 h-4" /> Bảo trì
+                            </Button>
+                        </>
+                    )}
                     <button 
                         onClick={() => setShowReportModal(true)} 
-                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium text-sm flex items-center gap-2 border-0 shadow-md shadow-red-500/20 transition-all"
+                        disabled={equipment.status === "MAINTENANCE" || equipment.status === "INACTIVE"}
+                        className={`px-4 py-2 text-white rounded-lg font-medium text-sm flex items-center gap-2 border-0 transition-all ${
+                            equipment.status === "MAINTENANCE" || equipment.status === "INACTIVE"
+                                ? "bg-red-300 cursor-not-allowed"
+                                : "bg-red-500 hover:bg-red-600 shadow-md shadow-red-500/20"
+                        }`}
+                        title={equipment.status === "MAINTENANCE" ? "Thiết bị đang được bảo trì" : equipment.status === "INACTIVE" ? "Thiết bị đã ngừng hoạt động" : ""}
                     >
                         <AlertTriangle className="w-4 h-4" /> Báo hỏng
                     </button>
-                    {equipment.status !== "INACTIVE" && (
+                    {isAdmin && equipment.status !== "INACTIVE" && (
                         <button 
                             onClick={handleRetire} 
                             className="px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white rounded-lg font-medium text-sm flex items-center gap-2 border-0 shadow-md shadow-slate-500/20 transition-all"
@@ -196,8 +210,8 @@ export default function EquipmentDetailPage() {
                             <select
                                 value={equipment.status}
                                 onChange={(e) => handleUpdateStatus(e.target.value)}
-                                disabled={updatingStatus}
-                                className={`text-xs font-medium px-2 py-1 rounded-md border border-slate-200 focus:outline-none focus:border-fit-primary ${equipment.status === 'ACTIVE' ? 'text-fit-primary bg-fit-primarySoft' : equipment.status === 'MAINTENANCE' ? 'text-fit-trainer bg-fit-trainerSoft' : 'text-fit-danger bg-fit-dangerSoft'}`}
+                                disabled={updatingStatus || !isAdmin}
+                                className={`text-xs font-medium px-2 py-1 rounded-md border border-slate-200 focus:outline-none focus:border-fit-primary ${equipment.status === 'ACTIVE' ? 'text-fit-primary bg-fit-primarySoft' : equipment.status === 'MAINTENANCE' ? 'text-fit-trainer bg-fit-trainerSoft' : 'text-fit-danger bg-fit-dangerSoft'} ${!isAdmin ? 'opacity-80 cursor-not-allowed' : ''}`}
                             >
                                 <option value="ACTIVE">Hoạt động</option>
                                 <option value="MAINTENANCE">Bảo trì</option>
@@ -248,7 +262,7 @@ export default function EquipmentDetailPage() {
                                 ) : (
                                     <div className="flex items-center gap-2 mt-0.5">
                                         <p className="text-sm text-slate-900">{equipment.area}</p>
-                                        {equipment.status !== "INACTIVE" && (
+                                        {isAdmin && equipment.status !== "INACTIVE" && (
                                             <button
                                                 onClick={() => setIsEditingArea(true)}
                                                 className="text-slate-400 hover:text-fit-primary transition-colors"
@@ -281,55 +295,57 @@ export default function EquipmentDetailPage() {
             </div>
 
             {/* Lịch sử bảo trì */}
-            <Card className="p-6">
-                <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-4">
-                    <History className="w-5 h-5 text-fit-primary" />
-                    <h3 className="font-bold text-slate-900">Lịch sử bảo trì & Sửa chữa</h3>
-                </div>
-
-                {fetchingHistory ? (
-                    <div className="py-6 text-center text-sm text-slate-500">Đang tải lịch sử...</div>
-                ) : history.length === 0 ? (
-                    <div className="py-8 text-center text-sm text-slate-400">Chưa có lịch sử bảo trì cho thiết bị này.</div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-sm text-slate-600">
-                            <thead>
-                                <tr className="border-b border-slate-100 text-slate-400 font-semibold">
-                                    <th className="py-3 px-4">Ngày bảo trì</th>
-                                    <th className="py-3 px-4">Loại hình</th>
-                                    <th className="py-3 px-4">Mô tả hỏng hóc / công việc</th>
-                                    <th className="py-3 px-4 text-right">Chi phí</th>
-                                    <th className="py-3 px-4">Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {history.map((h, index) => (
-                                    <tr key={index} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                                        <td className="py-3 px-4 font-medium text-slate-900">{h.date || h.maintenanceDate}</td>
-                                        <td className="py-3 px-4">
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${h.type === 'REPAIR' || h.maintenanceType === 'REPAIR' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                                                {h.type === 'REPAIR' || h.maintenanceType === 'REPAIR' ? 'Sửa chữa' : 'Bảo trì định kỳ'}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4 max-w-xs truncate" title={h.description}>
-                                            {h.description || "—"}
-                                        </td>
-                                        <td className="py-3 px-4 text-right font-medium text-slate-900">
-                                            {h.cost ? `${Number(h.cost).toLocaleString('vi-VN')} đ` : "0 đ"}
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <span className={`inline-flex items-center gap-1 text-xs font-semibold ${h.status === 'COMPLETED' ? 'text-emerald-600' : h.status === 'CANCELLED' ? 'text-slate-400' : 'text-amber-600'}`}>
-                                                {h.status === 'COMPLETED' ? 'Đã hoàn thành' : h.status === 'CANCELLED' ? 'Đã hủy' : 'Chờ thực hiện'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            {isAdmin && (
+                <Card className="p-6">
+                    <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-4">
+                        <History className="w-5 h-5 text-fit-primary" />
+                        <h3 className="font-bold text-slate-900">Lịch sử bảo trì & Sửa chữa</h3>
                     </div>
-                )}
-            </Card>
+
+                    {fetchingHistory ? (
+                        <div className="py-6 text-center text-sm text-slate-500">Đang tải lịch sử...</div>
+                    ) : history.length === 0 ? (
+                        <div className="py-8 text-center text-sm text-slate-400">Chưa có lịch sử bảo trì cho thiết bị này.</div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse text-left text-sm text-slate-600">
+                                <thead>
+                                    <tr className="border-b border-slate-100 text-slate-400 font-semibold">
+                                        <th className="py-3 px-4">Ngày bảo trì</th>
+                                        <th className="py-3 px-4">Loại hình</th>
+                                        <th className="py-3 px-4">Mô tả hỏng hóc / công việc</th>
+                                        <th className="py-3 px-4 text-right">Chi phí</th>
+                                        <th className="py-3 px-4">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {history.map((h, index) => (
+                                        <tr key={index} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                                            <td className="py-3 px-4 font-medium text-slate-900">{h.date || h.maintenanceDate}</td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${h.type === 'REPAIR' || h.maintenanceType === 'REPAIR' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                                    {h.type === 'REPAIR' || h.maintenanceType === 'REPAIR' ? 'Sửa chữa' : 'Bảo trì định kỳ'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 max-w-xs truncate" title={h.description}>
+                                                {h.description || "—"}
+                                            </td>
+                                            <td className="py-3 px-4 text-right font-medium text-slate-900">
+                                                {h.cost ? `${Number(h.cost).toLocaleString('vi-VN')} đ` : "0 đ"}
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <span className={`inline-flex items-center gap-1 text-xs font-semibold ${h.status === 'COMPLETED' ? 'text-emerald-600' : h.status === 'CANCELLED' ? 'text-slate-400' : 'text-amber-600'}`}>
+                                                    {h.status === 'COMPLETED' ? 'Đã hoàn thành' : h.status === 'CANCELLED' ? 'Đã hủy' : 'Chờ thực hiện'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </Card>
+            )}
 
             {/* Modal báo hỏng */}
             {showReportModal && (

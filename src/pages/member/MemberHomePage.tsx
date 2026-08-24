@@ -41,15 +41,6 @@ export default function MemberHomePage() {
           title={`Chào mừng trở lại, ${user?.fullName?.split(" ").pop() || "Hội viên"}! 👋`}
           description="Cùng xem lại tiến trình tập luyện của bạn hôm nay nhé."
         />
-        <div className="flex gap-3">
-          <Link 
-            to="/member/checkins"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-bold text-white shadow-lg shadow-fit-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl"
-          >
-            <img src="https://api.iconify.design/mdi:qrcode-scan.svg?color=white" alt="Scan QR" className="w-5 h-5" />
-            Quét mã QR Phòng tập
-          </Link>
-        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">

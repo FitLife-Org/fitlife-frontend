@@ -13,8 +13,10 @@ export function useTrainerManagement() {
     try {
       setLoading(true);
       const data = await trainerService.getAdminTrainers();
+      console.log("🔥 FETCHED TRAINERS API RESPONSE:", data);
       setTrainers(data);
-    } catch {
+    } catch (error) {
+      console.error("🔥 ERROR FETCHING TRAINERS:", error);
       toast.error("Không thể tải danh sách PT");
     } finally {
       setLoading(false);

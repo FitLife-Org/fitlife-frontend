@@ -172,8 +172,12 @@ export default function AdminAiSuggestionPage() {
     <div className="space-y-6" ref={containerRef}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-gradient-to-r from-purple-600/10 to-blue-600/10 rounded-2xl border border-purple-500/20 shadow-sm backdrop-blur-sm">
         <div className="flex items-center gap-4 mb-4 sm:mb-0">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
-            <BrainCircuit className="w-6 h-6" />
+          <div className="w-14 h-14 bg-white/50 backdrop-blur-md rounded-2xl border border-white/40 shadow-xl flex items-center justify-center p-2 overflow-hidden">
+            <img 
+              src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png" 
+              alt="FitLife Logo" 
+              className="w-full h-full object-contain hover:scale-110 transition-transform duration-500"
+            />
           </div>
           <div>
             <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">

@@ -17,6 +17,14 @@ import type {
   PlanSummaryDto
 } from "../types/dashboard.type";
 
+function toReportQuery(params?: DashboardFilterRequest) {
+  return {
+    fromDate: params?.startDate,
+    toDate: params?.endDate,
+    groupBy: params?.groupBy,
+  };
+}
+
 export const adminDashboardService = {
   async getOverview(params?: DashboardFilterRequest): Promise<DashboardOverviewResponse> {
     try {
@@ -38,7 +46,7 @@ export const adminDashboardService = {
 
   async getRevenueStats(params?: DashboardFilterRequest): Promise<ChartDataDto[]> {
     try {
-      const res = await apiClient.get<ApiResponse<any[]>>("/admin/reports/revenue/trend", { params });
+      const res = await apiClient.get<ApiResponse<any[]>>("/admin/reports/revenue/trend", { params: toReportQuery(params) });
       return (res.data.data || []).map(item => ({
         label: item.period,
         value: item.revenue || 0
@@ -78,7 +86,7 @@ export const adminDashboardService = {
 
   async getRevenueSummary(params?: DashboardFilterRequest): Promise<RevenueSummaryDto> {
     try {
-      const res = await apiClient.get<ApiResponse<any>>("/admin/reports/revenue/summary", { params });
+      const res = await apiClient.get<ApiResponse<any>>("/admin/reports/revenue/summary", { params: toReportQuery(params) });
       return {
         totalRevenue: res.data.data?.totalRevenue || 0,
         pendingRevenue: 0,
@@ -159,7 +167,7 @@ export const adminDashboardService = {
 
   async getCheckinTrend(params?: DashboardFilterRequest): Promise<CheckinTrendDto[]> {
     try {
-      const res = await apiClient.get<ApiResponse<any[]>>("/admin/reports/checkins/trend", { params });
+      const res = await apiClient.get<ApiResponse<any[]>>("/admin/reports/checkins/trend", { params: toReportQuery(params) });
       return (res.data.data || []).map(item => ({
         date: item.period,
         count: item.checkInCount || 0
@@ -188,11 +196,23 @@ export const adminDashboardService = {
   },
 
   async exportReport(params?: DashboardFilterRequest): Promise<Blob> {
-    try {
-      const res = await apiClient.post("/admin/reports/export", params, { responseType: "blob" });
-      return res.data as Blob;
-    } catch {
-      return new Blob(["This is a dummy exported report data."], { type: "text/plain" });
+    const res = await apiClient.post("/admin/reports/export", {
+      reportType: "REVENUE",
+      fromDate: params?.startDate,
+      toDate: params?.endDate,
+    }, { responseType: "blob" });
+
+    // apiClient auto-wraps objects, so the Blob might be inside res.data.data
+    if (res.data instanceof Blob) {
+      return res.data;
     }
+    
+    // If it was auto-wrapped
+    if (res.data && (res.data as any).data instanceof Blob) {
+      return (res.data as any).data;
+    }
+
+    // Fallback
+    return res.data as unknown as Blob;
   }
 };

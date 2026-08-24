@@ -24,7 +24,7 @@ import {
     useParams,
 } from "react-router-dom";
 
-import toast from "react-hot-toast";
+import { showAlert } from "../../utils/alert";
 
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
@@ -250,11 +250,11 @@ export default function WorkoutPlanDetailPage() {
                     activatedPlan,
                 );
 
-                toast.success(
+                void showAlert.success("Thành công", 
                     "Đã kích hoạt giáo án thành công.",
                 );
             } catch (requestError) {
-                toast.error(
+                void showAlert.error("Đã xảy ra lỗi", 
                     getApiErrorMessage(
                         requestError,
                         "Không thể kích hoạt giáo án.",

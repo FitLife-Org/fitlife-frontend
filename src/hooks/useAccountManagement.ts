@@ -67,9 +67,7 @@ export function useAccountManagement() {
   const [
     roleFilter,
     setRoleFilter,
-  ] = useState<Role | "ALL">(
-      "ALL",
-  );
+  ] = useState<Role | "ALL">("ALL");
 
   /*
    * Spring Pageable bắt đầu từ page = 0.
@@ -89,13 +87,10 @@ export function useAccountManagement() {
     setTotalItems,
   ] = useState(0);
 
-  const pageSize =
-      DEFAULT_PAGE_SIZE;
-
   const [
-    detailModalOpen,
-    setDetailModalOpen,
-  ] = useState(false);
+    pageSize,
+    setPageSize,
+  ] = useState(DEFAULT_PAGE_SIZE);
 
   const [
     showFormView,
@@ -103,8 +98,8 @@ export function useAccountManagement() {
   ] = useState(false);
 
   const [
-    roleModalOpen,
-    setRoleModalOpen,
+    isEditMode,
+    setIsEditMode,
   ] = useState(false);
 
   const [
@@ -113,11 +108,6 @@ export function useAccountManagement() {
   ] = useState<User | null>(
       null,
   );
-
-  const [
-    isEditMode,
-    setIsEditMode,
-  ] = useState(false);
 
   const [
     formValues,
@@ -129,6 +119,28 @@ export function useAccountManagement() {
   const [
     formLoading,
     setFormLoading,
+  ] = useState(false);
+
+  const [
+    detailModalOpen,
+    setDetailModalOpen,
+  ] = useState(false);
+
+  const [
+    formErrors,
+    setFormErrors,
+  ] = useState<
+      Partial<
+          Record<
+              keyof AccountFormValues,
+              string
+          >
+      >
+  >({});
+
+  const [
+    roleModalOpen,
+    setRoleModalOpen,
   ] = useState(false);
 
   const [
@@ -161,10 +173,7 @@ export function useAccountManagement() {
                         ? undefined
                         : statusFilter,
 
-                roleCode:
-                    roleFilter === "ALL"
-                        ? undefined
-                        : roleFilter,
+                roleCode: roleFilter === "ALL" ? undefined : roleFilter,
               });
 
           setUsers(result.content);
@@ -470,14 +479,13 @@ export function useAccountManagement() {
   const handleToggleStatus =
       async (user: User) => {
         const currentlyLocked =
-            user.status ===
-            "LOCKED";
+            user.status === "SUSPENDED" || user.status === "INACTIVE";
 
         const newStatus:
             UserStatus =
             currentlyLocked
                 ? "ACTIVE"
-                : "LOCKED";
+                : "INACTIVE";
 
         const actionText =
             currentlyLocked
@@ -502,15 +510,7 @@ export function useAccountManagement() {
                       newStatus,
                   );
 
-          setUsers((previous) =>
-              previous.map(
-                  (item) =>
-                      item.id ===
-                      updatedUser.id
-                          ? updatedUser
-                          : item,
-              ),
-          );
+          await fetchUsers();
 
           showAlert.success(
               "Thành công",
@@ -554,6 +554,28 @@ export function useAccountManagement() {
           return;
         }
 
+        if (
+            selectedUser.roles.includes("ROLE_MEMBER") ||
+            selectedUser.roles.includes("ROLE_TRAINER")
+        ) {
+          showAlert.error(
+              "Không hợp lệ",
+              "Không thể đổi vai trò của Hội viên hoặc Huấn luyện viên tại đây.",
+          );
+          return;
+        }
+
+        if (
+            selectedRoles.includes("ROLE_MEMBER") ||
+            selectedRoles.includes("ROLE_TRAINER")
+        ) {
+          showAlert.error(
+              "Không hợp lệ",
+              "Chỉ có thể luân chuyển giữa Nhân viên và Quản trị viên.",
+          );
+          return;
+        }
+
         try {
           setRoleLoading(true);
 
@@ -564,15 +586,7 @@ export function useAccountManagement() {
                       selectedRoles,
                   );
 
-          setUsers((previous) =>
-              previous.map(
-                  (item) =>
-                      item.id ===
-                      updatedUser.id
-                          ? updatedUser
-                          : item,
-              ),
-          );
+          await fetchUsers();
 
           setRoleModalOpen(false);
 
@@ -613,6 +627,7 @@ export function useAccountManagement() {
     totalPages,
     totalItems,
     pageSize,
+    setPageSize,
     setCurrentPage,
 
     detailModalOpen,

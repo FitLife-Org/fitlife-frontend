@@ -2,6 +2,7 @@ export interface Trainer {
   id: number;
   userId?: number;
   trainerCode?: string;
+  username?: string;
   fullName: string;
   specialty?: string;
   specialization?: string;

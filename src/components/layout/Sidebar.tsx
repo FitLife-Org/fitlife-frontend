@@ -19,6 +19,7 @@ import {
     Settings,
     ShieldCheck,
     UserRound,
+    User,
     Users,
     Utensils,
     WalletCards,
@@ -64,6 +65,10 @@ interface MenuItem {
     icon: LucideIcon;
     roles: readonly Role[];
     children?: readonly MenuChild[];
+}
+
+function getMenuItemKey(item: MenuItem): string {
+    return item.path ?? item.children?.map((child) => child.path).join("|") ?? item.label;
 }
 
 const menuItems:
@@ -151,6 +156,13 @@ const menuItems:
         roles: [
             "ROLE_MEMBER",
         ],
+    },
+
+    {
+        label: "Huấn luyện viên",
+        path: ROUTES.MEMBER_BOOKING,
+        icon: User,
+        roles: ["ROLE_MEMBER"],
     },
 
     {
@@ -340,13 +352,6 @@ const menuItems:
 
             {
                 label:
-                    "Thanh toán",
-                path:
-                ROUTES.ADMIN_PAYMENTS,
-            },
-
-            {
-                label:
                     "Đăng ký gói",
                 path:
                 ROUTES.ADMIN_SUBSCRIPTIONS,
@@ -390,7 +395,6 @@ const menuItems:
         icon:
         ScanLine,
         roles: [
-            "ROLE_ADMIN",
             "ROLE_STAFF",
         ],
     },
@@ -571,6 +575,7 @@ export default function Sidebar() {
 
         visibleMenuItems.forEach(
             (item) => {
+                const menuKey = getMenuItemKey(item);
                 if (
                     item.children?.some(
                         (child) =>
@@ -580,9 +585,7 @@ export default function Sidebar() {
                             ),
                     )
                 ) {
-                    activeParents[
-                        item.label
-                        ] = true;
+                    activeParents[menuKey] = true;
                 }
             },
         );
@@ -595,13 +598,13 @@ export default function Sidebar() {
     ]);
 
     const toggleMenu = (
-        label: string,
+        menuKey: string,
     ) => {
         setExpandedMenus(
             (previous) => ({
                 ...previous,
-                [label]:
-                    !previous[label],
+                [menuKey]:
+                    !previous[menuKey],
             }),
         );
     };
@@ -659,6 +662,7 @@ export default function Sidebar() {
             <nav className="fit-scrollbar flex-1 space-y-2 overflow-y-auto px-4 py-4">
                 {visibleMenuItems.map(
                     (item) => {
+                        const menuKey = getMenuItemKey(item);
                         const Icon =
                             item.icon;
 
@@ -681,22 +685,20 @@ export default function Sidebar() {
 
                         const isExpanded =
                             Boolean(
-                                expandedMenus[
-                                    item.label
-                                    ],
+                                expandedMenus[menuKey],
                             );
 
                         if (hasChildren) {
                             return (
                                 <div
-                                    key={item.label}
+                                    key={menuKey}
                                     className="space-y-1"
                                 >
                                     <button
                                         type="button"
                                         onClick={() => {
                                             toggleMenu(
-                                                item.label,
+                                                menuKey,
                                             );
                                         }}
                                         aria-expanded={

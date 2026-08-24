@@ -68,19 +68,40 @@ export function usePaymentManagement() {
       null,
   );
 
+  const [
+    currentPage,
+    setCurrentPage,
+  ] = useState(0);
+  const [
+    pageSize,
+    setPageSize,
+  ] = useState(10);
+  const [
+    totalPages,
+    setTotalPages,
+  ] = useState(0);
+  const [
+    totalElements,
+    setTotalElements,
+  ] = useState(0);
+
   const fetchPayments =
       useCallback(
           async (): Promise<void> => {
             try {
               setLoading(true);
 
-              const data =
+              const response =
                   await paymentService
                       .getAdminPayments({
                         status: "PENDING",
+                        page: currentPage,
+                        size: pageSize,
                       });
 
-              setPayments(data);
+              setPayments(response.content);
+              setTotalPages(response.totalPages);
+              setTotalElements(response.totalElements);
             } catch (
                 error: unknown
                 ) {
@@ -90,6 +111,8 @@ export function usePaymentManagement() {
               );
 
               setPayments([]);
+              setTotalPages(0);
+              setTotalElements(0);
 
               void showAlert.error(
                   "Không thể tải thanh toán",
@@ -102,7 +125,7 @@ export function usePaymentManagement() {
               setLoading(false);
             }
           },
-          [],
+          [currentPage, pageSize],
       );
 
   useEffect(() => {
@@ -299,5 +322,11 @@ export function usePaymentManagement() {
 
     refreshPayments:
     fetchPayments,
+
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalElements,
   };
 }

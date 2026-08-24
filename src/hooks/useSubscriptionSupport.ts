@@ -19,7 +19,7 @@ export function useSubscriptionSupport() {
       }
 
       const data = await subscriptionService.getAdminSubscriptions(params);
-      setSubscriptions(data);
+      setSubscriptions(data.content);
     } catch (error) {
       console.error("Failed to load subscriptions:", error);
       setSubscriptions([]);

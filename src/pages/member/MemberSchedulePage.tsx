@@ -16,7 +16,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import toast from "react-hot-toast";
+import { showAlert } from "../../utils/alert";
 
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
@@ -280,7 +280,7 @@ export default function MemberSchedulePage() {
               null,
           );
 
-          toast.error(
+          void showAlert.error("Đã xảy ra lỗi", 
               getApiErrorMessage(
                   error,
                   "Không thể tải lịch tập.",

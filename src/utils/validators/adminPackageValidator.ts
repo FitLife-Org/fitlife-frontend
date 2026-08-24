@@ -7,11 +7,7 @@ export const validateAdminPackageForm = (
 ): boolean => {
   if (isCreate) {
     const data = formData as AdminPackageCreateRequest;
-    if (!data.code || data.code.trim() === "") {
-      showAlert.error("Lỗi", "Mã gói tập không được để trống");
-      return false;
-    }
-    if (data.code.length > 50) {
+    if (data.code && data.code.length > 50) {
       showAlert.error("Lỗi", "Mã gói tập không được vượt quá 50 ký tự");
       return false;
     }

@@ -14,6 +14,7 @@ import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 import Loading from "../../components/common/Loading";
+import Pagination from "../../components/common/Pagination";
 
 import {
   useAccountManagement,
@@ -43,6 +44,8 @@ export default function AccountManagementPage() {
     currentPage,
     totalPages,
     totalItems,
+    pageSize,
+    setPageSize,
     setCurrentPage,
 
     detailModalOpen,
@@ -133,7 +136,7 @@ export default function AccountManagementPage() {
             </Badge>
         );
 
-      case "LOCKED":
+      case "SUSPENDED":
         return (
             <Badge variant="danger">
               Bị khóa
@@ -207,9 +210,7 @@ export default function AccountManagementPage() {
                     className="w-full rounded-xl border px-4 py-2 border-slate-200 outline-none focus:border-fit-primary"
                   >
                     <option value="ROLE_STAFF">Nhân viên</option>
-                    <option value="ROLE_TRAINER">Huấn luyện viên</option>
                     <option value="ROLE_ADMIN">Quản trị viên</option>
-                    <option value="ROLE_MEMBER">Hội viên</option>
                   </select>
                 </div>
               )}
@@ -224,7 +225,7 @@ export default function AccountManagementPage() {
                   <option value="PENDING">Chờ xác minh</option>
                   <option value="ACTIVE">Hoạt động</option>
                   <option value="INACTIVE">Không hoạt động</option>
-                  <option value="LOCKED">Bị khóa</option>
+                  <option value="SUSPENDED">Bị khóa</option>
                 </select>
               </div>
             </div>
@@ -299,9 +300,7 @@ export default function AccountManagementPage() {
                   onChange={(event) => {
                     setRoleFilter(
                         event.target
-                            .value as
-                            | Role
-                            | "ALL",
+                            .value as Role | "ALL",
                     );
 
                     setCurrentPage(0);
@@ -309,16 +308,16 @@ export default function AccountManagementPage() {
                   className="rounded-xl border px-3 py-2 text-sm"
               >
                 <option value="ALL">
-                  Tất cả vai trò
-                </option>
-                <option value="ROLE_ADMIN">
-                  Quản trị viên
+                  Tất cả tài khoản
                 </option>
                 <option value="ROLE_STAFF">
                   Nhân viên
                 </option>
                 <option value="ROLE_TRAINER">
                   Huấn luyện viên
+                </option>
+                <option value="ROLE_ADMIN">
+                  Quản trị viên
                 </option>
                 <option value="ROLE_MEMBER">
                   Hội viên
@@ -351,7 +350,7 @@ export default function AccountManagementPage() {
                 <option value="INACTIVE">
                   Không hoạt động
                 </option>
-                <option value="LOCKED">
+                <option value="SUSPENDED">
                   Bị khóa
                 </option>
               </select>
@@ -479,16 +478,18 @@ export default function AccountManagementPage() {
                                   <Edit2 className="h-4 w-4" />
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        handleOpenRoleEdit(
-                                            user,
-                                        )
-                                    }
-                                >
-                                  <Shield className="h-4 w-4" />
-                                </button>
+                                {!(user.roles.includes("ROLE_MEMBER") || user.roles.includes("ROLE_TRAINER")) && (
+                                  <button
+                                      type="button"
+                                      onClick={() =>
+                                          handleOpenRoleEdit(
+                                              user,
+                                          )
+                                      }
+                                  >
+                                    <Shield className="h-4 w-4" />
+                                  </button>
+                                )}
 
                                 <button
                                     type="button"
@@ -498,12 +499,11 @@ export default function AccountManagementPage() {
                                         )
                                     }
                                 >
-                                  {user.status ===
-                                  "LOCKED" ? (
-                                      <Unlock className="h-4 w-4 text-emerald-600" />
-                                  ) : (
-                                      <Lock className="h-4 w-4 text-rose-600" />
-                                  )}
+                                    {(user.status === "SUSPENDED" || user.status === "INACTIVE") ? (
+                                        <Unlock className="h-4 w-4 text-emerald-600" />
+                                    ) : (
+                                        <Lock className="h-4 w-4 text-rose-600" />
+                                    )}
                                 </button>
                               </div>
                             </td>
@@ -516,60 +516,16 @@ export default function AccountManagementPage() {
           )}
 
           {totalPages > 0 && (
-              <div className="flex items-center justify-between border-t p-4">
-            <span className="text-sm text-slate-500">
-              Hiển thị {users.length} trên{" "}
-              {totalItems} tài khoản
-            </span>
-
-                <div className="flex items-center gap-3">
-                  <Button
-                      variant="outline"
-                      disabled={
-                          currentPage === 0
-                      }
-                      onClick={() =>
-                          setCurrentPage(
-                              (previous) =>
-                                  Math.max(
-                                      previous - 1,
-                                      0,
-                                  ),
-                          )
-                      }
-                  >
-                    Trước
-                  </Button>
-
-                  <span className="text-sm font-semibold">
-                Trang{" "}
-                    {currentPage + 1} /{" "}
-                    {Math.max(
-                        totalPages,
-                        1,
-                    )}
-              </span>
-
-                  <Button
-                      variant="outline"
-                      disabled={
-                          currentPage >=
-                          totalPages - 1
-                      }
-                      onClick={() =>
-                          setCurrentPage(
-                              (previous) =>
-                                  Math.min(
-                                      previous + 1,
-                                      totalPages - 1,
-                                  ),
-                          )
-                      }
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </div>
+              <Pagination
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(size) => {
+                      setPageSize(size);
+                      setCurrentPage(0);
+                  }}
+              />
           )}
         </Card>
 
@@ -646,14 +602,8 @@ export default function AccountManagementPage() {
                 }
                 className="w-full rounded-xl border px-4 py-3"
             >
-              <option value="ROLE_MEMBER">
-                Hội viên
-              </option>
               <option value="ROLE_STAFF">
                 Nhân viên
-              </option>
-              <option value="ROLE_TRAINER">
-                Huấn luyện viên
               </option>
               <option value="ROLE_ADMIN">
                 Quản trị viên

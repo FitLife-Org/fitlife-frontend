@@ -65,7 +65,7 @@ const VALID_USER_STATUSES:
   "PENDING",
   "ACTIVE",
   "INACTIVE",
-  "LOCKED",
+  "SUSPENDED",
 ];
 
 function isRole(

@@ -49,6 +49,9 @@ export const ROUTES = {
   MEMBER_BODY_METRICS:
       "/member/body-metrics",
 
+  ADMIN_BODY_METRICS:
+  "/admin/members/{memberId}/body-metrics",
+
   MEMBER_PACKAGES:
       "/member/packages",
   MEMBER_SUBSCRIPTION:
@@ -101,6 +104,8 @@ export const ROUTES = {
       "/staff/checkin",
   STAFF_CHECKIN_HISTORY:
       "/staff/checkin-history",
+  STAFF_EQUIPMENT:
+      "/staff/equipment",
 
 
   // Trainer

@@ -12,7 +12,6 @@ import { showAlert } from "../../../utils/alert";
 export default function AddEquipmentPage() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState<AdminEquipmentCreateRequest>({
-        equipmentCode: "",
         name: "",
         category: "Cardio",
         area: "",
@@ -20,7 +19,8 @@ export default function AddEquipmentPage() {
         purchaseDate: "",
         warrantyExpiry: "",
         description: "",
-        image: ""
+        image: "",
+        equipmentCode: ""
     });
 
     const [areas, setAreas] = useState<any[]>([]);
@@ -73,9 +73,12 @@ export default function AddEquipmentPage() {
             return;
         }
 
+        // Auto-generate equipmentCode since backend requires it but we hide it from users
+        const autoCode = `TB${Date.now().toString().slice(-6)}`;
+
         setLoading(true);
         try {
-            await EquipmentService.create(formData);
+            await EquipmentService.create({ ...formData, equipmentCode: autoCode });
             showAlert.success("Thành công", "Đã thêm thiết bị mới");
             navigate("/admin/equipment");
         } catch (error: unknown) {
@@ -104,18 +107,6 @@ export default function AddEquipmentPage() {
             <Card className="p-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-slate-700">Mã thiết bị <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
-                                required
-                                value={formData.equipmentCode}
-                                onChange={(e) => setFormData({ ...formData, equipmentCode: e.target.value })}
-                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-fit-primary/20 focus:border-fit-primary"
-                                placeholder="VD: TB001"
-                            />
-                        </div>
-
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-slate-700">Tên thiết bị <span className="text-red-500">*</span></label>
                             <input
@@ -269,9 +260,6 @@ export default function AddEquipmentPage() {
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
-                        <Button type="button" onClick={() => navigate(-1)} className="px-6 py-2.5 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-lg font-medium text-sm transition-colors">
-                            Hủy bỏ
-                        </Button>
                         <Button type="submit" disabled={loading} className="px-6 py-2.5 bg-fit-primary hover:bg-fit-primaryHover text-white rounded-lg font-medium text-sm shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50">
                             <Save className="w-4 h-4" />
                             {loading ? "Đang lưu..." : "Lưu thiết bị"}
