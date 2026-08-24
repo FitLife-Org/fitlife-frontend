@@ -19,7 +19,7 @@ import {
     X,
 } from "lucide-react";
 
-import toast from "react-hot-toast";
+import { showAlert } from "../../utils/alert";
 
 import { usePageAnimation } from "../../hooks/usePageAnimation";
 
@@ -826,7 +826,7 @@ export default function AiFitnessPage() {
                     false,
                 );
 
-                toast.success(
+                void showAlert.success("Thành công", 
                     getSuccessMessage(
                         planFormMode,
                     ),
@@ -847,7 +847,7 @@ export default function AiFitnessPage() {
                     `Xin lỗi, yêu cầu chưa thể hoàn thành.\n\n${message}`,
                 );
 
-                toast.error(
+                void showAlert.error("Đã xảy ra lỗi", 
                     message,
                 );
             } finally {
@@ -901,7 +901,7 @@ export default function AiFitnessPage() {
                     detail,
                 );
 
-                toast.success(
+                void showAlert.success("Thành công", 
                     "Đã phân tích cơ thể.",
                 );
 
@@ -920,7 +920,7 @@ export default function AiFitnessPage() {
                     `Xin lỗi, mình chưa thể phân tích cơ thể lúc này.\n\n${message}`,
                 );
 
-                toast.error(
+                void showAlert.error("Đã xảy ra lỗi", 
                     message,
                 );
             } finally {
@@ -1032,7 +1032,7 @@ export default function AiFitnessPage() {
                     detail,
                 );
             } catch (error) {
-                toast.error(
+                void showAlert.error("Đã xảy ra lỗi", 
                     getApiErrorMessage(
                         error,
                         "Không thể tải chi tiết lịch sử AI.",
@@ -1654,7 +1654,7 @@ export default function AiFitnessPage() {
                                                                 (
                                                                     error,
                                                                 ) => {
-                                                                    toast.error(
+                                                                    void showAlert.error("Đã xảy ra lỗi", 
                                                                         getApiErrorMessage(
                                                                             error,
                                                                             "Không thể tải lại đánh giá AI.",

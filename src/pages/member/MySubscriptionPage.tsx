@@ -1,6 +1,6 @@
 import { Calendar, CreditCard, CheckCircle2, Clock, XCircle, Dumbbell, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { showAlert } from "../../utils/alert";
 import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
@@ -17,11 +17,11 @@ export default function MySubscriptionPage() {
     try {
       const newSub = await handleRenew(id);
       if (newSub.invoiceId) {
-        toast.success("Đã tạo hóa đơn gia hạn.");
+        void showAlert.success("Thành công", "Đã tạo hóa đơn gia hạn.");
         navigate(`/member/payment/${newSub.invoiceId}`);
       }
     } catch (error) {
-      toast.error("Không thể gia hạn gói tập.");
+      void showAlert.error("Đã xảy ra lỗi", "Không thể gia hạn gói tập.");
     }
   };
 
