@@ -399,7 +399,7 @@ export const aiService = {
                     PageResponse<AiSuggestionResponse>
                 >
             >(
-                "/admin/ai-suggestions",
+                "/admin/ai/suggestions",
                 {
                     params: {
                         page,
@@ -430,7 +430,7 @@ export const aiService = {
                     AiSuggestionDetailResponse
                 >
             >(
-                `/admin/ai-suggestions/${suggestionId}`,
+                `/admin/ai/suggestions/${suggestionId}`,
                 {
                     timeout:
                     AI_STANDARD_TIMEOUT_MS,

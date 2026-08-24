@@ -19,6 +19,7 @@ import {
     Settings,
     ShieldCheck,
     UserRound,
+    User,
     Users,
     Utensils,
     WalletCards,
@@ -155,6 +156,13 @@ const menuItems:
         roles: [
             "ROLE_MEMBER",
         ],
+    },
+
+    {
+        label: "Huấn luyện viên",
+        path: ROUTES.MEMBER_BOOKING,
+        icon: User,
+        roles: ["ROLE_MEMBER"],
     },
 
     {
@@ -387,7 +395,6 @@ const menuItems:
         icon:
         ScanLine,
         roles: [
-            "ROLE_ADMIN",
             "ROLE_STAFF",
         ],
     },

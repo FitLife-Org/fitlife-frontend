@@ -113,6 +113,7 @@ import NutritionPlanDetailPage from "../pages/member/NutritionPlanDetailPage";
 import NutritionTodayPage from "../pages/member/NutritionTodayPage";
 
 import AiFitnessPage from "../pages/member/AiFitnessPage";
+import TrainerBookingPage from "../pages/member/TrainerBookingPage";
 
 // =====================================================
 // STAFF
@@ -503,6 +504,18 @@ export default function AppRouter() {
                                     ]}
                                 >
                                     <AiFitnessPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* =================================
+                         * MEMBER - TRAINER BOOKING
+                         * ================================= */}
+                        <Route
+                            path={ROUTES.MEMBER_BOOKING}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <TrainerBookingPage />
                                 </RoleGuard>
                             }
                         />

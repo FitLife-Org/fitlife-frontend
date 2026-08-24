@@ -19,7 +19,8 @@ export default function AddEquipmentPage() {
         purchaseDate: "",
         warrantyExpiry: "",
         description: "",
-        image: ""
+        image: "",
+        equipmentCode: ""
     });
 
     const [areas, setAreas] = useState<any[]>([]);
