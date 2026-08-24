@@ -4,7 +4,7 @@ export type UserStatus =
     | "PENDING"
     | "ACTIVE"
     | "INACTIVE"
-    | "LOCKED";
+    | "SUSPENDED";
 
 export type AuthProvider =
     | "LOCAL"

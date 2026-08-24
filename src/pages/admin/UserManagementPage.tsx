@@ -1177,20 +1177,17 @@ export default function UserManagementPage() {
                                             )
                                         }
                                         className={`rounded-lg p-2 transition ${
-                                            member.status ===
-                                            "SUSPENDED"
+                                            (member.status === "SUSPENDED" || member.status === "INACTIVE")
                                                 ? "text-emerald-600 hover:bg-emerald-50"
                                                 : "text-rose-600 hover:bg-rose-50"
                                         }`}
                                         title={
-                                          member.status ===
-                                          "SUSPENDED"
+                                          (member.status === "SUSPENDED" || member.status === "INACTIVE")
                                               ? "Mở khóa tài khoản"
                                               : "Khóa tài khoản"
                                         }
                                     >
-                                      {member.status ===
-                                      "SUSPENDED" ? (
+                                      {(member.status === "SUSPENDED" || member.status === "INACTIVE") ? (
                                           <Unlock className="h-4 w-4" />
                                       ) : (
                                           <Lock className="h-4 w-4" />

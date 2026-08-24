@@ -797,8 +797,7 @@ export function useUserManagement() {
              * ACTIVE
              */
             const currentlySuspended =
-                member.status ===
-                "SUSPENDED";
+                member.status === "SUSPENDED" || member.status === "INACTIVE";
 
             const newStatus:
                 MemberStatus =

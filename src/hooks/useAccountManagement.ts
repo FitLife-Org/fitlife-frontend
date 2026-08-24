@@ -479,14 +479,13 @@ export function useAccountManagement() {
   const handleToggleStatus =
       async (user: User) => {
         const currentlyLocked =
-            user.status ===
-            "LOCKED";
+            user.status === "SUSPENDED" || user.status === "INACTIVE";
 
         const newStatus:
             UserStatus =
             currentlyLocked
                 ? "ACTIVE"
-                : "LOCKED";
+                : "INACTIVE";
 
         const actionText =
             currentlyLocked
