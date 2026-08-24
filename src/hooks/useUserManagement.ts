@@ -36,11 +36,8 @@ import type {
     CheckinRecord,
 } from "../types/checkin.type";
 
-const PAGE_SIZE = 20;
-
-// =====================================================
-// TYPES
-// =====================================================
+const PAGE_SIZE =
+    20;
 
 type MemberDetailTab =
     | "profile"
@@ -54,10 +51,6 @@ type MemberFormValues =
     password?: string;
 };
 
-// =====================================================
-// EMPTY FORM
-// =====================================================
-
 function createEmptyForm():
     MemberFormValues {
     return {
@@ -68,28 +61,96 @@ function createEmptyForm():
         email: "",
         phone: "",
 
-        gender: "MALE",
-        dateOfBirth: "",
+        gender:
+            null,
 
-        /**
-         * Chỉ dùng để UI hiển thị.
-         *
-         * Không gửi status trong create/update profile.
-         */
-        address: "",
+        dateOfBirth:
+            "",
 
-        emergencyContactName: "",
-        emergencyContactPhone: "",
+        address:
+            "",
 
-        fitnessGoal: null,
+        emergencyContactName:
+            "",
 
-        healthNote: "",
+        emergencyContactPhone:
+            "",
+
+        fitnessGoal:
+            null,
+
+        healthNote:
+            "",
+    };
+}
+
+function createFormFromMember(
+    member: MemberProfile,
+): MemberFormValues {
+    return {
+        id:
+        member.id,
+
+        userId:
+        member.userId,
+
+        username:
+        member.username,
+
+        memberCode:
+        member.memberCode,
+
+        fullName:
+        member.fullName,
+
+        email:
+        member.email,
+
+        phone:
+            member.phone ??
+            "",
+
+        gender:
+            member.gender ??
+            null,
+
+        dateOfBirth:
+            member.dateOfBirth ??
+            "",
+
+        address:
+            member.address ??
+            "",
+
+        emergencyContactName:
+            member
+                .emergencyContactName ??
+            "",
+
+        emergencyContactPhone:
+            member
+                .emergencyContactPhone ??
+            "",
+
+        fitnessGoal:
+            member.fitnessGoal ??
+            null,
+
+        healthNote:
+            member.healthNote ??
+            "",
+
+        status:
+        member.status,
+
+        emailVerified:
+        member.emailVerified,
     };
 }
 
 export function useUserManagement() {
     // =====================================================
-    // LIST STATE
+    // LIST
     // =====================================================
 
     const [
@@ -112,9 +173,6 @@ export function useUserManagement() {
     ] =
         useState(0);
 
-    /**
-     * Spring Pageable bắt đầu từ page = 0.
-     */
     const [
         currentPage,
         setCurrentPage,
@@ -148,8 +206,11 @@ export function useUserManagement() {
         setStatusFilter,
     ] =
         useState<
-            MemberStatus | "ALL"
-        >("ALL");
+            MemberStatus |
+            "ALL"
+        >(
+            "ALL",
+        );
 
     // =====================================================
     // DETAIL
@@ -166,8 +227,11 @@ export function useUserManagement() {
         setSelectedMember,
     ] =
         useState<
-            MemberProfile | null
-        >(null);
+            MemberProfile |
+            null
+        >(
+            null,
+        );
 
     const [
         detailTab,
@@ -230,7 +294,7 @@ export function useUserManagement() {
         useState(false);
 
     // =====================================================
-    // FETCH LIST
+    // FETCH
     // =====================================================
 
     const fetchMembers =
@@ -257,10 +321,10 @@ export function useUserManagement() {
                                     undefined,
 
                                 status:
-                                    (statusFilter ===
+                                    statusFilter ===
                                     "ALL"
                                         ? undefined
-                                        : statusFilter) as any,
+                                        : statusFilter,
                             });
 
                     setMembers(
@@ -282,10 +346,7 @@ export function useUserManagement() {
                         data.page ??
                         page,
                     );
-                } catch (
-                    error:
-                    unknown
-                    ) {
+                } catch (error) {
                     console.error(
                         "API error fetching members:",
                         error,
@@ -323,26 +384,28 @@ export function useUserManagement() {
             ],
         );
 
-    useEffect(() => {
-        void fetchMembers(
+    useEffect(
+        () => {
+            void fetchMembers(
+                currentPage,
+            );
+        },
+        [
             currentPage,
-        );
-    }, [
-        currentPage,
-        fetchMembers,
-    ]);
+            fetchMembers,
+        ],
+    );
 
-    /**
-     * Khi đổi filter:
-     * quay lại trang đầu.
-     */
-    useEffect(() => {
-        setCurrentPage(
-            0,
-        );
-    }, [
-        statusFilter,
-    ]);
+    useEffect(
+        () => {
+            setCurrentPage(
+                0,
+            );
+        },
+        [
+            statusFilter,
+        ],
+    );
 
     // =====================================================
     // SEARCH
@@ -434,22 +497,6 @@ export function useUserManagement() {
                         ? checkins.value
                         : [],
                 );
-            } catch (
-                error:
-                unknown
-                ) {
-                console.error(
-                    "Failed to load member details:",
-                    error,
-                );
-
-                setMemberSubscriptions(
-                    [],
-                );
-
-                setMemberCheckins(
-                    [],
-                );
             } finally {
                 setDetailLoading(
                     false,
@@ -485,74 +532,67 @@ export function useUserManagement() {
     // =====================================================
 
     const handleOpenEdit =
-        (
+        async (
             member:
             MemberProfile,
-        ): void => {
-            setIsEditMode(
-                true,
-            );
+        ): Promise<void> => {
+            try {
+                setIsEditMode(
+                    true,
+                );
 
-            setSelectedMember(
-                member,
-            );
+                setSelectedMember(
+                    member,
+                );
 
-            setFormValues({
-                id:
-                member.id,
+                setFormValues(
+                    createFormFromMember(
+                        member,
+                    ),
+                );
 
-                username:
-                member.username,
+                setShowFormView(
+                    true,
+                );
 
-                fullName:
-                member.fullName,
-
-                email:
-                member.email,
-
-                phone:
-                    member.phone ??
-                    "",
-
-                gender:
-                    member.gender ??
-                    "MALE",
-
-                dateOfBirth:
-                    member.dateOfBirth ??
-                    "",
-
-                /**
-                 * Chỉ hiển thị trên UI.
-                 *
-                 * Không gửi trong updatePayload.
+                /*
+                 * Lấy detail từ Backend để form luôn có:
+                 * - gender
+                 * - dateOfBirth
+                 * - address
+                 * - fitnessGoal
+                 * - healthNote
                  */
-                address:
-                    member.address ??
-                    "",
+                const detailedMember =
+                    await memberService
+                        .getMemberById(
+                            member.id,
+                        );
 
-                emergencyContactName:
-                    member
-                        .emergencyContactName ??
-                    "",
+                setSelectedMember(
+                    detailedMember,
+                );
 
-                emergencyContactPhone:
-                    member
-                        .emergencyContactPhone ??
-                    "",
+                setFormValues(
+                    createFormFromMember(
+                        detailedMember,
+                    ),
+                );
+            } catch (error) {
+                console.error(
+                    "Failed to load member before editing:",
+                    error,
+                );
 
-                fitnessGoal:
-                    member.fitnessGoal ??
-                    null,
+                showAlert.error(
+                    "Không thể tải hồ sơ",
 
-                healthNote:
-                    member.healthNote ??
-                    "",
-            });
-
-            setShowFormView(
-                true,
-            );
+                    getApiErrorMessage(
+                        error,
+                        "Không thể tải thông tin hội viên.",
+                    ),
+                );
+            }
         };
 
     // =====================================================
@@ -566,12 +606,6 @@ export function useUserManagement() {
         ): Promise<void> => {
             event.preventDefault();
 
-            /**
-             * UPDATE PROFILE
-             *
-             * Không gửi status.
-             * Status sử dụng endpoint riêng.
-             */
             const updatePayload:
                 AdminMemberUpdateRequest = {
                 fullName:
@@ -584,10 +618,12 @@ export function useUserManagement() {
                 formValues.phone,
 
                 gender:
-                formValues.gender,
+                    formValues.gender ??
+                    undefined,
 
                 dateOfBirth:
-                formValues.dateOfBirth,
+                    formValues.dateOfBirth ||
+                    undefined,
 
                 address:
                 formValues.address,
@@ -601,17 +637,15 @@ export function useUserManagement() {
                     .emergencyContactPhone,
 
                 fitnessGoal:
-                formValues
-                    .fitnessGoal,
+                    formValues
+                        .fitnessGoal ??
+                    undefined,
 
                 healthNote:
                 formValues
                     .healthNote,
             };
 
-            /**
-             * CREATE MEMBER
-             */
             const createPayload:
                 AdminMemberCreateRequest = {
                 username:
@@ -634,10 +668,12 @@ export function useUserManagement() {
                 formValues.phone,
 
                 gender:
-                formValues.gender,
+                    formValues.gender ??
+                    undefined,
 
                 dateOfBirth:
-                formValues.dateOfBirth,
+                    formValues.dateOfBirth ||
+                    undefined,
 
                 address:
                 formValues.address,
@@ -651,17 +687,16 @@ export function useUserManagement() {
                     .emergencyContactPhone,
 
                 fitnessGoal:
-                formValues
-                    .fitnessGoal,
+                    formValues
+                        .fitnessGoal ??
+                    undefined,
 
                 healthNote:
                 formValues
                     .healthNote,
             };
 
-            const validationPayload:
-                | AdminMemberCreateRequest
-                | AdminMemberUpdateRequest =
+            const validationPayload =
                 isEditMode
                     ? updatePayload
                     : createPayload;
@@ -699,13 +734,9 @@ export function useUserManagement() {
                             );
 
                     setMembers(
-                        (
-                            previous,
-                        ) =>
+                        (previous) =>
                             previous.map(
-                                (
-                                    member,
-                                ) =>
+                                (member) =>
                                     member.id ===
                                     updatedMember.id
                                         ? updatedMember
@@ -737,10 +768,6 @@ export function useUserManagement() {
                     false,
                 );
 
-                /**
-                 * Sau create/update:
-                 * reload lại list từ backend.
-                 */
                 if (
                     currentPage !==
                     0
@@ -753,10 +780,7 @@ export function useUserManagement() {
                         0,
                     );
                 }
-            } catch (
-                error:
-                unknown
-                ) {
+            } catch (error) {
                 console.error(
                     "Member form submit error:",
                     error,
@@ -786,17 +810,6 @@ export function useUserManagement() {
             member:
             MemberProfile,
         ): Promise<void> => {
-            /**
-             * FitLife Member:
-             *
-             * ACTIVE
-             *     ↓ khóa
-             * SUSPENDED
-             *
-             * SUSPENDED
-             *     ↓ mở
-             * ACTIVE
-             */
             const currentlySuspended =
                 member.status ===
                 "SUSPENDED";
@@ -826,17 +839,21 @@ export function useUserManagement() {
             }
 
             try {
-                await memberService.updateMemberStatus(member.id, { status: newStatus });
-                const updatedMember = { ...member, status: newStatus as any };
+                /*
+                 * Dùng response thật từ Backend,
+                 * không tự giả lập status phía FE.
+                 */
+                const updatedMember =
+                    await memberService
+                        .updateMemberStatus(
+                            member.id,
+                            newStatus,
+                        );
 
                 setMembers(
-                    (
-                        previous,
-                    ) =>
+                    (previous) =>
                         previous.map(
-                            (
-                                item,
-                            ) =>
+                            (item) =>
                                 item.id ===
                                 updatedMember.id
                                     ? updatedMember
@@ -860,17 +877,10 @@ export function useUserManagement() {
                     `Đã ${actionText.toLowerCase()} tài khoản hội viên.`,
                 );
 
-                /**
-                 * Reload để đồng bộ tuyệt đối
-                 * với dữ liệu backend.
-                 */
                 await fetchMembers(
                     currentPage,
                 );
-            } catch (
-                error:
-                unknown
-                ) {
+            } catch (error) {
                 console.error(
                     "Failed to update member status:",
                     error,
@@ -889,20 +899,12 @@ export function useUserManagement() {
         };
 
     // =====================================================
-    // CLIENT FILTER
+    // FILTERED MEMBERS
     // =====================================================
 
-    /**
-     * Backend search bằng submittedSearchTerm.
-     *
-     * Client filter được giữ để UI phản hồi
-     * trong lúc người dùng đang nhập.
-     */
     const filteredMembers =
         members.filter(
-            (
-                member,
-            ) => {
+            (member) => {
                 const keyword =
                     searchTerm
                         .trim()
@@ -918,36 +920,28 @@ export function useUserManagement() {
                         ""
                     )
                         .toLowerCase()
-                        .includes(
-                            keyword,
-                        )
+                        .includes(keyword)
                     ||
                     (
                         member.email ??
                         ""
                     )
                         .toLowerCase()
-                        .includes(
-                            keyword,
-                        )
+                        .includes(keyword)
                     ||
                     (
                         member.phone ??
                         ""
                     )
                         .toLowerCase()
-                        .includes(
-                            keyword,
-                        )
+                        .includes(keyword)
                     ||
                     (
                         member.memberCode ??
                         ""
                     )
                         .toLowerCase()
-                        .includes(
-                            keyword,
-                        )
+                        .includes(keyword)
                 );
             },
         );
@@ -959,52 +953,26 @@ export function useUserManagement() {
     const totalCount =
         totalItems;
 
-    /**
-     * Lưu ý:
-     *
-     * Đây chỉ là count của page hiện tại.
-     *
-     * Nếu Dashboard cần tổng chính xác toàn DB,
-     * backend nên trả summary riêng.
-     */
     const activeCount =
         members.filter(
-            (
-                member,
-            ) =>
+            (member) =>
                 member.status ===
                 "ACTIVE",
         ).length;
 
     const suspendedCount =
         members.filter(
-            (
-                member,
-            ) =>
+            (member) =>
                 member.status ===
                 "SUSPENDED",
         ).length;
 
     const inactiveCount =
         members.filter(
-            (
-                member,
-            ) =>
+            (member) =>
                 member.status ===
                 "INACTIVE",
         ).length;
-
-    /**
-     * Alias tạm để không làm vỡ UI cũ.
-     *
-     * Sau khi AdminMembersPage đã đổi tên,
-     * có thể xóa 2 alias này.
-     */
-    const lockedCount =
-        suspendedCount;
-
-    const pendingCount =
-        inactiveCount;
 
     // =====================================================
     // BMI
@@ -1166,27 +1134,15 @@ export function useUserManagement() {
         handleSearchSubmit,
 
         handleOpenDetail,
-
         handleOpenCreate,
-
         handleOpenEdit,
-
         handleFormSubmit,
-
         handleToggleStatus,
 
         totalCount,
-
         activeCount,
-
         suspendedCount,
         inactiveCount,
-
-        /**
-         * Compatibility với UI cũ.
-         */
-        lockedCount,
-        pendingCount,
 
         getBmiInfo,
 
