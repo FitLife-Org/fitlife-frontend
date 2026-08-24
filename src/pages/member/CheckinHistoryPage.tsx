@@ -12,10 +12,7 @@ import {
   Clock
 } from "lucide-react";
 import { usePageAnimation } from "../../hooks/usePageAnimation";
-import Button from "../../components/common/Button";
-import Html5QrcodePlugin from "../../components/common/Html5QrcodePlugin";
 import { useCheckinHistory } from "../../hooks/useCheckinHistory";
-import { useGymQrScanner } from "../../hooks/useGymQrScanner";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -26,16 +23,8 @@ export default function CheckinHistoryPage() {
 
   const {
     history,
-    loading,
-    showScanner,
-    setShowScanner,
-    handleScanSuccess: handleLogicScan
+    loading
   } = useCheckinHistory();
-
-  const { isProcessing: isScannerProcessing, handleScanSuccess } = useGymQrScanner((token) => {
-    setShowScanner(false);
-    handleLogicScan(token);
-  });
 
   // Quản lý state cho Lịch
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -121,15 +110,6 @@ export default function CheckinHistoryPage() {
                 <div>
                   <h1 className="text-3xl font-black text-slate-900 tracking-tight">Check-in</h1>
                   <p className="text-slate-500 mt-1">Sử dụng mã QR để điểm danh khi đến phòng tập.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button
-                      variant="primary"
-                      onClick={() => setShowScanner(true)}
-                      className="rounded-xl bg-slate-900 text-white flex items-center gap-2 hover:bg-slate-800 shadow-lg shadow-slate-900/20 border-none"
-                  >
-                    <ScanLine className="w-5 h-5 text-emerald-400" /> Quét QR Phòng tập
-                  </Button>
                 </div>
               </div>
 
@@ -298,43 +278,6 @@ export default function CheckinHistoryPage() {
             </div>
           </div>
               </div>
-
-              {/* --- MODAL SCANNER (Giữ nguyên) --- */}
-              {showScanner && (
-                  <div
-                      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl p-6 w-full max-w-md relative gsap-animate">
-                      <button
-                          onClick={() => setShowScanner(false)}
-                          className="absolute top-4 right-4 text-slate-400 hover:text-rose-500 z-50 transition-colors"
-                      >
-                        <X className="w-6 h-6"/>
-                      </button>
-                      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                        <ScanLine className="w-5 h-5 text-emerald-600"/> Quét mã QR Phòng tập
-                      </h2>
-                      <div className="rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 min-h-[300px] relative flex flex-col items-center justify-center p-2">
-                          {!isScannerProcessing ? (
-                            <Html5QrcodePlugin 
-                              fps={15} 
-                              qrbox={250} 
-                              disableFlip={false}
-                              qrCodeSuccessCallback={handleScanSuccess}
-                              qrCodeErrorCallback={() => {}}
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-50/90 backdrop-blur-sm z-20">
-                              <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4 shadow-lg" />
-                              <p className="text-emerald-700 font-bold text-lg animate-pulse">Đang giải mã thẻ...</p>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-center text-sm font-medium text-slate-500 mt-4">
-                          Sử dụng Camera để quét mã đặt tại quầy Lễ tân
-                        </p>
-              </div>
-            </div>
-        )}
             </>
         )}
       </div>

@@ -117,7 +117,7 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
       <section
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-3xl rounded-3xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-4xl rounded-3xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         <header className="flex-none flex items-center justify-between border-b border-slate-100 px-6 py-5">
           <div>
@@ -141,17 +141,7 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <form id="gym-package-form" onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {!isEditing && (
-                <Input
-                  label="Mã gói tập"
-                  placeholder="VD: PKG-01"
-                  required
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  icon={<Package className="w-4 h-4" />}
-                />
-              )}
-              <div className={!isEditing ? "md:col-span-1" : "md:col-span-2"}>
+              <div className="md:col-span-1">
                 <Input
                   label="Tên gói tập"
                   placeholder="VD: Premium 30 Days"
@@ -161,7 +151,7 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
                 />
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                  <label className="mb-2 block text-sm font-semibold text-slate-700">Loại gói tập</label>
                  <select
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary shadow-sm hover:border-slate-300"
@@ -193,6 +183,27 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
                 onChange={(e) => setFormData({ ...formData, ptSessionsPerMonth: Number(e.target.value) })}
               />
 
+              <div className="md:col-span-2 flex flex-row items-center justify-center gap-8 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <label className="flex items-center gap-3 text-sm font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-slate-300 text-fit-primary focus:ring-fit-primary transition-colors"
+                    checked={formData.hasAiWorkoutPlan}
+                    onChange={(e) => setFormData({ ...formData, hasAiWorkoutPlan: e.target.checked })}
+                  />
+                  Tích hợp AI
+                </label>
+                <label className="flex items-center gap-3 text-sm font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-slate-300 text-fit-primary focus:ring-fit-primary transition-colors"
+                    checked={formData.hasNutritionPlan}
+                    onChange={(e) => setFormData({ ...formData, hasNutritionPlan: e.target.checked })}
+                  />
+                  Gói dinh dưỡng
+                </label>
+              </div>
+
               <div className="md:col-span-2">
                 <Input
                   label="Đường dẫn ảnh đại diện (Thumbnail URL)"
@@ -203,7 +214,7 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
                 />
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <label className="mb-2 block text-sm font-semibold text-slate-700">Mô tả gói tập</label>
                 <textarea
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary shadow-sm hover:border-slate-300"
@@ -214,7 +225,7 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
                 ></textarea>
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <label className="mb-2 block text-sm font-semibold text-slate-700">Quyền lợi (cách nhau bởi dấu phẩy hoặc xuống dòng)</label>
                 <textarea
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary shadow-sm hover:border-slate-300"
@@ -224,27 +235,6 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
                   onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
                 ></textarea>
               </div>
-            </div>
-
-            <div className="flex gap-8 mt-4 pt-4 border-t border-slate-100">
-              <label className="flex items-center gap-3 text-sm font-semibold text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 rounded border-slate-300 text-fit-primary focus:ring-fit-primary transition-colors"
-                  checked={formData.hasAiWorkoutPlan}
-                  onChange={(e) => setFormData({ ...formData, hasAiWorkoutPlan: e.target.checked })}
-                />
-                Tích hợp AI
-              </label>
-              <label className="flex items-center gap-3 text-sm font-semibold text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 rounded border-slate-300 text-fit-primary focus:ring-fit-primary transition-colors"
-                  checked={formData.hasNutritionPlan}
-                  onChange={(e) => setFormData({ ...formData, hasNutritionPlan: e.target.checked })}
-                />
-                Gói dinh dưỡng
-              </label>
             </div>
           </form>
         </div>

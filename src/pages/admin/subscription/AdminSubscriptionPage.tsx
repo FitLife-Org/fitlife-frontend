@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { 
     Search, 
     Plus, 
@@ -7,9 +7,10 @@ import {
     Calendar,
     UserCircle,
     Activity,
-    CheckCircle2
+    CheckCircle2,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
-import toast from "react-hot-toast";
 import { useForm, Controller } from "react-hook-form";
 
 import Card from "../../../components/common/Card";
@@ -18,30 +19,44 @@ import Badge from "../../../components/common/Badge";
 import Input from "../../../components/common/Input";
 import Modal from "../../../components/common/Modal";
 import Loading from "../../../components/common/Loading";
+import Pagination from "../../../components/common/Pagination";
 
 import { subscriptionService } from "../../../services/subscriptionService";
-import { userService } from "../../../services/userService";
+import { memberService } from "../../../services/memberService";
 import { packageService } from "../../../services/packageService";
 import { getApiErrorMessage } from "../../../utils/apiError";
+import { showAlert } from "../../../utils/alert";
 
 import type { Subscription, CreateSubscriptionRequest, SubscriptionStatus } from "../../../types/subscription.type";
-import type { User } from "../../../types/user.type";
+import type { MemberProfile } from "../../../types/member.type";
 import type { GymPackage, PackageDuration } from "../../../types/package.type";
+
+const DEFAULT_PAGE_SIZE = 10;
 
 export default function AdminSubscriptionPage() {
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+    const [totalElements, setTotalElements] = useState(0);
     
     // Modal states
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-    const [members, setMembers] = useState<User[]>([]);
+    const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
+    const [members, setMembers] = useState<MemberProfile[]>([]);
+    const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null);
+    const [memberSearch, setMemberSearch] = useState("");
+    const [memberPage, setMemberPage] = useState(0);
+    const [memberTotalPages, setMemberTotalPages] = useState(0);
+    const [memberTotalElements, setMemberTotalElements] = useState(0);
+    const [loadingMembers, setLoadingMembers] = useState(false);
     const [packages, setPackages] = useState<GymPackage[]>([]);
     const [durations, setDurations] = useState<PackageDuration[]>([]);
     const [loadingFormData, setLoadingFormData] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { register, handleSubmit, control, reset, formState: { errors } } = useForm<CreateSubscriptionRequest & { memberId: string }>({
+    const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<CreateSubscriptionRequest & { memberId: string }>({
         defaultValues: {
             memberId: "",
             gymPackageId: undefined,
@@ -50,44 +65,84 @@ export default function AdminSubscriptionPage() {
         }
     });
 
-    const fetchSubscriptions = async () => {
+    const fetchSubscriptions = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await subscriptionService.getAdminSubscriptions();
-            setSubscriptions(data);
+            const data = await subscriptionService.getAdminSubscriptions({
+                page: currentPage,
+                size: pageSize,
+            });
+            setSubscriptions(data.content);
+            setTotalElements(data.totalElements);
         } catch (error) {
-            toast.error(getApiErrorMessage(error));
+            setSubscriptions([]);
+            setTotalElements(0);
+            void showAlert.error("Không thể tải danh sách", getApiErrorMessage(error));
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, pageSize]);
 
     useEffect(() => {
         void fetchSubscriptions();
-    }, []);
+    }, [fetchSubscriptions]);
 
     const fetchFormData = async () => {
         try {
             setLoadingFormData(true);
-            const [usersRes, packagesRes, durationsRes] = await Promise.all([
-                userService.getUsers({ roleCode: "ROLE_MEMBER", size: 100 }), // Get up to 100 members for dropdown
+            const [packagesRes, durationsRes] = await Promise.all([
                 packageService.getAdminPackages(),
                 packageService.getAdminPackageDurations()
             ]);
-            setMembers(usersRes.content);
             setPackages(packagesRes);
             setDurations(durationsRes);
         } catch (error) {
-            toast.error("Không thể tải dữ liệu: " + getApiErrorMessage(error));
+            void showAlert.error("Không thể tải dữ liệu", getApiErrorMessage(error));
         } finally {
             setLoadingFormData(false);
         }
     };
 
+    const fetchMembers = useCallback(async () => {
+        try {
+            setLoadingMembers(true);
+            const result = await memberService.getMembers({
+                page: memberPage,
+                size: 10,
+                keyword: memberSearch.trim() || undefined,
+                status: "ACTIVE",
+                sort: "fullName,asc",
+            });
+            setMembers(result.content);
+            setMemberTotalPages(result.totalPages);
+            setMemberTotalElements(result.totalElements);
+        } catch (error) {
+            setMembers([]);
+            setMemberTotalPages(0);
+            setMemberTotalElements(0);
+            void showAlert.error("Không thể tìm hội viên", getApiErrorMessage(error));
+        } finally {
+            setLoadingMembers(false);
+        }
+    }, [memberPage, memberSearch]);
+
+    useEffect(() => {
+        if (!isMemberPickerOpen) return;
+
+        const timeoutId = window.setTimeout(() => {
+            void fetchMembers();
+        }, 250);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [fetchMembers, isMemberPickerOpen]);
+
     const handleOpenAssignModal = () => {
         setIsAssignModalOpen(true);
         reset();
-        if (members.length === 0 || packages.length === 0) {
+        setSelectedMember(null);
+        setMemberSearch("");
+        setMemberPage(0);
+        if (packages.length === 0 || durations.length === 0) {
             void fetchFormData();
         }
     };
@@ -98,27 +153,34 @@ export default function AdminSubscriptionPage() {
             const requestData: CreateSubscriptionRequest = {
                 gymPackageId: Number(data.gymPackageId),
                 packageDurationId: Number(data.packageDurationId),
+                paidCash: true,
                 note: data.note
             };
             await subscriptionService.createSubscriptionForMemberByStaff(Number(data.memberId), requestData);
-            toast.success("Đã gán gói tập thành công!");
             setIsAssignModalOpen(false);
-            void fetchSubscriptions();
+            await showAlert.success("Đăng kí thành công", "Gói tập đã được kích hoạt và ghi nhận thanh toán tiền mặt.");
+            setCurrentPage(0);
+            await fetchSubscriptions();
         } catch (error) {
-            toast.error(getApiErrorMessage(error));
+            void showAlert.error("Đăng kí gói thất bại", getApiErrorMessage(error));
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleCancelSubscription = async (id: number) => {
-        if (!confirm("Bạn có chắc chắn muốn hủy gói tập này?")) return;
+        const result = await showAlert.confirm(
+            "Hủy gói tập?",
+            "Gói tập sẽ bị hủy và thao tác này không thể hoàn tác.",
+            { confirmButtonText: "Hủy gói", cancelButtonText: "Quay lại" }
+        );
+        if (!result.isConfirmed) return;
         try {
             await subscriptionService.cancelSubscriptionAdmin(id);
-            toast.success("Hủy gói tập thành công!");
-            void fetchSubscriptions();
+            await showAlert.success("Đã hủy gói tập", "Gói tập của hội viên đã được hủy.");
+            await fetchSubscriptions();
         } catch (error) {
-            toast.error(getApiErrorMessage(error));
+            void showAlert.error("Không thể hủy gói tập", getApiErrorMessage(error));
         }
     };
 
@@ -232,64 +294,86 @@ export default function AdminSubscriptionPage() {
                         </tbody>
                     </table>
                 </div>
+                {!loading && (
+                    <Pagination
+                        currentPage={currentPage}
+                        pageSize={pageSize}
+                        totalItems={totalElements}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={(size) => {
+                            setPageSize(size);
+                            setCurrentPage(0);
+                        }}
+                    />
+                )}
             </Card>
 
             <Modal 
                 open={isAssignModalOpen} 
                 onClose={() => setIsAssignModalOpen(false)}
                 title="Gán Gói Tập Cho Hội Viên"
+                size="xl"
             >
                 {loadingFormData ? (
                     <Loading label="Đang tải danh mục gói tập..." />
                 ) : (
                     <form onSubmit={handleSubmit(onSubmitAssign)} className="space-y-5">
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700">Hội viên (*)</label>
-                            <select 
-                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                {...register("memberId", { required: "Vui lòng chọn hội viên" })}
+                            <input type="hidden" {...register("memberId", { required: "Vui lòng chọn hội viên" })} />
+                            <button
+                                type="button"
+                                onClick={() => setIsMemberPickerOpen(true)}
+                                className="flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3 text-left transition-colors hover:border-blue-400 hover:bg-blue-50"
                             >
-                                <option value="">-- Chọn hội viên --</option>
-                                {members.map(m => (
-                                    <option key={m.id} value={m.id}>{m.fullName} ({m.email})</option>
-                                ))}
-                            </select>
+                                {selectedMember ? (
+                                    <span>
+                                        <span className="block font-semibold text-slate-800">{selectedMember.fullName}</span>
+                                        <span className="block text-xs text-slate-500">{selectedMember.memberCode} · {selectedMember.email}</span>
+                                    </span>
+                                ) : <span className="text-sm text-slate-500">Chọn hội viên để đăng kí gói</span>}
+                                <span className="ml-3 shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white">Chọn hội viên</span>
+                            </button>
                             {errors.memberId && <p className="text-xs text-red-500">{errors.memberId.message}</p>}
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-bold text-slate-700">Gói tập (*)</label>
-                            <select 
-                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                {...register("gymPackageId", { required: "Vui lòng chọn gói tập" })}
-                            >
-                                <option value="">-- Chọn gói tập --</option>
-                                {packages.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                            </select>
-                            {errors.gymPackageId && <p className="text-xs text-red-500">{errors.gymPackageId.message}</p>}
-                        </div>
+                        <div className="grid gap-5 md:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-bold text-slate-700">Gói tập (*)</label>
+                                <select 
+                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    {...register("gymPackageId", { required: "Vui lòng chọn gói tập" })}
+                                >
+                                    <option value="">-- Chọn gói tập --</option>
+                                    {packages.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                </select>
+                                {errors.gymPackageId && <p className="text-xs text-red-500">{errors.gymPackageId.message}</p>}
+                            </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-bold text-slate-700">Thời lượng (*)</label>
-                            <select 
-                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                {...register("packageDurationId", { required: "Vui lòng chọn thời lượng" })}
-                            >
-                                <option value="">-- Chọn thời lượng --</option>
-                                {durations.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name} ({d.months} tháng)</option>
-                                ))}
-                            </select>
-                            {errors.packageDurationId && <p className="text-xs text-red-500">{errors.packageDurationId.message}</p>}
-                        </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-bold text-slate-700">Thời lượng (*)</label>
+                                <select 
+                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    {...register("packageDurationId", { required: "Vui lòng chọn thời lượng" })}
+                                >
+                                    <option value="">-- Chọn thời lượng --</option>
+                                    {durations.map(d => (
+                                        <option key={d.id} value={d.id}>{d.name} ({d.months} tháng)</option>
+                                    ))}
+                                </select>
+                                {errors.packageDurationId && <p className="text-xs text-red-500">{errors.packageDurationId.message}</p>}
+                            </div>
 
-                        <Input 
-                            label="Ghi chú thêm"
-                            placeholder="Tặng nhân dịp sinh nhật..."
-                            {...register("note")}
-                        />
+                            <div className="md:col-span-2">
+                                <Input 
+                                    label="Ghi chú thêm"
+                                    placeholder="Tặng nhân dịp sinh nhật..."
+                                    {...register("note")}
+                                />
+                            </div>
+                        </div>
 
                         <div className="pt-4 flex justify-end gap-3">
                             <Button 
@@ -309,6 +393,68 @@ export default function AdminSubscriptionPage() {
                         </div>
                     </form>
                 )}
+            </Modal>
+
+            <Modal
+                open={isMemberPickerOpen}
+                onClose={() => setIsMemberPickerOpen(false)}
+                title="Chọn hội viên"
+                size="xl"
+            >
+                <div className="space-y-4">
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                        <input
+                            autoFocus
+                            type="search"
+                            value={memberSearch}
+                            onChange={(event) => {
+                                setMemberSearch(event.target.value);
+                                setMemberPage(0);
+                            }}
+                            placeholder="Tìm theo tên, mã hội viên, email hoặc số điện thoại..."
+                            className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <div className="grid max-h-[48vh] gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                        {loadingMembers ? (
+                            <p className="col-span-full py-10 text-center text-sm text-slate-500">Đang tìm hội viên...</p>
+                        ) : members.length === 0 ? (
+                            <p className="col-span-full py-10 text-center text-sm text-slate-500">Không tìm thấy hội viên phù hợp.</p>
+                        ) : members.map((member) => (
+                            <button
+                                key={member.id}
+                                type="button"
+                                onClick={() => {
+                                    setSelectedMember(member);
+                                    setValue("memberId", String(member.id), { shouldValidate: true });
+                                    setIsMemberPickerOpen(false);
+                                }}
+                                className={`rounded-xl border p-4 text-left transition-all hover:border-blue-400 hover:bg-blue-50 ${selectedMember?.id === member.id ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500" : "border-slate-200 bg-white"}`}
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <span className="min-w-0">
+                                        <span className="block truncate font-semibold text-slate-800">{member.fullName}</span>
+                                        <span className="mt-1 block text-xs font-medium text-blue-600">{member.memberCode}</span>
+                                        <span className="mt-1 block truncate text-xs text-slate-500">{member.email}</span>
+                                        {member.phone && <span className="mt-1 block text-xs text-slate-500">{member.phone}</span>}
+                                    </span>
+                                    {selectedMember?.id === member.id && <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-600" />}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-sm text-slate-500">
+                        <span>{memberTotalElements} hội viên phù hợp</span>
+                        <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setMemberPage((page) => Math.max(0, page - 1))} disabled={memberPage === 0 || loadingMembers} className="rounded-lg border border-slate-200 p-2 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Trang hội viên trước"><ChevronLeft className="h-4 w-4" /></button>
+                            <span>Trang {memberTotalPages === 0 ? 0 : memberPage + 1}/{memberTotalPages}</span>
+                            <button type="button" onClick={() => setMemberPage((page) => Math.min(Math.max(0, memberTotalPages - 1), page + 1))} disabled={memberPage >= memberTotalPages - 1 || loadingMembers} className="rounded-lg border border-slate-200 p-2 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Trang hội viên sau"><ChevronRight className="h-4 w-4" /></button>
+                        </div>
+                    </div>
+                </div>
             </Modal>
         </div>
     );

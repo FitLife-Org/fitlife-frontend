@@ -466,6 +466,7 @@ apiClient.interceptors.response.use(
             );
 
         if (env.isDevelopment && status !== 404) {
+            console.error("FITLIFE_API_ERROR_DETAILS:", JSON.stringify(error.response?.data));
             console.error(
                 "FITLIFE_API_ERROR",
                 {

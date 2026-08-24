@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, CheckCircle2, Clock } from "lucide-react";
 import Card from "../../../components/common/Card";
+import Pagination from "../../../components/common/Pagination";
 import { EquipmentService } from "../../../services/equipmentService";
 
 interface ScheduleItem {
@@ -24,16 +25,26 @@ export default function MaintenanceSchedulesPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
     const [loading, setLoading] = useState(false);
+    
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
 
     useEffect(() => {
         fetchSchedules();
-    }, []);
+    }, [currentPage, pageSize]);
 
     const fetchSchedules = async () => {
         setLoading(true);
         try {
-            const response = await EquipmentService.getMaintenanceSchedules() as any;
+            const response = await EquipmentService.getMaintenanceSchedules({ page: currentPage, size: pageSize }) as any;
             const content = response?.content || [];
+            if (response?.totalElements !== undefined) {
+                setTotalItems(response.totalElements);
+            } else {
+                setTotalItems(content.length);
+            }
             if (Array.isArray(content)) {
                 const mapped = content.map((item: any) => ({
                     id: item.id ? `BT${String(item.id).padStart(3, "0")}` : "BT000",
@@ -155,6 +166,16 @@ export default function MaintenanceSchedulesPage() {
                         </tbody>
                     </table>
                 </div>
+                <Pagination 
+                    currentPage={currentPage}
+                    pageSize={pageSize}
+                    totalItems={totalItems}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setCurrentPage(0);
+                    }}
+                />
             </Card>
         </div>
     );

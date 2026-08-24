@@ -30,6 +30,9 @@ interface ModalProps {
    * Cho phép click backdrop để đóng modal.
    */
   closeOnBackdrop?: boolean;
+
+  /** Kích thước nội dung modal trên màn hình lớn. */
+  size?: "md" | "xl";
 }
 
 export default function Modal({
@@ -39,6 +42,7 @@ export default function Modal({
                                 children,
                                 disableClose = false,
                                 closeOnBackdrop = true,
+                                size = "md",
                               }: ModalProps) {
   const generatedId = useId();
 
@@ -172,7 +176,11 @@ export default function Modal({
             aria-modal="true"
             aria-labelledby={titleId}
             tabIndex={-1}
-            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
+            className={`w-full ${
+                size === "xl"
+                    ? "max-w-2xl"
+                    : "max-w-lg"
+            } max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white shadow-2xl outline-none`}
             onMouseDown={(event) => {
               event.stopPropagation();
             }}

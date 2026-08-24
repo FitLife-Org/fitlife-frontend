@@ -16,6 +16,7 @@ import type {
 
 const PUBLIC_API_BASE = "/equipment";
 const ADMIN_API_BASE = "/admin/equipment";
+const STAFF_API_BASE = "/staff/equipment";
 
 export interface EquipmentQueryParams {
   page?: number;
@@ -61,7 +62,7 @@ export const EquipmentService = {
       const response =
           await apiClient.get<
               ApiResponse<PageResponse<Equipment>>
-          >("/equipment", {
+          >(STAFF_API_BASE, {
             params: {
               page: params.page ?? 0,
               size: params.size ?? 20,
@@ -174,7 +175,7 @@ export const EquipmentService = {
     const response =
         await apiClient.get<
             ApiResponse<Equipment>
-        >(`${ADMIN_API_BASE}/${id}`);
+        >(`${STAFF_API_BASE}/${id}`);
 
     return requireData(
         response.data,

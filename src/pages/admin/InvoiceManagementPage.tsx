@@ -14,6 +14,7 @@ import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
+import Pagination from "../../components/common/Pagination";
 
 import {
   formatCurrency,
@@ -104,6 +105,7 @@ export default function InvoiceManagementPage() {
     totalElements,
 
     pageSize,
+    setPageSize,
 
     actionInvoiceId,
 
@@ -326,20 +328,6 @@ export default function InvoiceManagementPage() {
     },
   ];
 
-  const firstItem =
-      totalElements === 0
-          ? 0
-          : currentPage *
-          pageSize +
-          1;
-
-  const lastItem =
-      Math.min(
-          (currentPage + 1) *
-          pageSize,
-          totalElements,
-      );
-
 
 
   return (
@@ -479,74 +467,16 @@ export default function InvoiceManagementPage() {
                     emptyText="Không tìm thấy hóa đơn phù hợp"
                 />
 
-                <div className="flex flex-col gap-4 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-slate-500">
-                    Hiển thị{" "}
-                    <strong>
-                      {firstItem}
-                    </strong>
-                    {" - "}
-                    <strong>
-                      {lastItem}
-                    </strong>
-                    {" trên "}
-                    <strong>
-                      {totalElements}
-                    </strong>
-                    {" hóa đơn"}
-                  </p>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        disabled={
-                            currentPage <= 0
-                        }
-                        onClick={() => {
-                          setCurrentPage(
-                              (previous) =>
-                                  Math.max(
-                                      0,
-                                      previous - 1,
-                                  ),
-                          );
-                        }}
-                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Trước
-                    </button>
-
-                    <span className="min-w-24 text-center text-sm font-semibold text-slate-600">
-                  Trang{" "}
-                      {totalPages === 0
-                          ? 0
-                          : currentPage +
-                          1}
-                      /{totalPages}
-                </span>
-
-                    <button
-                        type="button"
-                        disabled={
-                            totalPages === 0 ||
-                            currentPage >=
-                            totalPages - 1
-                        }
-                        onClick={() => {
-                          setCurrentPage(
-                              (previous) =>
-                                  Math.min(
-                                      totalPages - 1,
-                                      previous + 1,
-                                  ),
-                          );
-                        }}
-                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Sau
-                    </button>
-                  </div>
-                </div>
+                <Pagination
+                    currentPage={currentPage}
+                    pageSize={pageSize}
+                    totalItems={totalElements}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setCurrentPage(0);
+                    }}
+                />
               </>
           )}
         </Card>

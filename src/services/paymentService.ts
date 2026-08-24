@@ -77,12 +77,12 @@ export const paymentService = {
     method?: string;
     memberId?: number;
     invoiceId?: number;
-  }): Promise<PaymentResult[]> {
+  }): Promise<PageResponse<PaymentResult>> {
     const response = await apiClient.get<
-        ApiResponse<PageResponse<PaymentResult> | PaymentResult[]>
+        ApiResponse<PageResponse<PaymentResult>>
     >("/admin/payments", { params });
 
-    return extractPageContent<PaymentResult>(response.data.data);
+    return response.data.data;
   },
 
   async confirmPayment(

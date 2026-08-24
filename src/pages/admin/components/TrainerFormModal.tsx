@@ -31,7 +31,7 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
         setFormData({
           userId: trainer.userId?.toString() || "",
           trainerCode: trainer.trainerCode || "",
-          specialty: trainer.specialty || "",
+          specialty: trainer.specialization || trainer.specialty || "",
         });
       } else {
         setFormData({
@@ -66,20 +66,20 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
     try {
       setIsSubmitting(true);
       if (isEditing && trainer) {
-        await trainerService.updateTrainer(trainer.id, { specialty: formData.specialty });
+        await trainerService.updateTrainer(trainer.id, { specialization: formData.specialty });
         toast.success("Cập nhật PT thành công!");
       } else {
         await trainerService.createTrainer({
           userId: Number(formData.userId),
           trainerCode: formData.trainerCode,
-          specialty: formData.specialty,
+          specialization: formData.specialty,
         });
         toast.success("Thêm PT thành công!");
       }
       onSuccess();
       onClose();
-    } catch {
-      toast.error("Có lỗi xảy ra khi lưu PT.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Có lỗi xảy ra khi lưu PT.");
     } finally {
       setIsSubmitting(false);
     }
@@ -140,7 +140,7 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
           />
 
           <Input 
-            label="Mã huấn luyện viên"
+            label="Mã huấn luyện viên *"
             name="trainerCode"
             placeholder="VD: PT001"
             value={formData.trainerCode}

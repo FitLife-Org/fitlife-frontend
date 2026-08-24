@@ -9,10 +9,14 @@ import {
   UserCheck,
   UserX,
   Users,
+  Trash2,
+  RefreshCw,
 } from "lucide-react";
 
+import { useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import Pagination from "../../components/common/Pagination";
 
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
@@ -200,9 +204,12 @@ export default function UserManagementPage() {
     handleOpenEdit,
     handleFormSubmit,
     handleToggleStatus,
+    handleDeleteMember,
 
     totalCount,
     activeCount,
+    inactiveCount,
+    suspendedCount,
     
     
   } = useUserManagement();
@@ -296,6 +303,18 @@ export default function UserManagementPage() {
             );
           },
       );
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const paginatedMembers = filteredMembers.slice(
+      currentPage * pageSize,
+      (currentPage + 1) * pageSize
+  );
+
+  // Reset page when filter changes
+  useEffect(() => {
+      setCurrentPage(0);
+  }, [searchTerm, statusFilter]);
 
   /* ========================================================
    * ANIMATION
@@ -722,15 +741,20 @@ export default function UserManagementPage() {
                             Trạng thái hiện tại
                           </label>
 
-                          <div className="mt-2 flex min-h-[46px] items-center rounded-xl border border-slate-200 bg-slate-50 px-4">
-                            {renderStatusBadge(
-                                selectedMember.status,
-                            )}
-                          </div>
-
-                          <p className="mt-1.5 text-xs text-slate-400">
-                            Dùng nút khóa/mở khóa trong danh sách để thay đổi trạng thái.
-                          </p>
+                          <select
+                              value={formValues.status ?? ""}
+                              onChange={(event) =>
+                                  setFormValues((previous) => ({
+                                      ...previous,
+                                      status: event.target.value as MemberStatus,
+                                  }))
+                              }
+                              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium focus:border-fit-primary focus:outline-none focus:ring-2 focus:ring-fit-primary/10"
+                          >
+                              <option value="ACTIVE">Hoạt động</option>
+                              <option value="INACTIVE">Ngưng hoạt động</option>
+                              <option value="SUSPENDED">Bị khóa</option>
+                          </select>
                         </div>
                     )}
 
@@ -925,7 +949,7 @@ export default function UserManagementPage() {
               }
               label="Ngưng hoạt động"
               value={
-                0
+                inactiveCount
               }
               iconClass="bg-slate-100 text-slate-600"
           />
@@ -936,7 +960,7 @@ export default function UserManagementPage() {
               }
               label="Đang bị khóa"
               value={
-                0
+                suspendedCount
               }
               iconClass="bg-rose-50 text-rose-600"
           />
@@ -1020,59 +1044,28 @@ export default function UserManagementPage() {
           {loading ? (
               <Loading label="Đang tải danh sách hội viên..." />
           ) : (
+            <>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-600">
                   <thead className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                   <tr>
-                    <th className="px-6 py-4">
-                      Mã HV
-                    </th>
-
-                    <th className="px-6 py-4">
-                      Hội viên
-                    </th>
-
-                    <th className="px-6 py-4">
-                      Liên hệ
-                    </th>
-
-                    <th className="px-6 py-4">
-                      Giới tính
-                    </th>
-
-                    <th className="px-6 py-4">
-                      Ngày sinh
-                    </th>
-
-                    <th className="px-6 py-4">
-                      Ngày tham gia
-                    </th>
-
-                    <th className="px-6 py-4">
-                      Trạng thái
-                    </th>
-
-                    <th className="px-6 py-4 text-center">
-                      Thao tác
-                    </th>
+                    <th className="px-6 py-4 w-[30%]">Hội viên</th>
+                    <th className="px-6 py-4 w-[25%]">Liên hệ</th>
+                    <th className="px-6 py-4 w-[15%]">Tham gia</th>
+                    <th className="px-6 py-4 w-[15%]">Trạng thái</th>
+                    <th className="px-6 py-4 w-[15%] text-center">Thao tác</th>
                   </tr>
                   </thead>
 
                   <tbody className="divide-y divide-slate-50">
-                  {filteredMembers.length ===
-                  0 ? (
+                  {paginatedMembers.length === 0 ? (
                       <tr>
-                        <td
-                            colSpan={
-                              8
-                            }
-                            className="px-6 py-12 text-center font-medium text-slate-400"
-                        >
+                        <td colSpan={5} className="px-6 py-12 text-center font-medium text-slate-400">
                           Không tìm thấy hội viên phù hợp.
                         </td>
                       </tr>
                   ) : (
-                      filteredMembers.map(
+                      paginatedMembers.map(
                           (
                               member,
                           ) => (
@@ -1084,97 +1077,50 @@ export default function UserManagementPage() {
                               >
                                 {/* CODE */}
 
-                                <td className="px-6 py-4 text-xs font-bold text-slate-900">
-                                  {member.memberCode ||
-                                      `MEM${String(
-                                          member.id,
-                                      ).padStart(
-                                          4,
-                                          "0",
-                                      )}`}
-                                </td>
-
-                                {/* MEMBER */}
-
+                                {/* MEMBER (Combined Avatar, FullName, MemberCode, Username) */}
                                 <td className="px-6 py-4">
                                   <div className="flex items-center gap-3">
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 text-sm font-bold text-slate-600">
                                       {member.avatarUrl ? (
                                           <img
-                                              src={
-                                                member.avatarUrl
-                                              }
-                                              alt={
-                                                member.fullName
-                                              }
+                                              src={member.avatarUrl}
+                                              alt={member.fullName}
                                               className="h-full w-full object-cover"
                                           />
                                       ) : (
-                                          <span>
-                                  {(
-                                      member.fullName ||
-                                      "?"
-                                  ).charAt(
-                                      0,
-                                  )}
-                                </span>
+                                          <span>{(member.fullName || "?").charAt(0)}</span>
                                       )}
                                     </div>
-
                                     <div>
-                                      <p className="text-[13px] font-bold text-slate-900">
-                                        {
-                                          member.fullName
-                                        }
-                                      </p>
-
-                                      <p className="mt-0.5 text-[11px] text-slate-400">
-                                        @{member.username}
-                                      </p>
+                                      <div className="flex items-center gap-2">
+                                          <p className="text-[13px] font-bold text-slate-900">{member.fullName}</p>
+                                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">
+                                              {member.memberCode || `MEM${String(member.id).padStart(4, "0")}`}
+                                          </span>
+                                      </div>
+                                      <p className="mt-0.5 text-[11px] text-slate-400">@{member.username}</p>
                                     </div>
                                   </div>
                                 </td>
 
-                                {/* CONTACT */}
-
+                                {/* CONTACT (Combined Phone, Email, Gender) */}
                                 <td className="px-6 py-4">
                                   <div className="flex flex-col gap-0.5 text-[13px]">
-                            <span className="font-medium text-slate-700">
-                              {member.phone ||
-                                  "-"}
-                            </span>
-
                                     <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-400">
-                                {
-                                  member.email
-                                }
-                              </span>
-
-                                      {member.emailVerified ===
-                                      false ? (
+                                        <span className="font-medium text-slate-700">{member.phone || "-"}</span>
+                                        <span className="text-[10px] text-slate-400 border-l border-slate-200 pl-2">
+                                            {getGenderLabel(member.gender)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-slate-400">{member.email}</span>
+                                      {member.emailVerified === false && (
                                           <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-600">
-                                  Chưa xác thực
-                                </span>
-                                      ) : null}
+                                            Chưa xác thực
+                                          </span>
+                                      )}
                                     </div>
                                   </div>
-                                </td>
-
-                                {/* GENDER */}
-
-                                <td className="px-6 py-4 text-xs font-semibold text-slate-600">
-                                  {getGenderLabel(
-                                      member.gender,
-                                  )}
-                                </td>
-
-                                {/* DOB */}
-
-                                <td className="px-6 py-4 text-[13px] font-medium text-slate-500">
-                                  {formatDate(
-                                      member.dateOfBirth,
-                                  )}
                                 </td>
 
                                 {/* JOIN DATE */}
@@ -1250,6 +1196,27 @@ export default function UserManagementPage() {
                                           <Lock className="h-4 w-4" />
                                       )}
                                     </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDeleteMember(member)}
+                                        className={`rounded-lg p-2 transition ${
+                                            member.status === "INACTIVE"
+                                                ? "text-blue-600 hover:bg-blue-50"
+                                                : "text-slate-500 hover:bg-slate-100"
+                                        }`}
+                                        title={
+                                            member.status === "INACTIVE"
+                                                ? "Khôi phục tài khoản"
+                                                : "Ngưng hoạt động / Xóa"
+                                        }
+                                    >
+                                        {member.status === "INACTIVE" ? (
+                                            <RefreshCw className="h-4 w-4" />
+                                        ) : (
+                                            <Trash2 className="h-4 w-4" />
+                                        )}
+                                    </button>
                                   </div>
                                 </td>
                               </tr>
@@ -1259,6 +1226,17 @@ export default function UserManagementPage() {
                   </tbody>
                 </table>
               </div>
+              <Pagination 
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalItems={filteredMembers.length}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(size) => {
+                      setPageSize(size);
+                      setCurrentPage(0);
+                  }}
+              />
+            </>
           )}
         </Card>
 

@@ -67,9 +67,7 @@ export function useAccountManagement() {
   const [
     roleFilter,
     setRoleFilter,
-  ] = useState<Role | "ALL">(
-      "ALL",
-  );
+  ] = useState<Role | "ALL">("ALL");
 
   /*
    * Spring Pageable bắt đầu từ page = 0.
@@ -89,13 +87,10 @@ export function useAccountManagement() {
     setTotalItems,
   ] = useState(0);
 
-  const pageSize =
-      DEFAULT_PAGE_SIZE;
-
   const [
-    detailModalOpen,
-    setDetailModalOpen,
-  ] = useState(false);
+    pageSize,
+    setPageSize,
+  ] = useState(DEFAULT_PAGE_SIZE);
 
   const [
     showFormView,
@@ -103,8 +98,8 @@ export function useAccountManagement() {
   ] = useState(false);
 
   const [
-    roleModalOpen,
-    setRoleModalOpen,
+    isEditMode,
+    setIsEditMode,
   ] = useState(false);
 
   const [
@@ -113,11 +108,6 @@ export function useAccountManagement() {
   ] = useState<User | null>(
       null,
   );
-
-  const [
-    isEditMode,
-    setIsEditMode,
-  ] = useState(false);
 
   const [
     formValues,
@@ -129,6 +119,28 @@ export function useAccountManagement() {
   const [
     formLoading,
     setFormLoading,
+  ] = useState(false);
+
+  const [
+    detailModalOpen,
+    setDetailModalOpen,
+  ] = useState(false);
+
+  const [
+    formErrors,
+    setFormErrors,
+  ] = useState<
+      Partial<
+          Record<
+              keyof AccountFormValues,
+              string
+          >
+      >
+  >({});
+
+  const [
+    roleModalOpen,
+    setRoleModalOpen,
   ] = useState(false);
 
   const [
@@ -161,10 +173,7 @@ export function useAccountManagement() {
                         ? undefined
                         : statusFilter,
 
-                roleCode:
-                    roleFilter === "ALL"
-                        ? undefined
-                        : roleFilter,
+                roleCode: roleFilter === "ALL" ? undefined : roleFilter,
               });
 
           setUsers(result.content);
@@ -502,15 +511,7 @@ export function useAccountManagement() {
                       newStatus,
                   );
 
-          setUsers((previous) =>
-              previous.map(
-                  (item) =>
-                      item.id ===
-                      updatedUser.id
-                          ? updatedUser
-                          : item,
-              ),
-          );
+          await fetchUsers();
 
           showAlert.success(
               "Thành công",
@@ -564,15 +565,7 @@ export function useAccountManagement() {
                       selectedRoles,
                   );
 
-          setUsers((previous) =>
-              previous.map(
-                  (item) =>
-                      item.id ===
-                      updatedUser.id
-                          ? updatedUser
-                          : item,
-              ),
-          );
+          await fetchUsers();
 
           setRoleModalOpen(false);
 
@@ -613,6 +606,7 @@ export function useAccountManagement() {
     totalPages,
     totalItems,
     pageSize,
+    setPageSize,
     setCurrentPage,
 
     detailModalOpen,

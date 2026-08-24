@@ -360,7 +360,7 @@ export const memberService = {
         };
 
         const response =
-            await apiClient.patch<
+            await apiClient.put<
                 ApiResponse<MemberProfile>
             >(
                 `/admin/members/${id}`,
@@ -429,4 +429,11 @@ export const memberService = {
         ).content;
     },
 
-    };
+    async deleteMember(id: number): Promise<void> {
+        await apiClient.delete(`/admin/members/${id}`);
+    },
+
+    async restoreMember(id: number): Promise<void> {
+        await apiClient.patch(`/admin/members/${id}/restore`);
+    },
+};

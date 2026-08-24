@@ -3,12 +3,23 @@ import Card from "../../components/common/Card";
 import PageHeader from "../../components/common/PageHeader";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
+import Pagination from "../../components/common/Pagination";
 import { formatCurrency } from "../../utils/formatCurrency";
 import type { PaymentResult } from "../../types/payment.type";
 import { usePaymentManagement } from "../../hooks/usePaymentManagement";
 
 export default function PaymentManagementPage() {
-    const { payments, loading, handleConfirm, handleFail } = usePaymentManagement();
+    const { 
+        payments, 
+        loading, 
+        handleConfirm, 
+        handleFail,
+        currentPage,
+        setCurrentPage,
+        pageSize,
+        setPageSize,
+        totalElements, 
+    } = usePaymentManagement();
 
     const getStatusBadge = (status?: string) => {
         switch (status) {
@@ -115,7 +126,19 @@ export default function PaymentManagementPage() {
                         Đang tải dữ liệu...
                     </div>
                 ) : (
-                    <Table columns={columns} data={payments} />
+                    <>
+                        <Table columns={columns} data={payments} />
+                        <Pagination
+                            currentPage={currentPage}
+                            pageSize={pageSize}
+                            totalItems={totalElements}
+                            onPageChange={setCurrentPage}
+                            onPageSizeChange={(size) => {
+                                setPageSize(size);
+                                setCurrentPage(0);
+                            }}
+                        />
+                    </>
                 )}
             </Card>
         </>

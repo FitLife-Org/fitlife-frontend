@@ -80,6 +80,7 @@ export interface PreviewPriceResponse {
 export interface CreateSubscriptionRequest {
   gymPackageId: number;
   packageDurationId: number;
+  paidCash?: boolean;
   autoRenew?: boolean;
   note?: string;
 }

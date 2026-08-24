@@ -68,6 +68,11 @@ export function useInvoiceManagement() {
   ] = useState(0);
 
   const [
+    pageSize,
+    setPageSize,
+  ] = useState(DEFAULT_PAGE_SIZE);
+
+  const [
     actionInvoiceId,
     setActionInvoiceId,
   ] = useState<number | null>(
@@ -86,7 +91,7 @@ export function useInvoiceManagement() {
                     currentPage,
 
                     size:
-                    DEFAULT_PAGE_SIZE,
+                    pageSize,
 
                     keyword:
                         submittedKeyword ||
@@ -136,6 +141,7 @@ export function useInvoiceManagement() {
         }
       }, [
         currentPage,
+        pageSize,
         statusFilter,
         submittedKeyword,
       ]);
@@ -423,8 +429,8 @@ export function useInvoiceManagement() {
     totalPages,
     totalElements,
 
-    pageSize:
-    DEFAULT_PAGE_SIZE,
+    pageSize,
+    setPageSize,
 
     actionInvoiceId,
 

@@ -56,6 +56,7 @@ import NotFoundPage from "../pages/error/NotFoundPage";
 // =====================================================
 
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AdminBodyMetricPage from "../pages/admin/AdminBodyMetricPage";
 import AccountManagementPage from "../pages/admin/AccountManagementPage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
 import PackageManagementPage from "../pages/admin/PackageManagementPage";
@@ -792,9 +793,10 @@ export default function AppRouter() {
                                 </RoleGuard>
                             }
                         />
+                        <Route path={ROUTES.ADMIN_BODY_METRICS} element={<RoleGuard roles={["ROLE_ADMIN", "ROLE_STAFF"]}><AdminBodyMetricPage /></RoleGuard>} />
 
                         {/* =================================
-                         * ADMIN / STAFF - EQUIPMENT
+                         * ADMIN - EQUIPMENT
                          * ================================= */}
 
                         <Route
@@ -804,8 +806,7 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard
                                     roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN"
                                     ]}
                                 >
                                     <EquipmentManagementPage />
@@ -818,8 +819,7 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard
                                     roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN"
                                     ]}
                                 >
                                     <EquipmentAreaManagementPage />
@@ -832,8 +832,7 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard
                                     roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN"
                                     ]}
                                 >
                                     <AddEquipmentPage />
@@ -846,8 +845,7 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard
                                     roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN"
                                     ]}
                                 >
                                     <MaintenanceSchedulesPage />
@@ -860,8 +858,7 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard
                                     roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN"
                                     ]}
                                 >
                                     <EditEquipmentPage />
@@ -874,8 +871,7 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard
                                     roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN"
                                     ]}
                                 >
                                     <CreateMaintenancePage />
@@ -888,8 +884,105 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard
                                     roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN"
+                                    ]}
+                                >
+                                    <EquipmentDetailPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* =================================
+                         * STAFF - EQUIPMENT
+                         * ================================= */
+}
+
+                        <Route
+                            path={
+                                ROUTES.STAFF_EQUIPMENT
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF"
+                                    ]}
+                                >
+                                    <EquipmentManagementPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.STAFF_EQUIPMENT}/areas`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF"
+                                    ]}
+                                >
+                                    <EquipmentAreaManagementPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.STAFF_EQUIPMENT}/add`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF"
+                                    ]}
+                                >
+                                    <AddEquipmentPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.STAFF_EQUIPMENT}/maintenance-schedules`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF"
+                                    ]}
+                                >
+                                    <MaintenanceSchedulesPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.STAFF_EQUIPMENT}/edit/:id`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF"
+                                    ]}
+                                >
+                                    <EditEquipmentPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.STAFF_EQUIPMENT}/:id/maintenance`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF"
+                                    ]}
+                                >
+                                    <CreateMaintenancePage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={`${ROUTES.STAFF_EQUIPMENT}/:id`}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF"
                                     ]}
                                 >
                                     <EquipmentDetailPage />
@@ -1096,3 +1189,6 @@ export default function AppRouter() {
         </BrowserRouter>
     );
 }
+
+
+

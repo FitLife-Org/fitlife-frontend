@@ -14,6 +14,7 @@ import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 import Loading from "../../components/common/Loading";
+import Pagination from "../../components/common/Pagination";
 
 import {
   useAccountManagement,
@@ -43,6 +44,8 @@ export default function AccountManagementPage() {
     currentPage,
     totalPages,
     totalItems,
+    pageSize,
+    setPageSize,
     setCurrentPage,
 
     detailModalOpen,
@@ -299,9 +302,7 @@ export default function AccountManagementPage() {
                   onChange={(event) => {
                     setRoleFilter(
                         event.target
-                            .value as
-                            | Role
-                            | "ALL",
+                            .value as Role | "ALL",
                     );
 
                     setCurrentPage(0);
@@ -309,16 +310,16 @@ export default function AccountManagementPage() {
                   className="rounded-xl border px-3 py-2 text-sm"
               >
                 <option value="ALL">
-                  Tất cả vai trò
-                </option>
-                <option value="ROLE_ADMIN">
-                  Quản trị viên
+                  Tất cả tài khoản
                 </option>
                 <option value="ROLE_STAFF">
                   Nhân viên
                 </option>
                 <option value="ROLE_TRAINER">
                   Huấn luyện viên
+                </option>
+                <option value="ROLE_ADMIN">
+                  Quản trị viên
                 </option>
                 <option value="ROLE_MEMBER">
                   Hội viên
@@ -516,60 +517,16 @@ export default function AccountManagementPage() {
           )}
 
           {totalPages > 0 && (
-              <div className="flex items-center justify-between border-t p-4">
-            <span className="text-sm text-slate-500">
-              Hiển thị {users.length} trên{" "}
-              {totalItems} tài khoản
-            </span>
-
-                <div className="flex items-center gap-3">
-                  <Button
-                      variant="outline"
-                      disabled={
-                          currentPage === 0
-                      }
-                      onClick={() =>
-                          setCurrentPage(
-                              (previous) =>
-                                  Math.max(
-                                      previous - 1,
-                                      0,
-                                  ),
-                          )
-                      }
-                  >
-                    Trước
-                  </Button>
-
-                  <span className="text-sm font-semibold">
-                Trang{" "}
-                    {currentPage + 1} /{" "}
-                    {Math.max(
-                        totalPages,
-                        1,
-                    )}
-              </span>
-
-                  <Button
-                      variant="outline"
-                      disabled={
-                          currentPage >=
-                          totalPages - 1
-                      }
-                      onClick={() =>
-                          setCurrentPage(
-                              (previous) =>
-                                  Math.min(
-                                      previous + 1,
-                                      totalPages - 1,
-                                  ),
-                          )
-                      }
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </div>
+              <Pagination
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(size) => {
+                      setPageSize(size);
+                      setCurrentPage(0);
+                  }}
+              />
           )}
         </Card>
 

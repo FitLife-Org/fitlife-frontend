@@ -22,6 +22,8 @@ import { Link } from "react-router-dom";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
 
+import Pagination from "../../../components/common/Pagination";
+
 import {
     EquipmentService,
 } from "../../../services/equipmentService";
@@ -31,6 +33,8 @@ import type {
     EquipmentStatus,
     EquipmentSummary,
 } from "../../../types/equipment.type";
+
+import { useAuthStore } from "../../../store/authStore";
 
 const INITIAL_SUMMARY:
     EquipmentSummary = {
@@ -58,6 +62,9 @@ const INITIAL_SUMMARY:
 };
 
 export default function EquipmentManagementPage() {
+    const user = useAuthStore((state) => state.user);
+    const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false;
+
     const [searchTerm, setSearchTerm] =
         useState("");
 
@@ -244,27 +251,31 @@ export default function EquipmentManagementPage() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <Link to="/admin/equipment/areas">
-                        <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20">
-                            <MapPin className="h-4 w-4" />
-                            Quản lý khu vực
-                        </Button>
-                    </Link>
+                <div className="flex shrink-0 items-center gap-3">
+                    {isAdmin && (
+                        <>
+                            <Link to="/admin/equipment/areas">
+                                <Button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20">
+                                    <MapPin className="h-4 w-4" />
+                                    Quản lý khu vực
+                                </Button>
+                            </Link>
 
-                    <Link to="/admin/equipment/maintenance-schedules">
-                        <Button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20">
-                            <CalendarClock className="h-4 w-4" />
-                            Lịch bảo trì
-                        </Button>
-                    </Link>
+                            <Link to="/admin/equipment/maintenance-schedules">
+                                <Button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20">
+                                    <CalendarClock className="h-4 w-4" />
+                                    Lịch bảo trì
+                                </Button>
+                            </Link>
 
-                    <Link to="/admin/equipment/add">
-                        <Button className="flex items-center gap-2 bg-fit-primary text-white shadow-lg shadow-fit-primary/20">
-                            <Plus className="h-4 w-4" />
-                            Thêm thiết bị
-                        </Button>
-                    </Link>
+                            <Link to="/admin/equipment/add">
+                                <Button className="flex items-center gap-2 bg-fit-primary text-white shadow-lg shadow-fit-primary/20">
+                                    <Plus className="h-4 w-4" />
+                                    Thêm thiết bị
+                                </Button>
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -510,20 +521,22 @@ export default function EquipmentManagementPage() {
                                         <td className="px-5 py-4">
                                             <div className="flex justify-center gap-2">
                                                 <Link
-                                                    to={`/admin/equipment/${equipment.id}`}
+                                                    to={isAdmin ? `/admin/equipment/${equipment.id}` : `/staff/equipment/${equipment.id}`}
                                                     title="Xem chi tiết"
                                                     className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-600 hover:text-slate-900"
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Link>
 
-                                                <Link
-                                                    to={`/admin/equipment/edit/${equipment.id}`}
-                                                    title="Chỉnh sửa"
-                                                    className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-600 hover:text-slate-900"
-                                                >
-                                                    <Edit2 className="h-4 w-4" />
-                                                </Link>
+                                                {isAdmin && (
+                                                    <Link
+                                                        to={`/admin/equipment/edit/${equipment.id}`}
+                                                        title="Chỉnh sửa"
+                                                        className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-600 hover:text-slate-900"
+                                                    >
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Link>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -534,99 +547,16 @@ export default function EquipmentManagementPage() {
                     </table>
                 </div>
 
-                <div className="flex items-center justify-between border-t p-5">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span>
-              Hiển thị
-            </span>
-
-                        <select
-                            value={pageSize}
-                            onChange={(event) => {
-                                setPageSize(
-                                    Number(
-                                        event.target
-                                            .value,
-                                    ),
-                                );
-
-                                setCurrentPage(0);
-                            }}
-                            className="rounded border px-2 py-1"
-                        >
-                            <option value={10}>
-                                10
-                            </option>
-                            <option value={20}>
-                                20
-                            </option>
-                            <option value={50}>
-                                50
-                            </option>
-                        </select>
-
-                        <span>
-              {firstItem} -{" "}
-                            {lastItem} của{" "}
-                            {totalItems} thiết bị
-            </span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            disabled={
-                                currentPage === 0
-                            }
-                            onClick={() =>
-                                setCurrentPage(
-                                    (previous) =>
-                                        Math.max(
-                                            previous - 1,
-                                            0,
-                                        ),
-                                )
-                            }
-                        >
-                            Trước
-                        </Button>
-
-                        <span className="text-sm font-semibold">
-              Trang{" "}
-                            {currentPage + 1} /{" "}
-                            {Math.max(
-                                totalPages,
-                                1,
-                            )}
-            </span>
-
-                        <Button
-                            type="button"
-                            variant="outline"
-                            disabled={
-                                totalPages === 0 ||
-                                currentPage >=
-                                totalPages - 1
-                            }
-                            onClick={() =>
-                                setCurrentPage(
-                                    (previous) =>
-                                        Math.min(
-                                            previous + 1,
-                                            Math.max(
-                                                totalPages -
-                                                1,
-                                                0,
-                                            ),
-                                        ),
-                                )
-                            }
-                        >
-                            Sau
-                        </Button>
-                    </div>
-                </div>
+                <Pagination 
+                    currentPage={currentPage}
+                    pageSize={pageSize}
+                    totalItems={totalItems}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setCurrentPage(0);
+                    }}
+                />
             </Card>
         </div>
     );

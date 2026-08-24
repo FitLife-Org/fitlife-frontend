@@ -127,6 +127,13 @@ export function useUserManagement() {
     ] =
         useState(true);
 
+    const [stats, setStats] = useState({
+        total: 0,
+        active: 0,
+        suspended: 0,
+        inactive: 0,
+    });
+
     // =====================================================
     // FILTER
     // =====================================================
@@ -243,45 +250,32 @@ export function useUserManagement() {
                         true,
                     );
 
-                    const data =
-                        await memberService
-                            .getMembers({
-                                page,
+                    const keyword = submittedSearchTerm.trim() || undefined;
 
-                                size:
-                                PAGE_SIZE,
+                    const [data, allStats, activeStats, suspendedStats, inactiveStats] = await Promise.all([
+                        memberService.getMembers({
+                            page,
+                            size: PAGE_SIZE,
+                            keyword,
+                            status: (statusFilter === "ALL" ? undefined : statusFilter) as any,
+                        }),
+                        memberService.getMembers({ size: 1, keyword }),
+                        memberService.getMembers({ size: 1, keyword, status: "ACTIVE" as any }),
+                        memberService.getMembers({ size: 1, keyword, status: "SUSPENDED" as any }),
+                        memberService.getMembers({ size: 1, keyword, status: "INACTIVE" as any }),
+                    ]);
 
-                                keyword:
-                                    submittedSearchTerm
-                                        .trim() ||
-                                    undefined,
+                    setMembers(data.content ?? []);
+                    setTotalItems(data.totalElements ?? 0);
+                    setTotalPages(data.totalPages ?? 0);
+                    setCurrentPage(data.page ?? page);
 
-                                status:
-                                    (statusFilter ===
-                                    "ALL"
-                                        ? undefined
-                                        : statusFilter) as any,
-                            });
-
-                    setMembers(
-                        data.content ??
-                        [],
-                    );
-
-                    setTotalItems(
-                        data.totalElements ??
-                        0,
-                    );
-
-                    setTotalPages(
-                        data.totalPages ??
-                        0,
-                    );
-
-                    setCurrentPage(
-                        data.page ??
-                        page,
-                    );
+                    setStats({
+                        total: allStats.totalElements ?? 0,
+                        active: activeStats.totalElements ?? 0,
+                        suspended: suspendedStats.totalElements ?? 0,
+                        inactive: inactiveStats.totalElements ?? 0,
+                    });
                 } catch (
                     error:
                     unknown
@@ -691,12 +685,17 @@ export function useUserManagement() {
                     isEditMode &&
                     selectedMember
                 ) {
-                    const updatedMember =
+                    let updatedMember =
                         await memberService
                             .updateMember(
                                 selectedMember.id,
                                 updatePayload,
                             );
+
+                    if (formValues.status && formValues.status !== selectedMember.status) {
+                        await memberService.updateMemberStatus(selectedMember.id, { status: formValues.status as MemberStatus });
+                        updatedMember = { ...updatedMember, status: formValues.status as MemberStatus };
+                    }
 
                     setMembers(
                         (
@@ -829,34 +828,10 @@ export function useUserManagement() {
                 await memberService.updateMemberStatus(member.id, { status: newStatus });
                 const updatedMember = { ...member, status: newStatus as any };
 
-                setMembers(
-                    (
-                        previous,
-                    ) =>
-                        previous.map(
-                            (
-                                item,
-                            ) =>
-                                item.id ===
-                                updatedMember.id
-                                    ? updatedMember
-                                    : item,
-                        ),
-                );
-
-                if (
-                    selectedMember
-                        ?.id ===
-                    updatedMember.id
-                ) {
-                    setSelectedMember(
-                        updatedMember,
-                    );
-                }
+                await fetchMembers();
 
                 showAlert.success(
                     "Thành công",
-
                     `Đã ${actionText.toLowerCase()} tài khoản hội viên.`,
                 );
 
@@ -887,6 +862,40 @@ export function useUserManagement() {
                 );
             }
         };
+
+    const handleDeleteMember = async (member: MemberProfile): Promise<void> => {
+        const isInactive = member.status === "INACTIVE";
+        const actionText = isInactive ? "Khôi phục" : "Ngưng hoạt động";
+        const result = await showAlert.confirm(
+            `${actionText} tài khoản?`,
+            `Bạn có chắc chắn muốn ${actionText.toLowerCase()} tài khoản của hội viên ${member.fullName}?`
+        );
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+            if (isInactive) {
+                await memberService.updateMemberStatus(member.id, { status: "ACTIVE" });
+            } else {
+                await memberService.updateMemberStatus(member.id, { status: "INACTIVE" });
+            }
+
+            showAlert.success(
+                "Thành công",
+                `Đã ${actionText.toLowerCase()} tài khoản hội viên.`
+            );
+
+            await fetchMembers(currentPage);
+        } catch (error: unknown) {
+            console.error(`Failed to ${isInactive ? 'restore' : 'delete'} member:`, error);
+            showAlert.error(
+                "Thao tác thất bại",
+                getApiErrorMessage(error, `Không thể ${actionText.toLowerCase()} tài khoản hội viên.`)
+            );
+        }
+    };
 
     // =====================================================
     // CLIENT FILTER
@@ -956,55 +965,13 @@ export function useUserManagement() {
     // SUMMARY
     // =====================================================
 
-    const totalCount =
-        totalItems;
+    const totalCount = stats.total;
+    const activeCount = stats.active;
+    const suspendedCount = stats.suspended;
+    const inactiveCount = stats.inactive;
 
-    /**
-     * Lưu ý:
-     *
-     * Đây chỉ là count của page hiện tại.
-     *
-     * Nếu Dashboard cần tổng chính xác toàn DB,
-     * backend nên trả summary riêng.
-     */
-    const activeCount =
-        members.filter(
-            (
-                member,
-            ) =>
-                member.status ===
-                "ACTIVE",
-        ).length;
-
-    const suspendedCount =
-        members.filter(
-            (
-                member,
-            ) =>
-                member.status ===
-                "SUSPENDED",
-        ).length;
-
-    const inactiveCount =
-        members.filter(
-            (
-                member,
-            ) =>
-                member.status ===
-                "INACTIVE",
-        ).length;
-
-    /**
-     * Alias tạm để không làm vỡ UI cũ.
-     *
-     * Sau khi AdminMembersPage đã đổi tên,
-     * có thể xóa 2 alias này.
-     */
-    const lockedCount =
-        suspendedCount;
-
-    const pendingCount =
-        inactiveCount;
+    const lockedCount = stats.suspended;
+    const pendingCount = stats.inactive;
 
     // =====================================================
     // BMI
@@ -1174,6 +1141,7 @@ export function useUserManagement() {
         handleFormSubmit,
 
         handleToggleStatus,
+        handleDeleteMember,
 
         totalCount,
 
