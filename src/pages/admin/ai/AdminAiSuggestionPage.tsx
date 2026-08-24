@@ -45,15 +45,33 @@ export default function AdminAiSuggestionPage() {
     fetchSuggestions(0);
   }, []);
 
-  const handleViewDetail = async (id: number) => {
+  const handleViewDetail = async (
+      id: number,
+  ) => {
+    setSelectedDetail(null);
     setModalOpen(true);
+
     try {
       setDetailLoading(true);
-      const res = await aiService.getAdminAiSuggestionDetail(id);
+
+      const res =
+          await aiService
+              .getAdminAiSuggestionDetail(
+                  id,
+              );
+
       setSelectedDetail(res);
     } catch (error) {
-      console.error("GET_DETAIL_ERROR:", error);
-      showAlert.error("Lỗi", "Không thể tải chi tiết gợi ý AI");
+      console.error(
+          "GET_DETAIL_ERROR:",
+          error,
+      );
+
+      showAlert.error(
+          "Lỗi",
+          "Không thể tải chi tiết gợi ý AI",
+      );
+
       setModalOpen(false);
     } finally {
       setDetailLoading(false);

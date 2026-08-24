@@ -26,6 +26,9 @@ import {
 const AI_BASE_URL =
     "/ai/suggestions";
 
+const ADMIN_AI_BASE_URL =
+    "/admin/ai/suggestions";
+
 const AI_STANDARD_TIMEOUT_MS =
     30_000;
 
@@ -384,8 +387,8 @@ export const aiService = {
     },
 
     // =====================================================
-    // ADMIN
-    // =====================================================
+// ADMIN
+// =====================================================
 
     async getAdminAiSuggestions(
         page = 0,
@@ -399,7 +402,7 @@ export const aiService = {
                     PageResponse<AiSuggestionResponse>
                 >
             >(
-                "/admin/ai-suggestions",
+                ADMIN_AI_BASE_URL,
                 {
                     params: {
                         page,
@@ -430,7 +433,7 @@ export const aiService = {
                     AiSuggestionDetailResponse
                 >
             >(
-                `/admin/ai-suggestions/${suggestionId}`,
+                `${ADMIN_AI_BASE_URL}/${suggestionId}`,
                 {
                     timeout:
                     AI_STANDARD_TIMEOUT_MS,
