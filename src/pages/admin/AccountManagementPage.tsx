@@ -136,7 +136,7 @@ export default function AccountManagementPage() {
             </Badge>
         );
 
-      case "LOCKED":
+      case "SUSPENDED":
         return (
             <Badge variant="danger">
               Bị khóa
@@ -212,7 +212,6 @@ export default function AccountManagementPage() {
                     <option value="ROLE_STAFF">Nhân viên</option>
                     <option value="ROLE_TRAINER">Huấn luyện viên</option>
                     <option value="ROLE_ADMIN">Quản trị viên</option>
-                    <option value="ROLE_MEMBER">Hội viên</option>
                   </select>
                 </div>
               )}
@@ -227,7 +226,7 @@ export default function AccountManagementPage() {
                   <option value="PENDING">Chờ xác minh</option>
                   <option value="ACTIVE">Hoạt động</option>
                   <option value="INACTIVE">Không hoạt động</option>
-                  <option value="LOCKED">Bị khóa</option>
+                  <option value="SUSPENDED">Bị khóa</option>
                 </select>
               </div>
             </div>
@@ -352,7 +351,7 @@ export default function AccountManagementPage() {
                 <option value="INACTIVE">
                   Không hoạt động
                 </option>
-                <option value="LOCKED">
+                <option value="SUSPENDED">
                   Bị khóa
                 </option>
               </select>
@@ -499,12 +498,11 @@ export default function AccountManagementPage() {
                                         )
                                     }
                                 >
-                                  {user.status ===
-                                  "LOCKED" ? (
-                                      <Unlock className="h-4 w-4 text-emerald-600" />
-                                  ) : (
-                                      <Lock className="h-4 w-4 text-rose-600" />
-                                  )}
+                                    {(user.status === "SUSPENDED" || user.status === "INACTIVE") ? (
+                                        <Unlock className="h-4 w-4 text-emerald-600" />
+                                    ) : (
+                                        <Lock className="h-4 w-4 text-rose-600" />
+                                    )}
                                 </button>
                               </div>
                             </td>
