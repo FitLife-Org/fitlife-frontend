@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Filter, Star, Clock, Award, ChevronRight, User, Crown } from "lucide-react";
+import { Search, Filter, Star, Clock, Award, ChevronRight, User, Crown, Check } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
@@ -17,6 +17,7 @@ export default function TrainerBookingPage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null);
   
   const { activeSubscription, loading: subLoading } = useMySubscription();
 
@@ -43,6 +44,7 @@ export default function TrainerBookingPage() {
     );
     
     if (result.isConfirmed) {
+      setSelectedTrainerId(trainer.id);
       void showAlert.success(
         "Gửi yêu cầu thành công!",
         "Chúng tôi đã ghi nhận lựa chọn của bạn. Nhân viên sẽ sớm liên hệ để thống nhất lịch tập."
@@ -125,9 +127,7 @@ export default function TrainerBookingPage() {
                           {trainer.specialization || trainer.specialty || "Fitness Trainer"}
                         </Badge>
                         <div className="flex items-center gap-1 text-sm text-amber-500 font-semibold">
-                          <Star className="w-4 h-4 fill-current" />
-                          <span>4.9</span>
-                          <span className="text-slate-400 font-normal ml-1">({Math.floor(Math.random() * 50) + 10} đánh giá)</span>
+                          {/* Rating and review count placeholder removed as it's not provided by backend */}
                         </div>
                       </div>
                     </div>
@@ -137,7 +137,7 @@ export default function TrainerBookingPage() {
                         <Clock className="w-4 h-4 text-emerald-500" />
                         <div>
                           <p className="text-xs text-slate-500">Kinh nghiệm</p>
-                          <p className="text-sm font-semibold text-slate-700">{trainer.experienceYears || 1}+ năm</p>
+                          <p className="text-sm font-semibold text-slate-700">{trainer.experienceYears ? `${trainer.experienceYears}+ năm` : "Chưa cập nhật"}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -145,23 +145,32 @@ export default function TrainerBookingPage() {
                         <div>
                           <p className="text-xs text-slate-500">Chứng chỉ</p>
                           <p className="text-sm font-semibold text-slate-700 line-clamp-1">
-                            {trainer.certifications ? trainer.certifications.split(',')[0] : "Quốc tế"}
+                            {trainer.certifications ? trainer.certifications.split(',')[0] : "Chưa cập nhật"}
                           </p>
                         </div>
                       </div>
                     </div>
 
                     <p className="text-sm text-slate-600 mb-6 line-clamp-3 flex-1">
-                      {trainer.bio || "Huấn luyện viên chuyên nghiệp, tận tâm giúp bạn đạt được mục tiêu hình thể mong muốn một cách an toàn và hiệu quả nhất."}
+                      {trainer.bio || "Chưa có thông tin giới thiệu."}
                     </p>
 
                     <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-end">
-                      <Button
-                        onClick={() => handleBookTrainer(trainer)}
-                        className="rounded-xl pl-4 pr-3 py-2 flex items-center gap-1 shadow-lg shadow-emerald-600/20 w-full justify-center"
-                      >
-                        Chọn HLV này <ChevronRight className="w-4 h-4" />
-                      </Button>
+                      {selectedTrainerId === trainer.id ? (
+                        <Button
+                          disabled
+                          className="rounded-xl px-4 py-2 flex items-center gap-2 shadow-sm w-full justify-center bg-emerald-50 text-emerald-700 border-none opacity-100"
+                        >
+                          <Check className="w-4 h-4" /> Đã chọn HLV này
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => handleBookTrainer(trainer)}
+                          className="rounded-xl pl-4 pr-3 py-2 flex items-center gap-1 shadow-lg shadow-emerald-600/20 w-full justify-center"
+                        >
+                          Chọn HLV này <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </Card>

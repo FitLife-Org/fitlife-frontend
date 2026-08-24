@@ -3,7 +3,9 @@ import toast from "react-hot-toast";
 import { User, Activity, X } from "lucide-react";
 
 import Input from "../../../components/common/Input";
+import Modal from "../../../components/common/Modal";
 import { trainerService } from "../../../services/trainerService";
+import { userService } from "../../../services/userService";
 import { validateTrainerForm, type TrainerFormData } from "../../../utils/validators/trainerValidator";
 import type { Trainer } from "../../../types/trainer.type";
 
@@ -19,9 +21,16 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<TrainerFormData>({
-    userId: "",
     trainerCode: "",
     specialty: "",
+    experienceYears: "",
+    certifications: "",
+    bio: "",
+    username: "",
+    email: "",
+    password: "",
+    fullName: "",
+    phone: "",
   });
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof TrainerFormData, string>>>({});
 
@@ -29,15 +38,29 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
     if (open) {
       if (trainer) {
         setFormData({
-          userId: trainer.userId?.toString() || "",
           trainerCode: trainer.trainerCode || "",
           specialty: trainer.specialization || trainer.specialty || "",
+          experienceYears: trainer.experienceYears?.toString() || "",
+          certifications: trainer.certifications || "",
+          bio: trainer.bio || "",
+          username: trainer.username || "",
+          email: trainer.email || "",
+          password: "••••••••",
+          fullName: trainer.fullName || "",
+          phone: trainer.phone || "",
         });
       } else {
         setFormData({
-          userId: "",
           trainerCode: "",
           specialty: "",
+          experienceYears: "",
+          certifications: "",
+          bio: "",
+          username: "",
+          email: "",
+          password: "",
+          fullName: "",
+          phone: "",
         });
       }
       setFormErrors({});
@@ -56,7 +79,7 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validation = validateTrainerForm(formData);
+    const validation = validateTrainerForm(formData, isEditing);
     
     if (!validation.isValid) {
       setFormErrors(validation.errors);
@@ -65,17 +88,43 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
 
     try {
       setIsSubmitting(true);
-      if (isEditing && trainer) {
-        await trainerService.updateTrainer(trainer.id, { specialization: formData.specialty });
-        toast.success("Cập nhật PT thành công!");
-      } else {
-        await trainerService.createTrainer({
-          userId: Number(formData.userId),
+
+      if (!isEditing) {
+        // Step 1: Create the User account with ROLE_TRAINER
+        const newUser = await userService.createUser({
+          username: formData.username!,
+          email: formData.email!,
+          password: formData.password!,
+          fullName: formData.fullName!,
+          phone: formData.phone!,
+          roleCode: "ROLE_TRAINER",
+          status: "ACTIVE"
+        });
+
+        // Step 2: Create the Trainer profile linked to the new user
+        const payload = {
+          userId: newUser.id,
           trainerCode: formData.trainerCode,
           specialization: formData.specialty,
+          experienceYears: formData.experienceYears ? Number(formData.experienceYears) : undefined,
+          certifications: formData.certifications,
+          bio: formData.bio,
+        };
+
+        await trainerService.createTrainer(payload);
+        toast.success("Tạo mới tài khoản và hồ sơ HLV thành công!");
+      } else {
+        if (!trainer) return;
+        
+        await trainerService.updateTrainer(trainer.id, { 
+          specialization: formData.specialty,
+          experienceYears: formData.experienceYears ? Number(formData.experienceYears) : undefined,
+          certifications: formData.certifications,
+          bio: formData.bio,
         });
-        toast.success("Thêm PT thành công!");
+        toast.success("Cập nhật PT thành công!");
       }
+      
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -86,48 +135,81 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm gsap-animate"
-      role="presentation"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+    <Modal
+      title={isEditing ? "Chỉnh sửa PT" : "Thêm Huấn Luyện Viên"}
+      open={open}
+      onClose={onClose}
+      size="xl"
+      disableClose={isSubmitting}
     >
-      <section
-        role="dialog"
-        aria-modal="true"
-        className="w-full max-w-lg rounded-3xl bg-white shadow-2xl overflow-hidden"
-      >
-        <header className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-          <div>
-            <h2 className="text-xl font-black text-slate-900">
-              {isEditing ? "Chỉnh sửa PT" : "Thêm Huấn Luyện Viên"}
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {isEditing ? "Cập nhật thông tin chuyên môn của PT." : "Tạo mới một tài khoản Huấn Luyện Viên."}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition disabled:opacity-40"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </header>
+      <p className="mb-4 text-sm text-slate-500">
+        {isEditing ? "Cập nhật thông tin chuyên môn của PT." : "Tạo mới một tài khoản Huấn Luyện Viên."}
+      </p>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {!isEditing && (
+          <div className="space-y-5 p-6 bg-slate-50/80 rounded-2xl border border-slate-100 mb-2">
+            <h3 className="font-bold text-sm text-slate-800">Thông tin tài khoản đăng nhập</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                label="Họ và tên *"
+                name="fullName"
+                placeholder="VD: Nguyễn Văn A"
+                value={formData.fullName}
+                onChange={handleFormChange}
+                error={formErrors.fullName}
+              />
+              <Input 
+                label="Tên đăng nhập (Username) *"
+                name="username"
+                placeholder="VD: nguyenvana"
+                value={formData.username}
+                onChange={handleFormChange}
+                error={formErrors.username}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                label="Email *"
+                name="email"
+                type="email"
+                placeholder="VD: email@example.com"
+                value={formData.email}
+                onChange={handleFormChange}
+                error={formErrors.email}
+              />
+              <Input 
+                label="Số điện thoại *"
+                name="phone"
+                placeholder="VD: 0901234567"
+                value={formData.phone}
+                onChange={handleFormChange}
+                error={formErrors.phone}
+              />
+            </div>
+            <Input 
+              label="Mật khẩu *"
+              name="password"
+              type="password"
+              placeholder="Nhập mật khẩu cho tài khoản..."
+              value={formData.password}
+              onChange={handleFormChange}
+              error={formErrors.password}
+            />
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
           <Input 
-            label="ID Tài Khoản (User ID) *"
-            name="userId"
-            placeholder="Ví dụ: 12"
-            value={formData.userId}
-            onChange={handleFormChange}
-            error={formErrors.userId}
-            icon={<User className="w-4 h-4" />}
-            disabled={isEditing}
-          />
+              label="Mã huấn luyện viên *"
+              name="trainerCode"
+              placeholder="VD: PT001"
+              value={formData.trainerCode}
+              onChange={handleFormChange}
+              error={formErrors.trainerCode}
+              icon={<User className="w-4 h-4" />}
+              disabled={isEditing}
+            />
           
           <Input 
             label="Chuyên môn *"
@@ -138,19 +220,43 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
             error={formErrors.specialty}
             icon={<Activity className="w-4 h-4" />}
           />
+        </div>
 
-          <Input 
-            label="Mã huấn luyện viên *"
-            name="trainerCode"
-            placeholder="VD: PT001"
-            value={formData.trainerCode}
-            onChange={handleFormChange}
-            error={formErrors.trainerCode}
-            icon={<User className="w-4 h-4" />}
-            disabled={isEditing}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <Input 
+              label="Số năm kinh nghiệm"
+              name="experienceYears"
+              type="number"
+              placeholder="VD: 3"
+              value={formData.experienceYears}
+              onChange={handleFormChange}
+              error={formErrors.experienceYears}
+              icon={<Activity className="w-4 h-4" />}
+            />
+            <Input 
+              label="Chứng chỉ"
+              name="certifications"
+              placeholder="VD: NASM, ACE..."
+              value={formData.certifications}
+              onChange={handleFormChange}
+            />
+          </div>
 
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              Giới thiệu (Bio)
+            </label>
+            <textarea
+              name="bio"
+              rows={2}
+              placeholder="Nhập thông tin giới thiệu về HLV..."
+              value={formData.bio}
+              onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm transition focus:border-fit-primary focus:outline-none focus:ring-2 focus:ring-fit-primary/10 resize-none"
+            />
+          </div>
+
+          <div className="pt-5 mt-4 flex items-center justify-end gap-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
@@ -169,7 +275,6 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
             </button>
           </div>
         </form>
-      </section>
-    </div>
+    </Modal>
   );
 }

@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Search, Plus, Edit2, Trash2, Mail, Phone, User } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, Plus, Edit2, Trash2, Mail, Phone, User, Clock, Award } from "lucide-react";
+import Pagination from "../../components/common/Pagination";
 
 import PageHeader from "../../components/common/PageHeader";
 import Input from "../../components/common/Input";
@@ -32,6 +33,21 @@ export default function TrainerManagementPage() {
     setSelectedTrainer(trainer);
     setModalOpen(true);
   };
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(12);
+
+  const paginatedTrainers = useMemo(() => {
+    return filteredTrainers.slice(
+      currentPage * pageSize,
+      (currentPage + 1) * pageSize
+    );
+  }, [filteredTrainers, currentPage, pageSize]);
+
+  // Reset page when search changes
+  useMemo(() => {
+    setCurrentPage(0);
+  }, [search]);
 
   return (
     <div className="space-y-8" ref={containerRef}>
@@ -71,8 +87,9 @@ export default function TrainerManagementPage() {
           <p className="text-slate-500 font-medium">Không tìm thấy Huấn Luyện Viên nào khớp với tìm kiếm</p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredTrainers.map(trainer => (
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {paginatedTrainers.map(trainer => (
             <div
               key={trainer.id}
               className="gsap-animate group relative bg-white p-6 rounded-3xl border border-slate-100 shadow-md hover:shadow-2xl hover:shadow-fit-primary/20 hover:border-fit-primary/30 transition-all duration-500 hover:-translate-y-1 overflow-hidden"
@@ -116,24 +133,67 @@ export default function TrainerManagementPage() {
                   )}
                 </div>
 
-                <div className="space-y-3 text-sm text-slate-600 font-medium bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
-                  <div className="flex items-center gap-3">
+                <div className="grid grid-cols-2 gap-3 mb-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
+                  <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-sm">
-                      <Phone className="w-3.5 h-3.5 text-fit-primary" />
+                      <Clock className="w-3.5 h-3.5 text-fit-primary" />
                     </div>
-                    <span className="truncate">{trainer.phone || "Trống"}</span>
+                    <div>
+                      <p className="text-[10px] text-slate-500">Kinh nghiệm</p>
+                      <p className="text-xs font-semibold text-slate-700">{trainer.experienceYears ? `${trainer.experienceYears}+ năm` : "Chưa cập nhật"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-sm">
+                      <Award className="w-3.5 h-3.5 text-fit-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-slate-500">Chứng chỉ</p>
+                      <p className="text-xs font-semibold text-slate-700 line-clamp-1">
+                        {trainer.certifications ? trainer.certifications.split(',')[0] : "Chưa cập nhật"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-sm text-slate-600 font-medium mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center">
+                      <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    </div>
+                    <span className="truncate">{trainer.phone || "Chưa cập nhật SĐT"}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-sm">
-                      <Mail className="w-3.5 h-3.5 text-fit-primary" />
+                    <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center">
+                      <Mail className="w-3.5 h-3.5 text-slate-400" />
                     </div>
-                    <span className="truncate">{trainer.email || "Trống"}</span>
+                    <span className="truncate">{trainer.email || "Chưa cập nhật Email"}</span>
                   </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <p className="text-sm text-slate-500 line-clamp-2">
+                    {trainer.bio || "Chưa có thông tin giới thiệu."}
+                  </p>
                 </div>
               </div>
             </div>
           ))}
-        </div>
+          </div>
+          
+          <div className="mt-6 flex justify-end">
+            <Pagination 
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={filteredTrainers.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setCurrentPage(0);
+                }}
+            />
+          </div>
+        </>
       )}
 
       <TrainerFormModal 

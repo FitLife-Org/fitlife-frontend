@@ -210,7 +210,6 @@ export default function AccountManagementPage() {
                     className="w-full rounded-xl border px-4 py-2 border-slate-200 outline-none focus:border-fit-primary"
                   >
                     <option value="ROLE_STAFF">Nhân viên</option>
-                    <option value="ROLE_TRAINER">Huấn luyện viên</option>
                     <option value="ROLE_ADMIN">Quản trị viên</option>
                   </select>
                 </div>
@@ -479,16 +478,18 @@ export default function AccountManagementPage() {
                                   <Edit2 className="h-4 w-4" />
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        handleOpenRoleEdit(
-                                            user,
-                                        )
-                                    }
-                                >
-                                  <Shield className="h-4 w-4" />
-                                </button>
+                                {!(user.roles.includes("ROLE_MEMBER") || user.roles.includes("ROLE_TRAINER")) && (
+                                  <button
+                                      type="button"
+                                      onClick={() =>
+                                          handleOpenRoleEdit(
+                                              user,
+                                          )
+                                      }
+                                  >
+                                    <Shield className="h-4 w-4" />
+                                  </button>
+                                )}
 
                                 <button
                                     type="button"
@@ -601,14 +602,8 @@ export default function AccountManagementPage() {
                 }
                 className="w-full rounded-xl border px-4 py-3"
             >
-              <option value="ROLE_MEMBER">
-                Hội viên
-              </option>
               <option value="ROLE_STAFF">
                 Nhân viên
-              </option>
-              <option value="ROLE_TRAINER">
-                Huấn luyện viên
               </option>
               <option value="ROLE_ADMIN">
                 Quản trị viên

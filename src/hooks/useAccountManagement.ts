@@ -554,6 +554,28 @@ export function useAccountManagement() {
           return;
         }
 
+        if (
+            selectedUser.roles.includes("ROLE_MEMBER") ||
+            selectedUser.roles.includes("ROLE_TRAINER")
+        ) {
+          showAlert.error(
+              "Không hợp lệ",
+              "Không thể đổi vai trò của Hội viên hoặc Huấn luyện viên tại đây.",
+          );
+          return;
+        }
+
+        if (
+            selectedRoles.includes("ROLE_MEMBER") ||
+            selectedRoles.includes("ROLE_TRAINER")
+        ) {
+          showAlert.error(
+              "Không hợp lệ",
+              "Chỉ có thể luân chuyển giữa Nhân viên và Quản trị viên.",
+          );
+          return;
+        }
+
         try {
           setRoleLoading(true);
 

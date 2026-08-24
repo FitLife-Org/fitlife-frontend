@@ -2,6 +2,7 @@ import {
     useCallback,
     useRef,
     useState,
+    useEffect,
     type ChangeEvent,
     type FormEvent,
 } from "react";
@@ -162,6 +163,17 @@ export function useLoginLogic() {
             (state) =>
                 state.setSession,
         );
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get("error") === "inactive") {
+            showAlert.error(
+                "Lỗi đăng nhập",
+                "Tài khoản của bạn đã bị vô hiệu hóa hoặc chưa được kích hoạt. Vui lòng liên hệ Admin.",
+            );
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, []);
 
     const rememberedIdentifier =
         getRememberedIdentifier();
