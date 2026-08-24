@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+
 import {
   getApiErrorCode,
   getApiErrorMessage,
@@ -21,6 +22,10 @@ import type {
 } from "../types/auth.type";
 
 import { tokenStorage } from "../utils/token";
+
+/* ============================================================
+ * HELPERS
+ * ============================================================ */
 
 const normalizeRoles = (
     payload: AuthResponsePayload,
@@ -56,7 +61,8 @@ const normalizeSession = (
   }
 
   const accessToken =
-      payload.accessToken || payload.token;
+      payload.accessToken ??
+      payload.token;
 
   const refreshToken =
       payload.refreshToken;
@@ -73,7 +79,8 @@ const normalizeSession = (
     );
   }
 
-  const roles = normalizeRoles(payload);
+  const roles =
+      normalizeRoles(payload);
 
   if (roles.length === 0) {
     throw new Error(
@@ -95,13 +102,16 @@ const normalizeSession = (
       payload.username,
 
       email:
-          payload.email ?? "",
+          payload.email ??
+          "",
 
       fullName:
-          payload.fullName ?? "User",
+          payload.fullName ??
+          "User",
 
       avatarUrl:
-          payload.avatarUrl ?? null,
+          payload.avatarUrl ??
+          null,
 
       roles,
     },
@@ -113,9 +123,10 @@ const normalizeRegisterResult = (
     fallbackEmail: string,
     fallbackFullName: string,
 ): RegisterResult => {
-  const roles = payload
-      ? normalizeRoles(payload)
-      : [];
+  const roles =
+      payload
+          ? normalizeRoles(payload)
+          : [];
 
   return {
     userId:
@@ -135,13 +146,37 @@ const normalizeRegisterResult = (
   };
 };
 
+/* ============================================================
+ * ERROR HELPERS
+ * ============================================================ */
+
+/**
+ * Cho component sử dụng khi cần lấy
+ * code/message từ AxiosError.
+ *
+ * QUAN TRỌNG:
+ * authService không wrap AxiosError thành Error mới,
+ * vì sẽ làm mất:
+ *
+ * error.response.status
+ * error.response.data
+ * error.response.data.data
+ */
 export const extractErrorCode =
     getApiErrorCode;
 
 export const extractErrorMessage =
     getApiErrorMessage;
 
+/* ============================================================
+ * AUTH SERVICE
+ * ============================================================ */
+
 export const authService = {
+  // ==========================================================
+  // LOGIN
+  // ==========================================================
+
   async login(
       credentials: LoginRequest,
   ): Promise<AuthSession> {
@@ -158,29 +193,70 @@ export const authService = {
     );
   },
 
+  // ==========================================================
+  // REGISTER
+  // ==========================================================
+
+  /**
+   * Không catch + throw new Error ở đây.
+   *
+   * Nếu Backend trả:
+   *
+   * {
+   *   code: 1001,
+   *   message: "Validation failed",
+   *   data: {
+   *     phone: "Phone number is invalid"
+   *   }
+   * }
+   *
+   * component cần giữ nguyên AxiosError để đọc data.phone.
+   */
   async register(
       data: RegisterRequest,
   ): Promise<RegisterResult> {
-    try {
-      const response =
-          await apiClient.post<
-              ApiResponse<AuthResponsePayload>
-          >(
-              "/auth/register",
-              data,
-          );
+    const normalizedRequest:
+        RegisterRequest = {
+      ...data,
 
-      return normalizeRegisterResult(
-          response.data.data,
-          data.email,
-          data.fullName,
-      );
-    } catch (error: unknown) {
-      throw new Error(
-          extractErrorMessage(error),
-      );
-    }
+      username:
+          data.username
+              .trim()
+              .toLowerCase(),
+
+      email:
+          data.email
+              .trim()
+              .toLowerCase(),
+
+      fullName:
+          data.fullName
+              .trim(),
+
+      phone:
+          data.phone
+              ?.trim() ||
+          undefined,
+    };
+
+    const response =
+        await apiClient.post<
+            ApiResponse<AuthResponsePayload>
+        >(
+            "/auth/register",
+            normalizedRequest,
+        );
+
+    return normalizeRegisterResult(
+        response.data.data,
+        normalizedRequest.email,
+        normalizedRequest.fullName,
+    );
   },
+
+  // ==========================================================
+  // GOOGLE LOGIN
+  // ==========================================================
 
   async googleLogin(
       idToken: string,
@@ -200,57 +276,97 @@ export const authService = {
     );
   },
 
+  // ==========================================================
+  // VERIFY EMAIL
+  // ==========================================================
+
+  /**
+   * Public endpoint:
+   *
+   * GET /auth/verify-email?token=...
+   */
   async verifyEmail(
       token: string,
   ): Promise<string> {
-    try {
-      const response =
-          await apiClient.get<
-              ApiResponse<void>
-          >(
-              "/auth/verify-email",
-              {
-                params: {
-                  token,
-                },
+    const normalizedToken =
+        token.trim();
+
+    if (!normalizedToken) {
+      throw new Error(
+          "Token xác minh email không hợp lệ.",
+      );
+    }
+
+    const response =
+        await apiClient.get<
+            ApiResponse<void>
+        >(
+            "/auth/verify-email",
+            {
+              params: {
+                token:
+                normalizedToken,
               },
-          );
+            },
+        );
 
-      return (
-          response.data.message ||
-          "Xác minh email thành công."
-      );
-    } catch (error: unknown) {
-      throw new Error(
-          extractErrorMessage(error),
-      );
-    }
+    return (
+        response.data.message ||
+        "Xác minh email thành công."
+    );
   },
 
+  // ==========================================================
+  // RESEND VERIFICATION EMAIL
+  // ==========================================================
+
+  /**
+   * Public endpoint:
+   *
+   * POST /auth/resend-verification
+   *
+   * {
+   *   "email": "member@gmail.com"
+   * }
+   */
   async resendVerificationEmail(
-      data: ResendVerificationEmailRequest,
+      data:
+      ResendVerificationEmailRequest,
   ): Promise<string> {
-    try {
-      const response =
-          await apiClient.post<
-              ApiResponse<void>
-          >(
-              "/auth/resend-verification",
-              data,
-          );
+    const email =
+        data.email
+            ?.trim()
+            .toLowerCase();
 
-      return (
-          response.data.message ||
-          "Email xác minh đã được gửi lại."
-      );
-    } catch (error: unknown) {
+    if (!email) {
       throw new Error(
-          extractErrorMessage(error),
+          "Email không được để trống.",
       );
     }
+
+    const response =
+        await apiClient.post<
+            ApiResponse<void>
+        >(
+            "/auth/resend-verification",
+            {
+              ...data,
+              email,
+            },
+        );
+
+    return (
+        response.data.message ||
+        "Email xác minh đã được gửi lại."
+    );
   },
 
-  async refreshToken(): Promise<AuthSession> {
+  // ==========================================================
+  // REFRESH TOKEN
+  // ==========================================================
+
+  async refreshToken():
+      Promise<AuthSession> {
     const refreshToken =
         tokenStorage.getRefreshToken();
 
@@ -260,82 +376,90 @@ export const authService = {
       );
     }
 
-    try {
-      const response =
-          await apiClient.post<
-              ApiResponse<AuthResponsePayload>
-          >(
-              "/auth/refresh-token",
-              {
-                refreshToken,
-              },
-          );
+    const response =
+        await apiClient.post<
+            ApiResponse<AuthResponsePayload>
+        >(
+            "/auth/refresh-token",
+            {
+              refreshToken,
+            },
+        );
 
-      return normalizeSession(
-          response.data.data,
-      );
-    } catch (error: unknown) {
-      throw new Error(
-          extractErrorMessage(error),
-      );
-    }
+    return normalizeSession(
+        response.data.data,
+    );
   },
+
+  // ==========================================================
+  // FORGOT PASSWORD
+  // ==========================================================
 
   async forgotPassword(
       data: ForgotPasswordRequest,
   ): Promise<string> {
-    try {
-      const response =
-          await apiClient.post<
-              ApiResponse<void>
-          >(
-              "/auth/forgot-password",
-              data,
-          );
+    const response =
+        await apiClient.post<
+            ApiResponse<void>
+        >(
+            "/auth/forgot-password",
+            {
+              ...data,
 
-      return (
-          response.data.message ||
-          "OTP đã được gửi đến email của bạn."
-      );
-    } catch (error: unknown) {
-      throw new Error(
-          extractErrorMessage(error),
-      );
-    }
+              email:
+                  data.email
+                      .trim()
+                      .toLowerCase(),
+            },
+        );
+
+    return (
+        response.data.message ||
+        "Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn."
+    );
   },
+
+  // ==========================================================
+  // RESET PASSWORD
+  // ==========================================================
 
   async resetPassword(
       data: ResetPasswordRequest,
   ): Promise<string> {
-    try {
-      const response =
-          await apiClient.post<
-              ApiResponse<void>
-          >(
-              "/auth/reset-password",
-              data,
-          );
+    const response =
+        await apiClient.post<
+            ApiResponse<void>
+        >(
+            "/auth/reset-password",
+            data,
+        );
 
-      return (
-          response.data.message ||
-          "Đặt lại mật khẩu thành công."
-      );
-    } catch (error: unknown) {
-      throw new Error(
-          extractErrorMessage(error),
-      );
-    }
+    return (
+        response.data.message ||
+        "Đặt lại mật khẩu thành công."
+    );
   },
 
-  async logout(): Promise<void> {
+  // ==========================================================
+  // LOGOUT
+  // ==========================================================
+
+  async logout():
+      Promise<void> {
     const refreshToken =
         tokenStorage.getRefreshToken();
 
+    /*
+     * Không có refresh token thì client
+     * đã không còn session để revoke.
+     */
     if (!refreshToken) {
       return;
     }
 
-    await apiClient.post<ApiResponse<void>>(
+    await apiClient.post<
+        ApiResponse<void>
+    >(
         "/auth/logout",
         {
           refreshToken,
@@ -343,13 +467,25 @@ export const authService = {
     );
   },
 
-  async logoutAll(): Promise<void> {
-    await apiClient.post<ApiResponse<void>>(
+  // ==========================================================
+  // LOGOUT ALL
+  // ==========================================================
+
+  async logoutAll():
+      Promise<void> {
+    await apiClient.post<
+        ApiResponse<void>
+    >(
         "/auth/logout-all",
     );
   },
 
-  isAuthenticated(): boolean {
+  // ==========================================================
+  // AUTH STATE
+  // ==========================================================
+
+  isAuthenticated():
+      boolean {
     return Boolean(
         tokenStorage.getAccessToken() &&
         tokenStorage.getRefreshToken(),
