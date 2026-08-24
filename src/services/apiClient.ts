@@ -43,7 +43,7 @@ const PUBLIC_API_ENDPOINTS = [
     "/auth/google-login",
     "/auth/refresh-token",
     "/auth/verify-email",
-    "/auth/resend-verification-email",
+    "/auth/resend-verification",
     "/auth/forgot-password",
     "/auth/reset-password",
 
@@ -53,7 +53,6 @@ const PUBLIC_API_ENDPOINTS = [
     "/public/trainers",
     "/public/contact-requests",
 
-    // Nếu backend package public dùng endpoint này
     "/gym-packages",
 ] as const;
 

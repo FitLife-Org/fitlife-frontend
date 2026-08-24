@@ -50,9 +50,7 @@ export default function DashboardLayout({
 
     useGSAP(
         () => {
-            if (
-                !mainRef.current
-            ) {
+            if (!mainRef.current) {
                 return;
             }
 
@@ -81,24 +79,31 @@ export default function DashboardLayout({
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 lg:flex">
+        <div
+            className="
+                flex
+                min-h-screen
+                w-full
+                max-w-full
+                overflow-x-hidden
+                bg-slate-50
+            "
+        >
             {sidebarOpen && (
                 <button
                     type="button"
                     aria-label="Đóng menu"
                     onClick={() =>
-                        setSidebarOpen(
-                            false,
-                        )
+                        setSidebarOpen(false)
                     }
                     className="
-            fixed
-            inset-0
-            z-30
-            bg-slate-950/40
-            backdrop-blur-[1px]
-            lg:hidden
-          "
+                        fixed
+                        inset-0
+                        z-30
+                        bg-slate-950/40
+                        backdrop-blur-[1px]
+                        lg:hidden
+                    "
                 />
             )}
 
@@ -106,29 +111,39 @@ export default function DashboardLayout({
 
             <div
                 className="
-          flex
-          min-h-screen
-          min-w-0
-          flex-1
-          flex-col
-        "
+                    flex
+                    min-h-screen
+                    min-w-0
+                    max-w-full
+                    flex-1
+                    flex-col
+                    overflow-x-hidden
+                "
             >
                 <Header />
 
                 <main
-                    ref={
-                        mainRef
-                    }
+                    ref={mainRef}
                     className="
-            flex-1
-            px-4
-            py-6
-            sm:px-6
-            lg:px-8
-            xl:px-10
-          "
+                        min-w-0
+                        max-w-full
+                        flex-1
+                        overflow-x-hidden
+                        px-4
+                        py-6
+                        sm:px-6
+                        lg:px-8
+                        xl:px-10
+                    "
                 >
-                    <div className="mx-auto w-full max-w-[1600px]">
+                    <div
+                        className="
+                            mx-auto
+                            w-full
+                            min-w-0
+                            max-w-[1600px]
+                        "
+                    >
                         {children}
                     </div>
                 </main>

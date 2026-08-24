@@ -3,11 +3,11 @@ import apiClient from "./apiClient";
 import type {
     ApiResponse,
     PageResponse,
-    Status,
 } from "../types/common.type";
 
 import type {
     MemberProfile,
+    MemberStatus,
     AdminMemberCreateRequest,
     AdminMemberUpdateRequest,
 } from "../types/member.type";
@@ -27,11 +27,19 @@ import type {
 export interface MemberQueryParams {
     page?: number;
     size?: number;
+
     keyword?: string;
-    status?: Status;
+
+    status?: MemberStatus;
+
     fitnessGoal?: string;
+
     sort?: string;
 }
+
+/* ============================================================
+ * HELPERS
+ * ============================================================ */
 
 function requireData<T>(
     response: ApiResponse<T>,
@@ -41,7 +49,10 @@ function requireData<T>(
         response.data === null ||
         response.data === undefined
     ) {
-        throw new Error(message);
+        throw new Error(
+            response.message ||
+            message,
+        );
     }
 
     return response.data;
@@ -50,15 +61,50 @@ function requireData<T>(
 function normalizeOptionalText(
     value?: string | null,
 ): string | undefined {
-    if (value === null || value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return undefined;
     }
 
-    const normalized = value.trim();
+    const normalized =
+        value.trim();
 
     return normalized.length > 0
         ? normalized
         : undefined;
+}
+
+function normalizeOptionalDate(
+    value?: string | null,
+): string | undefined {
+    if (
+        !value ||
+        !value.trim()
+    ) {
+        return undefined;
+    }
+
+    /*
+     * Backend LocalDate nhận ISO:
+     * YYYY-MM-DD
+     */
+    return value.trim();
+}
+
+function validatePositiveId(
+    id: number,
+    fieldName = "ID",
+): void {
+    if (
+        !Number.isInteger(id) ||
+        id <= 0
+    ) {
+        throw new Error(
+            `${fieldName} không hợp lệ.`,
+        );
+    }
 }
 
 function mapMember(
@@ -66,21 +112,67 @@ function mapMember(
 ): MemberProfile {
     return {
         ...member,
-        status: member.status,
+
+        gender:
+            member.gender ??
+            null,
+
+        dateOfBirth:
+            member.dateOfBirth ??
+            null,
+
+        joinDate:
+            member.joinDate ??
+            null,
+
+        emailVerified:
+            member.emailVerified ??
+            null,
+
+        fitnessGoal:
+            member.fitnessGoal ??
+            null,
     };
 }
 
+/* ============================================================
+ * SERVICE
+ * ============================================================ */
+
 export const memberService = {
-    async getMyQr(): Promise<{ memberCode: string; qrData: string }> {
-        const response = await apiClient.get<ApiResponse<{ memberCode: string; qrData: string }>>("/members/me/qr");
-        return requireData(response.data, "Kh�ng nh?n ��?c m? QR.");
+    // =====================================================
+    // MEMBER
+    // =====================================================
+
+    async getMyQr():
+        Promise<{
+            memberCode: string;
+            qrData: string;
+        }> {
+        const response =
+            await apiClient.get<
+                ApiResponse<{
+                    memberCode: string;
+                    qrData: string;
+                }>
+            >(
+                "/members/me/qr",
+            );
+
+        return requireData(
+            response.data,
+            "Không nhận được mã QR.",
+        );
     },
+
     async getMyProfile():
         Promise<MemberProfile> {
         const response =
             await apiClient.get<
                 ApiResponse<MemberProfile>
-            >("/members/me");
+            >(
+                "/members/me",
+            );
 
         return mapMember(
             requireData(
@@ -93,9 +185,7 @@ export const memberService = {
     async updateMyProfile(
         data: Partial<MemberProfile>,
     ): Promise<MemberProfile> {
-        const payload: Partial<MemberProfile> = {
-            ...data,
-
+        const payload = {
             fullName:
                 normalizeOptionalText(
                     data.fullName,
@@ -104,6 +194,15 @@ export const memberService = {
             phone:
                 normalizeOptionalText(
                     data.phone,
+                ),
+
+            gender:
+                data.gender ??
+                undefined,
+
+            dateOfBirth:
+                normalizeOptionalDate(
+                    data.dateOfBirth,
                 ),
 
             address:
@@ -122,7 +221,8 @@ export const memberService = {
                 ),
 
             fitnessGoal:
-                data.fitnessGoal ?? undefined,
+                data.fitnessGoal ??
+                undefined,
 
             healthNote:
                 normalizeOptionalText(
@@ -146,33 +246,43 @@ export const memberService = {
         );
     },
 
+    // =====================================================
+    // BODY METRIC
+    // =====================================================
+
     async getBodyMetrics():
         Promise<BodyMetric[]> {
         const response =
             await apiClient.get<
                 ApiResponse<
-                    PageResponse<BodyMetric> |
-                    BodyMetric[]
+                    | PageResponse<BodyMetric>
+                    | BodyMetric[]
                 >
-            >("/body-metrics/me");
+            >(
+                "/body-metrics/me",
+            );
 
-        const data = requireData(
-            response.data,
-            "Không nhận được lịch sử chỉ số cơ thể.",
-        );
+        const data =
+            requireData(
+                response.data,
+                "Không nhận được lịch sử chỉ số cơ thể.",
+            );
 
         return Array.isArray(data)
             ? data
             : data.content;
     },
 
-    /**
-     * Admin lấy danh sách Member.
-     * page bắt đầu từ 0.
-     */
+    // =====================================================
+    // ADMIN - LIST
+    // =====================================================
+
     async getMembers(
-        params: MemberQueryParams = {},
-    ): Promise<PageResponse<MemberProfile>> {
+        params:
+        MemberQueryParams = {},
+    ): Promise<
+        PageResponse<MemberProfile>
+    > {
         const response =
             await apiClient.get<
                 ApiResponse<
@@ -182,10 +292,16 @@ export const memberService = {
                 "/admin/members",
                 {
                     params: {
-                        page: params.page ?? 0,
-                        size: params.size ?? 20,
+                        page:
+                            params.page ??
+                            0,
 
-                        ...(params.keyword?.trim()
+                        size:
+                            params.size ??
+                            20,
+
+                        ...(params.keyword
+                            ?.trim()
                             ? {
                                 keyword:
                                     params.keyword.trim(),
@@ -194,7 +310,8 @@ export const memberService = {
 
                         ...(params.status
                             ? {
-                                status: params.status,
+                                status:
+                                params.status,
                             }
                             : {}),
 
@@ -207,34 +324,50 @@ export const memberService = {
 
                         ...(params.sort
                             ? {
-                                sort: params.sort,
+                                sort:
+                                params.sort,
                             }
                             : {}),
                     },
                 },
             );
 
-        const pageData = requireData(
-            response.data,
-            "Không nhận được danh sách hội viên.",
-        );
+        const pageData =
+            requireData(
+                response.data,
+                "Không nhận được danh sách hội viên.",
+            );
 
         return {
             ...pageData,
+
             content:
-                pageData.content.map(
-                    mapMember,
-                ),
+                pageData.content
+                    ?.map(
+                        mapMember,
+                    ) ??
+                [],
         };
     },
+
+    // =====================================================
+    // ADMIN - DETAIL
+    // =====================================================
 
     async getMemberById(
         id: number,
     ): Promise<MemberProfile> {
+        validatePositiveId(
+            id,
+            "Member ID",
+        );
+
         const response =
             await apiClient.get<
                 ApiResponse<MemberProfile>
-            >(`/admin/members/${id}`);
+            >(
+                `/admin/members/${id}`,
+            );
 
         return mapMember(
             requireData(
@@ -244,23 +377,33 @@ export const memberService = {
         );
     },
 
+    // =====================================================
+    // ADMIN - CREATE
+    // =====================================================
+
     async createMember(
-        data: AdminMemberCreateRequest,
+        data:
+        AdminMemberCreateRequest,
     ): Promise<MemberProfile> {
-        const payload: AdminMemberCreateRequest = {
+        const payload:
+            AdminMemberCreateRequest = {
             ...data,
 
             username:
-                data.username.trim(),
+                data.username
+                    .trim(),
 
             email:
-                data.email.trim().toLowerCase(),
+                data.email
+                    .trim()
+                    .toLowerCase(),
 
             password:
             data.password,
 
             fullName:
-                data.fullName.trim(),
+                data.fullName
+                    .trim(),
 
             phone:
                 normalizeOptionalText(
@@ -268,10 +411,13 @@ export const memberService = {
                 ),
 
             gender:
-                data.gender ?? undefined,
+                data.gender ??
+                undefined,
 
             dateOfBirth:
-                data.dateOfBirth ?? undefined,
+                normalizeOptionalDate(
+                    data.dateOfBirth,
+                ),
 
             address:
                 normalizeOptionalText(
@@ -289,7 +435,8 @@ export const memberService = {
                 ),
 
             fitnessGoal:
-                data.fitnessGoal ?? undefined,
+                data.fitnessGoal ??
+                undefined,
 
             healthNote:
                 normalizeOptionalText(
@@ -313,13 +460,29 @@ export const memberService = {
         );
     },
 
+    // =====================================================
+    // ADMIN - UPDATE PROFILE
+    // =====================================================
+
+    /**
+     * Backend:
+     *
+     * PUT /admin/members/{id}
+     *
+     * KHÔNG dùng PATCH ở endpoint này.
+     */
     async updateMember(
         id: number,
-        data: AdminMemberUpdateRequest,
+        data:
+        AdminMemberUpdateRequest,
     ): Promise<MemberProfile> {
-        const payload: AdminMemberUpdateRequest = {
-            ...data,
+        validatePositiveId(
+            id,
+            "Member ID",
+        );
 
+        const payload:
+            AdminMemberUpdateRequest = {
             fullName:
                 normalizeOptionalText(
                     data.fullName,
@@ -328,11 +491,21 @@ export const memberService = {
             email:
                 normalizeOptionalText(
                     data.email,
-                ),
+                )
+                    ?.toLowerCase(),
 
             phone:
                 normalizeOptionalText(
                     data.phone,
+                ),
+
+            gender:
+                data.gender ??
+                undefined,
+
+            dateOfBirth:
+                normalizeOptionalDate(
+                    data.dateOfBirth,
                 ),
 
             address:
@@ -351,7 +524,8 @@ export const memberService = {
                 ),
 
             fitnessGoal:
-                data.fitnessGoal ?? undefined,
+                data.fitnessGoal ??
+                undefined,
 
             healthNote:
                 normalizeOptionalText(
@@ -375,13 +549,54 @@ export const memberService = {
         );
     },
 
-    async updateMemberStatus(id: number, data: { status: string }): Promise<void> {
-        await apiClient.patch(`/admin/members/${id}/status`, data);
+    // =====================================================
+    // ADMIN - UPDATE STATUS
+    // =====================================================
+
+    /**
+     * Backend:
+     *
+     * PATCH /admin/members/{id}/status
+     */
+    async updateMemberStatus(
+        id: number,
+        status: MemberStatus,
+    ): Promise<MemberProfile> {
+        validatePositiveId(
+            id,
+            "Member ID",
+        );
+
+        const response =
+            await apiClient.patch<
+                ApiResponse<MemberProfile>
+            >(
+                `/admin/members/${id}/status`,
+                {
+                    status,
+                },
+            );
+
+        return mapMember(
+            requireData(
+                response.data,
+                "Không nhận được trạng thái hội viên sau khi cập nhật.",
+            ),
+        );
     },
+
+    // =====================================================
+    // ADMIN - RELATED DATA
+    // =====================================================
 
     async getMemberSubscriptions(
         id: number,
     ): Promise<Subscription[]> {
+        validatePositiveId(
+            id,
+            "Member ID",
+        );
+
         const response =
             await apiClient.get<
                 ApiResponse<
@@ -391,9 +606,14 @@ export const memberService = {
                 "/admin/subscriptions",
                 {
                     params: {
-                        memberId: id,
-                        page: 0,
-                        size: 100,
+                        memberId:
+                        id,
+
+                        page:
+                            0,
+
+                        size:
+                            100,
                     },
                 },
             );
@@ -407,6 +627,11 @@ export const memberService = {
     async getMemberCheckins(
         id: number,
     ): Promise<CheckinRecord[]> {
+        validatePositiveId(
+            id,
+            "Member ID",
+        );
+
         const response =
             await apiClient.get<
                 ApiResponse<
@@ -416,9 +641,14 @@ export const memberService = {
                 "/admin/check-ins",
                 {
                     params: {
-                        memberId: id,
-                        page: 0,
-                        size: 100,
+                        memberId:
+                        id,
+
+                        page:
+                            0,
+
+                        size:
+                            100,
                     },
                 },
             );
