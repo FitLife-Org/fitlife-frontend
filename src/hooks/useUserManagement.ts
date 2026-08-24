@@ -693,7 +693,7 @@ export function useUserManagement() {
                             );
 
                     if (formValues.status && formValues.status !== selectedMember.status) {
-                        await memberService.updateMemberStatus(selectedMember.id, { status: formValues.status as MemberStatus });
+                        await memberService.updateMemberStatus(selectedMember.id, formValues.status as MemberStatus);
                         updatedMember = { ...updatedMember, status: formValues.status as MemberStatus };
                     }
 
@@ -824,7 +824,7 @@ export function useUserManagement() {
             }
 
             try {
-                await memberService.updateMemberStatus(member.id, { status: newStatus });
+                await memberService.updateMemberStatus(member.id, newStatus);
                 const updatedMember = { ...member, status: newStatus as any };
 
                 await fetchMembers();
@@ -876,9 +876,9 @@ export function useUserManagement() {
 
         try {
             if (isInactive) {
-                await memberService.updateMemberStatus(member.id, { status: "ACTIVE" });
+                await memberService.updateMemberStatus(member.id, "ACTIVE");
             } else {
-                await memberService.updateMemberStatus(member.id, { status: "INACTIVE" });
+                await memberService.updateMemberStatus(member.id, "INACTIVE");
             }
 
             showAlert.success(
