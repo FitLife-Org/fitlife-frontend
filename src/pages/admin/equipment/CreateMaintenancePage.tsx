@@ -137,9 +137,6 @@ export default function CreateMaintenancePage() {
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <Button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-lg font-medium text-sm">
-                            Hủy
-                        </Button>
                         <Button type="submit" disabled={loading} className="bg-fit-trainer hover:bg-fit-trainer/90 text-white flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm disabled:opacity-50">
                             <Save className="w-4 h-4" /> 
                             {loading ? "Đang lưu..." : "Lưu phiếu bảo trì"}

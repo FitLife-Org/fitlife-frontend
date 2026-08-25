@@ -418,6 +418,17 @@ const menuItems:
 
     {
         label:
+            "Hồ sơ cá nhân",
+        path:
+        ROUTES.TRAINER_PROFILE,
+        icon:
+        User,
+        roles: [
+            "ROLE_TRAINER",
+        ],
+    },
+    {
+        label:
             "Lịch PT",
         path:
         ROUTES.TRAINER_SCHEDULE,

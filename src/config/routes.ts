@@ -109,6 +109,8 @@ export const ROUTES = {
 
 
   // Trainer
+  TRAINER_PROFILE:
+      "/trainer/profile",
   TRAINER_SCHEDULE:
       "/trainer/schedule",
   TRAINER_MEMBERS:

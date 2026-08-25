@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Search, Filter, Star, Clock, Award, ChevronRight, User, Crown, Check } from "lucide-react";
+import { Search, Filter, Star, Clock, Award, ChevronRight, User, Crown, Check, Eye } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
+import TrainerDetailModal from "../../components/common/TrainerDetailModal";
 import { trainerService } from "../../services/trainerService";
 import type { Trainer } from "../../types/trainer.type";
 import { showAlert } from "../../utils/alert";
@@ -18,6 +19,7 @@ export default function TrainerBookingPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null);
+  const [detailTrainer, setDetailTrainer] = useState<Trainer | null>(null);
   
   const { activeSubscription, loading: subLoading } = useMySubscription();
 
@@ -155,20 +157,29 @@ export default function TrainerBookingPage() {
                       {trainer.bio || "Chưa có thông tin giới thiệu."}
                     </p>
 
-                    <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-end">
+                    <div className="mt-auto pt-4 border-t border-slate-100 flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setDetailTrainer(trainer)}
+                        className="rounded-xl px-3 py-2 flex items-center gap-1 text-slate-600 border-slate-200 hover:bg-slate-50"
+                        title="Xem chi tiết HLV"
+                      >
+                        <Eye className="w-4 h-4" /> Chi tiết
+                      </Button>
+
                       {selectedTrainerId === trainer.id ? (
                         <Button
                           disabled
-                          className="rounded-xl px-4 py-2 flex items-center gap-2 shadow-sm w-full justify-center bg-emerald-50 text-emerald-700 border-none opacity-100"
+                          className="rounded-xl px-3 py-2 flex items-center gap-1 shadow-sm flex-1 justify-center bg-emerald-50 text-emerald-700 border-none opacity-100 text-sm"
                         >
-                          <Check className="w-4 h-4" /> Đã chọn HLV này
+                          <Check className="w-4 h-4" /> Đã chọn
                         </Button>
                       ) : (
                         <Button
                           onClick={() => handleBookTrainer(trainer)}
-                          className="rounded-xl pl-4 pr-3 py-2 flex items-center gap-1 shadow-lg shadow-emerald-600/20 w-full justify-center"
+                          className="rounded-xl px-3 py-2 flex items-center gap-1 shadow-lg shadow-emerald-600/20 flex-1 justify-center text-sm"
                         >
-                          Chọn HLV này <ChevronRight className="w-4 h-4" />
+                          Chọn HLV <ChevronRight className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
@@ -182,6 +193,14 @@ export default function TrainerBookingPage() {
               </div>
             )}
           </div>
+
+          <TrainerDetailModal
+            open={Boolean(detailTrainer)}
+            onClose={() => setDetailTrainer(null)}
+            trainer={detailTrainer}
+            onBook={handleBookTrainer}
+            isBooked={detailTrainer ? selectedTrainerId === detailTrainer.id : false}
+          />
         </>
       )}
     </div>

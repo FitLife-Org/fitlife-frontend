@@ -1,13 +1,24 @@
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Activity } from "lucide-react";
 import Card from "../../../../components/common/Card";
 import type { BodyMetricChartPoint } from "../../../../types/bodyMetric.type";
 import { formatNumber } from "./bodyMetricUtils";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface SimpleLineChartProps {
   data: BodyMetricChartPoint[];
   valueKey: "weightKg" | "bmi";
   title: string;
   unit: string;
+  color: string;
+  icon: React.ReactNode;
 }
 
 function SimpleLineChart({
@@ -15,18 +26,9 @@ function SimpleLineChart({
                            valueKey,
                            title,
                            unit,
+                           color,
+                           icon,
                          }: SimpleLineChartProps) {
-  const width = 760;
-  const height = 260;
-
-  const paddingLeft = 52;
-  const paddingRight = 24;
-  const paddingTop = 28;
-  const paddingBottom = 44;
-
-  const plotWidth = width - paddingLeft - paddingRight;
-  const plotHeight = height - paddingTop - paddingBottom;
-
   const values = data
       .map((item) => item[valueKey])
       .filter((value): value is number => Number.isFinite(value));
@@ -34,10 +36,18 @@ function SimpleLineChart({
   if (values.length === 0) {
     return (
         <Card className="p-6 gsap-animate">
-          <h2 className="text-lg font-black text-slate-900">{title}</h2>
-          <div className="mt-5 flex h-52 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200">
+          <div className="flex items-center gap-3">
+            <div className={`rounded-xl p-2.5 text-white`} style={{ backgroundColor: color }}>
+              {icon}
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-900">{title}</h2>
+              <p className="text-sm text-slate-500">Chưa đủ dữ liệu hiển thị.</p>
+            </div>
+          </div>
+          <div className="mt-5 flex h-[260px] items-center justify-center rounded-2xl border-2 border-dashed border-slate-200">
             <p className="text-sm font-medium text-slate-400">
-              Chưa đủ dữ liệu để hiển thị biểu đồ.
+              Không có dữ liệu
             </p>
           </div>
         </Card>
@@ -48,126 +58,83 @@ function SimpleLineChart({
   let maximum = Math.max(...values);
 
   if (minimum === maximum) {
-    minimum -= 1;
-    maximum += 1;
+    minimum = Math.max(0, minimum - 5);
+    maximum += 5;
   } else {
     const margin = (maximum - minimum) * 0.15;
-    minimum -= margin;
+    minimum = Math.max(0, minimum - margin);
     maximum += margin;
   }
 
-  const getX = (index: number): number => {
-    if (data.length <= 1) {
-      return paddingLeft + plotWidth / 2;
-    }
-    return paddingLeft + (index / (data.length - 1)) * plotWidth;
-  };
-
-  const getY = (value: number): number =>
-      paddingTop + (1 - (value - minimum) / (maximum - minimum)) * plotHeight;
-
-  const points = data
-      .map((item, index) => `${getX(index)},${getY(item[valueKey])}`)
-      .join(" ");
-
-  const horizontalLines = Array.from({ length: 5 }, (_, index) => {
-    const ratio = index / 4;
-    const y = paddingTop + ratio * plotHeight;
-    const value = maximum - ratio * (maximum - minimum);
-    return { y, value };
-  });
-
   return (
-      <Card className="overflow-hidden p-6 gsap-animate">
-        <div className="flex items-center justify-between gap-4">
+      <Card className="overflow-hidden p-6 shadow-sm ring-1 ring-slate-900/5 transition-shadow hover:shadow-md gsap-animate">
+        <div className="flex items-center gap-3">
+          <div className={`rounded-xl p-2.5 text-white`} style={{ backgroundColor: color }}>
+            {icon}
+          </div>
           <div>
             <h2 className="text-lg font-black text-slate-900">{title}</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Dữ liệu được sắp xếp theo thời gian đo.
+            <p className="text-xs text-slate-500 mt-0.5">
+              Dữ liệu sắp xếp theo thời gian đo gần nhất
             </p>
           </div>
-          <TrendingUp className="h-5 w-5 text-fit-primary" />
         </div>
 
-        <div className="mt-5 w-full">
-          <svg
-              viewBox={`0 0 ${width} ${height}`}
-              className="w-full h-auto drop-shadow-sm"
-              role="img"
-              aria-label={title}
-          >
-            {horizontalLines.map((line, index) => (
-                <g key={index}>
-                  <line
-                      x1={paddingLeft}
-                      y1={line.y}
-                      x2={width - paddingRight}
-                      y2={line.y}
-                      stroke="#e2e8f0"
-                      strokeDasharray="4 4"
-                  />
-                  <text
-                      x={paddingLeft - 10}
-                      y={line.y + 4}
-                      textAnchor="end"
-                      fontSize="11"
-                      fill="#94a3b8"
-                  >
-                    {formatNumber(line.value, 1)}
-                  </text>
-                </g>
-            ))}
-
-            <polyline
-                points={points}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-fit-primary"
-            />
-
-            {data.map((item, index) => {
-              const x = getX(index);
-              const y = getY(item[valueKey]);
-              const displayLabel =
-                  data.length <= 8 ||
-                  index === 0 ||
-                  index === data.length - 1 ||
-                  index % 2 === 0;
-
-              return (
-                  <g key={item.id}>
-                    <circle
-                        cx={x}
-                        cy={y}
-                        r="5"
-                        fill="white"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        className="text-fit-primary"
-                    >
-                      <title>
-                        {`${item.label}: ${formatNumber(item[valueKey], 2)} ${unit}`}
-                      </title>
-                    </circle>
-
-                    {displayLabel && (
-                        <text
-                            x={x}
-                            y={height - 15}
-                            textAnchor="middle"
-                            fontSize="11"
-                            fill="#64748b"
-                        >
-                          {item.label}
-                        </text>
-                    )}
-                  </g>
-              );
-            })}
-          </svg>
+        <div className="mt-6 h-[260px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+                data={data}
+                margin={{ top: 10, right: 0, left: -20, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id={`color-${valueKey}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={color} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  dy={10}
+              />
+              <YAxis
+                  domain={[minimum, maximum]}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 12 }}
+                  tickFormatter={(val) => formatNumber(val, 0)}
+                  dx={-10}
+              />
+              <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                          <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-lg">
+                            <p className="mb-1 text-xs font-semibold text-slate-500">{label}</p>
+                            <p className="text-sm font-bold" style={{ color }}>
+                              {formatNumber(payload[0].value as number, 2)} {unit}
+                            </p>
+                          </div>
+                      );
+                    }
+                    return null;
+                  }}
+                  cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: "3 3" }}
+              />
+              <Area
+                  type="monotone"
+                  dataKey={valueKey}
+                  stroke={color}
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill={`url(#color-${valueKey})`}
+                  activeDot={{ r: 6, strokeWidth: 0, fill: color }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </Card>
   );
@@ -183,14 +150,18 @@ export function BodyMetricCharts({ chartData }: BodyMetricChartsProps) {
         <SimpleLineChart
             data={chartData}
             valueKey="weightKg"
-            title="Biểu đồ cân nặng"
+            title="Biểu đồ Cân nặng"
             unit="kg"
+            color="#3b82f6" // blue-500
+            icon={<TrendingUp className="h-5 w-5" />}
         />
         <SimpleLineChart
             data={chartData}
             valueKey="bmi"
             title="Biểu đồ BMI"
             unit=""
+            color="#10b981" // emerald-500
+            icon={<Activity className="h-5 w-5" />}
         />
       </div>
   );

@@ -314,6 +314,12 @@ export function useMemberProfile() {
                     ) {
                         return "Ngày sinh không được ở tương lai.";
                     }
+
+                    const tenYearsAgo = new Date();
+                    tenYearsAgo.setFullYear(today.getFullYear() - 10);
+                    if (birthDate > tenYearsAgo) {
+                        return "Hội viên phải từ 10 tuổi trở lên.";
+                    }
                 }
 
                 return null;

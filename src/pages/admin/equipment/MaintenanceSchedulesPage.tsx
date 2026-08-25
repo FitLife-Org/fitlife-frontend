@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, CheckCircle2, Clock } from "lucide-react";
 import Card from "../../../components/common/Card";
@@ -15,11 +15,6 @@ interface ScheduleItem {
     staff: string;
 }
 
-const MOCK_SCHEDULES: ScheduleItem[] = [
-    { id: "BT001", realId: 1, equipName: "Máy chạy bộ TechnoGym T20", date: "15/06/2024", type: "Định kỳ", status: "PENDING", staff: "Nguyễn Văn A" },
-    { id: "BT002", realId: 2, equipName: "Ghế đẩy ngực Hammer", date: "10/06/2024", type: "Sửa chữa", status: "COMPLETED", staff: "Trần Văn B" },
-];
-
 export default function MaintenanceSchedulesPage() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
@@ -31,11 +26,7 @@ export default function MaintenanceSchedulesPage() {
     const [pageSize, setPageSize] = useState(10);
     const [totalItems, setTotalItems] = useState(0);
 
-    useEffect(() => {
-        fetchSchedules();
-    }, [currentPage, pageSize]);
-
-    const fetchSchedules = async () => {
+    const fetchSchedules = useCallback(async () => {
         setLoading(true);
         try {
             const response = await EquipmentService.getMaintenanceSchedules({ page: currentPage, size: pageSize }) as any;
@@ -62,7 +53,11 @@ export default function MaintenanceSchedulesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, pageSize]);
+
+    useEffect(() => {
+        fetchSchedules();
+    }, [fetchSchedules]);
 
     const handleComplete = async (realId: number) => {
         if (!window.confirm("Bạn có chắc chắn muốn xác nhận hoàn thành phiếu bảo trì này và đưa thiết bị trở lại hoạt động?")) {

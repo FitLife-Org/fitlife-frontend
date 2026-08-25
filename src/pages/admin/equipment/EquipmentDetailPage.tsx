@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Edit2, Wrench, Calendar, MapPin, Tag, AlertTriangle, Trash2, Edit, DollarSign, History } from "lucide-react";
+import { ArrowLeft, Edit2, Wrench, Calendar, MapPin, Tag, AlertTriangle, Trash2, Edit, DollarSign, History, RefreshCcw } from "lucide-react";
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
 import { EquipmentService } from "../../../services/equipmentService";
@@ -191,6 +191,14 @@ export default function EquipmentDetailPage() {
                             className="px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white rounded-lg font-medium text-sm flex items-center gap-2 border-0 shadow-md shadow-slate-500/20 transition-all"
                         >
                             <Trash2 className="w-4 h-4" /> Ngừng dùng
+                        </button>
+                    )}
+                    {isAdmin && equipment.status === "INACTIVE" && (
+                        <button 
+                            onClick={() => handleStatusChange("ACTIVE")} 
+                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium text-sm flex items-center gap-2 border-0 shadow-md shadow-emerald-500/20 transition-all"
+                        >
+                            <RefreshCcw className="w-4 h-4" /> Hoạt động lại
                         </button>
                     )}
                 </div>

@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
-import { Search, Plus, Edit2, Trash2, Mail, Phone, User, Clock, Award } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, Plus, Edit2, Trash2, Mail, Phone, User, Clock, Award, Eye } from "lucide-react";
 import Pagination from "../../components/common/Pagination";
 
 import PageHeader from "../../components/common/PageHeader";
 import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
+import TrainerDetailModal from "../../components/common/TrainerDetailModal";
 import { useTrainerManagement } from "../../hooks/useTrainerManagement";
 import { TrainerFormModal } from "./components/TrainerFormModal";
 import { usePageAnimation } from "../../hooks/usePageAnimation";
@@ -23,6 +24,7 @@ export default function TrainerManagementPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
+  const [detailTrainer, setDetailTrainer] = useState<Trainer | null>(null);
 
   const handleOpenAddModal = () => {
     setSelectedTrainer(null);
@@ -45,7 +47,7 @@ export default function TrainerManagementPage() {
   }, [filteredTrainers, currentPage, pageSize]);
 
   // Reset page when search changes
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(0);
   }, [search]);
 
@@ -102,6 +104,13 @@ export default function TrainerManagementPage() {
                     <User className="w-8 h-8 text-fit-primary" />
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+                    <button 
+                      onClick={() => setDetailTrainer(trainer)}
+                      className="p-2.5 text-emerald-600 hover:text-white hover:bg-emerald-600 rounded-xl transition-all shadow-sm hover:shadow-emerald-600/30 hover:scale-110 bg-emerald-50/50"
+                      title="Xem chi tiết"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                     <button 
                       onClick={() => handleOpenEditModal(trainer)}
                       className="p-2.5 text-blue-500 hover:text-white hover:bg-blue-500 rounded-xl transition-all shadow-sm hover:shadow-blue-500/30 hover:scale-110 bg-blue-50/50"
@@ -171,10 +180,16 @@ export default function TrainerManagementPage() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100">
-                  <p className="text-sm text-slate-500 line-clamp-2">
+                <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                  <p className="text-sm text-slate-500 line-clamp-2 flex-1">
                     {trainer.bio || "Chưa có thông tin giới thiệu."}
                   </p>
+                  <button
+                    onClick={() => setDetailTrainer(trainer)}
+                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline shrink-0 ml-2"
+                  >
+                    Chi tiết &rarr;
+                  </button>
                 </div>
               </div>
             </div>
@@ -201,6 +216,12 @@ export default function TrainerManagementPage() {
         onClose={() => setModalOpen(false)} 
         onSuccess={fetchTrainers} 
         trainer={selectedTrainer} 
+      />
+
+      <TrainerDetailModal
+        open={Boolean(detailTrainer)}
+        onClose={() => setDetailTrainer(null)}
+        trainer={detailTrainer}
       />
     </div>
   );

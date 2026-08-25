@@ -43,7 +43,7 @@ const PUBLIC_API_ENDPOINTS = [
     "/auth/google-login",
     "/auth/refresh-token",
     "/auth/verify-email",
-    "/auth/resend-verification",
+    "/auth/resend-verification-email",
     "/auth/forgot-password",
     "/auth/reset-password",
 
@@ -441,6 +441,18 @@ apiClient.interceptors.response.use(
                 message: "Success (Auto-wrapped)",
                 data: data,
             };
+        } else if (data && typeof data === "object" && "code" in data) {
+            const code = Number(data.code);
+            if (code >= 400) {
+                return Promise.reject({
+                    response: {
+                        status: code,
+                        data: data
+                    },
+                    config: response.config,
+                    isAxiosError: true
+                });
+            }
         }
         return response;
     },

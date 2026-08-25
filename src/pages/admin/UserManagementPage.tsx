@@ -13,7 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Pagination from "../../components/common/Pagination";
@@ -129,22 +129,30 @@ function formatDate(
     return "-";
   }
 
+  // Nếu là chuỗi ISO chứa thời gian (có chữ T)
+  if (value.includes("T")) {
+    try {
+      const date = new Date(value);
+      return new Intl.DateTimeFormat("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(date);
+    } catch (e) {
+      return value;
+    }
+  }
+
   /*
    * LocalDate từ Backend thường là YYYY-MM-DD.
    * Parse thủ công để tránh lệch ngày do timezone.
    */
-  const parts =
-      value.split("-");
+  const parts = value.split("-");
 
   if (parts.length === 3) {
-    const year =
-        Number(parts[0]);
-
-    const month =
-        Number(parts[1]);
-
-    const day =
-        Number(parts[2]);
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const day = Number(parts[2]);
 
     if (
         Number.isInteger(year) &&
@@ -311,10 +319,6 @@ export default function UserManagementPage() {
       (currentPage + 1) * pageSize
   );
 
-  // Reset page when filter changes
-  useEffect(() => {
-      setCurrentPage(0);
-  }, [searchTerm, statusFilter]);
 
   /* ========================================================
    * ANIMATION
@@ -983,12 +987,13 @@ export default function UserManagementPage() {
                   }
                   onChange={(
                       event,
-                  ) =>
+                  ) => {
                       setSearchTerm(
                           event.target
                               .value,
-                      )
-                  }
+                      );
+                      setCurrentPage(0);
+                  }}
                   className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm transition focus:border-fit-primary focus:outline-none focus:ring-2 focus:ring-fit-primary/10"
               />
             </div>
@@ -1010,14 +1015,15 @@ export default function UserManagementPage() {
                   }
                   onChange={(
                       event,
-                  ) =>
+                  ) => {
                       setStatusFilter(
                           event.target
                               .value as
                               | MemberStatus
                               | "ALL",
-                      )
-                  }
+                      );
+                      setCurrentPage(0);
+                  }}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 focus:border-fit-primary focus:outline-none focus:ring-2 focus:ring-fit-primary/10"
               >
                 <option value="ALL">
@@ -1242,6 +1248,7 @@ export default function UserManagementPage() {
        * ==================================================== */}
 
         <Modal
+            size="xl"
             title={`Chi tiết hội viên: ${
                 selectedMember
                     ?.fullName ??
@@ -1392,10 +1399,22 @@ export default function UserManagementPage() {
 
                                   <DetailField
                                       label="Ngày sinh"
-                                      value={formatDate(
-                                          selectedMember.dateOfBirth,
-                                      )}
+                                      value={
+                                          selectedMember.dateOfBirth
+                                              ? formatDate(selectedMember.dateOfBirth)
+                                              : "-"
+                                      }
                                   />
+
+                                  <DetailField
+                                      label="Địa chỉ"
+                                      value={
+                                          selectedMember.address ||
+                                          "-"
+                                      }
+                                  />
+
+
 
                                   <DetailField
                                       label="Ngày tham gia"
@@ -1499,7 +1518,7 @@ export default function UserManagementPage() {
                                   <span className="flex items-center gap-1">
                                     <Calendar className="h-3.5 w-3.5" />
 
-                                    {subscription.startDate ||
+                                    {formatDate(subscription.startDate) ||
                                         "-"}
                                   </span>
 
@@ -1510,7 +1529,7 @@ export default function UserManagementPage() {
                                                     <span className="flex items-center gap-1">
                                     <Calendar className="h-3.5 w-3.5" />
 
-                                                      {subscription.endDate ||
+                                                      {formatDate(subscription.endDate) ||
                                                           "-"}
                                   </span>
                                                   </div>
@@ -1559,7 +1578,11 @@ export default function UserManagementPage() {
                                         <thead className="bg-slate-50 font-semibold text-slate-500">
                                         <tr>
                                           <th className="px-4 py-2.5 text-left">
-                                            Thời gian
+                                            Giờ vào
+                                          </th>
+
+                                          <th className="px-4 py-2.5 text-left">
+                                            Giờ ra
                                           </th>
 
                                           <th className="px-4 py-2.5 text-left">
@@ -1584,6 +1607,12 @@ export default function UserManagementPage() {
                                                     ).toLocaleString(
                                                         "vi-VN",
                                                     )}
+                                                  </td>
+
+                                                  <td className="px-4 py-3 text-slate-600">
+                                                    {record.checkOutTime
+                                                        ? new Date(record.checkOutTime).toLocaleString("vi-VN")
+                                                        : "-"}
                                                   </td>
 
                                                   <td className="px-4 py-3">

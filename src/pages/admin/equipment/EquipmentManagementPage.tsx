@@ -91,10 +91,7 @@ export default function EquipmentManagementPage() {
         setTotalItems,
     ] = useState(0);
 
-    const [
-        totalPages,
-        setTotalPages,
-    ] = useState(0);
+
 
     /**
      * Spring Pageable bắt đầu từ 0.
@@ -161,9 +158,7 @@ export default function EquipmentManagementPage() {
                     (data as any).totalElements ?? items.length,
                 );
 
-                setTotalPages(
-                    (data as any).totalPages ?? 1,
-                );
+
             } catch (error: unknown) {
                 console.error(
                     "Lỗi khi tải thiết bị:",
@@ -172,7 +167,6 @@ export default function EquipmentManagementPage() {
 
                 setEquipments([]);
                 setTotalItems(0);
-                setTotalPages(0);
             } finally {
                 setLoading(false);
             }
@@ -225,18 +219,7 @@ export default function EquipmentManagementPage() {
         }
     };
 
-    const firstItem =
-        totalItems === 0
-            ? 0
-            : currentPage *
-            pageSize +
-            1;
 
-    const lastItem = Math.min(
-        (currentPage + 1) *
-        pageSize,
-        totalItems,
-    );
 
     return (
         <div className="space-y-6">

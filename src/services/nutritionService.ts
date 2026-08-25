@@ -326,6 +326,7 @@ export const nutritionService = {
 
     async getTrainerPlans(
         memberId: number,
+        trainerId?: number,
         page = 0,
         size = 10,
     ): Promise<
@@ -343,9 +344,10 @@ export const nutritionService = {
                     SpringPage<NutritionPlan>
                 >
             >(
-                `/trainer/members/${id}/nutrition-plans`,
+                `/trainer/nutrition-plans/members/${id}`,
                 {
                     params: {
+                        ...(trainerId ? { trainerId } : {}),
                         page,
                         size,
                         sort:
@@ -361,9 +363,8 @@ export const nutritionService = {
 
     async createTrainerPlan(
         memberId: number,
-
-        request:
-        NutritionPlanRequest,
+        request: NutritionPlanRequest,
+        trainerId?: number,
     ): Promise<NutritionPlan> {
         const id =
             validatePositiveId(
@@ -375,8 +376,11 @@ export const nutritionService = {
             await apiClient.post<
                 ApiResponse<NutritionPlan>
             >(
-                `/trainer/members/${id}/nutrition-plans`,
+                `/trainer/nutrition-plans/members/${id}`,
                 request,
+                {
+                    params: trainerId ? { trainerId } : undefined,
+                },
             );
 
         return normalizePlan(
@@ -386,11 +390,9 @@ export const nutritionService = {
 
     async updateTrainerPlan(
         planId: number,
-
         memberId: number,
-
-        request:
-        NutritionPlanRequest,
+        request: NutritionPlanRequest,
+        trainerId?: number,
     ): Promise<NutritionPlan> {
         const numericPlanId =
             validatePositiveId(
@@ -405,11 +407,14 @@ export const nutritionService = {
             );
 
         const response =
-            await apiClient.patch<
+            await apiClient.put<
                 ApiResponse<NutritionPlan>
             >(
-                `/trainer/members/${numericMemberId}/nutrition-plans/${numericPlanId}`,
+                `/trainer/nutrition-plans/${numericPlanId}/members/${numericMemberId}`,
                 request,
+                {
+                    params: trainerId ? { trainerId } : undefined,
+                },
             );
 
         return normalizePlan(

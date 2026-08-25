@@ -13,17 +13,7 @@ export default function MySubscriptionPage() {
   const { subscriptions, loading, activeSubscription, calculateDaysLeft, handleRenew } = useMySubscription();
   const navigate = useNavigate();
 
-  const onRenew = async (id: number) => {
-    try {
-      const newSub = await handleRenew(id);
-      if (newSub.invoiceId) {
-        void showAlert.success("Thành công", "Đã tạo hóa đơn gia hạn.");
-        navigate(`/member/payment/${newSub.invoiceId}`);
-      }
-    } catch (error) {
-      void showAlert.error("Đã xảy ra lỗi", "Không thể gia hạn gói tập.");
-    }
-  };
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -127,7 +117,7 @@ export default function MySubscriptionPage() {
         <div className="mt-12">
           <h3 className="text-xl font-bold text-slate-900 mb-6">Lịch sử đăng ký</h3>
           <div className="grid gap-4">
-            {subscriptions.map((sub, idx) => (
+            {subscriptions.map((sub) => (
               <div
                 key={sub.id}
                 className="gsap-animate"

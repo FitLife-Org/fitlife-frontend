@@ -348,7 +348,7 @@ export const authService = {
         await apiClient.post<
             ApiResponse<void>
         >(
-            "/auth/resend-verification",
+            "/auth/resend-verification-email",
             {
               ...data,
               email,

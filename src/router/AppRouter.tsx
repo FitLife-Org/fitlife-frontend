@@ -127,6 +127,7 @@ import StaffCheckinHistoryPage from "../pages/staff/StaffCheckinHistoryPage";
 // =====================================================
 
 import TrainerSchedulePage from "../pages/trainer/TrainerSchedulePage";
+import TrainerProfilePage from "../pages/trainer/TrainerProfilePage";
 import MyMembersPage from "../pages/trainer/MyMembersPage";
 import WorkoutTrackingPage from "../pages/trainer/WorkoutTrackingPage";
 
@@ -1039,9 +1040,23 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* =================================
+                        {/* =========================================
                          * TRAINER
-                         * ================================= */}
+                         * ========================================= */}
+                        <Route
+                            path={
+                                ROUTES.TRAINER_PROFILE
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                    ]}
+                                >
+                                    <TrainerProfilePage />
+                                </RoleGuard>
+                            }
+                        />
 
                         <Route
                             path={

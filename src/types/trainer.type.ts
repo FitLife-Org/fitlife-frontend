@@ -9,6 +9,7 @@ export interface Trainer {
   experienceYears?: number;
   certifications?: string;
   bio?: string;
+  avatarUrl?: string;
   phone?: string;
   email?: string;
 }

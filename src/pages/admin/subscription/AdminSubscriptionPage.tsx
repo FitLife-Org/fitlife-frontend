@@ -56,7 +56,7 @@ export default function AdminSubscriptionPage() {
     const [loadingFormData, setLoadingFormData] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<CreateSubscriptionRequest & { memberId: string }>({
+    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateSubscriptionRequest & { memberId: string }>({
         defaultValues: {
             memberId: "",
             gymPackageId: undefined,

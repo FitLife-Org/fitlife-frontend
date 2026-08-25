@@ -285,9 +285,6 @@ export default function EditEquipmentPage() {
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
-                        <Button type="button" variant="danger" onClick={() => navigate(-1)} className="px-6 py-2.5 shadow-md shadow-red-500/10">
-                            Hủy bỏ
-                        </Button>
                         <Button type="submit" disabled={loading} className="px-6 py-2.5 bg-fit-primary hover:bg-fit-primaryHover text-white rounded-lg font-medium text-sm shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50">
                             <Save className="w-4 h-4" />
                             {loading ? "Đang lưu..." : "Lưu thay đổi"}

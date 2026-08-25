@@ -74,7 +74,7 @@ export default function StaffCheckinHistoryPage() {
       await staffCheckinService.manualCheckout(id);
       toast.success("Check-out thành công!");
       void fetchData();
-    } catch (error) {
+    } catch {
       toast.error("Lỗi khi Check-out.");
     } finally {
       setCheckingOutId(null);

@@ -197,13 +197,7 @@ export default function MemberSchedulePage() {
   ] =
       useState(true);
 
-  const [
-    plans,
-    setPlans,
-  ] =
-      useState<
-          WorkoutPlan[]
-      >([]);
+
 
   const [
     activePlan,
@@ -252,9 +246,7 @@ export default function MemberSchedulePage() {
               ),
           );
 
-          setPlans(
-              workoutPlans,
-          );
+
 
           /*
            * Không lấy data[0] làm active
@@ -272,9 +264,7 @@ export default function MemberSchedulePage() {
               active,
           );
         } catch (error) {
-          setPlans(
-              [],
-          );
+
 
           setActivePlan(
               null,

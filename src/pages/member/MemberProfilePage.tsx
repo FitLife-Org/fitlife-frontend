@@ -281,14 +281,21 @@ export default function MemberProfilePage() {
                 </h2>
 
                 <p className="mt-1 font-mono text-sm text-slate-400">
-                  {profile.memberCode}
+                  {profile.memberCode || "Chưa có mã hội viên"}
                 </p>
 
                 <div className="mt-3 flex justify-center">
-                  <Badge variant="success">
+                  <Badge variant={
+                    profile.status === "ACTIVE" ? "success" : 
+                    profile.status === "SUSPENDED" ? "danger" : 
+                    "warning"
+                  }>
                   <span className="flex items-center gap-1">
                     <Crown className="h-3.5 w-3.5" />
-                    Hội viên FitLife
+                    {profile.status === "ACTIVE" ? "Đang hoạt động" : 
+                     profile.status === "SUSPENDED" ? "Bị khóa" : 
+                     profile.status === "INACTIVE" ? "Chưa kích hoạt" : 
+                     profile.status || "Hội viên FitLife"}
                   </span>
                   </Badge>
                 </div>

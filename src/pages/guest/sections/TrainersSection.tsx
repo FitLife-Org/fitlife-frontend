@@ -43,7 +43,7 @@ export default function TrainersSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {trainers.map((trainer, idx) => (
+          {trainers.map((trainer) => (
             <div
               key={trainer.id}
               className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 gsap-animate"

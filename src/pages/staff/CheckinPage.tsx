@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Search, User, CheckCircle2, XCircle, Activity, History, ArrowRight, Smartphone, Keyboard, ScanLine, ScanFace } from "lucide-react";
 import Input from "../../components/common/Input";
 import { useStaffCheckinLogic } from "../../utils/validators/useStaffCheckinLogic";
-import { useState } from "react";
+
 import { ROUTES } from "../../config/routes";
 import PageHeader from "../../components/common/PageHeader";
 import GymQrScanner from "../../components/checkin/GymQrScanner";

@@ -66,7 +66,27 @@ export const publicService = {
   },
 
   async getTrainers(): Promise<PublicTrainer[]> {
-    // Mock trainers since backend does not have public trainers endpoint
+    try {
+      const response = await apiClient.get<ApiResponse<any[]>>("/trainers");
+      const data = response.data?.data;
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((t: any) => ({
+          id: t.id ? t.id.toString() : "",
+          fullName: t.fullName || "Huấn luyện viên",
+          avatarUrl: t.avatarUrl || `https://i.pravatar.cc/150?u=${t.id || t.username}`,
+          specialties: t.specialization
+            ? t.specialization.split(",").map((s: string) => s.trim())
+            : t.specialty
+            ? [t.specialty]
+            : ["Fitness & Bodybuilding"],
+          experienceYears: t.experienceYears || 1,
+          bio: t.bio || "Huấn luyện viên cá nhân chuyên nghiệp tại FitLife Gym."
+        }));
+      }
+    } catch (error) {
+      console.warn("Failed to fetch public trainers from backend, using fallback data", error);
+    }
+
     return [
       {
         id: "1",
@@ -74,7 +94,7 @@ export const publicService = {
         avatarUrl: "https://i.pravatar.cc/150?u=a",
         specialties: ["Yoga", "Cardio"],
         experienceYears: 5,
-        bio: "Chuyên gia Yoga"
+        bio: "Chuyên gia Yoga & Cardio với hơn 5 năm kinh nghiệm huấn luyện."
       },
       {
         id: "2",
@@ -82,7 +102,7 @@ export const publicService = {
         avatarUrl: "https://i.pravatar.cc/150?u=b",
         specialties: ["Weightlifting", "CrossFit"],
         experienceYears: 7,
-        bio: "Chuyên gia thể hình"
+        bio: "Chuyên gia thể hình và sức mạnh tăng cơ giảm mỡ hiệu quả."
       }
     ];
   },
