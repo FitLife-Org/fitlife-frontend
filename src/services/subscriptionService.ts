@@ -130,5 +130,10 @@ export const subscriptionService = {
         );
 
         return response.data.data;
+    },
+
+    async transferSubscription(id: number, recipientMemberId: number, note?: string): Promise<Subscription> {
+        const response = await apiClient.post<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/transfer`, { recipientMemberId, note });
+        return response.data.data;
     }
 };

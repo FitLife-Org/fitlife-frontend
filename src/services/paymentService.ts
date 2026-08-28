@@ -16,6 +16,18 @@ const extractPageContent = <T>(data: PageResponse<T> | T[]): T[] => {
 };
 
 export const paymentService = {
+  async createPayment(data: {
+    invoiceId: number;
+    paymentMethod: "CASH" | "BANK_TRANSFER" | "VNPAY";
+    note?: string;
+  }): Promise<PaymentResult> {
+    const response = await apiClient.post<ApiResponse<PaymentResult>>(
+        "/payments",
+        data
+    );
+    return response.data.data;
+  },
+
   async createOfflinePayment(data: {
     invoiceId: number;
     paymentMethod: "CASH" | "BANK_TRANSFER";
