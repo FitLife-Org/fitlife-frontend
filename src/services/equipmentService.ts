@@ -58,115 +58,59 @@ export const EquipmentService = {
   async getAll(
       params: EquipmentQueryParams = {},
   ): Promise<PageResponse<Equipment>> {
-    try {
-      const response =
-          await apiClient.get<
-              ApiResponse<PageResponse<Equipment>>
-          >(STAFF_API_BASE, {
-            params: {
-              page: params.page ?? 0,
-              size: params.size ?? 20,
+    const response =
+        await apiClient.get<
+            ApiResponse<PageResponse<Equipment>>
+        >(PUBLIC_API_BASE, {
+          params: {
+            page: params.page ?? 0,
+            size: params.size ?? 20,
 
-              ...(params.keyword?.trim()
-                  ? {
-                    keyword:
-                        params.keyword.trim(),
-                  }
-                  : {}),
+            ...(params.keyword?.trim()
+                ? {
+                  keyword:
+                      params.keyword.trim(),
+                }
+                : {}),
 
-              ...(params.status &&
-              params.status !== "ALL"
-                  ? {
-                    status: params.status,
-                  }
-                  : {}),
+            ...(params.status &&
+            params.status !== "ALL"
+                ? {
+                  status: params.status,
+                }
+                : {}),
 
-              ...(params.areaId !== undefined
-                  ? {
-                    areaId: params.areaId,
-                  }
-                  : {}),
+            ...(params.areaId !== undefined
+                ? {
+                  areaId: params.areaId,
+                }
+                : {}),
 
-              ...(params.sort
-                  ? {
-                    sort: params.sort,
-                  }
-                  : {}),
-            },
-          });
-
-      return requireData(
-          response.data,
-          "Không nhận được danh sách thiết bị.",
-      );
-    } catch (error) {
-      console.warn("Backend failed with 500 for equipment getAll, returning mock data");
-      return {
-        content: [
-          {
-            id: "EQ-001",
-            name: "Máy chạy bộ Pro",
-            category: "Cardio",
-            area: "Tầng 1 - Khu Cardio",
-            status: "ACTIVE",
-            lastMaintenance: "2026-07-01",
-            nextMaintenance: "2026-12-01",
-            daysToNextMaintenance: 110
+            ...(params.sort
+                ? {
+                  sort: params.sort,
+                }
+                : {}),
           },
-          {
-            id: "EQ-002",
-            name: "Giàn tạ đa năng",
-            category: "Thể lực",
-            area: "Tầng 2 - Khu Free Weight",
-            status: "ACTIVE",
-            lastMaintenance: "2026-06-15",
-            nextMaintenance: "2026-10-15",
-            daysToNextMaintenance: 62
-          },
-          {
-            id: "EQ-003",
-            name: "Xe đạp tập",
-            category: "Cardio",
-            area: "Tầng 1 - Khu Cardio",
-            status: "MAINTENANCE",
-            lastMaintenance: "2026-03-01",
-            nextMaintenance: "2026-08-01",
-            daysToNextMaintenance: -13
-          }
-        ],
-        totalElements: 3,
-        totalPages: 1,
-        size: 20,
-        page: 0,
-        first: true,
-        last: true,
-        empty: false
-      };
-    }
+        });
+
+    return requireData(
+        response.data,
+        "Không nhận được danh sách thiết bị.",
+    );
   },
 
   async getSummary():
       Promise<EquipmentSummary> {
-    try {
-      const response =
-          await apiClient.get<
-              ApiResponse<EquipmentSummary>
-          >(`/admin/equipment/summary`);
+    const response =
+        await apiClient.get<
+            ApiResponse<EquipmentSummary>
+        >(`/admin/equipment/summary`);
 
-      return requireData(
-          response.data,
-          "Không nhận được dữ liệu tổng quan thiết bị.",
-      );
-    } catch (error) {
-      console.warn("Backend failed with 500 for equipment getSummary, returning mock data");
-      return {
-        total: 120,
-        active: { count: 105, percentage: 87.5 },
-        maintenance: { count: 10, percentage: 8.3 },
-        inactive: { count: 5, percentage: 4.2 },
-        upcomingMaintenance: { count: 3, timeFrame: "7 ngày tới" }
-      };
-    }
+    return requireData(
+        response.data,
+        "Không nhận được dữ liệu tổng quan thiết bị.",
+    );
   },
 
   async getById(
@@ -175,7 +119,7 @@ export const EquipmentService = {
     const response =
         await apiClient.get<
             ApiResponse<Equipment>
-        >(`${STAFF_API_BASE}/${id}`);
+        >(`${ADMIN_API_BASE}/${id}`);
 
     return requireData(
         response.data,

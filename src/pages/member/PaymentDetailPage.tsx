@@ -231,8 +231,13 @@ export default function PaymentDetailPage() {
             return;
           }
 
-          // For CASH and BANK_TRANSFER, we do not call the API because members cannot create offline payments directly.
-          // Staff will create the offline payment via /admin/payments/offline
+          // Call the backend API to create a PENDING payment request in the database
+          await paymentService.createPayment({
+            invoiceId: invoice.id,
+            paymentMethod,
+            note: note.trim() || undefined,
+          });
+
           await showAlert.success(
               "Hướng dẫn thanh toán",
               paymentMethod ===

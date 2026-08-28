@@ -21,6 +21,15 @@ type PriceInfo = {
   finalPrice: number;
 };
 
+const getTierLevel = (type?: string): number => {
+  if (!type) return 0;
+  const t = type.toUpperCase();
+  if (t === "VIP") return 3;
+  if (t === "STANDARD") return 2;
+  if (t === "BASIC") return 1;
+  return 0;
+};
+
 export default function PackageListPage() {
   const containerRef = usePageAnimation();
   const navigate = useNavigate();
@@ -121,6 +130,33 @@ export default function PackageListPage() {
 
     try {
       setProcessingId(pkgId);
+
+      // Check if we are upgrading
+      if (mySubscription && mySubscription.status === "ACTIVE") {
+        const currentPackage = packages.find(p => p.id === mySubscription.gymPackageId);
+        const currentTier = currentPackage ? getTierLevel(currentPackage.packageType) : 0;
+        const targetPackage = packages.find(p => p.id === pkgId);
+        const targetTier = targetPackage ? getTierLevel(targetPackage.packageType) : 0;
+
+        if (targetTier > currentTier) {
+          const confirmUpgrade = window.confirm(`Bạn có chắc chắn muốn nâng cấp từ gói "${currentPackage?.name}" lên gói "${targetPackage?.name}" không?`);
+          if (!confirmUpgrade) {
+            setProcessingId(null);
+            return;
+          }
+          const subscription = await subscriptionService.upgradeSubscription(mySubscription.id, selectedDurationId);
+          if (subscription?.invoiceId) {
+            navigate(`/member/payment/${subscription.invoiceId}`);
+            return;
+          }
+          showAlert.success(
+              "Đã tạo yêu cầu nâng cấp",
+              "Vui lòng thanh toán hóa đơn để hoàn tất nâng cấp."
+          );
+          navigate("/member/subscription");
+          return;
+        }
+      }
 
       const subscription = await subscriptionService.createSubscription({
         gymPackageId: pkgId,
@@ -287,6 +323,12 @@ export default function PackageListPage() {
                       mySubscription?.package?.id === item.id) &&
                   mySubscription?.status === "ACTIVE";
 
+              const targetTier = getTierLevel(item.packageType);
+              const currentPackage = mySubscription ? packages.find(p => p.id === mySubscription.gymPackageId) : null;
+              const currentTier = currentPackage ? getTierLevel(currentPackage.packageType) : 0;
+              const isUpgrade = mySubscription?.status === "ACTIVE" && targetTier > currentTier;
+              const isDisabled = !selectedDurationId || (mySubscription?.status === "ACTIVE" && !isUpgrade);
+
               const isPopular =
                   item.name.toLowerCase().includes("standard") ||
                   item.name.toLowerCase().includes("phổ biến") ||
@@ -400,11 +442,11 @@ export default function PackageListPage() {
                       {/* Action Button */}
                       <Button
                           className={`w-full py-4 rounded-xl text-sm uppercase tracking-wider transition-all ${btnClass}`}
-                          disabled={!selectedDurationId || mySubscription?.status === "ACTIVE"}
+                          disabled={isDisabled}
                           isLoading={processingId === item.id}
                           onClick={() => handlePurchase(item.id)}
                       >
-                        {isCurrent ? "Đang sử dụng" : mySubscription?.status === "ACTIVE" ? "Đã có gói tập" : "Đăng ký gói này"}
+                        {isCurrent ? "Đang sử dụng" : isUpgrade ? "Nâng cấp lên gói này" : mySubscription?.status === "ACTIVE" ? "Đã có gói tập" : "Đăng ký gói này"}
                       </Button>
                     </div>
                   </div>
