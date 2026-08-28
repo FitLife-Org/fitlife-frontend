@@ -120,6 +120,18 @@ export const subscriptionService = {
     return response.data.data;
   },
 
+  async adminTransferSubscription(id: number, targetMemberId: number): Promise<Subscription> {
+    // MOCK: Giả lập gọi API chuyển nhượng vì backend chưa có endpoint này
+    console.log(`[MOCK] Transferring subscription ${id} to member ${targetMemberId}`);
+    return new Promise((resolve) => setTimeout(() => resolve({ id } as Subscription), 1000));
+  },
+
+  async adminUpgradeSubscription(id: number, data: { gymPackageId: number; packageDurationId: number }): Promise<Subscription> {
+    // MOCK: Giả lập gọi API nâng cấp
+    console.log(`[MOCK] Upgrading subscription ${id} with data`, data);
+    return new Promise((resolve) => setTimeout(() => resolve({ id } as Subscription), 1000));
+  },
+
     async createSubscriptionForMemberByStaff(
         memberId: number,
         data: CreateSubscriptionRequest

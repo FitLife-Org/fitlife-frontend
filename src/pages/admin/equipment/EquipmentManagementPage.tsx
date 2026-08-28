@@ -15,12 +15,14 @@ import {
     XCircle,
     CalendarClock,
     MapPin,
+    BrainCircuit,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
 import Button from "../../../components/common/Button";
 import Card from "../../../components/common/Card";
+import AiEquipmentModal from "./AiEquipmentModal";
 
 import Pagination from "../../../components/common/Pagination";
 
@@ -64,6 +66,7 @@ const INITIAL_SUMMARY:
 export default function EquipmentManagementPage() {
     const user = useAuthStore((state) => state.user);
     const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false;
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
     const [searchTerm, setSearchTerm] =
         useState("");
@@ -237,6 +240,13 @@ export default function EquipmentManagementPage() {
                 <div className="flex shrink-0 items-center gap-3">
                     {isAdmin && (
                         <>
+                            <Button 
+                                onClick={() => setIsAiModalOpen(true)}
+                                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20"
+                            >
+                                <BrainCircuit className="h-4 w-4" />
+                                AI Phân tích
+                            </Button>
                             <Link to="/admin/equipment/areas">
                                 <Button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20">
                                     <MapPin className="h-4 w-4" />
@@ -541,6 +551,11 @@ export default function EquipmentManagementPage() {
                     }}
                 />
             </Card>
+            
+            <AiEquipmentModal 
+                open={isAiModalOpen} 
+                onClose={() => setIsAiModalOpen(false)} 
+            />
         </div>
     );
 }

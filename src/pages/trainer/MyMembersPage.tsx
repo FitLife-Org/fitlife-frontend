@@ -11,6 +11,7 @@ export default function MyMembersPage() {
   const [members, setMembers] = useState<TrainerMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -27,10 +28,12 @@ export default function MyMembersPage() {
     fetchMembers();
   }, []);
 
-  const filteredMembers = members.filter(m => 
-    (m.fullName || "").toLowerCase().includes(search.toLowerCase()) || 
-    (m.phone || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredMembers = members.filter(m => {
+    const matchesSearch = (m.fullName || "").toLowerCase().includes(search.toLowerCase()) || 
+                          (m.phone || "").toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "ALL" || m.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">
@@ -39,13 +42,24 @@ export default function MyMembersPage() {
           <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fit-primary to-blue-600">Hội viên của tôi</h2>
           <p className="text-slate-600 text-sm mt-1 font-medium">Danh sách các hội viên bạn đang phụ trách huấn luyện</p>
         </div>
-        <div className="w-full sm:w-72">
-          <Input 
-            icon={<Search className="w-5 h-5 text-slate-400" />}
-            placeholder="Tìm kiếm theo tên hoặc SĐT..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <select 
+            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium outline-none focus:border-fit-primary"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="ACTIVE">Đang tập</option>
+            <option value="INACTIVE">Tạm nghỉ</option>
+          </select>
+          <div className="w-full sm:w-64">
+            <Input 
+              icon={<Search className="w-5 h-5 text-slate-400" />}
+              placeholder="Tìm kiếm theo tên hoặc SĐT..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 

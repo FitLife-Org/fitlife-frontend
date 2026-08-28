@@ -43,7 +43,11 @@ export default function AdminSubscriptionPage() {
     
     // Modal states
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
     const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
+    const [pickerMode, setPickerMode] = useState<"ASSIGN" | "TRANSFER">("ASSIGN");
     const [members, setMembers] = useState<MemberProfile[]>([]);
     const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null);
     const [memberSearch, setMemberSearch] = useState("");
@@ -168,6 +172,62 @@ export default function AdminSubscriptionPage() {
         }
     };
 
+    const handleOpenUpgrade = (sub: Subscription) => {
+        setSelectedSubscription(sub);
+        if (packages.length === 0) fetchFormData();
+        setIsUpgradeModalOpen(true);
+    };
+
+    const handleOpenTransfer = (sub: Subscription) => {
+        setSelectedSubscription(sub);
+        setSelectedMember(null);
+        setIsTransferModalOpen(true);
+    };
+
+    const handleUpgradeConfirm = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!selectedSubscription) return;
+        
+        const formData = new FormData(e.currentTarget);
+        const gymPackageId = Number(formData.get("gymPackageId"));
+        const packageDurationId = Number(formData.get("packageDurationId"));
+        
+        if (!gymPackageId || !packageDurationId) {
+            void showAlert.error("Lỗi", "Vui lòng chọn gói tập và thời lượng.");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            await subscriptionService.adminUpgradeSubscription(selectedSubscription.id, { gymPackageId, packageDurationId });
+            void showAlert.success("Thành công", "Nâng cấp gói thành công");
+            setIsUpgradeModalOpen(false);
+            void fetchSubscriptions();
+        } catch (error) {
+            void showAlert.error("Thất bại", getApiErrorMessage(error));
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleTransferConfirm = async () => {
+        if (!selectedSubscription || !selectedMember) {
+            void showAlert.error("Lỗi", "Vui lòng chọn hội viên để chuyển nhượng.");
+            return;
+        }
+        try {
+            setIsSubmitting(true);
+            await subscriptionService.adminTransferSubscription(selectedSubscription.id, selectedMember.id);
+            void showAlert.success("Thành công", "Chuyển nhượng gói thành công");
+            setIsTransferModalOpen(false);
+            void fetchSubscriptions();
+        } catch (error) {
+            void showAlert.error("Thất bại", getApiErrorMessage(error));
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const handleCancelSubscription = async (id: number) => {
         const result = await showAlert.confirm(
             "Hủy gói tập?",
@@ -278,16 +338,30 @@ export default function AdminSubscriptionPage() {
                                         <td className="px-6 py-4">
                                             {getStatusBadge(sub.status)}
                                         </td>
-                                        <td className="px-6 py-4 text-right space-x-2">
-                                            {sub.status === "ACTIVE" && (
-                                                <button 
-                                                    onClick={() => handleCancelSubscription(sub.id)}
-                                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
-                                                >
-                                                    Hủy gói
-                                                </button>
-                                            )}
-                                        </td>
+                                          <td className="px-6 py-4 text-right space-x-2">
+                                              {sub.status === "ACTIVE" && (
+                                                <>
+                                                  <button 
+                                                      onClick={() => handleOpenUpgrade(sub)}
+                                                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
+                                                  >
+                                                      Nâng cấp
+                                                  </button>
+                                                  <button 
+                                                      onClick={() => handleOpenTransfer(sub)}
+                                                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-colors"
+                                                  >
+                                                      Chuyển nhượng
+                                                  </button>
+                                                  <button 
+                                                      onClick={() => handleCancelSubscription(sub.id)}
+                                                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                                                  >
+                                                      Hủy gói
+                                                  </button>
+                                                </>
+                                              )}
+                                          </td>
                                     </tr>
                                 ))
                             )}
@@ -393,6 +467,90 @@ export default function AdminSubscriptionPage() {
                         </div>
                     </form>
                 )}
+            </Modal>
+
+            {/* Upgrade Modal */}
+            <Modal
+                open={isUpgradeModalOpen}
+                onClose={() => setIsUpgradeModalOpen(false)}
+                title="Nâng cấp gói tập"
+                size="lg"
+            >
+                {loadingFormData ? (
+                    <Loading label="Đang tải danh mục gói tập..." />
+                ) : (
+                    <form onSubmit={handleUpgradeConfirm} className="space-y-5">
+                        <div className="bg-blue-50 p-4 rounded-xl mb-4">
+                            <p className="text-sm text-blue-800 font-medium mb-1">Gói hiện tại: <strong>{selectedSubscription?.gymPackageName}</strong></p>
+                            <p className="text-sm text-blue-800 font-medium">Hội viên: <strong>{selectedSubscription?.memberName}</strong></p>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-bold text-slate-700">Gói tập mới (*)</label>
+                            <select 
+                                name="gymPackageId"
+                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                required
+                            >
+                                <option value="">-- Chọn gói tập mới --</option>
+                                {packages.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-bold text-slate-700">Thời lượng mới (*)</label>
+                            <select 
+                                name="packageDurationId"
+                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                required
+                            >
+                                <option value="">-- Chọn thời lượng mới --</option>
+                                {durations.map(d => (
+                                    <option key={d.id} value={d.id}>{d.name} ({d.months} tháng)</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button type="button" variant="outline" onClick={() => setIsUpgradeModalOpen(false)}>Hủy</Button>
+                            <Button type="submit" isLoading={isSubmitting}>Xác nhận Nâng cấp</Button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
+
+            {/* Transfer Modal */}
+            <Modal
+                open={isTransferModalOpen}
+                onClose={() => setIsTransferModalOpen(false)}
+                title="Chuyển nhượng gói tập"
+                size="lg"
+            >
+                <div className="space-y-5">
+                    <div className="bg-amber-50 p-4 rounded-xl mb-4">
+                        <p className="text-sm text-amber-800 font-medium mb-1">Đang chuyển gói: <strong>{selectedSubscription?.gymPackageName}</strong></p>
+                        <p className="text-sm text-amber-800 font-medium">Từ hội viên: <strong>{selectedSubscription?.memberName}</strong></p>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Người nhận (*)</label>
+                        <button
+                            type="button"
+                            onClick={() => { setPickerMode("TRANSFER"); setIsMemberPickerOpen(true); }}
+                            className="flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3 text-left transition-colors hover:border-blue-400 hover:bg-blue-50"
+                        >
+                            {selectedMember ? (
+                                <span>
+                                    <span className="block font-semibold text-slate-800">{selectedMember.fullName}</span>
+                                    <span className="mt-0.5 block text-xs text-slate-500">{selectedMember.memberCode}</span>
+                                </span>
+                            ) : <span className="text-sm text-slate-500">Chọn hội viên nhận gói...</span>}
+                            <span className="ml-3 shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white">Chọn</span>
+                        </button>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                        <Button type="button" variant="outline" onClick={() => setIsTransferModalOpen(false)}>Hủy</Button>
+                        <Button onClick={handleTransferConfirm} isLoading={isSubmitting} disabled={!selectedMember} className="bg-amber-600 hover:bg-amber-700 text-white">Xác nhận Chuyển nhượng</Button>
+                    </div>
+                </div>
             </Modal>
 
             <Modal
