@@ -40,8 +40,9 @@ import {
 } from "../../services/workoutService";
 
 import type {
-    WorkoutPlan,
     WorkoutPlanDay,
+    WorkoutPlanDetail,
+    WorkoutPlanSourceType,
     WorkoutPlanStatus,
 } from "../../types/workout.type";
 
@@ -101,6 +102,28 @@ function getStatusVariant(
     }
 }
 
+function getSourceLabel(
+    source:
+    WorkoutPlanSourceType,
+): string {
+    switch (source) {
+        case "AI_GENERATED":
+            return "FitLife AI";
+
+        case "TRAINER_CREATED":
+            return "Huấn luyện viên";
+
+        case "MEMBER_CREATED":
+            return "Hội viên";
+
+        case "MANUAL":
+            return "Thủ công";
+
+        default:
+            return source;
+    }
+}
+
 function formatDayLabel(
     day:
     WorkoutPlanDay,
@@ -134,7 +157,7 @@ export default function WorkoutPlanDetailPage() {
         setPlan,
     ] =
         useState<
-            WorkoutPlan | null
+            WorkoutPlanDetail | null
         >(null);
 
     const [
@@ -240,21 +263,20 @@ export default function WorkoutPlanDetailPage() {
                     true,
                 );
 
-                const activatedPlan =
-                    await workoutService
-                        .activateWorkoutPlan(
-                            plan.id,
-                        );
+                await workoutService
+                    .activateWorkoutPlan(
+                        plan.id,
+                    );
 
-                setPlan(
-                    activatedPlan,
-                );
+                await loadPlan();
 
-                void showAlert.success("Thành công", 
+                void showAlert.success(
+                    "Thành công",
                     "Đã kích hoạt giáo án thành công.",
                 );
             } catch (requestError) {
-                void showAlert.error("Đã xảy ra lỗi", 
+                void showAlert.error(
+                    "Đã xảy ra lỗi",
                     getApiErrorMessage(
                         requestError,
                         "Không thể kích hoạt giáo án.",
@@ -318,22 +340,16 @@ export default function WorkoutPlanDetailPage() {
     }
 
     const days =
-        plan.days ?? [];
+        plan.days;
 
     const trainingDays =
         days.filter(
-            (
-                day,
-            ) =>
+            (day) =>
                 !day.isRestDay,
         );
 
     return (
         <div className="space-y-6 pb-10">
-            {/* =================================================
-       * HEADER
-       * ================================================= */}
-
             <div>
                 <button
                     type="button"
@@ -343,15 +359,15 @@ export default function WorkoutPlanDetailPage() {
                         )
                     }
                     className="
-            inline-flex
-            items-center
-            gap-2
-            text-sm
-            font-bold
-            text-slate-500
-            transition
-            hover:text-slate-900
-          "
+                        inline-flex
+                        items-center
+                        gap-2
+                        text-sm
+                        font-bold
+                        text-slate-500
+                        transition
+                        hover:text-slate-900
+                    "
                 >
                     <ArrowLeft className="h-4 w-4" />
 
@@ -360,14 +376,14 @@ export default function WorkoutPlanDetailPage() {
 
                 <div
                     className="
-            mt-5
-            flex
-            flex-col
-            gap-4
-            lg:flex-row
-            lg:items-start
-            lg:justify-between
-          "
+                        mt-5
+                        flex
+                        flex-col
+                        gap-4
+                        lg:flex-row
+                        lg:items-start
+                        lg:justify-between
+                    "
                 >
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -383,27 +399,22 @@ export default function WorkoutPlanDetailPage() {
                                 )}
                             </Badge>
 
-                            {plan.sourceType && (
-                                <Badge variant="purple">
-                                    {
-                                        plan.sourceType ===
-                                        "AI_GENERATED"
-                                            ? "AI"
-                                            : plan.sourceType
-                                    }
-                                </Badge>
-                            )}
+                            <Badge variant="purple">
+                                {getSourceLabel(
+                                    plan.sourceType,
+                                )}
+                            </Badge>
                         </div>
 
                         <h1
                             className="
-                mt-3
-                max-w-5xl
-                text-3xl
-                font-black
-                tracking-tight
-                text-slate-950
-              "
+                                mt-3
+                                max-w-5xl
+                                text-3xl
+                                font-black
+                                tracking-tight
+                                text-slate-950
+                            "
                         >
                             {plan.name}
                         </h1>
@@ -411,12 +422,12 @@ export default function WorkoutPlanDetailPage() {
                         {plan.description ? (
                             <p
                                 className="
-                  mt-2
-                  max-w-4xl
-                  text-sm
-                  leading-6
-                  text-slate-500
-                "
+                                    mt-2
+                                    max-w-4xl
+                                    text-sm
+                                    leading-6
+                                    text-slate-500
+                                "
                             >
                                 {plan.description}
                             </p>
@@ -426,10 +437,6 @@ export default function WorkoutPlanDetailPage() {
                             </p>
                         )}
                     </div>
-
-                    {/* =============================================
-           * PLAN ACTIONS
-           * ============================================= */}
 
                     <div className="flex shrink-0 flex-wrap gap-2">
                         {plan.status ===
@@ -486,26 +493,22 @@ export default function WorkoutPlanDetailPage() {
                 </div>
             </div>
 
-            {/* =================================================
-       * DRAFT NOTICE
-       * ================================================= */}
-
             {plan.status ===
                 "DRAFT" && (
                     <div
                         className="
-            flex
-            flex-col
-            gap-4
-            rounded-2xl
-            border
-            border-amber-200
-            bg-amber-50
-            p-4
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-          "
+                            flex
+                            flex-col
+                            gap-4
+                            rounded-2xl
+                            border
+                            border-amber-200
+                            bg-amber-50
+                            p-4
+                            sm:flex-row
+                            sm:items-center
+                            sm:justify-between
+                        "
                     >
                         <div>
                             <p className="font-black text-amber-900">
@@ -535,17 +538,13 @@ export default function WorkoutPlanDetailPage() {
                     </div>
                 )}
 
-            {/* =================================================
-       * SUMMARY
-       * ================================================= */}
-
             <section
                 className="
-          grid
-          grid-cols-2
-          gap-4
-          lg:grid-cols-5
-        "
+                    grid
+                    grid-cols-2
+                    gap-4
+                    lg:grid-cols-5
+                "
             >
                 <SummaryCard
                     icon={
@@ -604,28 +603,25 @@ export default function WorkoutPlanDetailPage() {
                 />
             </section>
 
-            {/* =================================================
-       * TRAINER / NOTE
-       * ================================================= */}
-
-            {(plan.trainerName ||
-                plan.note ||
+            {(plan.note ||
                 plan.sourceType ===
-                "AI_GENERATED") && (
+                "AI_GENERATED" ||
+                plan.sourceType ===
+                "TRAINER_CREATED") && (
                 <Card className="p-5">
                     <div className="flex items-start gap-3">
                         <div
                             className="
-                flex
-                h-10
-                w-10
-                shrink-0
-                items-center
-                justify-center
-                rounded-xl
-                bg-blue-100
-                text-blue-700
-              "
+                                flex
+                                h-10
+                                w-10
+                                shrink-0
+                                items-center
+                                justify-center
+                                rounded-xl
+                                bg-blue-100
+                                text-blue-700
+                            "
                         >
                             <UserRound className="h-5 w-5" />
                         </div>
@@ -636,26 +632,24 @@ export default function WorkoutPlanDetailPage() {
                             </h2>
 
                             <p className="mt-1 text-sm text-slate-500">
-                                {plan.trainerName
-                                    ? `Huấn luyện viên: ${plan.trainerName}`
-                                    : "Được tạo bởi FitLife AI"}
+                                {plan.sourceType ===
+                                "AI_GENERATED"
+                                    ? "Được tạo bởi FitLife AI"
+                                    : plan.sourceType ===
+                                    "TRAINER_CREATED"
+                                        ? "Được tạo bởi huấn luyện viên"
+                                        : "Thông tin giáo án"}
                             </p>
 
                             {plan.note && (
                                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
-                                    {
-                                        plan.note
-                                    }
+                                    {plan.note}
                                 </p>
                             )}
                         </div>
                     </div>
                 </Card>
             )}
-
-            {/* =================================================
-       * DAYS
-       * ================================================= */}
 
             <section>
                 <div className="mb-4">
@@ -716,51 +710,50 @@ function WorkoutDayCard({
         number;
 }) {
     const exercises =
-        day.exercises ??
-        [];
+        day.exercises;
 
     return (
         <Card className="overflow-hidden">
             <header
                 className={`
-          border-b
-          border-slate-100
-          p-5
+                    border-b
+                    border-slate-100
+                    p-5
 
-          ${
+                    ${
                     day.isRestDay
                         ? "bg-slate-50"
                         : "bg-emerald-50/50"
                 }
-        `}
+                `}
             >
                 <div
                     className="
-            flex
-            flex-col
-            gap-3
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-          "
+                        flex
+                        flex-col
+                        gap-3
+                        sm:flex-row
+                        sm:items-center
+                        sm:justify-between
+                    "
                 >
                     <div className="flex items-center gap-3">
                         <div
                             className={`
-                flex
-                h-10
-                w-10
-                items-center
-                justify-center
-                rounded-xl
-                font-black
+                                flex
+                                h-10
+                                w-10
+                                items-center
+                                justify-center
+                                rounded-xl
+                                font-black
 
-                ${
+                                ${
                                 day.isRestDay
                                     ? "bg-slate-200 text-slate-500"
                                     : "bg-emerald-100 text-emerald-700"
                             }
-              `}
+                            `}
                         >
                             {day.dayNo ??
                                 index + 1}
@@ -824,16 +817,16 @@ function WorkoutDayCard({
                     0 ? (
                         <div
                             className="
-                rounded-xl
-                border
-                border-dashed
-                border-slate-200
-                bg-slate-50
-                p-5
-                text-center
-                text-sm
-                text-slate-500
-              "
+                                rounded-xl
+                                border
+                                border-dashed
+                                border-slate-200
+                                bg-slate-50
+                                p-5
+                                text-center
+                                text-sm
+                                text-slate-500
+                            "
                         >
                             Chưa có bài tập trong ngày này.
                         </div>
@@ -850,37 +843,37 @@ function WorkoutDayCard({
                                             `${exercise.exerciseName}-${exerciseIndex}`
                                         }
                                         className="
-                      rounded-2xl
-                      border
-                      border-slate-100
-                      bg-slate-50
-                      p-4
-                    "
+                                            rounded-2xl
+                                            border
+                                            border-slate-100
+                                            bg-slate-50
+                                            p-4
+                                        "
                                     >
                                         <div
                                             className="
-                        flex
-                        flex-col
-                        gap-4
-                        sm:flex-row
-                        sm:items-start
-                        sm:justify-between
-                      "
+                                                flex
+                                                flex-col
+                                                gap-4
+                                                sm:flex-row
+                                                sm:items-start
+                                                sm:justify-between
+                                            "
                                         >
                                             <div className="flex min-w-0 items-start gap-3">
                                                 <div
                                                     className="
-                            flex
-                            h-9
-                            w-9
-                            shrink-0
-                            items-center
-                            justify-center
-                            rounded-xl
-                            bg-white
-                            text-emerald-600
-                            shadow-sm
-                          "
+                                                        flex
+                                                        h-9
+                                                        w-9
+                                                        shrink-0
+                                                        items-center
+                                                        justify-center
+                                                        rounded-xl
+                                                        bg-white
+                                                        text-emerald-600
+                                                        shadow-sm
+                                                    "
                                                 >
                                                     <Dumbbell className="h-4 w-4" />
                                                 </div>
@@ -913,11 +906,11 @@ function WorkoutDayCard({
 
                                             <div
                                                 className="
-                          flex
-                          shrink-0
-                          flex-wrap
-                          gap-2
-                        "
+                                                    flex
+                                                    shrink-0
+                                                    flex-wrap
+                                                    gap-2
+                                                "
                                             >
                                                 {exercise.sets !=
                                                     null && (
@@ -1000,13 +993,13 @@ function SummaryCard({
 
             <p
                 className="
-          mt-3
-          text-[10px]
-          font-bold
-          uppercase
-          tracking-wider
-          text-slate-400
-        "
+                    mt-3
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-wider
+                    text-slate-400
+                "
             >
                 {label}
             </p>
@@ -1027,17 +1020,17 @@ function Metric({
     return (
         <span
             className="
-        rounded-lg
-        bg-white
-        px-2.5
-        py-1.5
-        text-xs
-        font-bold
-        text-slate-700
-        shadow-sm
-      "
+                rounded-lg
+                bg-white
+                px-2.5
+                py-1.5
+                text-xs
+                font-bold
+                text-slate-700
+                shadow-sm
+            "
         >
-      {children}
-    </span>
+            {children}
+        </span>
     );
 }

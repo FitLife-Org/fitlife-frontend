@@ -87,6 +87,11 @@ export const ROUTES = {
       "/member/workouts/:id",
   MEMBER_WORKOUT_TODAY:
       "/member/workouts/today",
+  MEMBER_WORKOUT_CREATE:
+      "/member/workouts/create",
+
+  MEMBER_WORKOUT_EDIT:
+      "/member/workouts/:id/edit",
 
   MEMBER_NUTRITION:
       "/member/nutrition",
