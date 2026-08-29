@@ -1,249 +1,942 @@
 import axios from "axios";
+
 import {
   Check,
   Dumbbell,
   Loader2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { usePageAnimation } from "../../hooks/usePageAnimation";
-import { showAlert } from "../../utils/alert";
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  useNavigate,
+} from "react-router-dom";
+
 import Button from "../../components/common/Button";
-import { formatCurrency } from "../../utils/formatCurrency";
-import { packageService } from "../../services/packageService";
-import { subscriptionService } from "../../services/subscriptionService";
-import type { GymPackage, PackageDuration } from "../../types/package.type";
-import type { Subscription } from "../../types/subscription.type";
 
-type PriceInfo = {
+import {
+  ROUTES,
+} from "../../config/routes";
+
+import {
+  usePageAnimation,
+} from "../../hooks/usePageAnimation";
+
+import {
+  packageService,
+} from "../../services/packageService";
+
+import {
+  subscriptionService,
+} from "../../services/subscriptionService";
+
+import type {
+  GymPackage,
+  PackageDuration,
+} from "../../types/package.type";
+
+import type {
+  Subscription,
+} from "../../types/subscription.type";
+
+import {
+  showAlert,
+} from "../../utils/alert";
+
+import {
+  formatCurrency,
+} from "../../utils/formatCurrency";
+
+// =====================================================
+// TYPES
+// =====================================================
+
+interface PriceInfo {
   originalPrice: number;
-  discountAmount: number;
-  finalPrice: number;
-};
 
-const getTierLevel = (type?: string): number => {
-  if (!type) return 0;
-  const t = type.toUpperCase();
-  if (t === "VIP") return 3;
-  if (t === "STANDARD") return 2;
-  if (t === "BASIC") return 1;
-  return 0;
-};
+  discountAmount: number;
+
+  finalPrice: number;
+
+  discountPercent: number;
+}
+
+// =====================================================
+// HELPERS
+// =====================================================
+
+function getTierLevel(
+    type?: string | null,
+): number {
+  if (!type) {
+    return 0;
+  }
+
+  switch (
+      type
+          .trim()
+          .toUpperCase()
+      ) {
+    case "VIP":
+      return 3;
+
+    case "STANDARD":
+      return 2;
+
+    case "BASIC":
+      return 1;
+
+    default:
+      return 0;
+  }
+}
+
+function getSubscriptionPackageId(
+    subscription:
+        Subscription | null,
+): number | null {
+  if (!subscription) {
+    return null;
+  }
+
+  return (
+      subscription.gymPackageId ??
+      subscription.package?.id ??
+      null
+  );
+}
+
+function renderFeatures(
+    gymPackage:
+    GymPackage,
+): string[] {
+  let features:
+      string[] = [];
+
+  if (
+      gymPackage.benefits
+  ) {
+    features =
+        gymPackage.benefits
+            .split(",")
+            .map(
+                (feature) =>
+                    feature.trim(),
+            )
+            .filter(Boolean);
+  } else if (
+      gymPackage.description
+  ) {
+    features =
+        gymPackage.description
+            .split("\n")
+            .map(
+                (feature) =>
+                    feature
+                        .replace(
+                            /^-\s*/,
+                            "",
+                        )
+                        .trim(),
+            )
+            .filter(Boolean);
+  } else {
+    features = [
+      "Truy cập phòng tập",
+      "Sử dụng thiết bị tập luyện",
+      "Check-in không giới hạn",
+    ];
+  }
+
+  if (
+      gymPackage.hasAiWorkoutPlan
+  ) {
+    features.unshift(
+        "AI hỗ trợ xây dựng giáo án",
+    );
+  }
+
+  if (
+      gymPackage.hasNutritionPlan
+  ) {
+    features.unshift(
+        "Hỗ trợ kế hoạch dinh dưỡng",
+    );
+  }
+
+  if (
+      gymPackage.ptSessionsPerMonth >
+      0
+  ) {
+    features.unshift(
+        `${gymPackage.ptSessionsPerMonth} buổi PT/tháng`,
+    );
+  }
+
+  return features;
+}
+
+// =====================================================
+// PAGE
+// =====================================================
 
 export default function PackageListPage() {
-  const containerRef = usePageAnimation();
-  const navigate = useNavigate();
+  const containerRef =
+      usePageAnimation();
 
-  const [packages, setPackages] = useState<GymPackage[]>([]);
-  const [durations, setDurations] = useState<PackageDuration[]>([]);
-  const [selectedDurationId, setSelectedDurationId] = useState<number | null>(
-      null
+  const navigate =
+      useNavigate();
+
+  const [
+    packages,
+    setPackages,
+  ] =
+      useState<GymPackage[]>(
+          [],
+      );
+
+  const [
+    durations,
+    setDurations,
+  ] =
+      useState<
+          PackageDuration[]
+      >(
+          [],
+      );
+
+  /**
+   * Chỉ lưu MONTHS.
+   *
+   * KHÔNG lưu durationId toàn cục.
+   *
+   * Vì mỗi GymPackage có PackageDuration
+   * riêng dù cùng số tháng.
+   */
+  const [
+    selectedMonths,
+    setSelectedMonths,
+  ] =
+      useState<
+          number | null
+      >(
+          null,
+      );
+
+  const [
+    mySubscription,
+    setMySubscription,
+  ] =
+      useState<
+          Subscription | null
+      >(
+          null,
+      );
+
+  const [
+    loading,
+    setLoading,
+  ] =
+      useState(
+          true,
+      );
+
+  const [
+    processingId,
+    setProcessingId,
+  ] =
+      useState<
+          number | null
+      >(
+          null,
+      );
+
+  // =====================================================
+  // LOAD DATA
+  // =====================================================
+
+  useEffect(
+      () => {
+        let mounted =
+            true;
+
+        const fetchData =
+            async (): Promise<void> => {
+              try {
+                setLoading(
+                    true,
+                );
+
+                const [
+                  packageData,
+                  subscriptionData,
+                  durationData,
+                ] =
+                    await Promise.all([
+                      packageService
+                          .getPublicPackages({
+                            size: 100,
+                          }),
+
+                      subscriptionService
+                          .getMySubscription(),
+
+                      packageService
+                          .getPackageDurations(),
+                    ]);
+
+                if (!mounted) {
+                  return;
+                }
+
+                const activePackages =
+                    packageData.filter(
+                        (item) =>
+                            item.status ===
+                            "ACTIVE",
+                    );
+
+                const activeDurations =
+                    durationData
+                        .filter(
+                            (item) =>
+                                item.status ===
+                                "ACTIVE",
+                        )
+                        .sort(
+                            (a, b) =>
+                                a.months -
+                                b.months,
+                        );
+
+                setPackages(
+                    activePackages,
+                );
+
+                setDurations(
+                    activeDurations,
+                );
+
+                setMySubscription(
+                    subscriptionData,
+                );
+
+                const monthValues =
+                    Array.from(
+                        new Set(
+                            activeDurations
+                                .map(
+                                    (duration) =>
+                                        duration.months,
+                                )
+                                .filter(
+                                    (months) =>
+                                        months >
+                                        0,
+                                ),
+                        ),
+                    ).sort(
+                        (a, b) =>
+                            a - b,
+                    );
+
+                setSelectedMonths(
+                    monthValues[0] ??
+                    null,
+                );
+              } catch (
+                  error: unknown
+                  ) {
+                console.error(
+                    "LOAD_PACKAGES_ERROR:",
+                    error,
+                );
+
+                await showAlert.error(
+                    "Không thể tải gói tập",
+                    "Đã xảy ra lỗi khi tải danh sách gói tập.",
+                );
+              } finally {
+                if (
+                    mounted
+                ) {
+                  setLoading(
+                      false,
+                  );
+                }
+              }
+            };
+
+        void fetchData();
+
+        return () => {
+          mounted =
+              false;
+        };
+      },
+      [],
   );
-  const [mySubscription, setMySubscription] = useState<Subscription | null>(
-      null
-  );
-  const [loading, setLoading] = useState(true);
-  const [processingId, setProcessingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        setLoading(true);
+  // =====================================================
+  // AVAILABLE MONTHS
+  // =====================================================
 
-        const [pkgs, sub, durationData] = await Promise.all([
-          packageService.getPublicPackages({ size: 100 }),
-          subscriptionService.getMySubscription(),
-          packageService.getPackageDurations(),
-        ]);
+  const availableMonths =
+      useMemo(
+          () =>
+              Array.from(
+                  new Set(
+                      durations.map(
+                          (duration) =>
+                              duration.months,
+                      ),
+                  ),
+              ).sort(
+                  (a, b) =>
+                      a - b,
+              ),
+          [
+            durations,
+          ],
+      );
 
-        const activePackages = pkgs.filter(
-            (pkg) => pkg.status === "ACTIVE"
+  // =====================================================
+  // PACKAGE DURATION
+  // =====================================================
+
+  const getDurationForPackage = (
+      packageId: number,
+  ): PackageDuration | null => {
+    if (
+        selectedMonths ===
+        null
+    ) {
+      return null;
+    }
+
+    return (
+        durations.find(
+            (duration) =>
+                duration.gymPackageId ===
+                packageId &&
+                duration.months ===
+                selectedMonths,
+        ) ??
+        null
+    );
+  };
+
+  // =====================================================
+  // PRICE
+  // =====================================================
+
+  const calculatePrice = (
+      gymPackage:
+      GymPackage,
+  ): PriceInfo => {
+    const duration =
+        getDurationForPackage(
+            gymPackage.id,
         );
 
-        const activeDurations = durationData.filter(
-            (duration) => duration.status === "ACTIVE"
-        );
-
-        const uniqueDurationsMap = new Map<number, PackageDuration>();
-        for (const d of activeDurations) {
-           if (!uniqueDurationsMap.has(d.months)) {
-               uniqueDurationsMap.set(d.months, d);
-           } else {
-               const existing = uniqueDurationsMap.get(d.months)!;
-               if (d.discountPercent > existing.discountPercent) {
-                   uniqueDurationsMap.set(d.months, d);
-               }
-           }
-        }
-        const uniqueDurations = Array.from(uniqueDurationsMap.values());
-
-        uniqueDurations.sort((a, b) => a.months - b.months);
-
-        setPackages(activePackages);
-        setDurations(uniqueDurations);
-        setMySubscription(sub);
-
-        if (uniqueDurations.length > 0) {
-          setSelectedDurationId(uniqueDurations[0].id);
-        }
-      } catch (error: unknown) {
-        console.error("LOAD_PACKAGES_ERROR:", error);
-        showAlert.error("Lỗi", "Không thể tải danh sách gói tập");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const selectedDuration = durations.find(
-      (duration) => duration.id === selectedDurationId
-  );
-
-  const calculatePrice = (pkg: GymPackage): PriceInfo => {
-    if (!selectedDuration) {
+    if (!duration) {
       return {
-        originalPrice: pkg.basePrice,
-        discountAmount: 0,
-        finalPrice: pkg.basePrice,
+        originalPrice:
+        gymPackage.basePrice,
+
+        discountAmount:
+            0,
+
+        finalPrice:
+        gymPackage.basePrice,
+
+        discountPercent:
+            0,
       };
     }
 
-    const originalPrice = pkg.basePrice * selectedDuration.months;
-    const discountPercent = selectedDuration.discountPercent || 0;
-    const discountAmount = originalPrice * (discountPercent / 100);
-    const finalPrice = originalPrice - discountAmount;
+    /**
+     * Ưu tiên price Backend.
+     *
+     * Nếu không có:
+     * basePrice * months.
+     */
+    const originalPrice =
+        duration.price != null &&
+        duration.price > 0
+            ? duration.price
+            : gymPackage.basePrice *
+            duration.months;
+
+    /**
+     * Nếu Backend đã tính discountPrice,
+     * FE KHÔNG tự giảm lần thứ hai.
+     */
+    let finalPrice =
+        duration.discountPrice !=
+        null &&
+        duration.discountPrice >
+        0
+            ? duration.discountPrice
+            : originalPrice;
+
+    const discountPercent =
+        Math.max(
+            0,
+            duration.discountPercent ??
+            0,
+        );
+
+    /**
+     * Chỉ tự tính discount nếu Backend
+     * không trả discountPrice.
+     */
+    if (
+        (
+            duration.discountPrice ==
+            null ||
+            duration.discountPrice <=
+            0
+        ) &&
+        discountPercent >
+        0
+    ) {
+      finalPrice =
+          originalPrice *
+          (
+              1 -
+              discountPercent /
+              100
+          );
+    }
+
+    finalPrice =
+        Math.max(
+            0,
+            finalPrice,
+        );
 
     return {
       originalPrice,
-      discountAmount,
+
+      discountAmount:
+          Math.max(
+              0,
+              originalPrice -
+              finalPrice,
+          ),
+
       finalPrice,
+
+      discountPercent,
     };
   };
 
-  const handlePurchase = async (pkgId: number): Promise<void> => {
-    if (!selectedDurationId) {
-      showAlert.error("Lỗi", "Vui lòng chọn thời hạn gói tập.");
-      return;
-    }
+  // =====================================================
+  // PURCHASE
+  // =====================================================
 
-    try {
-      setProcessingId(pkgId);
-
-      // Check if we are upgrading
-      if (mySubscription && mySubscription.status === "ACTIVE") {
-        const currentPackage = packages.find(p => p.id === mySubscription.gymPackageId);
-        const currentTier = currentPackage ? getTierLevel(currentPackage.packageType) : 0;
-        const targetPackage = packages.find(p => p.id === pkgId);
-        const targetTier = targetPackage ? getTierLevel(targetPackage.packageType) : 0;
-
-        if (targetTier > currentTier) {
-          const confirmUpgrade = window.confirm(`Bạn có chắc chắn muốn nâng cấp từ gói "${currentPackage?.name}" lên gói "${targetPackage?.name}" không?`);
-          if (!confirmUpgrade) {
-            setProcessingId(null);
-            return;
-          }
-          const subscription = await subscriptionService.upgradeSubscription(mySubscription.id, selectedDurationId);
-          if (subscription?.invoiceId) {
-            navigate(`/member/payment/${subscription.invoiceId}`);
-            return;
-          }
-          showAlert.success(
-              "Đã tạo yêu cầu nâng cấp",
-              "Vui lòng thanh toán hóa đơn để hoàn tất nâng cấp."
-          );
-          navigate("/member/subscription");
+  const handlePurchase =
+      async (
+          packageId: number,
+      ): Promise<void> => {
+        if (
+            processingId !==
+            null
+        ) {
           return;
         }
-      }
 
-      const subscription = await subscriptionService.createSubscription({
-        gymPackageId: pkgId,
-        packageDurationId: selectedDurationId,
-        autoRenew: false,
-        note: `Đăng ký gói tập ${selectedDuration?.name || ""}`,
-      });
+        const targetPackage =
+            packages.find(
+                (item) =>
+                    item.id ===
+                    packageId,
+            );
 
-      if (subscription?.invoiceId) {
-        navigate(`/member/payment/${subscription.invoiceId}`);
-        return;
-      }
+        if (!targetPackage) {
+          await showAlert.error(
+              "Gói tập không hợp lệ",
+              "Không tìm thấy gói tập đã chọn.",
+          );
 
-      showAlert.success(
-          "Đã tạo đăng ký",
-          "Vui lòng kiểm tra hóa đơn và tiếp tục thanh toán."
-      );
+          return;
+        }
 
-      navigate("/member/subscription");
-    } catch (error: unknown) {
-      console.error("CREATE_SUBSCRIPTION_ERROR:", error);
+        const packageDuration =
+            getDurationForPackage(
+                packageId,
+            );
 
-      let code: number | undefined;
-      let message = "Lỗi khi xử lý đăng ký";
+        if (
+            !packageDuration
+        ) {
+          await showAlert.warning(
+              "Không hỗ trợ thời hạn",
+              `Gói ${targetPackage.name} không có thời hạn ${
+                  selectedMonths ??
+                  ""
+              } tháng.`,
+          );
 
-      if (axios.isAxiosError(error)) {
-        code = error.response?.data?.code;
-        message = error.response?.data?.message || message;
-      }
+          return;
+        }
 
-      if (code === 8003) {
-        message =
-            "Bạn đã có gói tập đang hoạt động, không thể đăng ký thêm gói mới.";
-      }
+        /**
+         * Double validation.
+         *
+         * Không được gửi duration
+         * của package khác.
+         */
+        if (
+            packageDuration
+                .gymPackageId !==
+            packageId
+        ) {
+          await showAlert.error(
+              "Dữ liệu gói tập không hợp lệ",
+              "Thời hạn đã chọn không thuộc gói tập này. Vui lòng tải lại trang.",
+          );
 
-      showAlert.error("Lỗi", message);
-    } finally {
-      setProcessingId(null);
-    }
-  };
+          return;
+        }
 
-  const renderFeatures = (pkg: GymPackage): string[] => {
-    let features: string[] = [];
+        try {
+          setProcessingId(
+              packageId,
+          );
 
-    if (pkg.benefits) {
-      features = pkg.benefits
-          .split(",")
-          .map((feature) => feature.trim())
-          .filter(Boolean);
-    } else if (pkg.description) {
-      features = pkg.description
-          .split("\n")
-          .map((feature) => feature.replace(/^- /, "").trim())
-          .filter(Boolean);
-    } else {
-      features = [
-        "Truy cập phòng tập 24/7",
-        "Sử dụng thiết bị cao cấp",
-        "Check-in không giới hạn",
-        "Tủ đồ cá nhân",
-        "Phòng tắm & xông hơi",
-      ];
-    }
+          const currentPackageId =
+              getSubscriptionPackageId(
+                  mySubscription,
+              );
 
-    if (pkg.hasAiWorkoutPlan) {
-      features.unshift("Tích hợp AI tạo lịch tập");
-    }
+          const currentPackage =
+              currentPackageId
+                  ? packages.find(
+                      (item) =>
+                          item.id ===
+                          currentPackageId,
+                  )
+                  : undefined;
 
-    if (pkg.hasNutritionPlan) {
-      features.unshift("Tích hợp gợi ý dinh dưỡng");
-    }
+          const currentTier =
+              getTierLevel(
+                  currentPackage
+                      ?.packageType,
+              );
 
-    if (pkg.ptSessionsPerMonth > 0) {
-      features.unshift(
-          `Tặng ${pkg.ptSessionsPerMonth} buổi PT cá nhân/tháng`
-      );
-    }
+          const targetTier =
+              getTierLevel(
+                  targetPackage
+                      .packageType,
+              );
 
-    return features;
-  };
+          // ===============================================
+          // ACTIVE SUBSCRIPTION
+          // ===============================================
+
+          if (
+              mySubscription
+                  ?.status ===
+              "ACTIVE"
+          ) {
+            // ---------------------------------------------
+            // SAME PACKAGE
+            // ---------------------------------------------
+
+            if (
+                currentPackageId ===
+                packageId
+            ) {
+              await showAlert.info(
+                  "Gói đang hoạt động",
+                  `Bạn đang sử dụng gói ${targetPackage.name}. Nếu muốn kéo dài thời hạn, hãy sử dụng chức năng gia hạn.`,
+              );
+
+              navigate(
+                  ROUTES
+                      .MEMBER_SUBSCRIPTION,
+              );
+
+              return;
+            }
+
+            // ---------------------------------------------
+            // UPGRADE
+            // ---------------------------------------------
+
+            if (
+                targetTier >
+                currentTier
+            ) {
+              const confirmation =
+                  await showAlert.confirm(
+                      "Xác nhận nâng cấp",
+                      `Bạn muốn nâng cấp từ ${
+                          currentPackage
+                              ?.name ??
+                          "gói hiện tại"
+                      } lên ${
+                          targetPackage.name
+                      } trong ${
+                          packageDuration.months
+                      } tháng?`,
+                      {
+                        confirmButtonText:
+                            "Nâng cấp",
+
+                        cancelButtonText:
+                            "Hủy",
+                      },
+                  );
+
+              if (
+                  !confirmation
+                      .isConfirmed
+              ) {
+                return;
+              }
+
+              const upgradedSubscription =
+                  await subscriptionService
+                      .upgradeSubscription(
+                          mySubscription.id,
+
+                          packageDuration.id,
+                      );
+
+              if (
+                  upgradedSubscription
+                      .invoiceId
+              ) {
+                navigate(
+                    `/member/payment/${upgradedSubscription.invoiceId}`,
+                );
+
+                return;
+              }
+
+              await showAlert.success(
+                  "Đã tạo yêu cầu nâng cấp",
+                  "Vui lòng kiểm tra hóa đơn để tiếp tục thanh toán.",
+              );
+
+              navigate(
+                  ROUTES
+                      .MEMBER_SUBSCRIPTION,
+              );
+
+              return;
+            }
+
+            // ---------------------------------------------
+            // DOWNGRADE / PARALLEL PACKAGE
+            // ---------------------------------------------
+
+            await showAlert.warning(
+                "Không thể đăng ký",
+                "Bạn đang có gói tập hoạt động. Hiện tại chỉ hỗ trợ nâng cấp lên gói cao hơn hoặc gia hạn gói hiện tại.",
+            );
+
+            return;
+          }
+
+          // ===============================================
+          // PENDING PAYMENT
+          // ===============================================
+
+          if (
+              mySubscription
+                  ?.status ===
+              "PENDING_PAYMENT"
+          ) {
+            /**
+             * Nếu API getMySubscription()
+             * trả pending hiện tại có invoiceId,
+             * đưa Member quay lại đúng hóa đơn.
+             *
+             * Backend vẫn phải quyết định
+             * reuse/cancel khi chọn gói khác.
+             */
+            if (
+                mySubscription
+                    .invoiceId
+            ) {
+              const pendingPackageId =
+                  getSubscriptionPackageId(
+                      mySubscription,
+                  );
+
+              if (
+                  pendingPackageId ===
+                  packageId
+              ) {
+                const confirmation =
+                    await showAlert.confirm(
+                        "Đăng ký đang chờ thanh toán",
+                        "Bạn đã có đăng ký của gói này đang chờ thanh toán. Tiếp tục thanh toán hóa đơn hiện tại?",
+                        {
+                          confirmButtonText:
+                              "Tiếp tục thanh toán",
+
+                          cancelButtonText:
+                              "Hủy",
+                        },
+                    );
+
+                if (
+                    confirmation
+                        .isConfirmed
+                ) {
+                  navigate(
+                      `/member/payment/${mySubscription.invoiceId}`,
+                  );
+                }
+
+                return;
+              }
+            }
+          }
+
+          // ===============================================
+          // CREATE NEW SUBSCRIPTION
+          // ===============================================
+
+          const subscription =
+              await subscriptionService
+                  .createSubscription({
+                    gymPackageId:
+                    targetPackage.id,
+
+                    packageDurationId:
+                    packageDuration.id,
+
+                    autoRenew:
+                        false,
+
+                    note:
+                        `Đăng ký ${
+                            targetPackage.name
+                        } - ${
+                            packageDuration.name
+                        }`,
+                  });
+
+          // ===============================================
+          // PAYMENT
+          // ===============================================
+
+          if (
+              subscription
+                  .invoiceId
+          ) {
+            navigate(
+                `/member/payment/${subscription.invoiceId}`,
+            );
+
+            return;
+          }
+
+          await showAlert.success(
+              "Đã tạo đăng ký",
+              "Đăng ký đã được tạo. Vui lòng kiểm tra hóa đơn để tiếp tục thanh toán.",
+          );
+
+          navigate(
+              ROUTES
+                  .MEMBER_SUBSCRIPTION,
+          );
+        } catch (
+            error: unknown
+            ) {
+          console.error(
+              "CREATE_SUBSCRIPTION_ERROR:",
+              error,
+          );
+
+          let message =
+              "Không thể xử lý đăng ký gói tập.";
+
+          let code:
+              number | undefined;
+
+          if (
+              axios.isAxiosError(
+                  error,
+              )
+          ) {
+            code =
+                error.response
+                    ?.data?.code;
+
+            message =
+                error.response
+                    ?.data
+                    ?.message ??
+                message;
+          }
+
+          if (
+              code ===
+              8003
+          ) {
+            message =
+                "Bạn đang có gói tập hoạt động. Hãy gia hạn hoặc nâng cấp gói hiện tại.";
+          }
+
+          await showAlert.error(
+              "Đăng ký thất bại",
+              message,
+          );
+        } finally {
+          setProcessingId(
+              null,
+          );
+        }
+      };
+
+  // =====================================================
+  // LOADING
+  // =====================================================
 
   if (loading) {
     return (
-        <div className="flex h-[60vh] items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-10 w-10 animate-spin text-fit-primary" />
-            <p className="animate-pulse font-medium text-fit-muted">
+        <div
+            className="
+              flex
+              h-[60vh]
+              items-center
+              justify-center
+            "
+        >
+          <div
+              className="
+                flex
+                flex-col
+                items-center
+                gap-4
+              "
+          >
+            <Loader2
+                className="
+                  h-10
+                  w-10
+                  animate-spin
+                  text-fit-primary
+                "
+            />
+
+            <p
+                className="
+                  font-medium
+                  text-fit-muted
+                "
+            >
               Đang tải gói tập...
             </p>
           </div>
@@ -251,284 +944,922 @@ export default function PackageListPage() {
     );
   }
 
+  // =====================================================
+  // RENDER
+  // =====================================================
+
   return (
-      <div className="bg-slate-50 min-h-screen pb-16 font-sans" ref={containerRef}>
+      <div
+          ref={containerRef}
+          className="
+            min-h-screen
+            bg-slate-50
+            pb-16
+          "
+      >
+        {/* =================================================
+            HERO
+        ================================================== */}
 
-        <div className="relative bg-slate-950 text-white pt-20 pb-28 mb-12 rounded-[2rem] mx-4 mt-4 overflow-hidden shadow-2xl border border-slate-800">
-          {/* Subtle luxury glows */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-fit-primary/30 rounded-full blur-[120px] mix-blend-screen translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-[120px] mix-blend-screen -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
-          
-          <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-            <div className="gsap-animate">
-              <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-slate-600 bg-slate-800/80 backdrop-blur-sm">
-                <span className="text-xs font-bold uppercase tracking-widest text-white">
-                  Thẻ Hội Viên Cao Cấp
-                </span>
-              </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-6 text-white leading-tight drop-shadow-md">
-                Nâng Tầm <span className="text-fit-primary drop-shadow-[0_0_15px_rgba(5,150,105,0.4)]">Đẳng Cấp</span>
-              </h1>
-              <p className="text-slate-200 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed drop-shadow-sm">
-                Đặc quyền thượng lưu tại hệ thống phòng tập 5 sao. Không gian sang trọng, thiết bị tối tân và dịch vụ chuyên nghiệp.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* MAIN CONTENT AREA */}
-        <div className="max-w-6xl mx-auto px-4 mt-8 relative z-20">
-
-          {/* DURATION SELECTOR (SLEEK & COMPACT TABS) */}
-          {durations.length > 0 && (
-            <div 
-              className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-2 max-w-2xl mx-auto mb-12 flex items-center border border-slate-100 gsap-animate"
-            >
-              {durations.map((duration) => {
-                const isActive = selectedDurationId === duration.id;
-                return (
-                  <button
-                    key={duration.id}
-                    onClick={() => setSelectedDurationId(duration.id)}
-                    className={`relative flex-1 py-3 px-4 rounded-xl text-sm font-bold uppercase tracking-wide transition-all duration-300 ${
-                      isActive ? "text-white" : "text-slate-500 hover:text-slate-800"
-                    }`}
-                  >
-                    {isActive && (
-                      <div
-                        className="absolute inset-0 bg-fit-primary rounded-xl gsap-animate"
-                      />
-                    )}
-                    <div className="relative z-10 flex items-center justify-center gap-2">
-                      <span>{duration.months} Tháng</span>
-                      {duration.discountPercent > 0 && (
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'}`}>
-                          -{duration.discountPercent}%
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* PACKAGE CARDS */}
+        <section
+            className="
+              relative
+              mx-4
+              mt-4
+              overflow-hidden
+              rounded-[2rem]
+              border
+              border-slate-800
+              bg-slate-950
+              px-6
+              pb-24
+              pt-16
+              text-white
+              shadow-2xl
+              md:pt-20
+            "
+        >
           <div
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-end gsap-animate"
+              className="
+                pointer-events-none
+                absolute
+                right-0
+                top-0
+                h-[500px]
+                w-[500px]
+                -translate-y-1/3
+                translate-x-1/3
+                rounded-full
+                bg-fit-primary/30
+                blur-[120px]
+              "
+          />
+
+          <div
+              className="
+                pointer-events-none
+                absolute
+                bottom-0
+                left-0
+                h-[500px]
+                w-[500px]
+                -translate-x-1/3
+                translate-y-1/3
+                rounded-full
+                bg-emerald-500/20
+                blur-[120px]
+              "
+          />
+
+          <div
+              className="
+                relative
+                z-10
+                mx-auto
+                max-w-4xl
+                text-center
+              "
           >
-            {packages.map((item, index) => {
-              const isCurrent =
-                  (mySubscription?.gymPackageId === item.id ||
-                      mySubscription?.package?.id === item.id) &&
-                  mySubscription?.status === "ACTIVE";
+            <span
+                className="
+                  inline-flex
+                  rounded-full
+                  border
+                  border-slate-600
+                  bg-slate-800/80
+                  px-4
+                  py-1.5
+                  text-xs
+                  font-bold
+                  uppercase
+                  tracking-widest
+                "
+            >
+              Gói hội viên FitLife
+            </span>
 
-              const targetTier = getTierLevel(item.packageType);
-              const currentPackage = mySubscription ? packages.find(p => p.id === mySubscription.gymPackageId) : null;
-              const currentTier = currentPackage ? getTierLevel(currentPackage.packageType) : 0;
-              const isUpgrade = mySubscription?.status === "ACTIVE" && targetTier > currentTier;
-              const isDisabled = !selectedDurationId || (mySubscription?.status === "ACTIVE" && !isUpgrade);
+            <h1
+                className="
+                  mt-5
+                  text-4xl
+                  font-black
+                  uppercase
+                  tracking-tight
+                  md:text-5xl
+                  lg:text-6xl
+                "
+            >
+              Chọn gói phù hợp với{" "}
 
-              const isPopular =
-                  item.name.toLowerCase().includes("standard") ||
-                  item.name.toLowerCase().includes("phổ biến") ||
-                  index === 1;
+              <span className="text-fit-primary">
+                mục tiêu của bạn
+              </span>
+            </h1>
 
-              const isPremium =
-                  item.name.toLowerCase().includes("vip") ||
-                  item.name.toLowerCase().includes("premium") ||
-                  item.name.toLowerCase().includes("centuryon") ||
-                  item.basePrice > 500000;
-
-              const priceInfo = calculatePrice(item);
-
-              // STYLING VARIANTS
-              let cardBg = "bg-white border-slate-200";
-              let titleColor = "text-slate-900";
-              let badgeColor = "bg-slate-100 text-slate-600";
-              let priceColor = "text-slate-900";
-              let btnClass = "bg-slate-950 text-white border-0 transition-transform duration-300 hover:scale-[1.02] active:scale-95";
-              
-              if (isPremium) {
-                cardBg = "bg-zinc-900 border-zinc-800 text-white shadow-2xl shadow-zinc-900/50";
-                titleColor = "text-yellow-500";
-                badgeColor = "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20";
-                priceColor = "text-white";
-                btnClass = "bg-gradient-to-r from-yellow-600 to-yellow-500 text-black border-0 hover:from-yellow-500 hover:to-yellow-400 font-bold shadow-lg shadow-yellow-500/20";
-              } else if (isPopular) {
-                cardBg = "bg-white border-fit-primary shadow-xl shadow-fit-primary/10 ring-1 ring-fit-primary";
-                titleColor = "text-fit-primary";
-                badgeColor = "bg-fit-primary/10 text-fit-primary";
-                priceColor = "text-slate-900";
-                btnClass = "bg-fit-primary text-white border-0 hover:bg-emerald-600 shadow-md shadow-fit-primary/20";
-              }
-
-              if (isCurrent) {
-                if (isPremium) {
-                  btnClass = "bg-gradient-to-r from-yellow-600 to-yellow-500 text-black border-0 hover:from-yellow-500 hover:to-yellow-400 font-bold shadow-lg shadow-yellow-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-95";
-                } else if (isPopular) {
-                  btnClass = "bg-fit-primary text-white border-0 hover:bg-emerald-600 shadow-md shadow-fit-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-95";
-                } else {
-                  btnClass = "bg-slate-950 text-white border-0 transition-all duration-300 hover:scale-[1.02] active:scale-95";
-                }
-              }
-
-              return (
-                  <div
-                      key={item.id}
-                      className="relative h-full gsap-animate"
-                  >
-                    {isPopular && !isPremium && (
-                      <div className="absolute -top-4 left-0 right-0 flex justify-center z-20">
-                        <span className="bg-fit-primary text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 rounded-full shadow-md">
-                          Lựa chọn phổ biến
-                        </span>
-                      </div>
-                    )}
-
-                    <div className={`h-full rounded-[2rem] border p-8 flex flex-col transition-transform duration-500 hover:-translate-y-2 ${cardBg}`}>
-                      {/* Badge & Title */}
-                      <div className="mb-6">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 ${badgeColor}`}>
-                          {isCurrent ? "Đang sử dụng" : item.packageType || "MEMBER"}
-                        </span>
-                        <h2 className={`text-3xl font-black uppercase ${titleColor}`}>
-                          {item.name}
-                        </h2>
-                        <p className={`mt-2 text-sm ${isPremium ? 'text-zinc-400' : 'text-slate-500'}`}>
-                          {item.description ? item.description.split("\n")[0] : "Khởi đầu hoàn hảo cho bạn."}
-                        </p>
-                      </div>
-
-                      {/* Price Section */}
-                      <div className="mb-8 border-b border-dashed border-slate-300/30 pb-8">
-                        <div className="flex items-baseline gap-1">
-                          <span className={`text-4xl font-black tracking-tight ${priceColor}`}>
-                            {formatCurrency(priceInfo.finalPrice)}
-                          </span>
-                          <span className={`text-sm font-medium ${isPremium ? 'text-zinc-500' : 'text-slate-400'}`}>
-                            / {selectedDuration?.months || 1} tháng
-                          </span>
-                        </div>
-                        
-                        {selectedDuration && priceInfo.discountAmount > 0 ? (
-                          <div className="mt-2 flex flex-col gap-1 text-sm">
-                            <span className="line-through text-slate-400">
-                              Giá gốc: {formatCurrency(priceInfo.originalPrice)}
-                            </span>
-                            <span className={`${isPremium ? 'text-yellow-500' : 'text-fit-primary'} font-bold`}>
-                              Tiết kiệm: {formatCurrency(priceInfo.discountAmount)} ({selectedDuration.discountPercent}%)
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="mt-2 flex flex-col gap-1 text-sm opacity-0">
-                            <span>Placeholder</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Features */}
-                      <div className="flex-1 mb-8 space-y-4">
-                        {renderFeatures(item).map((feature, idx) => (
-                          <div key={idx} className="flex items-start gap-3">
-                            <Check className={`w-5 h-5 shrink-0 ${isPremium ? 'text-yellow-500' : 'text-fit-primary'}`} />
-                            <span className={`text-sm leading-relaxed ${isPremium ? 'text-zinc-300' : 'text-slate-700'}`}>
-                              {feature}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Action Button */}
-                      <Button
-                          className={`w-full py-4 rounded-xl text-sm uppercase tracking-wider transition-all ${btnClass}`}
-                          disabled={isDisabled}
-                          isLoading={processingId === item.id}
-                          onClick={() => handlePurchase(item.id)}
-                      >
-                        {isCurrent ? "Đang sử dụng" : isUpgrade ? "Nâng cấp lên gói này" : mySubscription?.status === "ACTIVE" ? "Đã có gói tập" : "Đăng ký gói này"}
-                      </Button>
-                    </div>
-                  </div>
-              );
-            })}
-
-            {packages.length === 0 && (
-                <div className="col-span-full flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white py-20 text-center text-slate-400">
-                  <Dumbbell className="mb-4 h-12 w-12 opacity-50" />
-                  <p className="text-lg font-medium text-slate-600">
-                    Hiện tại chưa có gói tập nào đang hoạt động.
-                  </p>
-                  <p className="mt-2 text-sm">Vui lòng quay lại sau.</p>
-                </div>
-            )}
+            <p
+                className="
+                  mx-auto
+                  mt-6
+                  max-w-2xl
+                  text-base
+                  leading-7
+                  text-slate-300
+                  md:text-lg
+                "
+            >
+              So sánh quyền lợi, thời hạn và chi phí trước khi đăng ký.
+            </p>
           </div>
-        </div>
+        </section>
 
-        {/* COMPARISON TABLE */}
-        {packages.length > 0 && (
-            <div className="mx-auto mt-24 max-w-5xl px-4">
-              <div className="mb-10 text-center">
-                <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">
-                  So sánh quyền lợi
-                </h2>
-                <p className="mt-3 text-slate-500">
-                  Bảng giá tính theo thời hạn: <span className="font-bold text-fit-primary">{selectedDuration?.name || "Chưa chọn"}</span>
-                </p>
-              </div>
+        <div
+            className="
+              relative
+              z-20
+              mx-auto
+              mt-8
+              max-w-6xl
+              px-4
+            "
+        >
+          {/* =================================================
+              MONTH SELECTOR
+          ================================================== */}
 
-              <div className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-200/40 border border-slate-100">
-                <div className="grid grid-cols-4 bg-slate-50 border-b border-slate-100">
-                  <div className="p-5 font-bold text-slate-400 text-xs uppercase tracking-wider">Tiêu chí</div>
-                  {packages.map((pkg) => (
-                      <div key={pkg.id} className="p-5 text-center font-bold text-slate-800 uppercase tracking-wide text-sm">
-                        {pkg.name}
-                      </div>
-                  ))}
-                </div>
+          {availableMonths.length >
+              0 && (
+                  <div
+                      className="
+                    mx-auto
+                    mb-12
+                    flex
+                    max-w-2xl
+                    overflow-x-auto
+                    rounded-2xl
+                    border
+                    border-slate-100
+                    bg-white
+                    p-2
+                    shadow-xl
+                    shadow-slate-200/50
+                  "
+                  >
+                    {availableMonths.map(
+                        (months) => {
+                          const isActive =
+                              selectedMonths ===
+                              months;
 
-                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">Tổng thanh toán</div>
-                  {packages.map((pkg) => {
-                    const priceInfo = calculatePrice(pkg);
-                    return (
-                        <div key={pkg.id} className="p-5 text-center font-bold text-slate-900">
-                          {formatCurrency(priceInfo.finalPrice)}
+                          const monthDurations =
+                              durations.filter(
+                                  (duration) =>
+                                      duration.months ===
+                                      months,
+                              );
+
+                          const bestDiscount =
+                              monthDurations.reduce(
+                                  (
+                                      highest,
+                                      duration,
+                                  ) =>
+                                      Math.max(
+                                          highest,
+
+                                          duration
+                                              .discountPercent ??
+                                          0,
+                                      ),
+                                  0,
+                              );
+
+                          return (
+                              <button
+                                  key={months}
+                                  type="button"
+                                  onClick={() =>
+                                      setSelectedMonths(
+                                          months,
+                                      )
+                                  }
+                                  className={`
+                                relative
+                                min-w-[110px]
+                                flex-1
+                                rounded-xl
+                                px-4
+                                py-3
+                                text-sm
+                                font-bold
+                                transition
+
+                                ${
+                                      isActive
+                                          ? "bg-fit-primary text-white shadow-sm"
+                                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                  }
+                              `}
+                              >
+                                <div
+                                    className="
+                                  flex
+                                  items-center
+                                  justify-center
+                                  gap-2
+                                "
+                                >
+                              <span>
+                                {months} tháng
+                              </span>
+
+                                  {bestDiscount >
+                                      0 && (
+                                          <span
+                                              className={`
+                                        rounded
+                                        px-1.5
+                                        py-0.5
+                                        text-[10px]
+
+                                        ${
+                                                  isActive
+                                                      ? "bg-white/20 text-white"
+                                                      : "bg-red-100 text-red-600"
+                                              }
+                                      `}
+                                          >
+                                    -
+                                            {
+                                              bestDiscount
+                                            }
+                                            %
+                                  </span>
+                                      )}
+                                </div>
+                              </button>
+                          );
+                        },
+                    )}
+                  </div>
+              )}
+
+          {/* =================================================
+              PACKAGE CARDS
+          ================================================== */}
+
+          <div
+              className="
+                grid
+                items-stretch
+                gap-6
+                md:grid-cols-2
+                xl:grid-cols-3
+              "
+          >
+            {packages.map(
+                (
+                    item,
+                    index,
+                ) => {
+                  const currentPackageId =
+                      getSubscriptionPackageId(
+                          mySubscription,
+                      );
+
+                  const isCurrent =
+                      currentPackageId ===
+                      item.id &&
+                      mySubscription
+                          ?.status ===
+                      "ACTIVE";
+
+                  const currentPackage =
+                      currentPackageId
+                          ? packages.find(
+                              (pkg) =>
+                                  pkg.id ===
+                                  currentPackageId,
+                          )
+                          : undefined;
+
+                  const currentTier =
+                      getTierLevel(
+                          currentPackage
+                              ?.packageType,
+                      );
+
+                  const targetTier =
+                      getTierLevel(
+                          item.packageType,
+                      );
+
+                  const isUpgrade =
+                      mySubscription
+                          ?.status ===
+                      "ACTIVE" &&
+                      targetTier >
+                      currentTier;
+
+                  const packageDuration =
+                      getDurationForPackage(
+                          item.id,
+                      );
+
+                  const hasActiveSubscription =
+                      mySubscription
+                          ?.status ===
+                      "ACTIVE";
+
+                  const isDisabled =
+                      !packageDuration ||
+                      (
+                          hasActiveSubscription &&
+                          !isUpgrade
+                      );
+
+                  const isPopular =
+                      item.packageType
+                          ?.toUpperCase() ===
+                      "STANDARD" ||
+                      index ===
+                      1;
+
+                  const isPremium =
+                      item.packageType
+                          ?.toUpperCase() ===
+                      "VIP";
+
+                  const priceInfo =
+                      calculatePrice(
+                          item,
+                      );
+
+                  const features =
+                      renderFeatures(
+                          item,
+                      );
+
+                  return (
+                      <article
+                          key={item.id}
+                          className={`
+                            relative
+                            flex
+                            h-full
+                            flex-col
+                            rounded-[2rem]
+                            border
+                            p-7
+                            transition-all
+                            duration-300
+                            hover:-translate-y-1
+                            hover:shadow-xl
+
+                            ${
+                              isPremium
+                                  ? "border-zinc-800 bg-zinc-900 text-white"
+                                  : isPopular
+                                      ? "border-fit-primary bg-white shadow-lg shadow-fit-primary/10"
+                                      : "border-slate-200 bg-white"
+                          }
+                          `}
+                      >
+                        {isPopular &&
+                            !isPremium && (
+                                <span
+                                    className="
+                                  absolute
+                                  -top-3
+                                  left-1/2
+                                  -translate-x-1/2
+                                  rounded-full
+                                  bg-fit-primary
+                                  px-4
+                                  py-1.5
+                                  text-[10px]
+                                  font-bold
+                                  uppercase
+                                  tracking-wider
+                                  text-white
+                                  shadow
+                                "
+                                >
+                              Phổ biến
+                            </span>
+                            )}
+
+                        <div>
+                          <span
+                              className={`
+                                inline-flex
+                                rounded-full
+                                px-3
+                                py-1
+                                text-xs
+                                font-bold
+                                uppercase
+
+                                ${
+                                  isPremium
+                                      ? "bg-yellow-500/10 text-yellow-400"
+                                      : "bg-slate-100 text-slate-600"
+                              }
+                              `}
+                          >
+                            {isCurrent
+                                ? "Đang sử dụng"
+                                : item.packageType}
+                          </span>
+
+                          <h2
+                              className={`
+                                mt-4
+                                text-2xl
+                                font-black
+                                uppercase
+
+                                ${
+                                  isPremium
+                                      ? "text-yellow-400"
+                                      : "text-slate-900"
+                              }
+                              `}
+                          >
+                            {item.name}
+                          </h2>
+
+                          <p
+                              className={`
+                                mt-2
+                                min-h-[44px]
+                                text-sm
+                                leading-6
+
+                                ${
+                                  isPremium
+                                      ? "text-zinc-400"
+                                      : "text-slate-500"
+                              }
+                              `}
+                          >
+                            {item.description
+                                    ?.split(
+                                        "\n",
+                                    )[0] ??
+                                "Gói tập phù hợp với mục tiêu của bạn."}
+                          </p>
                         </div>
-                    );
-                  })}
-                </div>
 
-                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">Phân tích AI</div>
-                  {packages.map((pkg) => (
-                      <div key={pkg.id} className="p-5 text-center flex justify-center">
-                        {pkg.hasAiWorkoutPlan ? <Check className="w-5 h-5 text-fit-primary" /> : <span className="text-slate-300">-</span>}
-                      </div>
-                  ))}
-                </div>
+                        {/* ===================================
+                            PRICE
+                        ==================================== */}
 
-                <div className="grid grid-cols-4 border-b border-slate-50 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">Dinh dưỡng</div>
-                  {packages.map((pkg) => (
-                      <div key={pkg.id} className="p-5 text-center flex justify-center">
-                        {pkg.hasNutritionPlan ? <Check className="w-5 h-5 text-fit-primary" /> : <span className="text-slate-300">-</span>}
-                      </div>
-                  ))}
-                </div>
+                        <div
+                            className="
+                              my-7
+                              border-b
+                              border-dashed
+                              border-slate-300/30
+                              pb-7
+                            "
+                        >
+                          {packageDuration ? (
+                              <>
+                                <div
+                                    className="
+                                      flex
+                                      flex-wrap
+                                      items-baseline
+                                      gap-1
+                                    "
+                                >
+                                  <span
+                                      className={`
+                                        text-3xl
+                                        font-black
+                                        tracking-tight
 
-                <div className="grid grid-cols-4 text-sm hover:bg-slate-50 transition-colors">
-                  <div className="p-5 font-semibold text-slate-600">PT Kèm riêng</div>
-                  {packages.map((pkg) => (
-                      <div key={pkg.id} className="p-5 text-center font-medium text-slate-700">
-                        {pkg.ptSessionsPerMonth > 0 ? `${pkg.ptSessionsPerMonth} buổi/tháng` : <span className="text-slate-300">-</span>}
-                      </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-        )}
+                                        ${
+                                          isPremium
+                                              ? "text-white"
+                                              : "text-slate-950"
+                                      }
+                                      `}
+                                  >
+                                    {formatCurrency(
+                                        priceInfo.finalPrice,
+                                    )}
+                                  </span>
 
+                                  <span
+                                      className={`
+                                        text-sm
+
+                                        ${
+                                          isPremium
+                                              ? "text-zinc-500"
+                                              : "text-slate-400"
+                                      }
+                                      `}
+                                  >
+                                    /{" "}
+                                    {
+                                      packageDuration.months
+                                    }{" "}
+                                    tháng
+                                  </span>
+                                </div>
+
+                                {priceInfo.discountAmount >
+                                    0 && (
+                                        <div className="mt-2 space-y-1 text-sm">
+                                          <p className="text-slate-400 line-through">
+                                            {formatCurrency(
+                                                priceInfo.originalPrice,
+                                            )}
+                                          </p>
+
+                                          <p
+                                              className={`
+                                            font-bold
+
+                                            ${
+                                                  isPremium
+                                                      ? "text-yellow-400"
+                                                      : "text-fit-primary"
+                                              }
+                                          `}
+                                          >
+                                            Tiết kiệm{" "}
+                                            {formatCurrency(
+                                                priceInfo.discountAmount,
+                                            )}
+
+                                            {priceInfo.discountPercent >
+                                                0 &&
+                                                ` (${priceInfo.discountPercent}%)`}
+                                          </p>
+                                        </div>
+                                    )}
+                              </>
+                          ) : (
+                              <p
+                                  className="
+                                    text-sm
+                                    font-semibold
+                                    text-red-500
+                                  "
+                              >
+                                Không hỗ trợ{" "}
+                                {selectedMonths ??
+                                    ""}
+                                {" "}
+                                tháng
+                              </p>
+                          )}
+                        </div>
+
+                        {/* ===================================
+                            FEATURES
+                        ==================================== */}
+
+                        <div
+                            className="
+                              mb-8
+                              flex-1
+                              space-y-4
+                            "
+                        >
+                          {features.map(
+                              (
+                                  feature,
+                                  featureIndex,
+                              ) => (
+                                  <div
+                                      key={`${item.id}-${featureIndex}`}
+                                      className="
+                                        flex
+                                        items-start
+                                        gap-3
+                                      "
+                                  >
+                                    <Check
+                                        className={`
+                                          mt-0.5
+                                          h-5
+                                          w-5
+                                          shrink-0
+
+                                          ${
+                                            isPremium
+                                                ? "text-yellow-400"
+                                                : "text-fit-primary"
+                                        }
+                                        `}
+                                    />
+
+                                    <span
+                                        className={`
+                                          text-sm
+                                          leading-6
+
+                                          ${
+                                            isPremium
+                                                ? "text-zinc-300"
+                                                : "text-slate-700"
+                                        }
+                                        `}
+                                    >
+                                      {feature}
+                                    </span>
+                                  </div>
+                              ),
+                          )}
+                        </div>
+
+                        {/* ===================================
+                            ACTION
+                        ==================================== */}
+
+                        <Button
+                            className={`
+                              w-full
+                              rounded-xl
+                              py-4
+                              text-sm
+                              font-bold
+                              uppercase
+                              tracking-wide
+
+                              ${
+                                isPremium
+                                    ? "bg-gradient-to-r from-yellow-600 to-yellow-400 text-black"
+                                    : isPopular
+                                        ? "bg-fit-primary text-white"
+                                        : "bg-slate-950 text-white"
+                            }
+                            `}
+                            disabled={
+                              isDisabled
+                            }
+                            isLoading={
+                                processingId ===
+                                item.id
+                            }
+                            onClick={() => {
+                              void handlePurchase(
+                                  item.id,
+                              );
+                            }}
+                        >
+                          {!packageDuration
+                              ? "Không hỗ trợ thời hạn"
+                              : isCurrent
+                                  ? "Đang sử dụng"
+                                  : isUpgrade
+                                      ? "Nâng cấp gói"
+                                      : hasActiveSubscription
+                                          ? "Đã có gói tập"
+                                          : "Đăng ký gói"}
+                        </Button>
+                      </article>
+                  );
+                },
+            )}
+
+            {packages.length ===
+                0 && (
+                    <div
+                        className="
+                      col-span-full
+                      flex
+                      flex-col
+                      items-center
+                      justify-center
+                      rounded-3xl
+                      border
+                      border-dashed
+                      border-slate-300
+                      bg-white
+                      py-20
+                      text-center
+                    "
+                    >
+                      <Dumbbell
+                          className="
+                        mb-4
+                        h-12
+                        w-12
+                        text-slate-300
+                      "
+                      />
+
+                      <p
+                          className="
+                        text-lg
+                        font-bold
+                        text-slate-700
+                      "
+                      >
+                        Chưa có gói tập hoạt động
+                      </p>
+                    </div>
+                )}
+          </div>
+
+          {/* =================================================
+              COMPARISON
+          ================================================== */}
+
+          {packages.length >
+              0 && (
+                  <section className="mt-24">
+                    <div className="mb-8 text-center">
+                      <h2
+                          className="
+                        text-3xl
+                        font-black
+                        uppercase
+                        tracking-tight
+                        text-slate-900
+                      "
+                      >
+                        So sánh quyền lợi
+                      </h2>
+
+                      <p className="mt-3 text-slate-500">
+                        Giá theo thời hạn{" "}
+
+                        <span className="font-bold text-fit-primary">
+                      {selectedMonths
+                          ? `${selectedMonths} tháng`
+                          : "chưa chọn"}
+                    </span>
+                      </p>
+                    </div>
+
+                    <div
+                        className="
+                      overflow-x-auto
+                      rounded-2xl
+                      border
+                      border-slate-100
+                      bg-white
+                      shadow-xl
+                      shadow-slate-200/40
+                    "
+                    >
+                      <table className="w-full min-w-[760px]">
+                        <thead className="bg-slate-50">
+                        <tr>
+                          <th
+                              className="
+                            p-5
+                            text-left
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-wider
+                            text-slate-400
+                          "
+                          >
+                            Tiêu chí
+                          </th>
+
+                          {packages.map(
+                              (pkg) => (
+                                  <th
+                                      key={pkg.id}
+                                      className="
+                                    p-5
+                                    text-center
+                                    text-sm
+                                    font-black
+                                    uppercase
+                                    text-slate-800
+                                  "
+                                  >
+                                    {pkg.name}
+                                  </th>
+                              ),
+                          )}
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <ComparisonRow
+                            label="Tổng thanh toán"
+                            packages={packages}
+                            render={(pkg) =>
+                                formatCurrency(
+                                    calculatePrice(
+                                        pkg,
+                                    ).finalPrice,
+                                )
+                            }
+                        />
+
+                        <ComparisonRow
+                            label="AI giáo án"
+                            packages={packages}
+                            render={(pkg) =>
+                                pkg.hasAiWorkoutPlan
+                                    ? "✓"
+                                    : "—"
+                            }
+                        />
+
+                        <ComparisonRow
+                            label="Dinh dưỡng"
+                            packages={packages}
+                            render={(pkg) =>
+                                pkg.hasNutritionPlan
+                                    ? "✓"
+                                    : "—"
+                            }
+                        />
+
+                        <ComparisonRow
+                            label="PT cá nhân"
+                            packages={packages}
+                            render={(pkg) =>
+                                pkg.ptSessionsPerMonth >
+                                0
+                                    ? `${pkg.ptSessionsPerMonth} buổi/tháng`
+                                    : "—"
+                            }
+                        />
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+              )}
+        </div>
       </div>
+  );
+}
+
+// =====================================================
+// COMPARISON ROW
+// =====================================================
+
+function ComparisonRow({
+                         label,
+                         packages,
+                         render,
+                       }: {
+  label:
+      string;
+
+  packages:
+      GymPackage[];
+
+  render:
+      (
+          gymPackage:
+          GymPackage,
+      ) => string;
+}) {
+  return (
+      <tr
+          className="
+            border-t
+            border-slate-100
+            transition
+            hover:bg-slate-50
+          "
+      >
+        <td
+            className="
+              p-5
+              text-sm
+              font-semibold
+              text-slate-600
+            "
+        >
+          {label}
+        </td>
+
+        {packages.map(
+            (gymPackage) => (
+                <td
+                    key={
+                      gymPackage.id
+                    }
+                    className="
+                      p-5
+                      text-center
+                      text-sm
+                      font-bold
+                      text-slate-800
+                    "
+                >
+                  {render(
+                      gymPackage,
+                  )}
+                </td>
+            ),
+        )}
+      </tr>
   );
 }

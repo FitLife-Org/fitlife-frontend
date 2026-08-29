@@ -11,8 +11,12 @@ export type WorkoutPlanSourceType =
     | "MEMBER_CREATED"
     | "MANUAL";
 
+// =====================================================
+// RESPONSE
+// =====================================================
+
 export interface WorkoutExercise {
-  id?: number;
+  id: number;
 
   exerciseName: string;
 
@@ -44,11 +48,11 @@ export interface WorkoutExercise {
 
   sortOrder?: number | null;
 
-  isOptional?: boolean;
+  isOptional: boolean;
 }
 
 export interface WorkoutPlanDay {
-  id?: number;
+  id: number;
 
   weekNo?: number | null;
 
@@ -66,32 +70,24 @@ export interface WorkoutPlanDay {
 
   sortOrder?: number | null;
 
-  isRestDay?: boolean;
-
-  /*
-   * Chỉ giữ field này nếu backend detail hiện
-   * thực sự trả về.
-   *
-   * Không dùng field này để gọi
-   * /workout-plans/{dayId}/complete.
-   */
-  isCompleted?: boolean;
+  isRestDay: boolean;
 
   exercises: WorkoutExercise[];
 }
 
+/**
+ * Response dùng cho list:
+ *
+ * GET /workout-plans/me
+ * GET /trainer/members/{memberId}/workout-plans
+ * GET /admin/workout-plans
+ */
 export interface WorkoutPlan {
   id: number;
 
-  code?: string | null;
-
   memberId?: number | null;
 
-  memberName?: string | null;
-
-  trainerId?: number | null;
-
-  trainerName?: string | null;
+  code: string;
 
   name: string;
 
@@ -99,7 +95,7 @@ export interface WorkoutPlan {
 
   experienceLevel?: string | null;
 
-  sourceType?: WorkoutPlanSourceType | string | null;
+  sourceType: WorkoutPlanSourceType;
 
   status: WorkoutPlanStatus;
 
@@ -109,9 +105,9 @@ export interface WorkoutPlan {
 
   workoutDurationMinutes?: number | null;
 
-  description?: string | null;
+  totalDays?: number | null;
 
-  note?: string | null;
+  trainingDays?: number | null;
 
   startDate?: string | null;
 
@@ -120,23 +116,105 @@ export interface WorkoutPlan {
   createdAt?: string | null;
 
   updatedAt?: string | null;
+}
+
+/**
+ * Response chi tiết:
+ *
+ * GET /workout-plans/{id}
+ * GET /workout-plans/me/active
+ */
+export interface WorkoutPlanDetail extends WorkoutPlan {
+  trainerId?: number | null;
+
+  sourceAiSuggestionId?: number | null;
+
+  description?: string | null;
+
+  note?: string | null;
+
+  /**
+   * Backend quyết định quyền edit.
+   * FE không tự suy luận lại business rule.
+   */
+  editableByMember: boolean;
 
   days: WorkoutPlanDay[];
 }
 
-/*
- * Request dùng cho Member / Trainer.
+// =====================================================
+// REQUEST
+// =====================================================
+
+export interface WorkoutExerciseRequest {
+  exerciseName: string;
+
+  targetMuscle?: string;
+
+  equipmentId?: number;
+
+  sets?: number;
+
+  reps?: string;
+
+  weightKg?: number;
+
+  durationMinutes?: number;
+
+  distanceKm?: number;
+
+  restSeconds?: number;
+
+  tempo?: string;
+
+  rpe?: number;
+
+  instruction?: string;
+
+  note?: string;
+
+  videoUrl?: string;
+
+  sortOrder?: number;
+
+  isOptional?: boolean;
+}
+
+export interface WorkoutPlanDayRequest {
+  weekNo?: number;
+
+  dayNo?: number;
+
+  dayOfWeek?: string;
+
+  name: string;
+
+  focusArea?: string;
+
+  estimatedMinutes?: number;
+
+  note?: string;
+
+  sortOrder?: number;
+
+  isRestDay?: boolean;
+
+  exercises?: WorkoutExerciseRequest[];
+}
+
+/**
+ * Không có memberId.
  *
- * memberId KHÔNG nằm trong body Trainer vì backend:
+ * Member:
+ * POST /workout-plans
  *
+ * Trainer:
  * POST /trainer/members/{memberId}/workout-plans
- *
- * đã lấy memberId từ path.
  */
 export interface WorkoutPlanCreateRequest {
   name: string;
 
-  goal?: string;
+  goal: string;
 
   experienceLevel?: string;
 
@@ -150,7 +228,7 @@ export interface WorkoutPlanCreateRequest {
 
   note?: string;
 
-  days?: WorkoutPlanDay[];
+  days?: WorkoutPlanDayRequest[];
 }
 
 export interface WorkoutPlanUpdateRequest {

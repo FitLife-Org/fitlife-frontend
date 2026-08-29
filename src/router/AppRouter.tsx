@@ -106,6 +106,7 @@ import CheckinHistoryPage from "../pages/member/CheckinHistoryPage";
 import WorkoutPlansPage from "../pages/member/WorkoutPlansPage";
 import WorkoutPlanDetailPage from "../pages/member/WorkoutPlanDetailPage";
 import WorkoutTodayPage from "../pages/member/WorkoutTodayPage";
+import MemberWorkoutFormPage from "../pages/member/MemberWorkoutFormPage";
 import MemberSchedulePage from "../pages/member/MemberSchedulePage";
 
 import NutritionPage from "../pages/member/NutritionPage";
@@ -521,8 +522,8 @@ export default function AppRouter() {
                         />
 
                         {/* =================================
-                         * MEMBER - WORKOUT
-                         * ================================= */}
+ * MEMBER - WORKOUT
+ * ================================= */}
 
                         <Route
                             path={
@@ -541,6 +542,21 @@ export default function AppRouter() {
 
                         <Route
                             path={
+                                ROUTES.MEMBER_WORKOUT_CREATE
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
+                                    <MemberWorkoutFormPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={
                                 ROUTES.MEMBER_WORKOUT_TODAY
                             }
                             element={
@@ -550,6 +566,21 @@ export default function AppRouter() {
                                     ]}
                                 >
                                     <WorkoutTodayPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={
+                                ROUTES.MEMBER_WORKOUT_EDIT
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_MEMBER",
+                                    ]}
+                                >
+                                    <MemberWorkoutFormPage />
                                 </RoleGuard>
                             }
                         />
@@ -907,8 +938,7 @@ export default function AppRouter() {
 
                         {/* =================================
                          * STAFF - EQUIPMENT
-                         * ================================= */
-}
+                         * ================================= */}
 
                         <Route
                             path={
@@ -1094,7 +1124,9 @@ export default function AppRouter() {
                         {/* Trainer Workout */}
 
                         <Route
-                            path="/trainer/members/:memberId/workouts"
+                            path={
+                                ROUTES.TRAINER_MEMBER_WORKOUTS
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -1108,7 +1140,9 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path="/trainer/members/:memberId/workouts/create"
+                            path={
+                                ROUTES.TRAINER_MEMBER_WORKOUT_CREATE
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -1122,7 +1156,9 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path="/trainer/members/:memberId/workouts/:planId/edit"
+                            path={
+                                ROUTES.TRAINER_MEMBER_WORKOUT_EDIT
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -1138,7 +1174,9 @@ export default function AppRouter() {
                         {/* Trainer Nutrition */}
 
                         <Route
-                            path="/trainer/members/:memberId/nutrition"
+                            path={
+                                ROUTES.TRAINER_MEMBER_NUTRITION
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -1152,7 +1190,9 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path="/trainer/members/:memberId/nutrition/create"
+                            path={
+                                ROUTES.TRAINER_MEMBER_NUTRITION_CREATE
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -1166,7 +1206,9 @@ export default function AppRouter() {
                         />
 
                         <Route
-                            path="/trainer/members/:memberId/nutrition/:planId/edit"
+                            path={
+                                ROUTES.TRAINER_MEMBER_NUTRITION_EDIT
+                            }
                             element={
                                 <RoleGuard
                                     roles={[

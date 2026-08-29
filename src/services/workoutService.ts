@@ -11,6 +11,8 @@ import type {
     WorkoutPlan,
     WorkoutPlanCreateRequest,
     WorkoutPlanDay,
+    WorkoutPlanDayRequest,
+    WorkoutPlanDetail,
     WorkoutPlanUpdateRequest,
 } from "../types/workout.type";
 
@@ -22,10 +24,13 @@ function validateId(
     id: string | number,
     fieldName: string,
 ): number {
-    const numericId = Number(id);
+    const numericId =
+        Number(id);
 
     if (
-        !Number.isInteger(numericId) ||
+        !Number.isInteger(
+            numericId,
+        ) ||
         numericId <= 0
     ) {
         throw new Error(
@@ -36,12 +41,46 @@ function validateId(
     return numericId;
 }
 
+function isNotFound(
+    error: unknown,
+): boolean {
+    return (
+        axios.isAxiosError(error) &&
+        error.response?.status === 404
+    );
+}
+
+function normalizeExercise<
+    T extends {
+        isOptional?: boolean;
+    },
+>(
+    exercise: T,
+): T & {
+    isOptional: boolean;
+} {
+    return {
+        ...exercise,
+        isOptional:
+            exercise.isOptional ??
+            false,
+    };
+}
+
 function normalizeDay(
     day: WorkoutPlanDay,
 ): WorkoutPlanDay {
     return {
         ...day,
-        exercises: day.exercises ?? [],
+
+        isRestDay:
+            day.isRestDay ??
+            false,
+
+        exercises:
+            day.exercises?.map(
+                normalizeExercise,
+            ) ?? [],
     };
 }
 
@@ -50,16 +89,42 @@ function normalizePlan(
 ): WorkoutPlan {
     return {
         ...plan,
+
+        totalDays:
+            plan.totalDays ??
+            0,
+
+        trainingDays:
+            plan.trainingDays ??
+            0,
+    };
+}
+
+function normalizeDetail(
+    plan: WorkoutPlanDetail,
+): WorkoutPlanDetail {
+    return {
+        ...normalizePlan(plan),
+
+        editableByMember:
+            plan.editableByMember ??
+            false,
+
         days:
-            plan.days?.map(normalizeDay) ??
-            [],
+            plan.days?.map(
+                normalizeDay,
+            ) ?? [],
     };
 }
 
 function extractPlans(
     response: WorkoutPlansResponse,
 ): WorkoutPlan[] {
-    if (Array.isArray(response)) {
+    if (
+        Array.isArray(
+            response,
+        )
+    ) {
         return response.map(
             normalizePlan,
         );
@@ -69,15 +134,6 @@ function extractPlans(
         response.content?.map(
             normalizePlan,
         ) ?? []
-    );
-}
-
-function isNotFound(
-    error: unknown,
-): boolean {
-    return (
-        axios.isAxiosError(error) &&
-        error.response?.status === 404
     );
 }
 
@@ -100,11 +156,11 @@ export const workoutService = {
                 response.data.data,
             );
         } catch (error) {
-            /*
-             * Chưa có giáo án không phải lỗi UI.
-             * Trả [] để page render empty-state.
-             */
-            if (isNotFound(error)) {
+            if (
+                isNotFound(
+                    error,
+                )
+            ) {
                 return [];
             }
 
@@ -113,23 +169,24 @@ export const workoutService = {
     },
 
     async getActiveWorkoutPlan():
-        Promise<WorkoutPlan | null> {
+        Promise<WorkoutPlanDetail | null> {
         try {
             const response =
                 await apiClient.get<
-                    ApiResponse<WorkoutPlan>
+                    ApiResponse<WorkoutPlanDetail>
                 >(
                     "/workout-plans/me/active",
                 );
 
-            return normalizePlan(
+            return normalizeDetail(
                 response.data.data,
             );
         } catch (error) {
-            /*
-             * Member chưa có plan ACTIVE.
-             */
-            if (isNotFound(error)) {
+            if (
+                isNotFound(
+                    error,
+                )
+            ) {
                 return null;
             }
 
@@ -151,11 +208,11 @@ export const workoutService = {
                 response.data.data,
             );
         } catch (error) {
-            /*
-             * Có ACTIVE nhưng hôm nay
-             * không nằm trong lịch tập.
-             */
-            if (isNotFound(error)) {
+            if (
+                isNotFound(
+                    error,
+                )
+            ) {
                 return null;
             }
 
@@ -165,7 +222,7 @@ export const workoutService = {
 
     async getWorkoutPlanDetails(
         id: string | number,
-    ): Promise<WorkoutPlan> {
+    ): Promise<WorkoutPlanDetail> {
         const planId =
             validateId(
                 id,
@@ -174,12 +231,12 @@ export const workoutService = {
 
         const response =
             await apiClient.get<
-                ApiResponse<WorkoutPlan>
+                ApiResponse<WorkoutPlanDetail>
             >(
                 `/workout-plans/${planId}`,
             );
 
-        return normalizePlan(
+        return normalizeDetail(
             response.data.data,
         );
     },
@@ -232,8 +289,8 @@ export const workoutService = {
             string | number,
 
         days:
-        WorkoutPlanDay[],
-    ): Promise<WorkoutPlan> {
+        WorkoutPlanDayRequest[],
+    ): Promise<WorkoutPlanDetail> {
         const numericPlanId =
             validateId(
                 planId,
@@ -242,13 +299,13 @@ export const workoutService = {
 
         const response =
             await apiClient.put<
-                ApiResponse<WorkoutPlan>
+                ApiResponse<WorkoutPlanDetail>
             >(
                 `/workout-plans/${numericPlanId}/structure`,
                 days,
             );
 
-        return normalizePlan(
+        return normalizeDetail(
             response.data.data,
         );
     },

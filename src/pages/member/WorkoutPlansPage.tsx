@@ -1,25 +1,26 @@
 import {
-  useCallback,
-  useEffect,
-  useState,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
 } from "react";
 
 import {
-  Activity,
-  CalendarDays,
-  ChevronRight,
-  Clock3,
-  Dumbbell,
-  Sparkles,
-  Target,
-  UserRound,
+    Activity,
+    CalendarDays,
+    ChevronRight,
+    Clock3,
+    Dumbbell,
+    Eye,
+    Pencil,
+    Plus,
+    Sparkles,
+    Target,
 } from "lucide-react";
 
 import {
-  useNavigate,
+    useNavigate,
 } from "react-router-dom";
-
-import { showAlert } from "../../utils/alert";
 
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
@@ -28,280 +29,395 @@ import Loading from "../../components/common/Loading";
 import PageHeader from "../../components/common/PageHeader";
 
 import {
-  ROUTES,
+    ROUTES,
 } from "../../config/routes";
 
 import {
-  usePageAnimation,
+    usePageAnimation,
 } from "../../hooks/usePageAnimation";
 
 import {
-  workoutService,
+    workoutService,
 } from "../../services/workoutService";
 
 import type {
-  WorkoutPlan,
-  WorkoutPlanStatus,
+    WorkoutPlan,
+    WorkoutPlanSourceType,
+    WorkoutPlanStatus,
 } from "../../types/workout.type";
 
 import {
-  getApiErrorMessage,
+    getApiErrorMessage,
 } from "../../utils/apiError";
 
+import {
+    showAlert,
+} from "../../utils/alert";
+
 function buildWorkoutDetailRoute(
-    planId:
-        string | number,
+    id: number,
 ): string {
-  return ROUTES
-      .MEMBER_WORKOUT_DETAIL
-      .replace(
-          ":id",
-          String(planId),
-      );
+    return ROUTES
+        .MEMBER_WORKOUT_DETAIL
+        .replace(
+            ":id",
+            String(id),
+        );
+}
+
+function buildWorkoutEditRoute(
+    planId: number,
+): string {
+    return ROUTES
+        .MEMBER_WORKOUT_EDIT
+        .replace(
+            ":id",
+            String(planId),
+        );
 }
 
 function getStatusLabel(
-    status:
-    WorkoutPlanStatus,
+    status: WorkoutPlanStatus,
 ): string {
-  switch (status) {
-    case "ACTIVE":
-      return "Đang áp dụng";
+    switch (status) {
+        case "ACTIVE":
+            return "Đang áp dụng";
 
-    case "DRAFT":
-      return "Bản nháp";
+        case "DRAFT":
+            return "Bản nháp";
 
-    case "COMPLETED":
-      return "Hoàn thành";
+        case "COMPLETED":
+            return "Hoàn thành";
 
-    case "ARCHIVED":
-      return "Đã lưu trữ";
+        case "ARCHIVED":
+            return "Đã lưu trữ";
 
-    case "CANCELLED":
-      return "Đã hủy";
+        case "CANCELLED":
+            return "Đã hủy";
 
-    default:
-      return status;
-  }
+        default:
+            return status;
+    }
 }
 
 function getStatusVariant(
-    status:
-    WorkoutPlanStatus,
+    status: WorkoutPlanStatus,
 ):
     | "success"
     | "warning"
     | "danger"
     | "info"
     | "default" {
-  switch (status) {
-    case "ACTIVE":
-      return "success";
+    switch (status) {
+        case "ACTIVE":
+            return "success";
 
-    case "DRAFT":
-      return "warning";
+        case "DRAFT":
+            return "warning";
 
-    case "COMPLETED":
-      return "info";
+        case "COMPLETED":
+            return "info";
 
-    case "CANCELLED":
-      return "danger";
+        case "CANCELLED":
+            return "danger";
 
-    default:
-      return "default";
-  }
+        default:
+            return "default";
+    }
 }
 
 function getSourceLabel(
-    source?:
-        string | null,
+    source: WorkoutPlanSourceType,
 ): string {
-  switch (source) {
-    case "AI_GENERATED":
-      return "FitLife AI";
+    switch (source) {
+        case "AI_GENERATED":
+            return "FitLife AI";
 
-    case "TRAINER_CREATED":
-      return "Huấn luyện viên";
+        case "TRAINER_CREATED":
+            return "Huấn luyện viên";
 
-    case "MEMBER_CREATED":
-      return "Hội viên";
+        case "MEMBER_CREATED":
+            return "Hội viên";
 
-    case "MANUAL":
-      return "Thủ công";
+        case "MANUAL":
+            return "Thủ công";
 
-    default:
-      return source ||
-          "FitLife";
-  }
+        default:
+            return source;
+    }
+}
+
+function canEditPlan(
+    plan: WorkoutPlan,
+): boolean {
+    const editableSource =
+        plan.sourceType === "AI_GENERATED" ||
+        plan.sourceType === "MEMBER_CREATED" ||
+        plan.sourceType === "MANUAL";
+
+    const editableStatus =
+        plan.status === "DRAFT" ||
+        plan.status === "ACTIVE";
+
+    return (
+        editableSource &&
+        editableStatus
+    );
 }
 
 export default function WorkoutPlansPage() {
-  const containerRef =
-      usePageAnimation();
+    const containerRef =
+        usePageAnimation();
 
-  const navigate =
-      useNavigate();
+    const navigate =
+        useNavigate();
 
-  const [
-    plans,
-    setPlans,
-  ] =
-      useState<
-          WorkoutPlan[]
-      >([]);
+    const [
+        plans,
+        setPlans,
+    ] =
+        useState<WorkoutPlan[]>(
+            [],
+        );
 
-  const [
-    loading,
-    setLoading,
-  ] =
-      useState(true);
+    const [
+        loading,
+        setLoading,
+    ] =
+        useState(true);
 
-  const fetchPlans =
-      useCallback(
-          async (): Promise<void> => {
-            try {
-              setLoading(
-                  true,
-              );
+    const fetchPlans =
+        useCallback(
+            async (): Promise<void> => {
+                try {
+                    setLoading(
+                        true,
+                    );
 
-              const data =
-                  await workoutService
-                      .getMyWorkoutPlans();
+                    const data =
+                        await workoutService
+                            .getMyWorkoutPlans();
 
-              setPlans(
-                  data,
-              );
-            } catch (error) {
-              setPlans(
-                  [],
-              );
+                    setPlans(
+                        data,
+                    );
+                } catch (error) {
+                    setPlans(
+                        [],
+                    );
 
-              void showAlert.error("Đã xảy ra lỗi", 
-                  getApiErrorMessage(
-                      error,
-                      "Không thể tải danh sách giáo án.",
-                  ),
-              );
-            } finally {
-              setLoading(
-                  false,
-              );
-            }
-          },
-          [],
-      );
+                    void showAlert.error(
+                        "Đã xảy ra lỗi",
+                        getApiErrorMessage(
+                            error,
+                            "Không thể tải danh sách giáo án.",
+                        ),
+                    );
+                } finally {
+                    setLoading(
+                        false,
+                    );
+                }
+            },
+            [],
+        );
 
-  useEffect(() => {
-    void fetchPlans();
-  }, [
-    fetchPlans,
-  ]);
+    useEffect(() => {
+        void fetchPlans();
+    }, [
+        fetchPlans,
+    ]);
 
-  if (loading) {
+    const activePlanCount =
+        useMemo(
+            () =>
+                plans.filter(
+                    (
+                        plan,
+                    ) =>
+                        plan.status ===
+                        "ACTIVE",
+                ).length,
+            [
+                plans,
+            ],
+        );
+
+    const editablePlanCount =
+        useMemo(
+            () =>
+                plans.filter(
+                    canEditPlan,
+                ).length,
+            [
+                plans,
+            ],
+        );
+
+    if (loading) {
+        return (
+            <Loading label="Đang tải danh sách giáo án..." />
+        );
+    }
+
     return (
-        <Loading label="Đang tải danh sách giáo án..." />
-    );
-  }
+        <div
+            ref={containerRef}
+            className="space-y-6 pb-10"
+        >
+            <PageHeader
+                eyebrow="Workout"
+                title="Giáo án của tôi"
+                description="Quản lý các giáo án tập luyện được tạo bởi FitLife AI, huấn luyện viên hoặc chính bạn."
+                action={
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() =>
+                                navigate(
+                                    ROUTES
+                                        .MEMBER_WORKOUT_CREATE,
+                                )
+                            }
+                        >
+                            <Plus className="h-4 w-4" />
 
-  return (
-      <div
-          ref={
-            containerRef
-          }
-          className="space-y-6 pb-10"
-      >
-        <PageHeader
-            eyebrow="Workout"
-            title="Giáo án của tôi"
-            description="Theo dõi các kế hoạch tập luyện được tạo bởi FitLife AI, huấn luyện viên hoặc chính bạn."
-            action={
-              <Button
-                  variant="primary"
-                  onClick={() =>
-                      navigate(
-                          ROUTES.MEMBER_AI,
-                      )
-                  }
-              >
-                <Sparkles className="h-4 w-4" />
-                Tạo bằng AI
-              </Button>
-            }
-        />
+                            Tạo thủ công
+                        </Button>
 
-        {plans.length ===
-        0 ? (
-            <EmptyWorkoutState
-                onCreate={() =>
-                    navigate(
-                        ROUTES.MEMBER_AI,
-                    )
+                        <Button
+                            variant="primary"
+                            onClick={() =>
+                                navigate(
+                                    ROUTES
+                                        .MEMBER_AI,
+                                )
+                            }
+                        >
+                            <Sparkles className="h-4 w-4" />
+
+                            Tạo bằng AI
+                        </Button>
+                    </div>
                 }
             />
-        ) : (
-            <div
+
+            <section
                 className="
+                    grid
+                    grid-cols-1
+                    gap-4
+                    sm:grid-cols-3
+                "
+            >
+                <SummaryCard
+                    label="Tổng giáo án"
+                    value={
+                        plans.length
+                    }
+                />
+
+                <SummaryCard
+                    label="Đang áp dụng"
+                    value={
+                        activePlanCount
+                    }
+                />
+
+                <SummaryCard
+                    label="Có thể chỉnh sửa"
+                    value={
+                        editablePlanCount
+                    }
+                />
+            </section>
+
+            {plans.length ===
+            0 ? (
+                <EmptyWorkoutState
+                    onManual={() =>
+                        navigate(
+                            ROUTES
+                                .MEMBER_WORKOUT_CREATE,
+                        )
+                    }
+                    onAi={() =>
+                        navigate(
+                            ROUTES
+                                .MEMBER_AI,
+                        )
+                    }
+                />
+            ) : (
+                <div
+                    className="
                         grid
                         grid-cols-1
                         gap-5
                         xl:grid-cols-2
                     "
-            >
-              {plans.map(
-                  (
-                      plan,
-                  ) => (
-                      <WorkoutPlanCard
-                          key={
-                            plan.id
-                          }
-                          plan={
-                            plan
-                          }
-                          onView={() =>
-                              navigate(
-                                  buildWorkoutDetailRoute(
-                                      plan.id,
-                                  ),
-                              )
-                          }
-                      />
-                  ),
-              )}
-            </div>
-        )}
-      </div>
-  );
+                >
+                    {plans.map(
+                        (
+                            plan,
+                        ) => (
+                            <WorkoutPlanCard
+                                key={
+                                    plan.id
+                                }
+                                plan={
+                                    plan
+                                }
+                                onView={() =>
+                                    navigate(
+                                        buildWorkoutDetailRoute(
+                                            plan.id,
+                                        ),
+                                    )
+                                }
+                                onEdit={() =>
+                                    navigate(
+                                        buildWorkoutEditRoute(
+                                            plan.id,
+                                        ),
+                                    )
+                                }
+                            />
+                        ),
+                    )}
+                </div>
+            )}
+        </div>
+    );
 }
 
 function WorkoutPlanCard({
-                           plan,
-                           onView,
+                             plan,
+                             onView,
+                             onEdit,
                          }: {
-  plan:
-      WorkoutPlan;
+    plan: WorkoutPlan;
 
-  onView:
-      () => void;
+    onView: () => void;
+
+    onEdit: () => void;
 }) {
-  const days =
-      plan.days ?? [];
+    const editable =
+        canEditPlan(
+            plan,
+        );
 
-  const trainingDays =
-      days.filter(
-          (
-              day,
-          ) =>
-              !day.isRestDay,
-      );
+    const totalDays =
+        plan.totalDays ??
+        0;
 
-  const restDays =
-      days.length -
-      trainingDays.length;
+    const trainingDays =
+        plan.trainingDays ??
+        0;
 
-  return (
-      <Card
-          className="
+    return (
+        <Card
+            className="
                 group
                 overflow-hidden
                 transition-all
@@ -309,18 +425,18 @@ function WorkoutPlanCard({
                 hover:-translate-y-0.5
                 hover:shadow-lg
             "
-      >
-        <div
-            className="
+        >
+            <div
+                className="
                     relative
                     overflow-hidden
                     border-b
                     border-slate-100
                     p-6
                 "
-        >
-          <div
-              className="
+            >
+                <div
+                    className="
                         pointer-events-none
                         absolute
                         -right-16
@@ -331,62 +447,59 @@ function WorkoutPlanCard({
                         bg-emerald-100
                         blur-3xl
                     "
-          />
+                />
 
-          <div className="relative">
-            <div
-                className="
+                <div className="relative">
+                    <div
+                        className="
                             flex
                             items-start
                             justify-between
                             gap-4
                         "
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                      variant={
-                        getStatusVariant(
-                            plan.status,
-                        )
-                      }
-                  >
-                    {getStatusLabel(
-                        plan.status,
-                    )}
-                  </Badge>
+                    >
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Badge
+                                    variant={
+                                        getStatusVariant(
+                                            plan.status,
+                                        )
+                                    }
+                                >
+                                    {getStatusLabel(
+                                        plan.status,
+                                    )}
+                                </Badge>
 
-                  <span
-                      className="
-                                        rounded-full
-                                        bg-slate-100
-                                        px-2.5
-                                        py-1
-                                        text-[10px]
-                                        font-bold
-                                        text-slate-500
-                                    "
-                  >
+                                <Badge variant="purple">
                                     {getSourceLabel(
                                         plan.sourceType,
                                     )}
-                                </span>
-                </div>
+                                </Badge>
 
-                <h2
-                    className="
+                                {editable && (
+                                    <Badge variant="info">
+                                        Có thể chỉnh sửa
+                                    </Badge>
+                                )}
+                            </div>
+
+                            <h2
+                                className="
                                     mt-4
+                                    line-clamp-2
                                     text-xl
                                     font-black
                                     tracking-tight
                                     text-slate-950
                                 "
-                >
-                  {plan.name}
-                </h2>
+                            >
+                                {plan.name}
+                            </h2>
 
-                <p
-                    className="
+                            <p
+                                className="
                                     mt-2
                                     flex
                                     items-center
@@ -394,16 +507,18 @@ function WorkoutPlanCard({
                                     text-sm
                                     text-slate-500
                                 "
-                >
-                  <Target className="h-4 w-4" />
+                            >
+                                <Target className="h-4 w-4 shrink-0" />
 
-                  {plan.goal ||
-                      "Chưa xác định mục tiêu"}
-                </p>
-              </div>
+                                <span className="line-clamp-1">
+                                    {plan.goal ||
+                                        "Chưa xác định mục tiêu"}
+                                </span>
+                            </p>
+                        </div>
 
-              <div
-                  className="
+                        <div
+                            className="
                                 flex
                                 h-12
                                 w-12
@@ -414,244 +529,315 @@ function WorkoutPlanCard({
                                 bg-emerald-100
                                 text-emerald-700
                             "
-              >
-                <Dumbbell className="h-6 w-6" />
-              </div>
-            </div>
+                        >
+                            <Dumbbell className="h-6 w-6" />
+                        </div>
+                    </div>
 
-            <div
-                className="
+                    <div
+                        className="
                             mt-5
                             grid
                             grid-cols-2
                             gap-3
                             sm:grid-cols-4
                         "
-            >
-              <Stat
-                  icon={
-                    CalendarDays
-                  }
-                  label="Tuần"
-                  value={
-                    plan.durationWeeks !=
-                    null
-                        ? String(
-                            plan.durationWeeks,
-                        )
-                        : "-"
-                  }
-              />
+                    >
+                        <PlanStat
+                            icon={
+                                CalendarDays
+                            }
+                            label="Tuần"
+                            value={
+                                plan.durationWeeks !=
+                                null
+                                    ? String(
+                                        plan.durationWeeks,
+                                    )
+                                    : "-"
+                            }
+                        />
 
-              <Stat
-                  icon={
-                    Activity
-                  }
-                  label="Buổi/tuần"
-                  value={
-                    plan.workoutDaysPerWeek !=
-                    null
-                        ? String(
-                            plan.workoutDaysPerWeek,
-                        )
-                        : "-"
-                  }
-              />
+                        <PlanStat
+                            icon={
+                                Activity
+                            }
+                            label="Buổi/tuần"
+                            value={
+                                plan.workoutDaysPerWeek !=
+                                null
+                                    ? String(
+                                        plan.workoutDaysPerWeek,
+                                    )
+                                    : "-"
+                            }
+                        />
 
-              <Stat
-                  icon={
-                    Clock3
-                  }
-                  label="Phút/buổi"
-                  value={
-                    plan.workoutDurationMinutes !=
-                    null
-                        ? String(
-                            plan.workoutDurationMinutes,
-                        )
-                        : "-"
-                  }
-              />
+                        <PlanStat
+                            icon={
+                                Clock3
+                            }
+                            label="Phút/buổi"
+                            value={
+                                plan.workoutDurationMinutes !=
+                                null
+                                    ? String(
+                                        plan.workoutDurationMinutes,
+                                    )
+                                    : "-"
+                            }
+                        />
 
-              <Stat
-                  icon={
-                    UserRound
-                  }
-                  label="Số ngày"
-                  value={
-                    String(
-                        days.length,
-                    )
-                  }
-              />
+                        <PlanStat
+                            icon={
+                                Dumbbell
+                            }
+                            label="Ngày tập"
+                            value={
+                                String(
+                                    trainingDays ||
+                                    totalDays,
+                                )
+                            }
+                        />
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
 
-        <div className="p-6">
-          {days.length >
-          0 ? (
-              <>
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="font-black text-slate-900">
-                    Cấu trúc giáo án
-                  </h3>
+            <div className="p-6">
+                <div className="space-y-2 text-sm">
+                    <PlanInfoRow
+                        label="Trình độ"
+                        value={
+                            plan.experienceLevel
+                                ? plan
+                                    .experienceLevel
+                                    .toLowerCase()
+                                    .replace(
+                                        /_/g,
+                                        " ",
+                                    )
+                                : "-"
+                        }
+                    />
 
-                  <p className="text-xs font-medium text-slate-400">
-                    {
-                      trainingDays.length
-                    }{" "}
-                    ngày tập
-                    {restDays >
-                        0 &&
-                        ` • ${restDays} ngày nghỉ`}
-                  </p>
+                    <PlanInfoRow
+                        label="Tổng ngày"
+                        value={`${totalDays} ngày`}
+                    />
+
+                    <PlanInfoRow
+                        label="Nguồn"
+                        value={
+                            getSourceLabel(
+                                plan.sourceType,
+                            )
+                        }
+                    />
+
+                    <PlanInfoRow
+                        label="Trạng thái"
+                        value={
+                            getStatusLabel(
+                                plan.status,
+                            )
+                        }
+                    />
                 </div>
 
-                <div className="space-y-2">
-                  {days
-                      .slice(
-                          0,
-                          4,
-                      )
-                      .map(
-                          (
-                              day,
-                              index,
-                          ) => (
-                              <div
-                                  key={
-                                      day.id ??
-                                      `${plan.id}-${index}`
-                                  }
-                                  className="
-                                                flex
-                                                items-center
-                                                justify-between
-                                                gap-4
-                                                rounded-xl
-                                                bg-slate-50
-                                                px-4
-                                                py-3
-                                            "
-                              >
-                                <div className="min-w-0">
-                                  <p className="truncate text-sm font-bold text-slate-800">
-                                    {day.name ||
-                                        `Ngày ${day.dayNo ?? index + 1}`}
-                                  </p>
+                <div
+                    className="
+                        mt-6
+                        grid
+                        grid-cols-1
+                        gap-2
+                        sm:grid-cols-2
+                    "
+                >
+                    <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={
+                            onView
+                        }
+                    >
+                        <Eye className="h-4 w-4" />
 
-                                  <p className="mt-0.5 text-xs text-slate-400">
-                                    {day.isRestDay
-                                        ? "Ngày nghỉ"
-                                        : `${day.exercises?.length ?? 0} bài tập`}
-                                  </p>
-                                </div>
+                        Xem chi tiết
 
-                                {day.focusArea && (
-                                    <span className="shrink-0 text-xs font-semibold text-emerald-600">
-                                                    {
-                                                      day.focusArea
-                                                    }
-                                                </span>
-                                )}
-                              </div>
-                          ),
-                      )}
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                    </Button>
+
+                    {editable ? (
+                        <Button
+                            variant="primary"
+                            className="w-full"
+                            onClick={
+                                onEdit
+                            }
+                        >
+                            <Pencil className="h-4 w-4" />
+
+                            Chỉnh sửa
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="outline"
+                            disabled
+                            className="w-full"
+                        >
+                            <Pencil className="h-4 w-4" />
+
+                            Chỉ đọc
+                        </Button>
+                    )}
                 </div>
 
-                {days.length >
-                    4 && (
-                        <p className="mt-3 text-center text-xs text-slate-400">
-                          +{" "}
-                          {days.length -
-                              4}{" "}
-                          ngày khác
+                {plan.sourceType ===
+                    "TRAINER_CREATED" && (
+                        <p
+                            className="
+                                mt-3
+                                text-xs
+                                leading-5
+                                text-slate-400
+                            "
+                        >
+                            Giáo án do huấn luyện viên tạo không thể chỉnh sửa trực tiếp bởi hội viên.
                         </p>
                     )}
-              </>
-          ) : (
-              <div
-                  className="
-                            rounded-2xl
-                            border
-                            border-dashed
-                            border-slate-200
-                            bg-slate-50
-                            p-6
-                            text-center
-                        "
-              >
-                <Dumbbell className="mx-auto h-9 w-9 text-slate-300" />
 
-                <p className="mt-2 text-sm font-bold text-slate-700">
-                  Giáo án chưa có cấu trúc ngày tập.
-                </p>
-              </div>
-          )}
-
-          <Button
-              variant="outline"
-              className="mt-5 w-full"
-              onClick={
-                onView
-              }
-          >
-            Xem chi tiết
-
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </Card>
-  );
+                {(plan.status ===
+                    "COMPLETED" ||
+                    plan.status ===
+                    "ARCHIVED") && (
+                    <p
+                        className="
+                                mt-3
+                                text-xs
+                                leading-5
+                                text-slate-400
+                            "
+                    >
+                        Giáo án ở trạng thái này chỉ có thể xem lại.
+                    </p>
+                )}
+            </div>
+        </Card>
+    );
 }
 
-function Stat({
-                icon: Icon,
-                label,
-                value,
-              }: {
-  icon:
-      typeof Activity;
+function PlanStat({
+                      icon: Icon,
+                      label,
+                      value,
+                  }: {
+    icon: typeof Activity;
 
-  label:
-      string;
+    label: string;
 
-  value:
-      string;
+    value: string;
 }) {
-  return (
-      <div className="rounded-xl bg-slate-50 p-3">
-        <Icon className="h-4 w-4 text-slate-400" />
+    return (
+        <div className="rounded-xl bg-slate-50 p-3">
+            <Icon className="h-4 w-4 text-slate-400" />
 
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
-          {label}
-        </p>
+            <p
+                className="
+                    mt-2
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-wide
+                    text-slate-400
+                "
+            >
+                {label}
+            </p>
 
-        <p className="mt-0.5 font-black text-slate-800">
-          {value}
-        </p>
-      </div>
-  );
+            <p className="mt-0.5 font-black text-slate-800">
+                {value}
+            </p>
+        </div>
+    );
+}
+
+function PlanInfoRow({
+                         label,
+                         value,
+                     }: {
+    label: string;
+
+    value: string;
+}) {
+    return (
+        <div
+            className="
+                flex
+                items-start
+                justify-between
+                gap-4
+            "
+        >
+            <span className="text-slate-500">
+                {label}
+            </span>
+
+            <span className="text-right font-semibold text-slate-700">
+                {value}
+            </span>
+        </div>
+    );
+}
+
+function SummaryCard({
+                         label,
+                         value,
+                     }: {
+    label: string;
+
+    value: number;
+}) {
+    return (
+        <Card className="p-5">
+            <p
+                className="
+                    text-[11px]
+                    font-bold
+                    uppercase
+                    tracking-wider
+                    text-slate-400
+                "
+            >
+                {label}
+            </p>
+
+            <p className="mt-2 text-3xl font-black text-slate-900">
+                {value}
+            </p>
+        </Card>
+    );
 }
 
 function EmptyWorkoutState({
-                             onCreate,
+                               onManual,
+                               onAi,
                            }: {
-  onCreate:
-      () => void;
+    onManual: () => void;
+
+    onAi: () => void;
 }) {
-  return (
-      <Card
-          className="
+    return (
+        <Card
+            className="
                 border-dashed
                 p-10
                 text-center
                 sm:p-14
             "
-      >
-        <div
-            className="
+        >
+            <div
+                className="
                     mx-auto
                     flex
                     h-16
@@ -662,38 +848,59 @@ function EmptyWorkoutState({
                     bg-emerald-100
                     text-emerald-700
                 "
-        >
-          <Dumbbell className="h-8 w-8" />
-        </div>
+            >
+                <Dumbbell className="h-8 w-8" />
+            </div>
 
-        <h3 className="mt-5 text-xl font-black text-slate-900">
-          Chưa có giáo án tập luyện
-        </h3>
+            <h3 className="mt-5 text-xl font-black text-slate-900">
+                Chưa có giáo án tập luyện
+            </h3>
 
-        <p
-            className="
+            <p
+                className="
                     mx-auto
                     mt-2
-                    max-w-md
+                    max-w-lg
                     text-sm
                     leading-6
                     text-slate-500
                 "
-        >
-          FitLife AI có thể phân tích mục tiêu và Body Metric để tạo giáo án phù hợp cho bạn.
-        </p>
+            >
+                Bạn có thể tự xây dựng giáo án hoặc để FitLife AI tạo kế hoạch dựa trên mục tiêu và dữ liệu cơ thể.
+            </p>
 
-        <Button
-            variant="primary"
-            className="mt-6"
-            onClick={
-              onCreate
-            }
-        >
-          <Sparkles className="h-4 w-4" />
+            <div
+                className="
+                    mt-6
+                    flex
+                    flex-col
+                    justify-center
+                    gap-2
+                    sm:flex-row
+                "
+            >
+                <Button
+                    variant="outline"
+                    onClick={
+                        onManual
+                    }
+                >
+                    <Plus className="h-4 w-4" />
 
-          Tạo giáo án bằng AI
-        </Button>
-      </Card>
-  );
+                    Tạo thủ công
+                </Button>
+
+                <Button
+                    variant="primary"
+                    onClick={
+                        onAi
+                    }
+                >
+                    <Sparkles className="h-4 w-4" />
+
+                    Tạo bằng AI
+                </Button>
+            </div>
+        </Card>
+    );
 }
