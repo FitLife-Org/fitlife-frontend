@@ -36,9 +36,7 @@ export default function PackageListPage() {
 
   const [packages, setPackages] = useState<GymPackage[]>([]);
   const [durations, setDurations] = useState<PackageDuration[]>([]);
-  const [selectedDurationId, setSelectedDurationId] = useState<number | null>(
-      null
-  );
+  const [selectedMonths, setSelectedMonths] = useState<number | null>(null);
   const [mySubscription, setMySubscription] = useState<Subscription | null>(
       null
   );
@@ -64,27 +62,18 @@ export default function PackageListPage() {
             (duration) => duration.status === "ACTIVE"
         );
 
-        const uniqueDurationsMap = new Map<number, PackageDuration>();
-        for (const d of activeDurations) {
-           if (!uniqueDurationsMap.has(d.months)) {
-               uniqueDurationsMap.set(d.months, d);
-           } else {
-               const existing = uniqueDurationsMap.get(d.months)!;
-               if (d.discountPercent > existing.discountPercent) {
-                   uniqueDurationsMap.set(d.months, d);
-               }
-           }
-        }
-        const uniqueDurations = Array.from(uniqueDurationsMap.values());
-
-        uniqueDurations.sort((a, b) => a.months - b.months);
+        activeDurations.sort((a, b) => a.months - b.months);
 
         setPackages(activePackages);
-        setDurations(uniqueDurations);
+        setDurations(activeDurations);
         setMySubscription(sub);
 
-        if (uniqueDurations.length > 0) {
-          setSelectedDurationId(uniqueDurations[0].id);
+        const firstMonths = activeDurations
+            .map((duration) => duration.months)
+            .sort((a, b) => a - b)[0];
+
+        if (firstMonths != null) {
+          setSelectedMonths(firstMonths);
         }
       } catch (error: unknown) {
         console.error("LOAD_PACKAGES_ERROR:", error);
@@ -97,12 +86,26 @@ export default function PackageListPage() {
     fetchData();
   }, []);
 
-  const selectedDuration = durations.find(
-      (duration) => duration.id === selectedDurationId
-  );
+  const availableMonths = Array.from(
+      new Set(durations.map((duration) => duration.months))
+  ).sort((a, b) => a - b);
+
+  const getDurationForPackage = (pkgId: number): PackageDuration | undefined =>
+      durations.find(
+          (duration) =>
+              duration.gymPackageId === pkgId &&
+              duration.months === selectedMonths
+      );
+
+  const selectedDuration =
+      selectedMonths == null
+          ? undefined
+          : durations.find((duration) => duration.months === selectedMonths);
 
   const calculatePrice = (pkg: GymPackage): PriceInfo => {
-    if (!selectedDuration) {
+    const packageDuration = getDurationForPackage(pkg.id);
+
+    if (!packageDuration) {
       return {
         originalPrice: pkg.basePrice,
         discountAmount: 0,
@@ -110,8 +113,11 @@ export default function PackageListPage() {
       };
     }
 
-    const originalPrice = pkg.basePrice * selectedDuration.months;
-    const discountPercent = selectedDuration.discountPercent || 0;
+    const originalPrice =
+        packageDuration.price && packageDuration.price > 0
+            ? packageDuration.price
+            : pkg.basePrice * packageDuration.months;
+    const discountPercent = packageDuration.discountPercent || 0;
     const discountAmount = originalPrice * (discountPercent / 100);
     const finalPrice = originalPrice - discountAmount;
 
@@ -123,8 +129,21 @@ export default function PackageListPage() {
   };
 
   const handlePurchase = async (pkgId: number): Promise<void> => {
-    if (!selectedDurationId) {
-      showAlert.error("Lỗi", "Vui lòng chọn thời hạn gói tập.");
+    const packageDuration = getDurationForPackage(pkgId);
+
+    if (!packageDuration) {
+      showAlert.error(
+          "Không thể đăng ký",
+          "Gói tập này không có thời hạn tương ứng với lựa chọn hiện tại."
+      );
+      return;
+    }
+
+    if (packageDuration.gymPackageId !== pkgId) {
+      showAlert.error(
+          "Dữ liệu không hợp lệ",
+          "Thời hạn đã chọn không thuộc gói tập này. Vui lòng tải lại trang."
+      );
       return;
     }
 
@@ -144,7 +163,7 @@ export default function PackageListPage() {
             setProcessingId(null);
             return;
           }
-          const subscription = await subscriptionService.upgradeSubscription(mySubscription.id, selectedDurationId);
+          const subscription = await subscriptionService.upgradeSubscription(mySubscription.id, packageDuration.id);
           if (subscription?.invoiceId) {
             navigate(`/member/payment/${subscription.invoiceId}`);
             return;
@@ -160,9 +179,9 @@ export default function PackageListPage() {
 
       const subscription = await subscriptionService.createSubscription({
         gymPackageId: pkgId,
-        packageDurationId: selectedDurationId,
+        packageDurationId: packageDuration.id,
         autoRenew: false,
-        note: `Đăng ký gói tập ${selectedDuration?.name || ""}`,
+        note: `Đăng ký gói tập ${packageDuration.name || ""}`,
       });
 
       if (subscription?.invoiceId) {
@@ -280,16 +299,21 @@ export default function PackageListPage() {
         <div className="max-w-6xl mx-auto px-4 mt-8 relative z-20">
 
           {/* DURATION SELECTOR (SLEEK & COMPACT TABS) */}
-          {durations.length > 0 && (
+          {availableMonths.length > 0 && (
             <div 
               className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-2 max-w-2xl mx-auto mb-12 flex items-center border border-slate-100 gsap-animate"
             >
-              {durations.map((duration) => {
-                const isActive = selectedDurationId === duration.id;
+              {availableMonths.map((months) => {
+                const isActive = selectedMonths === months;
+                const monthDurations = durations.filter((item) => item.months === months);
+                const bestDiscount = monthDurations.reduce(
+                    (max, item) => Math.max(max, item.discountPercent || 0),
+                    0
+                );
                 return (
                   <button
-                    key={duration.id}
-                    onClick={() => setSelectedDurationId(duration.id)}
+                    key={months}
+                    onClick={() => setSelectedMonths(months)}
                     className={`relative flex-1 py-3 px-4 rounded-xl text-sm font-bold uppercase tracking-wide transition-all duration-300 ${
                       isActive ? "text-white" : "text-slate-500 hover:text-slate-800"
                     }`}
@@ -300,10 +324,10 @@ export default function PackageListPage() {
                       />
                     )}
                     <div className="relative z-10 flex items-center justify-center gap-2">
-                      <span>{duration.months} Tháng</span>
-                      {duration.discountPercent > 0 && (
+                      <span>{months} Tháng</span>
+                      {bestDiscount > 0 && (
                         <span className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'}`}>
-                          -{duration.discountPercent}%
+                          -{bestDiscount}%
                         </span>
                       )}
                     </div>
@@ -327,7 +351,8 @@ export default function PackageListPage() {
               const currentPackage = mySubscription ? packages.find(p => p.id === mySubscription.gymPackageId) : null;
               const currentTier = currentPackage ? getTierLevel(currentPackage.packageType) : 0;
               const isUpgrade = mySubscription?.status === "ACTIVE" && targetTier > currentTier;
-              const isDisabled = !selectedDurationId || (mySubscription?.status === "ACTIVE" && !isUpgrade);
+              const packageDuration = getDurationForPackage(item.id);
+              const isDisabled = !packageDuration || (mySubscription?.status === "ACTIVE" && !isUpgrade);
 
               const isPopular =
                   item.name.toLowerCase().includes("standard") ||
@@ -407,17 +432,17 @@ export default function PackageListPage() {
                             {formatCurrency(priceInfo.finalPrice)}
                           </span>
                           <span className={`text-sm font-medium ${isPremium ? 'text-zinc-500' : 'text-slate-400'}`}>
-                            / {selectedDuration?.months || 1} tháng
+                            / {packageDuration?.months || selectedMonths || 1} tháng
                           </span>
                         </div>
                         
-                        {selectedDuration && priceInfo.discountAmount > 0 ? (
+                        {packageDuration && priceInfo.discountAmount > 0 ? (
                           <div className="mt-2 flex flex-col gap-1 text-sm">
                             <span className="line-through text-slate-400">
                               Giá gốc: {formatCurrency(priceInfo.originalPrice)}
                             </span>
                             <span className={`${isPremium ? 'text-yellow-500' : 'text-fit-primary'} font-bold`}>
-                              Tiết kiệm: {formatCurrency(priceInfo.discountAmount)} ({selectedDuration.discountPercent}%)
+                              Tiết kiệm: {formatCurrency(priceInfo.discountAmount)} ({packageDuration.discountPercent}%)
                             </span>
                           </div>
                         ) : (
@@ -473,7 +498,7 @@ export default function PackageListPage() {
                   So sánh quyền lợi
                 </h2>
                 <p className="mt-3 text-slate-500">
-                  Bảng giá tính theo thời hạn: <span className="font-bold text-fit-primary">{selectedDuration?.name || "Chưa chọn"}</span>
+                  Bảng giá tính theo thời hạn: <span className="font-bold text-fit-primary">{selectedMonths ? `${selectedMonths} tháng` : "Chưa chọn"}</span>
                 </p>
               </div>
 
