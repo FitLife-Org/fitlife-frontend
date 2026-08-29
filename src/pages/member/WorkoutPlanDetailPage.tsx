@@ -8,12 +8,15 @@ import {
 import {
     Activity,
     AlertTriangle,
+    Archive,
     ArrowLeft,
     CalendarDays,
     Clock3,
     Dumbbell,
+    Edit3,
     Gauge,
     Play,
+    Sparkles,
     Target,
     UserRound,
     type LucideIcon,
@@ -50,9 +53,12 @@ import {
     getApiErrorMessage,
 } from "../../utils/apiError";
 
+/* =========================================================
+ * STATUS
+ * ========================================================= */
+
 function getStatusLabel(
-    status:
-    WorkoutPlanStatus,
+    status: WorkoutPlanStatus,
 ): string {
     switch (status) {
         case "ACTIVE":
@@ -76,8 +82,7 @@ function getStatusLabel(
 }
 
 function getStatusVariant(
-    status:
-    WorkoutPlanStatus,
+    status: WorkoutPlanStatus,
 ):
     | "success"
     | "warning"
@@ -102,9 +107,12 @@ function getStatusVariant(
     }
 }
 
+/* =========================================================
+ * SOURCE
+ * ========================================================= */
+
 function getSourceLabel(
-    source:
-    WorkoutPlanSourceType,
+    source: WorkoutPlanSourceType,
 ): string {
     switch (source) {
         case "AI_GENERATED":
@@ -114,7 +122,7 @@ function getSourceLabel(
             return "Huấn luyện viên";
 
         case "MEMBER_CREATED":
-            return "Hội viên";
+            return "Tự tạo";
 
         case "MANUAL":
             return "Thủ công";
@@ -124,11 +132,58 @@ function getSourceLabel(
     }
 }
 
+/* =========================================================
+ * PERMISSION
+ * ========================================================= */
+
+function canMemberEdit(
+    plan: WorkoutPlanDetail,
+): boolean {
+    /*
+     * Plan kết thúc / archive / cancel:
+     * read-only.
+     */
+    if (
+        plan.status === "COMPLETED" ||
+        plan.status === "ARCHIVED" ||
+        plan.status === "CANCELLED"
+    ) {
+        return false;
+    }
+
+    /*
+     * Giáo án Trainer giao:
+     * Member chỉ được xem.
+     */
+    if (
+        plan.sourceType === "TRAINER_CREATED"
+    ) {
+        return false;
+    }
+
+    return (
+        plan.sourceType === "MEMBER_CREATED" ||
+        plan.sourceType === "MANUAL" ||
+        plan.sourceType === "AI_GENERATED"
+    );
+}
+
+function canMemberActivate(
+    plan: WorkoutPlanDetail,
+): boolean {
+    return (
+        plan.status === "DRAFT" &&
+        plan.sourceType !== "TRAINER_CREATED"
+    );
+}
+
+/* =========================================================
+ * FORMAT
+ * ========================================================= */
+
 function formatDayLabel(
-    day:
-    WorkoutPlanDay,
-    index:
-    number,
+    day: WorkoutPlanDay,
+    index: number,
 ): string {
     if (day.name) {
         return day.name;
@@ -141,13 +196,26 @@ function formatDayLabel(
     return `Ngày ${index + 1}`;
 }
 
+function buildWorkoutEditRoute(
+    id: number,
+): string {
+    return ROUTES
+        .MEMBER_WORKOUT_EDIT
+        .replace(
+            ":id",
+            String(id),
+        );
+}
+
+/* =========================================================
+ * PAGE
+ * ========================================================= */
+
 export default function WorkoutPlanDetailPage() {
     const navigate =
         useNavigate();
 
-    const {
-        id,
-    } =
+    const { id } =
         useParams<{
             id: string;
         }>();
@@ -180,6 +248,16 @@ export default function WorkoutPlanDetailPage() {
     ] =
         useState(false);
 
+    const [
+        archiving,
+        setArchiving,
+    ] =
+        useState(false);
+
+    /* =====================================================
+     * LOAD
+     * ===================================================== */
+
     const loadPlan =
         useCallback(
             async (): Promise<void> => {
@@ -196,21 +274,15 @@ export default function WorkoutPlanDetailPage() {
                         "Workout Plan ID không hợp lệ.",
                     );
 
-                    setLoading(
-                        false,
-                    );
+                    setLoading(false);
 
                     return;
                 }
 
                 try {
-                    setLoading(
-                        true,
-                    );
+                    setLoading(true);
 
-                    setError(
-                        null,
-                    );
+                    setError(null);
 
                     const result =
                         await workoutService
@@ -218,13 +290,9 @@ export default function WorkoutPlanDetailPage() {
                                 planId,
                             );
 
-                    setPlan(
-                        result,
-                    );
+                    setPlan(result);
                 } catch (requestError) {
-                    setPlan(
-                        null,
-                    );
+                    setPlan(null);
 
                     setError(
                         getApiErrorMessage(
@@ -233,35 +301,31 @@ export default function WorkoutPlanDetailPage() {
                         ),
                     );
                 } finally {
-                    setLoading(
-                        false,
-                    );
+                    setLoading(false);
                 }
             },
-            [
-                id,
-            ],
+            [id],
         );
 
     useEffect(() => {
         void loadPlan();
-    }, [
-        loadPlan,
-    ]);
+    }, [loadPlan]);
+
+    /* =====================================================
+     * ACTIVATE
+     * ===================================================== */
 
     const handleActivatePlan =
         async (): Promise<void> => {
             if (
                 !plan ||
-                plan.status !== "DRAFT"
+                !canMemberActivate(plan)
             ) {
                 return;
             }
 
             try {
-                setActivating(
-                    true,
-                );
+                setActivating(true);
 
                 await workoutService
                     .activateWorkoutPlan(
@@ -283,11 +347,52 @@ export default function WorkoutPlanDetailPage() {
                     ),
                 );
             } finally {
-                setActivating(
-                    false,
-                );
+                setActivating(false);
             }
         };
+
+    /* =====================================================
+     * ARCHIVE
+     * ===================================================== */
+
+    const handleArchivePlan =
+        async (): Promise<void> => {
+            if (!plan) {
+                return;
+            }
+
+            try {
+                setArchiving(true);
+
+                await workoutService
+                    .archiveWorkoutPlan(
+                        plan.id,
+                    );
+
+                void showAlert.success(
+                    "Đã lưu trữ",
+                    "Giáo án đã được chuyển vào lưu trữ.",
+                );
+
+                navigate(
+                    ROUTES.MEMBER_WORKOUTS,
+                );
+            } catch (requestError) {
+                void showAlert.error(
+                    "Đã xảy ra lỗi",
+                    getApiErrorMessage(
+                        requestError,
+                        "Không thể lưu trữ giáo án.",
+                    ),
+                );
+            } finally {
+                setArchiving(false);
+            }
+        };
+
+    /* =====================================================
+     * LOADING
+     * ===================================================== */
 
     if (loading) {
         return (
@@ -295,24 +400,56 @@ export default function WorkoutPlanDetailPage() {
         );
     }
 
+    /* =====================================================
+     * ERROR
+     * ===================================================== */
+
     if (
         error ||
         !plan
     ) {
         return (
             <Card className="mx-auto max-w-2xl p-10 text-center">
-                <AlertTriangle className="mx-auto h-14 w-14 text-red-400" />
+                <AlertTriangle
+                    className="
+                        mx-auto
+                        h-14
+                        w-14
+                        text-red-400
+                    "
+                />
 
-                <h1 className="mt-4 text-xl font-black text-slate-900">
+                <h1
+                    className="
+                        mt-4
+                        text-xl
+                        font-black
+                        text-slate-900
+                    "
+                >
                     Không thể tải giáo án
                 </h1>
 
-                <p className="mt-2 text-sm text-slate-500">
+                <p
+                    className="
+                        mt-2
+                        text-sm
+                        text-slate-500
+                    "
+                >
                     {error ||
                         "Giáo án không tồn tại."}
                 </p>
 
-                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                <div
+                    className="
+                        mt-6
+                        flex
+                        flex-wrap
+                        justify-center
+                        gap-2
+                    "
+                >
                     <Button
                         variant="outline"
                         onClick={() =>
@@ -339,8 +476,12 @@ export default function WorkoutPlanDetailPage() {
         );
     }
 
+    /* =====================================================
+     * DERIVED DATA
+     * ===================================================== */
+
     const days =
-        plan.days;
+        plan.days ?? [];
 
     const trainingDays =
         days.filter(
@@ -348,45 +489,102 @@ export default function WorkoutPlanDetailPage() {
                 !day.isRestDay,
         );
 
+    const totalExercises =
+        trainingDays.reduce(
+            (
+                total,
+                day,
+            ) =>
+                total +
+                (
+                    day.exercises?.length ??
+                    0
+                ),
+            0,
+        );
+
+    const editable =
+        canMemberEdit(plan);
+
+    const activatable =
+        canMemberActivate(plan);
+
+    /* =====================================================
+     * UI
+     * ===================================================== */
+
     return (
-        <div className="space-y-6 pb-10">
-            <div>
-                <button
-                    type="button"
-                    onClick={() =>
-                        navigate(
-                            ROUTES.MEMBER_WORKOUTS,
-                        )
-                    }
-                    className="
-                        inline-flex
-                        items-center
-                        gap-2
-                        text-sm
-                        font-bold
-                        text-slate-500
-                        transition
-                        hover:text-slate-900
-                    "
-                >
-                    <ArrowLeft className="h-4 w-4" />
+        <div
+            className="
+                w-full
+                min-w-0
+                space-y-6
+                overflow-x-hidden
+                pb-10
+            "
+        >
+            {/* =============================================
+                BACK
+            ============================================== */}
 
-                    Quay lại giáo án
-                </button>
+            <button
+                type="button"
+                onClick={() =>
+                    navigate(
+                        ROUTES.MEMBER_WORKOUTS,
+                    )
+                }
+                className="
+                    inline-flex
+                    items-center
+                    gap-2
+                    text-sm
+                    font-bold
+                    text-slate-500
+                    transition
+                    hover:text-slate-900
+                "
+            >
+                <ArrowLeft className="h-4 w-4" />
 
+                Giáo án của tôi
+            </button>
+
+            {/* =============================================
+                HEADER
+            ============================================== */}
+
+            <section
+                className="
+                    rounded-3xl
+                    border
+                    border-slate-200
+                    bg-white
+                    p-5
+                    shadow-sm
+                    sm:p-6
+                    lg:p-7
+                "
+            >
                 <div
                     className="
-                        mt-5
                         flex
                         flex-col
-                        gap-4
-                        lg:flex-row
-                        lg:items-start
-                        lg:justify-between
+                        gap-5
+                        xl:flex-row
+                        xl:items-start
+                        xl:justify-between
                     "
                 >
-                    <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                        <div
+                            className="
+                                flex
+                                flex-wrap
+                                items-center
+                                gap-2
+                            "
+                        >
                             <Badge
                                 variant={
                                     getStatusVariant(
@@ -404,16 +602,39 @@ export default function WorkoutPlanDetailPage() {
                                     plan.sourceType,
                                 )}
                             </Badge>
+
+                            {plan.sourceType ===
+                                "AI_GENERATED" && (
+                                    <span
+                                        className="
+                                        inline-flex
+                                        items-center
+                                        gap-1
+                                        rounded-full
+                                        bg-violet-50
+                                        px-2.5
+                                        py-1
+                                        text-xs
+                                        font-bold
+                                        text-violet-700
+                                    "
+                                    >
+                                    <Sparkles className="h-3.5 w-3.5" />
+
+                                    AI
+                                </span>
+                                )}
                         </div>
 
                         <h1
                             className="
-                                mt-3
-                                max-w-5xl
-                                text-3xl
+                                mt-4
+                                break-words
+                                text-2xl
                                 font-black
                                 tracking-tight
                                 text-slate-950
+                                sm:text-3xl
                             "
                         >
                             {plan.name}
@@ -422,8 +643,9 @@ export default function WorkoutPlanDetailPage() {
                         {plan.description ? (
                             <p
                                 className="
-                                    mt-2
+                                    mt-3
                                     max-w-4xl
+                                    whitespace-pre-wrap
                                     text-sm
                                     leading-6
                                     text-slate-500
@@ -432,30 +654,61 @@ export default function WorkoutPlanDetailPage() {
                                 {plan.description}
                             </p>
                         ) : (
-                            <p className="mt-2 text-sm text-slate-500">
+                            <p
+                                className="
+                                    mt-3
+                                    text-sm
+                                    text-slate-500
+                                "
+                            >
                                 Chi tiết kế hoạch tập luyện của bạn.
                             </p>
                         )}
                     </div>
 
-                    <div className="flex shrink-0 flex-wrap gap-2">
-                        {plan.status ===
-                            "DRAFT" && (
-                                <Button
-                                    variant="primary"
-                                    isLoading={
-                                        activating
-                                    }
-                                    loadingText="Đang kích hoạt..."
-                                    onClick={() => {
-                                        void handleActivatePlan();
-                                    }}
-                                >
-                                    <Play className="h-4 w-4" />
+                    {/* ACTIONS */}
 
-                                    Kích hoạt giáo án
-                                </Button>
-                            )}
+                    <div
+                        className="
+                            flex
+                            shrink-0
+                            flex-wrap
+                            gap-2
+                        "
+                    >
+                        {editable && (
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    navigate(
+                                        buildWorkoutEditRoute(
+                                            plan.id,
+                                        ),
+                                    )
+                                }
+                            >
+                                <Edit3 className="h-4 w-4" />
+
+                                Chỉnh sửa
+                            </Button>
+                        )}
+
+                        {activatable && (
+                            <Button
+                                variant="primary"
+                                isLoading={
+                                    activating
+                                }
+                                loadingText="Đang kích hoạt..."
+                                onClick={() => {
+                                    void handleActivatePlan();
+                                }}
+                            >
+                                <Play className="h-4 w-4" />
+
+                                Kích hoạt
+                            </Button>
+                        )}
 
                         {plan.status ===
                             "ACTIVE" && (
@@ -489,12 +742,92 @@ export default function WorkoutPlanDetailPage() {
                                     </Button>
                                 </>
                             )}
+
+                        {editable &&
+                            plan.status !==
+                            "ARCHIVED" && (
+                                <Button
+                                    variant="outline"
+                                    isLoading={
+                                        archiving
+                                    }
+                                    loadingText="Đang lưu..."
+                                    onClick={() => {
+                                        void handleArchivePlan();
+                                    }}
+                                >
+                                    <Archive className="h-4 w-4" />
+
+                                    Lưu trữ
+                                </Button>
+                            )}
                     </div>
                 </div>
-            </div>
+            </section>
+
+            {/* =============================================
+                PERMISSION NOTICE
+            ============================================== */}
+
+            {plan.sourceType ===
+                "TRAINER_CREATED" && (
+                    <div
+                        className="
+                        rounded-2xl
+                        border
+                        border-blue-200
+                        bg-blue-50
+                        p-4
+                    "
+                    >
+                        <div
+                            className="
+                            flex
+                            items-start
+                            gap-3
+                        "
+                        >
+                            <UserRound
+                                className="
+                                mt-0.5
+                                h-5
+                                w-5
+                                shrink-0
+                                text-blue-600
+                            "
+                            />
+
+                            <div>
+                                <p
+                                    className="
+                                    font-black
+                                    text-blue-900
+                                "
+                                >
+                                    Giáo án từ huấn luyện viên
+                                </p>
+
+                                <p
+                                    className="
+                                    mt-1
+                                    text-sm
+                                    leading-6
+                                    text-blue-700
+                                "
+                                >
+                                    Giáo án này được huấn luyện viên
+                                    tạo cho bạn. Bạn có thể xem chi
+                                    tiết nhưng không thể trực tiếp
+                                    chỉnh sửa nội dung.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             {plan.status ===
-                "DRAFT" && (
+                "DRAFT" &&
+                activatable && (
                     <div
                         className="
                             flex
@@ -511,45 +844,87 @@ export default function WorkoutPlanDetailPage() {
                         "
                     >
                         <div>
-                            <p className="font-black text-amber-900">
-                                Giáo án này đang là bản nháp
+                            <p
+                                className="
+                                    font-black
+                                    text-amber-900
+                                "
+                            >
+                                Giáo án đang là bản nháp
                             </p>
 
-                            <p className="mt-1 text-sm leading-6 text-amber-700">
-                                Hãy kiểm tra kế hoạch và kích hoạt để FitLife sử dụng giáo án này cho buổi tập hôm nay và lịch tập.
+                            <p
+                                className="
+                                    mt-1
+                                    text-sm
+                                    leading-6
+                                    text-amber-700
+                                "
+                            >
+                                Bạn có thể chỉnh sửa ngày tập,
+                                bài tập và thông tin giáo án
+                                trước khi kích hoạt.
                             </p>
                         </div>
 
-                        <Button
-                            variant="primary"
-                            isLoading={
-                                activating
-                            }
-                            loadingText="Đang kích hoạt..."
-                            onClick={() => {
-                                void handleActivatePlan();
-                            }}
-                            className="shrink-0"
+                        <div
+                            className="
+                                flex
+                                shrink-0
+                                flex-wrap
+                                gap-2
+                            "
                         >
-                            <Play className="h-4 w-4" />
+                            {editable && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        navigate(
+                                            buildWorkoutEditRoute(
+                                                plan.id,
+                                            ),
+                                        )
+                                    }
+                                >
+                                    <Edit3 className="h-4 w-4" />
 
-                            Kích hoạt
-                        </Button>
+                                    Chỉnh sửa
+                                </Button>
+                            )}
+
+                            <Button
+                                variant="primary"
+                                isLoading={
+                                    activating
+                                }
+                                loadingText="Đang kích hoạt..."
+                                onClick={() => {
+                                    void handleActivatePlan();
+                                }}
+                            >
+                                <Play className="h-4 w-4" />
+
+                                Kích hoạt
+                            </Button>
+                        </div>
                     </div>
                 )}
+
+            {/* =============================================
+                SUMMARY
+            ============================================== */}
 
             <section
                 className="
                     grid
                     grid-cols-2
-                    gap-4
-                    lg:grid-cols-5
+                    gap-3
+                    md:grid-cols-3
+                    xl:grid-cols-6
                 "
             >
                 <SummaryCard
-                    icon={
-                        Target
-                    }
+                    icon={Target}
                     label="Mục tiêu"
                     value={
                         plan.goal ||
@@ -558,9 +933,7 @@ export default function WorkoutPlanDetailPage() {
                 />
 
                 <SummaryCard
-                    icon={
-                        Gauge
-                    }
+                    icon={Gauge}
                     label="Trình độ"
                     value={
                         plan.experienceLevel ||
@@ -569,39 +942,41 @@ export default function WorkoutPlanDetailPage() {
                 />
 
                 <SummaryCard
-                    icon={
-                        CalendarDays
-                    }
+                    icon={CalendarDays}
                     label="Thời lượng"
                     value={
-                        plan.durationWeeks !=
-                        null
+                        plan.durationWeeks != null
                             ? `${plan.durationWeeks} tuần`
                             : "-"
                     }
                 />
 
                 <SummaryCard
-                    icon={
-                        Activity
-                    }
+                    icon={Activity}
                     label="Ngày tập"
                     value={`${trainingDays.length}`}
                 />
 
                 <SummaryCard
-                    icon={
-                        Clock3
-                    }
+                    icon={Dumbbell}
+                    label="Bài tập"
+                    value={`${totalExercises}`}
+                />
+
+                <SummaryCard
+                    icon={Clock3}
                     label="Phút / buổi"
                     value={
-                        plan.workoutDurationMinutes !=
-                        null
+                        plan.workoutDurationMinutes != null
                             ? `${plan.workoutDurationMinutes}`
                             : "-"
                     }
                 />
             </section>
+
+            {/* =============================================
+                NOTE / SOURCE
+            ============================================== */}
 
             {(plan.note ||
                 plan.sourceType ===
@@ -609,7 +984,13 @@ export default function WorkoutPlanDetailPage() {
                 plan.sourceType ===
                 "TRAINER_CREATED") && (
                 <Card className="p-5">
-                    <div className="flex items-start gap-3">
+                    <div
+                        className="
+                            flex
+                            items-start
+                            gap-3
+                        "
+                    >
                         <div
                             className="
                                 flex
@@ -623,26 +1004,57 @@ export default function WorkoutPlanDetailPage() {
                                 text-blue-700
                             "
                         >
-                            <UserRound className="h-5 w-5" />
+                            {plan.sourceType ===
+                            "AI_GENERATED" ? (
+                                <Sparkles className="h-5 w-5" />
+                            ) : (
+                                <UserRound className="h-5 w-5" />
+                            )}
                         </div>
 
-                        <div>
-                            <h2 className="font-black text-slate-900">
-                                Hướng dẫn
-                            </h2>
-
-                            <p className="mt-1 text-sm text-slate-500">
+                        <div className="min-w-0">
+                            <h2
+                                className="
+                                    font-black
+                                    text-slate-900
+                                "
+                            >
                                 {plan.sourceType ===
                                 "AI_GENERATED"
-                                    ? "Được tạo bởi FitLife AI"
+                                    ? "Gợi ý từ FitLife AI"
                                     : plan.sourceType ===
                                     "TRAINER_CREATED"
-                                        ? "Được tạo bởi huấn luyện viên"
-                                        : "Thông tin giáo án"}
+                                        ? "Hướng dẫn từ huấn luyện viên"
+                                        : "Ghi chú giáo án"}
+                            </h2>
+
+                            <p
+                                className="
+                                    mt-1
+                                    text-sm
+                                    text-slate-500
+                                "
+                            >
+                                {plan.sourceType ===
+                                "AI_GENERATED"
+                                    ? "Giáo án được khởi tạo từ đề xuất của FitLife AI."
+                                    : plan.sourceType ===
+                                    "TRAINER_CREATED"
+                                        ? "Giáo án được xây dựng bởi huấn luyện viên."
+                                        : "Thông tin bổ sung của giáo án."}
                             </p>
 
                             {plan.note && (
-                                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                                <p
+                                    className="
+                                        mt-3
+                                        whitespace-pre-wrap
+                                        break-words
+                                        text-sm
+                                        leading-6
+                                        text-slate-600
+                                    "
+                                >
                                     {plan.note}
                                 </p>
                             )}
@@ -651,25 +1063,108 @@ export default function WorkoutPlanDetailPage() {
                 </Card>
             )}
 
-            <section>
-                <div className="mb-4">
-                    <h2 className="text-xl font-black text-slate-900">
-                        Lịch tập chi tiết
-                    </h2>
+            {/* =============================================
+                DAYS
+            ============================================== */}
 
-                    <p className="mt-1 text-sm text-slate-500">
-                        Các ngày và bài tập trong giáo án.
-                    </p>
+            <section>
+                <div
+                    className="
+                        mb-4
+                        flex
+                        flex-col
+                        gap-1
+                        sm:flex-row
+                        sm:items-end
+                        sm:justify-between
+                    "
+                >
+                    <div>
+                        <h2
+                            className="
+                                text-xl
+                                font-black
+                                text-slate-900
+                            "
+                        >
+                            Lịch tập chi tiết
+                        </h2>
+
+                        <p
+                            className="
+                                mt-1
+                                text-sm
+                                text-slate-500
+                            "
+                        >
+                            {days.length} ngày ·{" "}
+                            {trainingDays.length} ngày tập ·{" "}
+                            {totalExercises} bài tập
+                        </p>
+                    </div>
+
+                    {editable && (
+                        <Button
+                            variant="outline"
+                            onClick={() =>
+                                navigate(
+                                    buildWorkoutEditRoute(
+                                        plan.id,
+                                    ),
+                                )
+                            }
+                        >
+                            <Edit3 className="h-4 w-4" />
+
+                            Sửa lịch tập
+                        </Button>
+                    )}
                 </div>
 
-                {days.length ===
-                0 ? (
-                    <Card className="border-dashed p-10 text-center">
-                        <Dumbbell className="mx-auto h-14 w-14 text-slate-300" />
+                {days.length === 0 ? (
+                    <Card
+                        className="
+                            border-dashed
+                            p-10
+                            text-center
+                        "
+                    >
+                        <Dumbbell
+                            className="
+                                mx-auto
+                                h-14
+                                w-14
+                                text-slate-300
+                            "
+                        />
 
-                        <p className="mt-4 font-bold text-slate-700">
+                        <p
+                            className="
+                                mt-4
+                                font-bold
+                                text-slate-700
+                            "
+                        >
                             Giáo án chưa có cấu trúc ngày tập.
                         </p>
+
+                        {editable && (
+                            <Button
+                                variant="primary"
+                                className="mt-5"
+                                onClick={() =>
+                                    navigate(
+                                        buildWorkoutEditRoute(
+                                            plan.id,
+                                        ),
+                                    )
+                                }
+                            >
+                                <Edit3 className="h-4 w-4" />
+
+                                Thêm lịch tập
+                            </Button>
+                        )}
                     </Card>
                 ) : (
                     <div className="space-y-5">
@@ -683,12 +1178,8 @@ export default function WorkoutPlanDetailPage() {
                                         day.id ??
                                         `${plan.id}-${dayIndex}`
                                     }
-                                    day={
-                                        day
-                                    }
-                                    index={
-                                        dayIndex
-                                    }
+                                    day={day}
+                                    index={dayIndex}
                                 />
                             ),
                         )}
@@ -699,21 +1190,27 @@ export default function WorkoutPlanDetailPage() {
     );
 }
 
+/* =========================================================
+ * DAY
+ * ========================================================= */
+
 function WorkoutDayCard({
                             day,
                             index,
                         }: {
-    day:
-        WorkoutPlanDay;
-
-    index:
-        number;
+    day: WorkoutPlanDay;
+    index: number;
 }) {
     const exercises =
-        day.exercises;
+        day.exercises ?? [];
 
     return (
-        <Card className="overflow-hidden">
+        <Card
+            className="
+                min-w-0
+                overflow-hidden
+            "
+        >
             <header
                 className={`
                     border-b
@@ -737,12 +1234,20 @@ function WorkoutDayCard({
                         sm:justify-between
                     "
                 >
-                    <div className="flex items-center gap-3">
+                    <div
+                        className="
+                            flex
+                            min-w-0
+                            items-center
+                            gap-3
+                        "
+                    >
                         <div
                             className={`
                                 flex
                                 h-10
                                 w-10
+                                shrink-0
                                 items-center
                                 justify-center
                                 rounded-xl
@@ -759,15 +1264,27 @@ function WorkoutDayCard({
                                 index + 1}
                         </div>
 
-                        <div>
-                            <h3 className="font-black text-slate-900">
+                        <div className="min-w-0">
+                            <h3
+                                className="
+                                    break-words
+                                    font-black
+                                    text-slate-900
+                                "
+                            >
                                 {formatDayLabel(
                                     day,
                                     index,
                                 )}
                             </h3>
 
-                            <p className="mt-0.5 text-xs text-slate-500">
+                            <p
+                                className="
+                                    mt-0.5
+                                    text-xs
+                                    text-slate-500
+                                "
+                            >
                                 {day.isRestDay
                                     ? "Ngày nghỉ phục hồi"
                                     : `${exercises.length} bài tập`}
@@ -775,46 +1292,60 @@ function WorkoutDayCard({
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div
+                        className="
+                            flex
+                            flex-wrap
+                            gap-2
+                        "
+                    >
                         {day.dayOfWeek && (
                             <Badge variant="default">
-                                {
-                                    day.dayOfWeek
-                                }
+                                {day.dayOfWeek}
                             </Badge>
                         )}
 
-                        {day.focusArea && (
-                            <Badge variant="success">
-                                {
-                                    day.focusArea
-                                }
+                        {day.isRestDay && (
+                            <Badge variant="default">
+                                Nghỉ
                             </Badge>
                         )}
 
-                        {day.estimatedMinutes !=
-                            null && (
+                        {day.focusArea &&
+                            !day.isRestDay && (
+                                <Badge variant="success">
+                                    {day.focusArea}
+                                </Badge>
+                            )}
+
+                        {day.estimatedMinutes != null &&
+                            !day.isRestDay && (
                                 <Badge variant="info">
-                                    {
-                                        day.estimatedMinutes
-                                    }{" "}
-                                    phút
+                                    {day.estimatedMinutes} phút
                                 </Badge>
                             )}
                     </div>
                 </div>
 
                 {day.note && (
-                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                    <p
+                        className="
+                            mt-3
+                            whitespace-pre-wrap
+                            break-words
+                            text-sm
+                            leading-6
+                            text-slate-600
+                        "
+                    >
                         {day.note}
                     </p>
                 )}
             </header>
 
             {!day.isRestDay && (
-                <div className="p-5">
-                    {exercises.length ===
-                    0 ? (
+                <div className="p-4 sm:p-5">
+                    {exercises.length === 0 ? (
                         <div
                             className="
                                 rounded-xl
@@ -843,6 +1374,7 @@ function WorkoutDayCard({
                                             `${exercise.exerciseName}-${exerciseIndex}`
                                         }
                                         className="
+                                            min-w-0
                                             rounded-2xl
                                             border
                                             border-slate-100
@@ -855,12 +1387,20 @@ function WorkoutDayCard({
                                                 flex
                                                 flex-col
                                                 gap-4
-                                                sm:flex-row
-                                                sm:items-start
-                                                sm:justify-between
+                                                lg:flex-row
+                                                lg:items-start
+                                                lg:justify-between
                                             "
                                         >
-                                            <div className="flex min-w-0 items-start gap-3">
+                                            <div
+                                                className="
+                                                    flex
+                                                    min-w-0
+                                                    flex-1
+                                                    items-start
+                                                    gap-3
+                                                "
+                                            >
                                                 <div
                                                     className="
                                                         flex
@@ -879,14 +1419,26 @@ function WorkoutDayCard({
                                                 </div>
 
                                                 <div className="min-w-0">
-                                                    <h4 className="font-black text-slate-900">
+                                                    <h4
+                                                        className="
+                                                            break-words
+                                                            font-black
+                                                            text-slate-900
+                                                        "
+                                                    >
                                                         {
                                                             exercise.exerciseName
                                                         }
                                                     </h4>
 
                                                     {exercise.targetMuscle && (
-                                                        <p className="mt-1 text-xs text-slate-500">
+                                                        <p
+                                                            className="
+                                                                mt-1
+                                                                text-xs
+                                                                text-slate-500
+                                                            "
+                                                        >
                                                             Nhóm cơ:{" "}
                                                             {
                                                                 exercise.targetMuscle
@@ -895,7 +1447,16 @@ function WorkoutDayCard({
                                                     )}
 
                                                     {exercise.instruction && (
-                                                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                                                        <p
+                                                            className="
+                                                                mt-2
+                                                                whitespace-pre-wrap
+                                                                break-words
+                                                                text-sm
+                                                                leading-6
+                                                                text-slate-600
+                                                            "
+                                                        >
                                                             {
                                                                 exercise.instruction
                                                             }
@@ -912,54 +1473,84 @@ function WorkoutDayCard({
                                                     gap-2
                                                 "
                                             >
-                                                {exercise.sets !=
-                                                    null && (
-                                                        <Metric>
-                                                            {
-                                                                exercise.sets
-                                                            }{" "}
-                                                            hiệp
-                                                        </Metric>
-                                                    )}
-
-                                                {exercise.reps && (
+                                                {exercise.sets != null && (
                                                     <Metric>
-                                                        {
-                                                            exercise.reps
-                                                        }{" "}
-                                                        reps
+                                                        {exercise.sets} hiệp
                                                     </Metric>
                                                 )}
 
-                                                {exercise.restSeconds !=
-                                                    null && (
-                                                        <Metric>
-                                                            Nghỉ{" "}
-                                                            {
-                                                                exercise.restSeconds
-                                                            }
-                                                            s
-                                                        </Metric>
-                                                    )}
+                                                {exercise.reps && (
+                                                    <Metric>
+                                                        {exercise.reps} reps
+                                                    </Metric>
+                                                )}
 
-                                                {exercise.durationMinutes !=
-                                                    null && (
-                                                        <Metric>
-                                                            {
-                                                                exercise.durationMinutes
-                                                            }{" "}
-                                                            phút
-                                                        </Metric>
-                                                    )}
+                                                {exercise.weightKg != null && (
+                                                    <Metric>
+                                                        {exercise.weightKg} kg
+                                                    </Metric>
+                                                )}
+
+                                                {exercise.restSeconds != null && (
+                                                    <Metric>
+                                                        Nghỉ{" "}
+                                                        {exercise.restSeconds}s
+                                                    </Metric>
+                                                )}
+
+                                                {exercise.durationMinutes != null && (
+                                                    <Metric>
+                                                        {
+                                                            exercise.durationMinutes
+                                                        }{" "}
+                                                        phút
+                                                    </Metric>
+                                                )}
+
+                                                {exercise.distanceKm != null && (
+                                                    <Metric>
+                                                        {
+                                                            exercise.distanceKm
+                                                        }{" "}
+                                                        km
+                                                    </Metric>
+                                                )}
+
+                                                {exercise.rpe != null && (
+                                                    <Metric>
+                                                        RPE{" "}
+                                                        {exercise.rpe}
+                                                    </Metric>
+                                                )}
+
+                                                {exercise.tempo && (
+                                                    <Metric>
+                                                        Tempo{" "}
+                                                        {exercise.tempo}
+                                                    </Metric>
+                                                )}
+
+                                                {exercise.isOptional && (
+                                                    <Metric>
+                                                        Tùy chọn
+                                                    </Metric>
+                                                )}
                                             </div>
                                         </div>
 
                                         {exercise.note && (
-                                            <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-slate-500">
+                                            <p
+                                                className="
+                                                    mt-3
+                                                    whitespace-pre-wrap
+                                                    break-words
+                                                    text-xs
+                                                    leading-5
+                                                    text-slate-500
+                                                "
+                                            >
                                                 Lưu ý:{" "}
-                                                {
-                                                    exercise.note
-                                                }
+                                                {exercise.note}
                                             </p>
                                         )}
                                     </article>
@@ -973,22 +1564,27 @@ function WorkoutDayCard({
     );
 }
 
+/* =========================================================
+ * SUMMARY CARD
+ * ========================================================= */
+
 function SummaryCard({
                          icon: Icon,
                          label,
                          value,
                      }: {
-    icon:
-        LucideIcon;
-
-    label:
-        string;
-
-    value:
-        string;
+    icon: LucideIcon;
+    label: string;
+    value: string;
 }) {
     return (
-        <Card className="p-4 sm:p-5">
+        <Card
+            className="
+                min-w-0
+                p-4
+                sm:p-5
+            "
+        >
             <Icon className="h-5 w-5 text-emerald-600" />
 
             <p
@@ -1004,18 +1600,28 @@ function SummaryCard({
                 {label}
             </p>
 
-            <p className="mt-1 break-words font-black text-slate-900">
+            <p
+                className="
+                    mt-1
+                    break-words
+                    font-black
+                    text-slate-900
+                "
+            >
                 {value}
             </p>
         </Card>
     );
 }
 
+/* =========================================================
+ * METRIC
+ * ========================================================= */
+
 function Metric({
                     children,
                 }: {
-    children:
-        ReactNode;
+    children: ReactNode;
 }) {
     return (
         <span
