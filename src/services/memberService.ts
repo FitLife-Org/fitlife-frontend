@@ -12,6 +12,8 @@ import type {
     AdminMemberUpdateRequest,
 } from "../types/member.type";
 
+import type { Trainer } from "../types/trainer.type";
+
 import type {
     BodyMetric,
 } from "../types/bodyMetric.type";
@@ -665,5 +667,14 @@ export const memberService = {
 
     async restoreMember(id: number): Promise<void> {
         await apiClient.patch(`/admin/members/${id}/restore`);
+    },
+
+    async getMyAssignedTrainer(): Promise<Trainer | null> {
+        const response = await apiClient.get<ApiResponse<Trainer | null>>("/members/me/trainer");
+        return response.data.data;
+    },
+
+    async bookTrainer(trainerId: number | string): Promise<void> {
+        await apiClient.post<ApiResponse<void>>(`/members/me/book-trainer/${trainerId}`);
     },
 };

@@ -35,7 +35,7 @@ interface AccountFormValues {
 const INITIAL_FORM_VALUES: AccountFormValues = {
   username: "",
   email: "",
-  password: "",
+  password: "123456",
   fullName: "",
   phone: "",
   roleCode: "ROLE_STAFF",
