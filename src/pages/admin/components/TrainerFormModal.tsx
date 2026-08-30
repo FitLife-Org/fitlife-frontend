@@ -28,7 +28,7 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
     bio: "",
     username: "",
     email: "",
-    password: "",
+    password: "123456",
     fullName: "",
     phone: "",
   });
@@ -58,7 +58,7 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
           bio: "",
           username: "",
           email: "",
-          password: "",
+          password: "123456",
           fullName: "",
           phone: "",
         });
@@ -116,6 +116,18 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
       } else {
         if (!trainer) return;
         
+        // Step 1: Update the user account details if we have the userId
+        if (trainer.userId) {
+          await userService.updateUser(trainer.userId, {
+            fullName: formData.fullName!,
+            email: formData.email!,
+            phone: formData.phone!,
+            username: formData.username || trainer.username,
+            status: trainer.status || "ACTIVE"
+          });
+        }
+
+        // Step 2: Update the Trainer profile details
         await trainerService.updateTrainer(trainer.id, { 
           specialization: formData.specialty,
           experienceYears: formData.experienceYears ? Number(formData.experienceYears) : undefined,
@@ -147,46 +159,47 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {!isEditing && (
-          <div className="space-y-5 p-6 bg-slate-50/80 rounded-2xl border border-slate-100 mb-2">
-            <h3 className="font-bold text-sm text-slate-800">Thông tin tài khoản đăng nhập</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <Input 
-                label="Họ và tên *"
-                name="fullName"
-                placeholder="VD: Nguyễn Văn A"
-                value={formData.fullName}
-                onChange={handleFormChange}
-                error={formErrors.fullName}
-              />
-              <Input 
-                label="Tên đăng nhập (Username) *"
-                name="username"
-                placeholder="VD: nguyenvana"
-                value={formData.username}
-                onChange={handleFormChange}
-                error={formErrors.username}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input 
-                label="Email *"
-                name="email"
-                type="email"
-                placeholder="VD: email@example.com"
-                value={formData.email}
-                onChange={handleFormChange}
-                error={formErrors.email}
-              />
-              <Input 
-                label="Số điện thoại *"
-                name="phone"
-                placeholder="VD: 0901234567"
-                value={formData.phone}
-                onChange={handleFormChange}
-                error={formErrors.phone}
-              />
-            </div>
+        <div className="space-y-5 p-6 bg-slate-50/80 rounded-2xl border border-slate-100 mb-2">
+          <h3 className="font-bold text-sm text-slate-800">Thông tin tài khoản đăng nhập</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <Input 
+              label="Họ và tên *"
+              name="fullName"
+              placeholder="VD: Nguyễn Văn A"
+              value={formData.fullName}
+              onChange={handleFormChange}
+              error={formErrors.fullName}
+            />
+            <Input 
+              label="Tên đăng nhập (Username) *"
+              name="username"
+              placeholder="VD: nguyenvana"
+              value={formData.username}
+              onChange={handleFormChange}
+              error={formErrors.username}
+              disabled={isEditing}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input 
+              label="Email *"
+              name="email"
+              type="email"
+              placeholder="VD: email@example.com"
+              value={formData.email}
+              onChange={handleFormChange}
+              error={formErrors.email}
+            />
+            <Input 
+              label="Số điện thoại *"
+              name="phone"
+              placeholder="VD: 0901234567"
+              value={formData.phone}
+              onChange={handleFormChange}
+              error={formErrors.phone}
+            />
+          </div>
+          {!isEditing && (
             <Input 
               label="Mật khẩu *"
               name="password"
@@ -196,8 +209,8 @@ export function TrainerFormModal({ open, onClose, onSuccess, trainer }: TrainerF
               onChange={handleFormChange}
               error={formErrors.password}
             />
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Input 

@@ -44,10 +44,6 @@ const CREATE_INTERNAL_ROLE_OPTIONS: Array<{
     label: "Nhân viên",
   },
   {
-    value: "ROLE_TRAINER",
-    label: "Huấn luyện viên",
-  },
-  {
     value: "ROLE_ADMIN",
     label: "Quản trị viên",
   },
@@ -71,10 +67,6 @@ const UPDATE_ROLE_OPTIONS: Array<{
   {
     value: "ROLE_MEMBER",
     label: "Hội viên",
-  },
-  {
-    value: "ROLE_TRAINER",
-    label: "Huấn luyện viên",
   },
   {
     value: "ROLE_STAFF",

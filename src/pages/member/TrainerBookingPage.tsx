@@ -6,6 +6,7 @@ import Badge from "../../components/common/Badge";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import { trainerService } from "../../services/trainerService";
+import { memberService } from "../../services/memberService";
 import type { Trainer } from "../../types/trainer.type";
 import { showAlert } from "../../utils/alert";
 import { getApiErrorMessage } from "../../utils/apiError";
@@ -23,7 +24,19 @@ export default function TrainerBookingPage() {
 
   useEffect(() => {
     fetchTrainers();
+    fetchAssignedTrainer();
   }, []);
+
+  const fetchAssignedTrainer = async () => {
+    try {
+      const data = await memberService.getMyAssignedTrainer();
+      if (data) {
+        setSelectedTrainerId(data.id);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải HLV đã chọn:", error);
+    }
+  };
 
   const fetchTrainers = async () => {
     try {
@@ -44,11 +57,16 @@ export default function TrainerBookingPage() {
     );
     
     if (result.isConfirmed) {
-      setSelectedTrainerId(trainer.id);
-      void showAlert.success(
-        "Gửi yêu cầu thành công!",
-        "Chúng tôi đã ghi nhận lựa chọn của bạn. Nhân viên sẽ sớm liên hệ để thống nhất lịch tập."
-      );
+      try {
+        await memberService.bookTrainer(trainer.id);
+        setSelectedTrainerId(trainer.id);
+        void showAlert.success(
+          "Gửi yêu cầu thành công!",
+          "Chúng tôi đã ghi nhận lựa chọn của bạn. Nhân viên sẽ sớm liên hệ để thống nhất lịch tập."
+        );
+      } catch (error) {
+        void showAlert.error("Lỗi khi chọn HLV", getApiErrorMessage(error));
+      }
     }
   };
 

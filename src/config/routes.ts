@@ -231,4 +231,13 @@ export const ROUTES = {
 
   TRAINER_MEMBER_NUTRITION_EDIT:
       "/trainer/members/:memberId/nutrition/:planId/edit",
+
+  TRAINER_PROFILE:
+      "/trainer/profile",
+
+  STAFF_PROFILE:
+      "/staff/profile",
+
+  ADMIN_PROFILE:
+      "/admin/profile",
 } as const;
