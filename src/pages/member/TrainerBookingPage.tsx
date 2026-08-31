@@ -1,31 +1,44 @@
 import { useEffect, useState } from "react";
-import { Search, Filter, Star, Clock, Award, ChevronRight, User, Crown, Check, Eye } from "lucide-react";
+import { Search, Filter, Star, Clock, Award, ChevronRight, User, Crown, Check, Calendar } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
-import TrainerDetailModal from "../../components/common/TrainerDetailModal";
 import { trainerService } from "../../services/trainerService";
+import { memberService } from "../../services/memberService";
 import type { Trainer } from "../../types/trainer.type";
 import { showAlert } from "../../utils/alert";
 import { getApiErrorMessage } from "../../utils/apiError";
 import { useMySubscription } from "../../hooks/useMySubscription";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../config/routes";
+import BookSessionModal from "./components/BookSessionModal";
 
 export default function TrainerBookingPage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null);
-  const [detailTrainer, setDetailTrainer] = useState<Trainer | null>(null);
+  const [showBookModal, setShowBookModal] = useState(false);
   
   const { activeSubscription, loading: subLoading } = useMySubscription();
 
   useEffect(() => {
     fetchTrainers();
+    fetchAssignedTrainer();
   }, []);
+
+  const fetchAssignedTrainer = async () => {
+    try {
+      const data = await memberService.getMyAssignedTrainer();
+      if (data) {
+        setSelectedTrainerId(data.id);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải HLV đã chọn:", error);
+    }
+  };
 
   const fetchTrainers = async () => {
     try {
@@ -46,11 +59,16 @@ export default function TrainerBookingPage() {
     );
     
     if (result.isConfirmed) {
-      setSelectedTrainerId(trainer.id);
-      void showAlert.success(
-        "Gửi yêu cầu thành công!",
-        "Chúng tôi đã ghi nhận lựa chọn của bạn. Nhân viên sẽ sớm liên hệ để thống nhất lịch tập."
-      );
+      try {
+        await memberService.bookTrainer(trainer.id);
+        setSelectedTrainerId(trainer.id);
+        void showAlert.success(
+          "Gửi yêu cầu thành công!",
+          "Chúng tôi đã ghi nhận lựa chọn của bạn. Nhân viên sẽ sớm liên hệ để thống nhất lịch tập."
+        );
+      } catch (error) {
+        void showAlert.error("Lỗi khi chọn HLV", getApiErrorMessage(error));
+      }
     }
   };
 
@@ -157,29 +175,20 @@ export default function TrainerBookingPage() {
                       {trainer.bio || "Chưa có thông tin giới thiệu."}
                     </p>
 
-                    <div className="mt-auto pt-4 border-t border-slate-100 flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setDetailTrainer(trainer)}
-                        className="rounded-xl px-3 py-2 flex items-center gap-1 text-slate-600 border-slate-200 hover:bg-slate-50"
-                        title="Xem chi tiết HLV"
-                      >
-                        <Eye className="w-4 h-4" /> Chi tiết
-                      </Button>
-
+                    <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-end">
                       {selectedTrainerId === trainer.id ? (
                         <Button
-                          disabled
-                          className="rounded-xl px-3 py-2 flex items-center gap-1 shadow-sm flex-1 justify-center bg-emerald-50 text-emerald-700 border-none opacity-100 text-sm"
+                          onClick={() => setShowBookModal(true)}
+                          className="rounded-xl px-4 py-2 flex items-center gap-2 shadow-sm w-full justify-center bg-emerald-500 text-white border-none opacity-100 hover:bg-emerald-600 transition-colors"
                         >
-                          <Check className="w-4 h-4" /> Đã chọn
+                          <Calendar className="w-4 h-4" /> Đặt lịch tập
                         </Button>
                       ) : (
                         <Button
                           onClick={() => handleBookTrainer(trainer)}
-                          className="rounded-xl px-3 py-2 flex items-center gap-1 shadow-lg shadow-emerald-600/20 flex-1 justify-center text-sm"
+                          className="rounded-xl pl-4 pr-3 py-2 flex items-center gap-1 shadow-lg shadow-emerald-600/20 w-full justify-center"
                         >
-                          Chọn HLV <ChevronRight className="w-4 h-4" />
+                          Chọn HLV này <ChevronRight className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
@@ -193,15 +202,15 @@ export default function TrainerBookingPage() {
               </div>
             )}
           </div>
-
-          <TrainerDetailModal
-            open={Boolean(detailTrainer)}
-            onClose={() => setDetailTrainer(null)}
-            trainer={detailTrainer}
-            onBook={handleBookTrainer}
-            isBooked={detailTrainer ? selectedTrainerId === detailTrainer.id : false}
-          />
         </>
+      )}
+
+      {showBookModal && selectedTrainerId && (
+        <BookSessionModal
+          trainerId={selectedTrainerId}
+          trainerName={trainers.find((t) => t.id === selectedTrainerId)?.fullName || "HLV"}
+          onClose={() => setShowBookModal(false)}
+        />
       )}
     </div>
   );

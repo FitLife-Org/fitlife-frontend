@@ -56,7 +56,14 @@ export default function AdminSubscriptionPage() {
     const [loadingFormData, setLoadingFormData] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateSubscriptionRequest & { memberId: string }>({
+    // Transfer states
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [selectedSubToTransfer, setSelectedSubToTransfer] = useState<Subscription | null>(null);
+    const [transferRecipient, setTransferRecipient] = useState<MemberProfile | null>(null);
+    const [transferNote, setTransferNote] = useState("");
+    const [pickerPurpose, setPickerPurpose] = useState<"assign" | "transfer">("assign");
+
+    const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<CreateSubscriptionRequest & { memberId: string }>({
         defaultValues: {
             memberId: "",
             gymPackageId: undefined,
@@ -137,6 +144,7 @@ export default function AdminSubscriptionPage() {
     }, [fetchMembers, isMemberPickerOpen]);
 
     const handleOpenAssignModal = () => {
+        setPickerPurpose("assign");
         setIsAssignModalOpen(true);
         reset();
         setSelectedMember(null);
@@ -144,6 +152,41 @@ export default function AdminSubscriptionPage() {
         setMemberPage(0);
         if (packages.length === 0 || durations.length === 0) {
             void fetchFormData();
+        }
+    };
+
+    const handleOpenTransferModal = (sub: Subscription) => {
+        setSelectedSubToTransfer(sub);
+        setTransferRecipient(null);
+        setTransferNote("");
+        setIsTransferModalOpen(true);
+    };
+
+    const handleOpenTransferPicker = () => {
+        setPickerPurpose("transfer");
+        setMemberSearch("");
+        setMemberPage(0);
+        setIsMemberPickerOpen(true);
+    };
+
+    const onSubmitTransfer = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedSubToTransfer || !transferRecipient) return;
+
+        try {
+            setIsSubmitting(true);
+            await subscriptionService.transferSubscription(
+                selectedSubToTransfer.id,
+                transferRecipient.id,
+                transferNote
+            );
+            setIsTransferModalOpen(false);
+            void showAlert.success("Thành công", "Đã chuyển gói tập sang hội viên mới.");
+            await fetchSubscriptions();
+        } catch (error) {
+            void showAlert.error("Lỗi", getApiErrorMessage(error));
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -278,14 +321,22 @@ export default function AdminSubscriptionPage() {
                                         <td className="px-6 py-4">
                                             {getStatusBadge(sub.status)}
                                         </td>
-                                        <td className="px-6 py-4 text-right space-x-2">
+                                        <td className="px-6 py-4 text-right">
                                             {sub.status === "ACTIVE" && (
-                                                <button 
-                                                    onClick={() => handleCancelSubscription(sub.id)}
-                                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
-                                                >
-                                                    Hủy gói
-                                                </button>
+                                                <div className="flex justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => handleOpenTransferModal(sub)}
+                                                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
+                                                    >
+                                                        Chuyển gói
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleCancelSubscription(sub.id)}
+                                                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                                                    >
+                                                        Hủy gói
+                                                    </button>
+                                                </div>
                                             )}
                                         </td>
                                     </tr>
@@ -394,6 +445,73 @@ export default function AdminSubscriptionPage() {
                     </form>
                 )}
             </Modal>
+            <Modal
+                open={isTransferModalOpen}
+                onClose={() => setIsTransferModalOpen(false)}
+                title="Chuyển Nhượng Gói Tập"
+                size="xl"
+            >
+                {selectedSubToTransfer && (
+                    <form onSubmit={onSubmitTransfer} className="space-y-5">
+                        <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 space-y-2">
+                            <h3 className="font-bold text-slate-800 text-sm">Gói tập cần chuyển nhượng:</h3>
+                            <p className="text-sm text-slate-700">
+                                <strong>Gói tập:</strong> {selectedSubToTransfer.gymPackageName} ({selectedSubToTransfer.packageDurationName})
+                            </p>
+                            <p className="text-sm text-slate-700">
+                                <strong>Hội viên hiện tại:</strong> {selectedSubToTransfer.memberName} (Mã: {selectedSubToTransfer.memberCode})
+                            </p>
+                            <p className="text-sm text-slate-700">
+                                <strong>Thời hạn:</strong> {selectedSubToTransfer.startDate ? new Date(selectedSubToTransfer.startDate).toLocaleDateString("vi-VN") : "Chưa bắt đầu"} - {selectedSubToTransfer.endDate ? new Date(selectedSubToTransfer.endDate).toLocaleDateString("vi-VN") : "Chưa kết thúc"}
+                            </p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Hội viên nhận chuyển nhượng (*)</label>
+                            <button
+                                type="button"
+                                onClick={handleOpenTransferPicker}
+                                className="flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3 text-left transition-colors hover:border-blue-400 hover:bg-blue-50"
+                            >
+                                {transferRecipient ? (
+                                    <span>
+                                        <span className="block font-semibold text-slate-800">{transferRecipient.fullName}</span>
+                                        <span className="block text-xs text-slate-500">{transferRecipient.memberCode} · {transferRecipient.email}</span>
+                                    </span>
+                                ) : <span className="text-sm text-slate-500">Chọn hội viên nhận gói tập...</span>}
+                                <span className="ml-3 shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white">Chọn hội viên</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-bold text-slate-700">Lý do / Ghi chú</label>
+                            <textarea
+                                value={transferNote}
+                                onChange={(e) => setTransferNote(e.target.value)}
+                                placeholder="Nhập lý do chuyển nhượng gói tập..."
+                                className="w-full px-4 py-2 border border-slate-300 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-24 resize-none"
+                            />
+                        </div>
+
+                        <div className="pt-4 flex justify-end gap-3">
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={() => setIsTransferModalOpen(false)}
+                            >
+                                Hủy
+                            </Button>
+                            <Button 
+                                type="submit" 
+                                disabled={isSubmitting || !transferRecipient}
+                                className="bg-blue-600 text-white"
+                            >
+                                {isSubmitting ? "Đang xử lý..." : "Xác nhận chuyển gói"}
+                            </Button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
 
             <Modal
                 open={isMemberPickerOpen}
@@ -427,11 +545,15 @@ export default function AdminSubscriptionPage() {
                                 key={member.id}
                                 type="button"
                                 onClick={() => {
-                                    setSelectedMember(member);
-                                    setValue("memberId", String(member.id), { shouldValidate: true });
+                                    if (pickerPurpose === "transfer") {
+                                        setTransferRecipient(member);
+                                    } else {
+                                        setSelectedMember(member);
+                                        setValue("memberId", String(member.id), { shouldValidate: true });
+                                    }
                                     setIsMemberPickerOpen(false);
                                 }}
-                                className={`rounded-xl border p-4 text-left transition-all hover:border-blue-400 hover:bg-blue-50 ${selectedMember?.id === member.id ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500" : "border-slate-200 bg-white"}`}
+                                className={`rounded-xl border p-4 text-left transition-all hover:border-blue-400 hover:bg-blue-50 ${(pickerPurpose === "transfer" ? transferRecipient?.id === member.id : selectedMember?.id === member.id) ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500" : "border-slate-200 bg-white"}`}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <span className="min-w-0">
@@ -440,7 +562,7 @@ export default function AdminSubscriptionPage() {
                                         <span className="mt-1 block truncate text-xs text-slate-500">{member.email}</span>
                                         {member.phone && <span className="mt-1 block text-xs text-slate-500">{member.phone}</span>}
                                     </span>
-                                    {selectedMember?.id === member.id && <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-600" />}
+                                    {(pickerPurpose === "transfer" ? transferRecipient?.id === member.id : selectedMember?.id === member.id) && <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-600" />}
                                 </div>
                             </button>
                         ))}

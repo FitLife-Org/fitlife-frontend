@@ -9,6 +9,9 @@ import type {
     UpdateMyMemberProfileRequest,
 } from "../types/member.type";
 
+import type { User } from "../types/user.type";
+import type { Trainer } from "../types/trainer.type";
+
 function requireData<T>(
     response: ApiResponse<T>,
     message: string,
@@ -79,5 +82,32 @@ export const profileService = {
             response.data,
             "Không nhận được hồ sơ sau khi cập nhật ảnh.",
         );
+    },
+
+    async getUserProfile(): Promise<User> {
+        const response = await apiClient.get<ApiResponse<User>>("/users/me");
+        return requireData(response.data, "Không nhận được hồ sơ người dùng.");
+    },
+
+    async updateUserProfile(request: { fullName: string; phone: string }): Promise<User> {
+        const response = await apiClient.put<ApiResponse<User>>("/users/me", request);
+        return requireData(response.data, "Không nhận được hồ sơ sau khi cập nhật.");
+    },
+
+    async updateUserAvatar(file: File): Promise<User> {
+        const formData = new FormData();
+        formData.append("file", file, file.name);
+        const response = await apiClient.patch<ApiResponse<User>>("/users/me/avatar", formData);
+        return requireData(response.data, "Không nhận được hồ sơ sau khi cập nhật ảnh.");
+    },
+
+    async getTrainerProfile(): Promise<Trainer> {
+        const response = await apiClient.get<ApiResponse<Trainer>>("/trainers/me");
+        return requireData(response.data, "Không nhận được hồ sơ huấn luyện viên.");
+    },
+
+    async updateTrainerProfile(request: Partial<Trainer>): Promise<Trainer> {
+        const response = await apiClient.put<ApiResponse<Trainer>>("/trainers/me", request);
+        return requireData(response.data, "Không nhận được hồ sơ sau khi cập nhật.");
     },
 };

@@ -35,7 +35,7 @@ interface AccountFormValues {
 const INITIAL_FORM_VALUES: AccountFormValues = {
   username: "",
   email: "",
-  password: "",
+  password: "123456",
   fullName: "",
   phone: "",
   roleCode: "ROLE_STAFF",
@@ -477,15 +477,18 @@ export function useAccountManagement() {
       };
 
   const handleToggleStatus =
-      async (user: User) => {
+      async (
+          user: User,
+      ) => {
         const currentlyLocked =
-            user.status === "SUSPENDED" || user.status === "INACTIVE";
+            user.status ===
+            "LOCKED";
 
         const newStatus:
             UserStatus =
             currentlyLocked
                 ? "ACTIVE"
-                : "INACTIVE";
+                : "LOCKED";
 
         const actionText =
             currentlyLocked
@@ -503,12 +506,11 @@ export function useAccountManagement() {
         }
 
         try {
-          const updatedUser =
-              await userService
-                  .updateUserStatus(
-                      user.id,
-                      newStatus,
-                  );
+          await userService
+              .updateUserStatus(
+                  user.id,
+                  newStatus,
+              );
 
           await fetchUsers();
 
@@ -524,8 +526,25 @@ export function useAccountManagement() {
               error,
           );
 
+          const message =
+              error &&
+              typeof error === "object" &&
+              "response" in error
+                  ? (
+                      error as {
+                        response?: {
+                          data?: {
+                            message?: string;
+                          };
+                        };
+                      }
+                  ).response?.data
+                      ?.message
+                  : undefined;
+
           showAlert.error(
               "Thất bại",
+              message ??
               "Không thể cập nhật trạng thái tài khoản.",
           );
         }
@@ -554,41 +573,53 @@ export function useAccountManagement() {
           return;
         }
 
-        if (
-            selectedUser.roles.includes("ROLE_MEMBER") ||
-            selectedUser.roles.includes("ROLE_TRAINER")
-        ) {
+        const allowedRoles:
+            Role[] = [
+          "ROLE_ADMIN",
+          "ROLE_STAFF",
+          "ROLE_TRAINER",
+          "ROLE_MEMBER",
+        ];
+
+        const invalidRole =
+            selectedRoles.find(
+                (role) =>
+                    !allowedRoles.includes(
+                        role,
+                    ),
+            );
+
+        if (invalidRole) {
           showAlert.error(
-              "Không hợp lệ",
-              "Không thể đổi vai trò của Hội viên hoặc Huấn luyện viên tại đây.",
+              "Vai trò không hợp lệ",
+              `Vai trò ${invalidRole} không được hỗ trợ.`,
           );
+
           return;
         }
 
-        if (
-            selectedRoles.includes("ROLE_MEMBER") ||
-            selectedRoles.includes("ROLE_TRAINER")
-        ) {
-          showAlert.error(
-              "Không hợp lệ",
-              "Chỉ có thể luân chuyển giữa Nhân viên và Quản trị viên.",
-          );
+        const result =
+            await showAlert.confirm(
+                "Cập nhật vai trò?",
+                `Bạn có chắc muốn cập nhật vai trò của ${selectedUser.fullName}?`,
+            );
+
+        if (!result.isConfirmed) {
           return;
         }
 
         try {
           setRoleLoading(true);
 
-          const updatedUser =
-              await userService
-                  .updateUserRoles(
-                      selectedUser.id,
-                      selectedRoles,
-                  );
-
-          await fetchUsers();
+          await userService
+              .updateUserRoles(
+                  selectedUser.id,
+                  selectedRoles,
+              );
 
           setRoleModalOpen(false);
+
+          await fetchUsers();
 
           showAlert.success(
               "Thành công",
@@ -602,8 +633,25 @@ export function useAccountManagement() {
               error,
           );
 
+          const message =
+              error &&
+              typeof error === "object" &&
+              "response" in error
+                  ? (
+                      error as {
+                        response?: {
+                          data?: {
+                            message?: string;
+                          };
+                        };
+                      }
+                  ).response?.data
+                      ?.message
+                  : undefined;
+
           showAlert.error(
               "Thất bại",
+              message ??
               "Không thể cập nhật vai trò tài khoản.",
           );
         } finally {

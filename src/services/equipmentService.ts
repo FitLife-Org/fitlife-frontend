@@ -23,7 +23,7 @@ export interface EquipmentQueryParams {
   size?: number;
   keyword?: string;
   status?: string;
-  area?: string;
+  areaId?: number;
   sort?: string;
 }
 
@@ -61,7 +61,7 @@ export const EquipmentService = {
     const response =
         await apiClient.get<
             ApiResponse<PageResponse<Equipment>>
-        >(STAFF_API_BASE, {
+        >(PUBLIC_API_BASE, {
           params: {
             page: params.page ?? 0,
             size: params.size ?? 20,
@@ -80,9 +80,9 @@ export const EquipmentService = {
                 }
                 : {}),
 
-            ...(params.area !== undefined && params.area !== "ALL"
+            ...(params.areaId !== undefined
                 ? {
-                  area: params.area,
+                  areaId: params.areaId,
                 }
                 : {}),
 
@@ -119,7 +119,7 @@ export const EquipmentService = {
     const response =
         await apiClient.get<
             ApiResponse<Equipment>
-        >(`${STAFF_API_BASE}/${id}`);
+        >(`${ADMIN_API_BASE}/${id}`);
 
     return requireData(
         response.data,

@@ -383,6 +383,15 @@ const menuItems:
         ],
     },
 
+    {
+        label: "Hồ sơ",
+        path: ROUTES.ADMIN_PROFILE,
+        icon: UserRound,
+        roles: [
+            "ROLE_ADMIN",
+        ],
+    },
+
     // =====================================================
     // STAFF
     // =====================================================
@@ -409,6 +418,15 @@ const menuItems:
         roles: [
             "ROLE_STAFF",
             "ROLE_ADMIN",
+        ],
+    },
+
+    {
+        label: "Hồ sơ",
+        path: ROUTES.STAFF_PROFILE,
+        icon: UserRound,
+        roles: [
+            "ROLE_STAFF",
         ],
     },
 
@@ -458,6 +476,15 @@ const menuItems:
         ROUTES.TRAINER_WORKOUT_TRACKING,
         icon:
         Flame,
+        roles: [
+            "ROLE_TRAINER",
+        ],
+    },
+
+    {
+        label: "Hồ sơ",
+        path: ROUTES.TRAINER_PROFILE,
+        icon: UserRound,
         roles: [
             "ROLE_TRAINER",
         ],

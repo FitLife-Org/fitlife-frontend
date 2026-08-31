@@ -9,20 +9,30 @@ export default function TrainerSchedulePage() {
   const [sessions, setSessions] = useState<TrainerSession[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchSchedule = async () => {
+    try {
+      setLoading(true);
+      const data = await trainerService.getTrainerSchedule();
+      setSessions(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchSchedule = async () => {
-      try {
-        setLoading(true);
-        const data = await trainerService.getTrainerSchedule();
-        setSessions(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchSchedule();
   }, []);
+
+  const handleUpdateStatus = async (bookingId: number, status: string) => {
+    try {
+      await trainerService.updateTrainerSessionStatus(bookingId, status);
+      fetchSchedule();
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
 
   const getStatusBadge = (status: TrainerSession["status"]) => {
     switch (status) {
@@ -117,10 +127,14 @@ export default function TrainerSchedulePage() {
                 
                 {session.status === "SCHEDULED" && (
                   <div className="shrink-0 flex gap-2">
-                    <button className="px-4 py-2 bg-emerald-50 text-emerald-600 font-semibold rounded-lg border border-emerald-200 hover:bg-emerald-500 hover:text-white transition-colors duration-300">
+                    <button 
+                      onClick={() => handleUpdateStatus(session.id, "COMPLETED")}
+                      className="px-4 py-2 bg-emerald-50 text-emerald-600 font-semibold rounded-lg border border-emerald-200 hover:bg-emerald-500 hover:text-white transition-colors duration-300">
                       Hoàn thành
                     </button>
-                    <button className="px-4 py-2 bg-red-50 text-red-600 font-semibold rounded-lg border border-red-200 hover:bg-red-500 hover:text-white transition-colors duration-300">
+                    <button 
+                      onClick={() => handleUpdateStatus(session.id, "CANCELLED")}
+                      className="px-4 py-2 bg-red-50 text-red-600 font-semibold rounded-lg border border-red-200 hover:bg-red-500 hover:text-white transition-colors duration-300">
                       Hủy
                     </button>
                   </div>

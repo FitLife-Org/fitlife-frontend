@@ -62,7 +62,7 @@ function createEmptyForm():
     MemberFormValues {
     return {
         username: "",
-        password: "",
+        password: "123456",
 
         fullName: "",
         email: "",
