@@ -677,4 +677,8 @@ export const memberService = {
     async bookTrainer(trainerId: number | string): Promise<void> {
         await apiClient.post<ApiResponse<void>>(`/members/me/book-trainer/${trainerId}`);
     },
+
+    async createBooking(data: { bookingDate: string; startTime: string; endTime: string; note?: string }): Promise<void> {
+        await apiClient.post<ApiResponse<void>>("/members/me/bookings", data);
+    },
 };

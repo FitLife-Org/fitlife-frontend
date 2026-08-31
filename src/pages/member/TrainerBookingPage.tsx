@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Filter, Star, Clock, Award, ChevronRight, User, Crown, Check } from "lucide-react";
+import { Search, Filter, Star, Clock, Award, ChevronRight, User, Crown, Check, Calendar } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
@@ -13,12 +13,14 @@ import { getApiErrorMessage } from "../../utils/apiError";
 import { useMySubscription } from "../../hooks/useMySubscription";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../config/routes";
+import BookSessionModal from "./components/BookSessionModal";
 
 export default function TrainerBookingPage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null);
+  const [showBookModal, setShowBookModal] = useState(false);
   
   const { activeSubscription, loading: subLoading } = useMySubscription();
 
@@ -176,10 +178,10 @@ export default function TrainerBookingPage() {
                     <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-end">
                       {selectedTrainerId === trainer.id ? (
                         <Button
-                          disabled
-                          className="rounded-xl px-4 py-2 flex items-center gap-2 shadow-sm w-full justify-center bg-emerald-50 text-emerald-700 border-none opacity-100"
+                          onClick={() => setShowBookModal(true)}
+                          className="rounded-xl px-4 py-2 flex items-center gap-2 shadow-sm w-full justify-center bg-emerald-500 text-white border-none opacity-100 hover:bg-emerald-600 transition-colors"
                         >
-                          <Check className="w-4 h-4" /> Đã chọn HLV này
+                          <Calendar className="w-4 h-4" /> Đặt lịch tập
                         </Button>
                       ) : (
                         <Button
@@ -201,6 +203,14 @@ export default function TrainerBookingPage() {
             )}
           </div>
         </>
+      )}
+
+      {showBookModal && selectedTrainerId && (
+        <BookSessionModal
+          trainerId={selectedTrainerId}
+          trainerName={trainers.find((t) => t.id === selectedTrainerId)?.fullName || "HLV"}
+          onClose={() => setShowBookModal(false)}
+        />
       )}
     </div>
   );

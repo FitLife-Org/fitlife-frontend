@@ -73,5 +73,9 @@ export const trainerService = {
   async getTrainerSchedule(): Promise<TrainerSession[]> {
     const response = await apiClient.get<ApiResponse<TrainerSession[]>>("/trainers/me/schedule");
     return response.data.data;
+  },
+
+  async updateTrainerSessionStatus(bookingId: number | string, status: string): Promise<void> {
+    await apiClient.patch<ApiResponse<void>>(`/trainers/bookings/${bookingId}/status?status=${status}`);
   }
 };
