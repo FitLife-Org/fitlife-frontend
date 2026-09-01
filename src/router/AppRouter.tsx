@@ -48,6 +48,7 @@ import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import SettingsPage from "../pages/settings/SettingsPage";
+import UserProfilePage from "../pages/profile/UserProfilePage";
 
 import ForbiddenPage from "../pages/error/ForbiddenPage";
 import NotFoundPage from "../pages/error/NotFoundPage";
@@ -66,6 +67,8 @@ import ReportPage from "../pages/admin/ReportPage";
 
 import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
 import AdminInvoiceDetailPage from "../pages/admin/AdminInvoiceDetailPage";
+import AdminSubscriptionPage from "../pages/admin/subscription/AdminSubscriptionPage";
+import AdminAiSuggestionPage from "../pages/admin/ai/AdminAiSuggestionPage";
 
 // =====================================================
 // ADMIN - EQUIPMENT
@@ -109,6 +112,8 @@ import NutritionTodayPage from "../pages/member/NutritionTodayPage";
 import MemberNutritionFormPage from "../pages/member/MemberNutritionFormPage";
 
 import AiFitnessPage from "../pages/member/AiFitnessPage";
+import TrainerBookingPage from "../pages/member/TrainerBookingPage";
+import MemberSchedulePage from "../pages/member/MemberSchedulePage";
 
 // =====================================================
 // STAFF
@@ -460,6 +465,28 @@ export default function AppRouter() {
                             }
                         />
 
+                        {/* Member Booking */}
+
+                        <Route
+                            path={ROUTES.MEMBER_BOOKING}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <TrainerBookingPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Member Schedule */}
+
+                        <Route
+                            path={ROUTES.MEMBER_SCHEDULE}
+                            element={
+                                <RoleGuard roles={["ROLE_MEMBER"]}>
+                                    <MemberSchedulePage />
+                                </RoleGuard>
+                            }
+                        />
+
                         {/* =================================================
                 ADMIN
             ================================================= */}
@@ -500,6 +527,22 @@ export default function AppRouter() {
                             }
                         />
 
+                        {/* Admin Subscription */}
+
+                        <Route
+                            path={ROUTES.ADMIN_SUBSCRIPTIONS}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
+                                    <AdminSubscriptionPage />
+                                </RoleGuard>
+                            }
+                        />
+
                         <Route
                             path={ROUTES.ADMIN_TRAINERS}
                             element={
@@ -514,7 +557,12 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.ADMIN_INVOICES}
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
                                     <InvoiceManagementPage />
                                 </RoleGuard>
                             }
@@ -523,7 +571,12 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.ADMIN_INVOICE_DETAIL}
                             element={
-                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                        "ROLE_STAFF",
+                                    ]}
+                                >
                                     <AdminInvoiceDetailPage />
                                 </RoleGuard>
                             }
@@ -552,6 +605,28 @@ export default function AppRouter() {
                             element={
                                 <RoleGuard roles={["ROLE_ADMIN"]}>
                                     <ReportPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Admin AI Suggestion */}
+
+                        <Route
+                            path={ROUTES.ADMIN_AI_SUGGESTIONS}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <AdminAiSuggestionPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Admin Profile */}
+
+                        <Route
+                            path={ROUTES.ADMIN_PROFILE}
+                            element={
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
+                                    <UserProfilePage />
                                 </RoleGuard>
                             }
                         />
@@ -700,6 +775,75 @@ export default function AppRouter() {
                             }
                         />
 
+                        {/* Staff Profile */}
+
+                        <Route
+                            path={ROUTES.STAFF_PROFILE}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <UserProfilePage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Staff Invoices */}
+
+                        <Route
+                            path={ROUTES.STAFF_INVOICES}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <InvoiceManagementPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={ROUTES.STAFF_INVOICE_DETAIL}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <AdminInvoiceDetailPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Staff Subscriptions */}
+
+                        <Route
+                            path={ROUTES.STAFF_SUBSCRIPTION_SUPPORT}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_STAFF",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <AdminSubscriptionPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path="/staff/subscription"
+                            element={
+                                <Navigate to={ROUTES.STAFF_SUBSCRIPTION_SUPPORT} replace />
+                            }
+                        />
+
                         {/* =================================================
                 TRAINER
             ================================================= */}
@@ -786,6 +930,22 @@ export default function AppRouter() {
                                     ]}
                                 >
                                     <TrainerNutritionFormPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        {/* Trainer Profile */}
+
+                        <Route
+                            path={ROUTES.TRAINER_PROFILE}
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_TRAINER",
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <UserProfilePage />
                                 </RoleGuard>
                             }
                         />

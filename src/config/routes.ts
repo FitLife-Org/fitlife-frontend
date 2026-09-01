@@ -146,6 +146,8 @@ export const ROUTES = {
 
   STAFF_CHECKIN: "/staff/checkin",
   STAFF_CHECKIN_HISTORY: "/staff/checkin-history",
+  STAFF_INVOICES: "/staff/invoices",
+  STAFF_INVOICE_DETAIL: "/staff/invoices/:id",
   STAFF_SUBSCRIPTION_SUPPORT: "/staff/subscriptions",
   STAFF_PROFILE: "/staff/profile",
 
