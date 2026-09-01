@@ -4,26 +4,23 @@ import {
     CalendarDays,
     ChevronDown,
     ChevronUp,
-    ClipboardCheck,
     Dumbbell,
     FileText,
     Flame,
     Gauge,
     HeartPulse,
-    History,
     Home,
     Package,
-    CreditCard,
     QrCode,
     Receipt,
+    ScanLine,
     Settings,
     ShieldCheck,
-    UserRound,
     User,
+    UserRound,
     Users,
     Utensils,
     WalletCards,
-    ScanLine,
     type LucideIcon,
 } from "lucide-react";
 
@@ -54,6 +51,10 @@ import type {
     Role,
 } from "../../types/common.type";
 
+// =====================================================
+// TYPES
+// =====================================================
+
 interface MenuChild {
     label: string;
     path: string;
@@ -67,20 +68,58 @@ interface MenuItem {
     children?: readonly MenuChild[];
 }
 
-function getMenuItemKey(item: MenuItem): string {
-    return item.path ?? item.children?.map((child) => child.path).join("|") ?? item.label;
+// =====================================================
+// HELPERS
+// =====================================================
+
+function getMenuItemKey(
+    item: MenuItem,
+): string {
+    return (
+        item.path ??
+        item.children
+            ?.map(
+                (child) =>
+                    child.path,
+            )
+            .join("|") ??
+        item.label
+    );
 }
+
+function isPathActive(
+    currentPath: string,
+    targetPath: string,
+): boolean {
+    if (
+        currentPath ===
+        targetPath
+    ) {
+        return true;
+    }
+
+    return currentPath.startsWith(
+        `${targetPath}/`,
+    );
+}
+
+// =====================================================
+// MENU CONFIG
+// =====================================================
 
 const menuItems:
     readonly MenuItem[] = [
+
     // =====================================================
     // MEMBER
     // =====================================================
 
     {
         label: "Dashboard",
-        path: ROUTES.MEMBER_HOME,
-        icon: Home,
+        path:
+        ROUTES.MEMBER_HOME,
+        icon:
+        Home,
         roles: [
             "ROLE_MEMBER",
         ],
@@ -88,18 +127,22 @@ const menuItems:
 
     {
         label: "AI Fitness",
-        path: ROUTES.MEMBER_AI,
-        icon: Bot,
+        path:
+        ROUTES.MEMBER_AI,
+        icon:
+        Bot,
         roles: [
             "ROLE_MEMBER",
         ],
     },
 
     {
-        label: "Chỉ số cơ thể",
+        label:
+            "Chỉ số cơ thể",
         path:
         ROUTES.MEMBER_BODY_METRICS,
-        icon: HeartPulse,
+        icon:
+        HeartPulse,
         roles: [
             "ROLE_MEMBER",
         ],
@@ -107,19 +150,21 @@ const menuItems:
 
     {
         label: "Giáo án",
-        icon: Dumbbell,
+        icon:
+        Dumbbell,
         roles: [
             "ROLE_MEMBER",
         ],
         children: [
             {
-                label: "Tất cả giáo án",
+                label:
+                    "Tất cả giáo án",
                 path:
                 ROUTES.MEMBER_WORKOUTS,
             },
-
             {
-                label: "Tập hôm nay",
+                label:
+                    "Tập hôm nay",
                 path:
                 ROUTES.MEMBER_WORKOUT_TODAY,
             },
@@ -127,20 +172,23 @@ const menuItems:
     },
 
     {
-        label: "Dinh dưỡng",
-        icon: Utensils,
+        label:
+            "Dinh dưỡng",
+        icon:
+        Utensils,
         roles: [
             "ROLE_MEMBER",
         ],
         children: [
             {
-                label: "Kế hoạch",
+                label:
+                    "Kế hoạch",
                 path:
                 ROUTES.MEMBER_NUTRITION,
             },
-
             {
-                label: "Hôm nay",
+                label:
+                    "Hôm nay",
                 path:
                 ROUTES.MEMBER_NUTRITION_TODAY,
             },
@@ -148,7 +196,8 @@ const menuItems:
     },
 
     {
-        label: "Lịch tập",
+        label:
+            "Lịch tập",
         path:
         ROUTES.MEMBER_SCHEDULE,
         icon:
@@ -159,15 +208,22 @@ const menuItems:
     },
 
     {
-        label: "Huấn luyện viên",
-        path: ROUTES.MEMBER_BOOKING,
-        icon: User,
-        roles: ["ROLE_MEMBER"],
+        label:
+            "Huấn luyện viên",
+        path:
+        ROUTES.MEMBER_BOOKING,
+        icon:
+        User,
+        roles: [
+            "ROLE_MEMBER",
+        ],
     },
 
     {
-        label: "Gói tập",
-        icon: Package,
+        label:
+            "Gói tập",
+        icon:
+        Package,
         roles: [
             "ROLE_MEMBER",
         ],
@@ -178,7 +234,6 @@ const menuItems:
                 path:
                 ROUTES.MEMBER_PACKAGES,
             },
-
             {
                 label:
                     "Gói của tôi",
@@ -215,7 +270,6 @@ const menuItems:
                 path:
                 ROUTES.MEMBER_INVOICES,
             },
-
             {
                 label:
                     "Lịch sử thanh toán",
@@ -226,7 +280,8 @@ const menuItems:
     },
 
     {
-        label: "Hồ sơ",
+        label:
+            "Hồ sơ",
         path:
         ROUTES.MEMBER_PROFILE,
         icon:
@@ -241,7 +296,8 @@ const menuItems:
     // =====================================================
 
     {
-        label: "Tổng quan",
+        label:
+            "Tổng quan",
         path:
         ROUTES.ADMIN_DASHBOARD,
         icon:
@@ -252,7 +308,8 @@ const menuItems:
     },
 
     {
-        label: "Tài khoản",
+        label:
+            "Tài khoản",
         path:
         ROUTES.ADMIN_USERS,
         icon:
@@ -263,7 +320,8 @@ const menuItems:
     },
 
     {
-        label: "Hội viên",
+        label:
+            "Hội viên",
         path:
         ROUTES.ADMIN_MEMBERS,
         icon:
@@ -274,7 +332,8 @@ const menuItems:
     },
 
     {
-        label: "Gói tập",
+        label:
+            "Gói tập",
         path:
         ROUTES.ADMIN_PACKAGES,
         icon:
@@ -312,15 +371,18 @@ const menuItems:
                 path:
                 ROUTES.ADMIN_EQUIPMENT,
             },
-
             {
                 label:
                     "Lịch bảo trì",
                 path:
-                    `${ROUTES.ADMIN_EQUIPMENT}/maintenance-schedules`,
+                ROUTES.ADMIN_MAINTENANCE_SCHEDULES,
             },
         ],
     },
+
+    // -----------------------------------------------------
+    // ADMIN FINANCE
+    // -----------------------------------------------------
 
     {
         label:
@@ -329,7 +391,6 @@ const menuItems:
         Receipt,
         roles: [
             "ROLE_ADMIN",
-            "ROLE_STAFF",
         ],
         children: [
             {
@@ -338,7 +399,6 @@ const menuItems:
                 path:
                 ROUTES.ADMIN_INVOICES,
             },
-
             {
                 label:
                     "Đăng ký gói",
@@ -385,9 +445,12 @@ const menuItems:
     },
 
     {
-        label: "Hồ sơ",
-        path: ROUTES.ADMIN_PROFILE,
-        icon: UserRound,
+        label:
+            "Hồ sơ",
+        path:
+        ROUTES.ADMIN_PROFILE,
+        icon:
+        UserRound,
         roles: [
             "ROLE_ADMIN",
         ],
@@ -409,10 +472,41 @@ const menuItems:
         ],
     },
 
+    // -----------------------------------------------------
+    // STAFF FINANCE
+    // -----------------------------------------------------
+
     {
-        label: "Hồ sơ",
-        path: ROUTES.STAFF_PROFILE,
-        icon: UserRound,
+        label:
+            "Tài chính",
+        icon:
+        Receipt,
+        roles: [
+            "ROLE_STAFF",
+        ],
+        children: [
+            {
+                label:
+                    "Hóa đơn",
+                path:
+                ROUTES.STAFF_INVOICES,
+            },
+            {
+                label:
+                    "Đăng ký gói",
+                path:
+                ROUTES.STAFF_SUBSCRIPTION_SUPPORT,
+            },
+        ],
+    },
+
+    {
+        label:
+            "Hồ sơ",
+        path:
+        ROUTES.STAFF_PROFILE,
+        icon:
+        UserRound,
         roles: [
             "ROLE_STAFF",
         ],
@@ -459,9 +553,12 @@ const menuItems:
     },
 
     {
-        label: "Hồ sơ",
-        path: ROUTES.TRAINER_PROFILE,
-        icon: UserRound,
+        label:
+            "Hồ sơ",
+        path:
+        ROUTES.TRAINER_PROFILE,
+        icon:
+        UserRound,
         roles: [
             "ROLE_TRAINER",
         ],
@@ -487,23 +584,15 @@ const menuItems:
     },
 ];
 
-function isPathActive(
-    currentPath: string,
-    targetPath: string,
-): boolean {
-    if (currentPath === targetPath) {
-        return true;
-    }
-
-    return currentPath.startsWith(
-        `${targetPath}/`,
-    );
-}
+// =====================================================
+// COMPONENT
+// =====================================================
 
 export default function Sidebar() {
     const user =
         useAuthStore(
-            (state) => state.user,
+            (state) =>
+                state.user,
         );
 
     const sidebarOpen =
@@ -521,30 +610,48 @@ export default function Sidebar() {
     const location =
         useLocation();
 
-    const userRoles = useMemo(() => user?.roles ?? [], [user?.roles]);
+    const userRoles =
+        useMemo(
+            () =>
+                user?.roles ??
+                [],
+            [
+                user?.roles,
+            ],
+        );
 
     const [
         expandedMenus,
         setExpandedMenus,
-    ] = useState<
-        Record<string, boolean>
-    >({});
+    ] =
+        useState<
+            Record<
+                string,
+                boolean
+            >
+        >({});
 
     const [
         isMobile,
         setIsMobile,
-    ] = useState(() => {
-        if (
-            typeof window ===
-            "undefined"
-        ) {
-            return false;
-        }
+    ] =
+        useState(() => {
+            if (
+                typeof window ===
+                "undefined"
+            ) {
+                return false;
+            }
 
-        return (
-            window.innerWidth < 1024
-        );
-    });
+            return (
+                window.innerWidth <
+                1024
+            );
+        });
+
+    // =====================================================
+    // VISIBLE MENUS
+    // =====================================================
 
     const visibleMenuItems =
         useMemo(
@@ -558,15 +665,23 @@ export default function Sidebar() {
                                 ),
                         ),
                 ),
-            [userRoles],
+            [
+                userRoles,
+            ],
         );
 
+    // =====================================================
+    // MOBILE
+    // =====================================================
+
     useEffect(() => {
-        const handleResize = () => {
-            setIsMobile(
-                window.innerWidth < 1024,
-            );
-        };
+        const handleResize =
+            () => {
+                setIsMobile(
+                    window.innerWidth <
+                    1024,
+                );
+            };
 
         window.addEventListener(
             "resize",
@@ -581,36 +696,57 @@ export default function Sidebar() {
         };
     }, []);
 
-    /*
-     * Tự động mở menu cha nếu route con đang active.
-     */
+    // =====================================================
+    // AUTO EXPAND ACTIVE PARENT
+    // =====================================================
+
     useEffect(() => {
         const activeParents:
-            Record<string, boolean> = {};
+            Record<
+                string,
+                boolean
+            > = {};
 
         visibleMenuItems.forEach(
             (item) => {
-                const menuKey = getMenuItemKey(item);
                 if (
-                    item.children?.some(
+                    !item.children
+                ) {
+                    return;
+                }
+
+                const hasActiveChild =
+                    item.children.some(
                         (child) =>
                             isPathActive(
                                 location.pathname,
                                 child.path,
                             ),
-                    )
+                    );
+
+                if (
+                    hasActiveChild
                 ) {
-                    activeParents[menuKey] = true;
+                    activeParents[
+                        getMenuItemKey(
+                            item,
+                        )
+                        ] = true;
                 }
             },
         );
 
-        // eslint-disable-next-line
-        setExpandedMenus(activeParents);
+        setExpandedMenus(
+            activeParents,
+        );
     }, [
         location.pathname,
         visibleMenuItems,
     ]);
+
+    // =====================================================
+    // ACTIONS
+    // =====================================================
 
     const toggleMenu = (
         menuKey: string,
@@ -619,16 +755,27 @@ export default function Sidebar() {
             (previous) => ({
                 ...previous,
                 [menuKey]:
-                    !previous[menuKey],
+                    !previous[
+                        menuKey
+                        ],
             }),
         );
     };
 
-    const handleNavigate = () => {
-        if (isMobile) {
-            setSidebarOpen(false);
-        }
-    };
+    const handleNavigate =
+        () => {
+            if (
+                isMobile
+            ) {
+                setSidebarOpen(
+                    false,
+                );
+            }
+        };
+
+    // =====================================================
+    // RENDER
+    // =====================================================
 
     return (
         <aside
@@ -642,42 +789,104 @@ export default function Sidebar() {
                 isMobile &&
                 !sidebarOpen
             }
-            className={`${
+            className={`
+                fixed
+                inset-y-0
+                left-0
+                z-40
+                flex
+                h-screen
+                w-[280px]
+                flex-col
+                border-r
+                border-slate-900
+                bg-slate-950
+                shadow-2xl
+                transition-transform
+                duration-300
+                ease-out
+                lg:translate-x-0
+                lg:shadow-none
+
+                ${
                 sidebarOpen
                     ? "translate-x-0"
                     : "-translate-x-full"
-            } fixed inset-y-0 left-0 z-40 flex w-[280px] h-screen flex-col border-r border-slate-900 bg-slate-950 shadow-2xl transition-transform duration-500 ease-out lg:translate-x-0 lg:shadow-none`}
+            }
+            `}
         >
             {/* =================================================
-       * BRAND
-       * ================================================= */}
+                BRAND
+            ================================================= */}
 
-            <div className="flex h-28 shrink-0 items-center gap-4 px-8">
+            <div
+                className="
+                    flex
+                    h-28
+                    shrink-0
+                    items-center
+                    gap-4
+                    px-8
+                "
+            >
                 <img
                     src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png"
                     alt="FitLife Logo"
-                    className="w-24 object-contain"
+                    className="
+                        w-24
+                        object-contain
+                    "
                 />
 
                 <div>
-                    <p className="text-3xl font-black uppercase italic tracking-tighter text-white">
+                    <p
+                        className="
+                            text-3xl
+                            font-black
+                            uppercase
+                            italic
+                            tracking-tighter
+                            text-white
+                        "
+                    >
                         FitLife
                     </p>
 
-                    <p className="text-xs font-bold uppercase tracking-widest text-fit-primary">
+                    <p
+                        className="
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-widest
+                            text-fit-primary
+                        "
+                    >
                         No Pain No Gain
                     </p>
                 </div>
             </div>
 
             {/* =================================================
-       * NAVIGATION
-       * ================================================= */}
+                NAVIGATION
+            ================================================= */}
 
-            <nav className="fit-scrollbar flex-1 space-y-2 overflow-y-auto px-4 py-4">
+            <nav
+                className="
+                    fit-scrollbar
+                    flex-1
+                    space-y-2
+                    overflow-y-auto
+                    px-4
+                    py-4
+                "
+            >
                 {visibleMenuItems.map(
                     (item) => {
-                        const menuKey = getMenuItemKey(item);
+                        const menuKey =
+                            getMenuItemKey(
+                                item,
+                            );
+
                         const Icon =
                             item.icon;
 
@@ -690,7 +899,9 @@ export default function Sidebar() {
                         const isChildActive =
                             Boolean(
                                 item.children?.some(
-                                    (child) =>
+                                    (
+                                        child,
+                                    ) =>
                                         isPathActive(
                                             location.pathname,
                                             child.path,
@@ -700,72 +911,151 @@ export default function Sidebar() {
 
                         const isExpanded =
                             Boolean(
-                                expandedMenus[menuKey],
+                                expandedMenus[
+                                    menuKey
+                                    ],
                             );
 
-                        if (hasChildren) {
+                        // =====================================
+                        // PARENT MENU
+                        // =====================================
+
+                        if (
+                            hasChildren
+                        ) {
                             return (
                                 <div
-                                    key={menuKey}
-                                    className="space-y-1"
+                                    key={
+                                        menuKey
+                                    }
+                                    className="
+                                        space-y-1
+                                    "
                                 >
                                     <button
                                         type="button"
-                                        onClick={() => {
+                                        onClick={() =>
                                             toggleMenu(
                                                 menuKey,
-                                            );
-                                        }}
+                                            )
+                                        }
                                         aria-expanded={
                                             isExpanded
                                         }
-                                        className={`group relative flex w-full items-center justify-between overflow-hidden rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wide transition-all duration-300 ease-out ${
+                                        className={`
+                                            group
+                                            relative
+                                            flex
+                                            w-full
+                                            items-center
+                                            justify-between
+                                            overflow-hidden
+                                            rounded-xl
+                                            px-4
+                                            py-3.5
+                                            text-sm
+                                            font-bold
+                                            uppercase
+                                            tracking-wide
+                                            transition-all
+                                            duration-200
+
+                                            ${
                                             isChildActive ||
                                             isExpanded
                                                 ? "bg-fit-primary/10 text-fit-primary shadow-[inset_4px_0_0_0_#10b981]"
-                                                : "text-slate-400 hover:translate-x-1 hover:bg-slate-900 hover:text-white"
-                                        }`}
+                                                : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                                        }
+                                        `}
                                     >
-                                        <div className="relative z-10 flex items-center gap-4">
+                                        <div
+                                            className="
+                                                relative
+                                                z-10
+                                                flex
+                                                items-center
+                                                gap-4
+                                            "
+                                        >
                                             <Icon
-                                                className={`h-5 w-5 transition-transform duration-300 ${
+                                                className={`
+                                                    h-5
+                                                    w-5
+                                                    transition-transform
+
+                                                    ${
                                                     isChildActive ||
                                                     isExpanded
-                                                        ? "scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]"
+                                                        ? "scale-110"
                                                         : "group-hover:scale-110"
-                                                }`}
+                                                }
+                                                `}
                                                 aria-hidden="true"
                                             />
 
                                             <span>
-                        {item.label}
-                      </span>
+                                                {
+                                                    item.label
+                                                }
+                                            </span>
                                         </div>
 
-                                        <span className="relative z-10">
-                      {isExpanded ? (
-                          <ChevronUp
-                              className="h-4 w-4"
-                              aria-hidden="true"
-                          />
-                      ) : (
-                          <ChevronDown
-                              className="h-4 w-4"
-                              aria-hidden="true"
-                          />
-                      )}
-                    </span>
+                                        <span
+                                            className="
+                                                relative
+                                                z-10
+                                            "
+                                        >
+                                            {isExpanded ? (
+                                                <ChevronUp
+                                                    className="
+                                                        h-4
+                                                        w-4
+                                                    "
+                                                    aria-hidden="true"
+                                                />
+                                            ) : (
+                                                <ChevronDown
+                                                    className="
+                                                        h-4
+                                                        w-4
+                                                    "
+                                                    aria-hidden="true"
+                                                />
+                                            )}
+                                        </span>
 
                                         {(isChildActive ||
                                             isExpanded) && (
-                                            <div className="absolute inset-0 z-0 bg-gradient-to-r from-fit-primary/20 to-transparent opacity-50" />
+                                            <div
+                                                className="
+                                                    absolute
+                                                    inset-0
+                                                    z-0
+                                                    bg-gradient-to-r
+                                                    from-fit-primary/20
+                                                    to-transparent
+                                                    opacity-50
+                                                "
+                                            />
                                         )}
                                     </button>
 
+                                    {/* CHILDREN */}
+
                                     {isExpanded && (
-                                        <div className="space-y-1 py-1 pl-12 pr-4">
+                                        <div
+                                            className="
+                                                space-y-1
+                                                py-1
+                                                pl-12
+                                                pr-4
+                                            "
+                                        >
                                             {item.children?.map(
-                                                (child) => {
+                                                (
+                                                    child,
+                                                ) => {
                                                     const active =
                                                         isPathActive(
                                                             location.pathname,
@@ -783,11 +1073,23 @@ export default function Sidebar() {
                                                             onClick={
                                                                 handleNavigate
                                                             }
-                                                            className={`block rounded-lg px-3 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+                                                            className={`
+                                                                block
+                                                                rounded-lg
+                                                                px-3
+                                                                py-2.5
+                                                                text-xs
+                                                                font-bold
+                                                                uppercase
+                                                                tracking-wide
+                                                                transition-colors
+
+                                                                ${
                                                                 active
                                                                     ? "bg-fit-primary/10 text-fit-primary"
                                                                     : "text-slate-500 hover:bg-slate-900 hover:text-slate-300"
-                                                            }`}
+                                                            }
+                                                            `}
                                                         >
                                                             {
                                                                 child.label
@@ -802,7 +1104,13 @@ export default function Sidebar() {
                             );
                         }
 
-                        if (!item.path) {
+                        // =====================================
+                        // NORMAL MENU
+                        // =====================================
+
+                        if (
+                            !item.path
+                        ) {
                             return null;
                         }
 
@@ -815,31 +1123,76 @@ export default function Sidebar() {
                         return (
                             <NavLink
                                 key={`${item.label}-${item.path}`}
-                                to={item.path}
+                                to={
+                                    item.path
+                                }
                                 onClick={
                                     handleNavigate
                                 }
-                                className={`group relative flex items-center gap-4 overflow-hidden rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wide transition-all duration-300 ease-out ${
+                                className={`
+                                    group
+                                    relative
+                                    flex
+                                    items-center
+                                    gap-4
+                                    overflow-hidden
+                                    rounded-xl
+                                    px-4
+                                    py-3.5
+                                    text-sm
+                                    font-bold
+                                    uppercase
+                                    tracking-wide
+                                    transition-all
+                                    duration-200
+
+                                    ${
                                     active
                                         ? "bg-fit-primary/10 text-fit-primary shadow-[inset_4px_0_0_0_#10b981]"
-                                        : "text-slate-400 hover:translate-x-1 hover:bg-slate-900 hover:text-white"
-                                }`}
+                                        : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                                }
+                                `}
                             >
                                 <Icon
-                                    className={`relative z-10 h-5 w-5 transition-transform duration-300 ${
+                                    className={`
+                                        relative
+                                        z-10
+                                        h-5
+                                        w-5
+                                        transition-transform
+
+                                        ${
                                         active
-                                            ? "scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]"
+                                            ? "scale-110"
                                             : "group-hover:scale-110"
-                                    }`}
+                                    }
+                                    `}
                                     aria-hidden="true"
                                 />
 
-                                <span className="relative z-10">
-                  {item.label}
-                </span>
+                                <span
+                                    className="
+                                        relative
+                                        z-10
+                                    "
+                                >
+                                    {
+                                        item.label
+                                    }
+                                </span>
 
                                 {active && (
-                                    <div className="absolute inset-0 z-0 bg-gradient-to-r from-fit-primary/20 to-transparent opacity-50" />
+                                    <div
+                                        className="
+                                            absolute
+                                            inset-0
+                                            z-0
+                                            bg-gradient-to-r
+                                            from-fit-primary/20
+                                            to-transparent
+                                            opacity-50
+                                        "
+                                    />
                                 )}
                             </NavLink>
                         );
@@ -848,28 +1201,94 @@ export default function Sidebar() {
             </nav>
 
             {/* =================================================
-       * FOOTER
-       * ================================================= */}
+                USER FOOTER
+            ================================================= */}
 
-            <div className="relative mt-auto shrink-0 p-5">
-                <div className="pointer-events-none absolute -top-6 left-0 h-6 w-full bg-gradient-to-t from-slate-950 to-transparent" />
+            <div
+                className="
+                    relative
+                    mt-auto
+                    shrink-0
+                    p-5
+                "
+            >
+                <div
+                    className="
+                        pointer-events-none
+                        absolute
+                        -top-6
+                        left-0
+                        h-6
+                        w-full
+                        bg-gradient-to-t
+                        from-slate-950
+                        to-transparent
+                    "
+                />
 
-                <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-fit-primary/15 text-fit-primary">
+                <div
+                    className="
+                        rounded-xl
+                        border
+                        border-slate-800
+                        bg-slate-900/70
+                        px-4
+                        py-3
+                    "
+                >
+                    <div
+                        className="
+                            flex
+                            items-center
+                            gap-3
+                        "
+                    >
+                        <div
+                            className="
+                                flex
+                                h-9
+                                w-9
+                                shrink-0
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-fit-primary/15
+                                text-fit-primary
+                            "
+                        >
                             <FileText
-                                className="h-4 w-4"
+                                className="
+                                    h-4
+                                    w-4
+                                "
                                 aria-hidden="true"
                             />
                         </div>
 
-                        <div className="min-w-0">
-                            <p className="truncate text-sm font-bold text-white">
+                        <div
+                            className="
+                                min-w-0
+                            "
+                        >
+                            <p
+                                className="
+                                    truncate
+                                    text-sm
+                                    font-bold
+                                    text-white
+                                "
+                            >
                                 {user?.fullName ||
                                     "FitLife User"}
                             </p>
 
-                            <p className="truncate text-xs text-slate-500">
+                            <p
+                                className="
+                                    truncate
+                                    text-xs
+                                    text-slate-500
+                                "
+                            >
                                 {user?.email ||
                                     userRoles.join(
                                         ", ",
