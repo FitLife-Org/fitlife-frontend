@@ -144,8 +144,8 @@ function getSourceLabel(
         case "MEMBER_CREATED":
             return "Hội viên";
 
-        case "MANUAL":
-            return "Thủ công";
+        case "SYSTEM_TEMPLATE":
+            return "Mẫu hệ thống";
 
         default:
             return source;
@@ -299,7 +299,6 @@ export default function NutritionPage() {
     return (
         <div className="space-y-6 pb-10">
             <PageHeader
-                eyebrow="Nutrition"
                 title="Dinh dưỡng"
                 description="Theo dõi calories, macro và thực đơn phù hợp với mục tiêu hiện tại."
                 action={
@@ -330,6 +329,19 @@ export default function NutritionPage() {
                                 Hôm nay
                             </Button>
                         )}
+
+                        <Button
+                            variant="outline"
+                            onClick={() =>
+                                navigate(
+                                    ROUTES.MEMBER_NUTRITION_CREATE,
+                                )
+                            }
+                        >
+                            <Plus className="h-4 w-4" />
+
+                            Tạo thủ công
+                        </Button>
 
                         <Button
                             variant="primary"
@@ -382,19 +394,33 @@ export default function NutritionPage() {
                         Hãy sử dụng FitLife AI để tạo kế hoạch calories, macro và bữa ăn phù hợp.
                     </p>
 
-                    <Button
-                        variant="primary"
-                        onClick={() =>
-                            navigate(
-                                ROUTES.MEMBER_AI,
-                            )
-                        }
-                        className="mt-6"
-                    >
-                        <Sparkles className="h-4 w-4" />
+                    <div className="mt-6 flex flex-wrap justify-center gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() =>
+                                navigate(
+                                    ROUTES.MEMBER_NUTRITION_CREATE,
+                                )
+                            }
+                        >
+                            <Plus className="h-4 w-4" />
 
-                        Tạo kế hoạch bằng AI
-                    </Button>
+                            Tạo thủ công
+                        </Button>
+
+                        <Button
+                            variant="primary"
+                            onClick={() =>
+                                navigate(
+                                    ROUTES.MEMBER_AI,
+                                )
+                            }
+                        >
+                            <Sparkles className="h-4 w-4" />
+
+                            Tạo bằng AI
+                        </Button>
+                    </div>
                 </Card>
             ) : (
                 <>

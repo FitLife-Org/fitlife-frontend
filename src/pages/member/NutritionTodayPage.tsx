@@ -32,10 +32,6 @@ import {
 } from "../../config/routes";
 
 import {
-    usePageAnimation,
-} from "../../hooks/usePageAnimation";
-
-import {
     nutritionService,
 } from "../../services/nutritionService";
 
@@ -117,8 +113,8 @@ function getSourceLabel(
         case "MEMBER_CREATED":
             return "Hội viên";
 
-        case "MANUAL":
-            return "Thủ công";
+        case "SYSTEM_TEMPLATE":
+            return "Mẫu hệ thống";
 
         default:
             return source ||
@@ -127,9 +123,6 @@ function getSourceLabel(
 }
 
 export default function NutritionTodayPage() {
-    const containerRef =
-        usePageAnimation();
-
     const navigate =
         useNavigate();
 
@@ -310,12 +303,7 @@ export default function NutritionTodayPage() {
         !activePlan
     ) {
         return (
-            <div
-                ref={
-                    containerRef
-                }
-                className="pb-10"
-            >
+            <div className="pb-10">
                 <Card className="mx-auto max-w-2xl p-10 text-center">
                     <AlertTriangle className="mx-auto h-14 w-14 text-red-400" />
 
@@ -358,14 +346,8 @@ export default function NutritionTodayPage() {
     }
 
     return (
-        <div
-            ref={
-                containerRef
-            }
-            className="space-y-6 pb-10"
-        >
+        <div className="space-y-6 pb-10">
             <PageHeader
-                eyebrow="Today's Nutrition"
                 title="Dinh dưỡng hôm nay"
                 description={
                     formatToday()
