@@ -67,6 +67,7 @@ import ReportPage from "../pages/admin/ReportPage";
 
 import InvoiceManagementPage from "../pages/admin/InvoiceManagementPage";
 import AdminInvoiceDetailPage from "../pages/admin/AdminInvoiceDetailPage";
+
 import AdminSubscriptionPage from "../pages/admin/subscription/AdminSubscriptionPage";
 import AdminAiSuggestionPage from "../pages/admin/ai/AdminAiSuggestionPage";
 
@@ -120,7 +121,6 @@ import MemberSchedulePage from "../pages/member/MemberSchedulePage";
 // =====================================================
 
 import CheckinPage from "../pages/staff/CheckinPage";
-import StaffCheckinHistoryPage from "../pages/staff/StaffCheckinHistoryPage";
 
 // =====================================================
 // TRAINER
@@ -171,9 +171,9 @@ export default function AppRouter() {
             <ScrollToTop />
 
             <Routes>
-                {/* =====================================================
+                {/* =================================================
             PUBLIC
-        ===================================================== */}
+        ================================================= */}
 
                 <Route
                     path={ROUTES.HOME}
@@ -215,16 +215,16 @@ export default function AppRouter() {
                     element={<ForbiddenPage />}
                 />
 
-                {/* =====================================================
+                {/* =================================================
             PROTECTED
-        ===================================================== */}
+        ================================================= */}
 
                 <Route element={<ProtectedRoute />}>
                     <Route element={<DashboardLayoutRoute />}>
 
-                        {/* =================================================
+                        {/* =============================================
                 COMMON
-            ================================================= */}
+            ============================================= */}
 
                         <Route
                             path={ROUTES.DASHBOARD}
@@ -236,9 +236,9 @@ export default function AppRouter() {
                             element={<SettingsPage />}
                         />
 
-                        {/* =================================================
+                        {/* =============================================
                 MEMBER
-            ================================================= */}
+            ============================================= */}
 
                         <Route
                             path={ROUTES.MEMBER_HOME}
@@ -267,11 +267,13 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Member QR redirect */}
+                        {/* Member QR:
+                hiện QR nằm trong profile/member flow,
+                chưa có page QR độc lập.
+            */}
+
                         <Route
-                            path={
-                                ROUTES.MEMBER_QR
-                            }
+                            path={ROUTES.MEMBER_QR}
                             element={
                                 <Navigate
                                     to={ROUTES.MEMBER_PROFILE}
@@ -280,7 +282,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Package */}
+                        {/* Package / Subscription */}
 
                         <Route
                             path={ROUTES.MEMBER_PACKAGES}
@@ -349,7 +351,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Checkin */}
+                        {/* Check-in */}
 
                         <Route
                             path={ROUTES.MEMBER_CHECKINS}
@@ -465,7 +467,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Member Booking */}
+                        {/* Booking */}
 
                         <Route
                             path={ROUTES.MEMBER_BOOKING}
@@ -476,7 +478,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Member Schedule */}
+                        {/* Schedule */}
 
                         <Route
                             path={ROUTES.MEMBER_SCHEDULE}
@@ -487,9 +489,9 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* =================================================
+                        {/* =============================================
                 ADMIN
-            ================================================= */}
+            ============================================= */}
 
                         <Route
                             path={ROUTES.ADMIN_DASHBOARD}
@@ -532,16 +534,13 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.ADMIN_SUBSCRIPTIONS}
                             element={
-                                <RoleGuard
-                                    roles={[
-                                        "ROLE_ADMIN",
-                                        "ROLE_STAFF",
-                                    ]}
-                                >
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
                                     <AdminSubscriptionPage />
                                 </RoleGuard>
                             }
                         />
+
+                        {/* Trainer */}
 
                         <Route
                             path={ROUTES.ADMIN_TRAINERS}
@@ -552,7 +551,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Admin Invoice */}
+                        {/* Invoice */}
 
                         <Route
                             path={ROUTES.ADMIN_INVOICES}
@@ -598,7 +597,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Reports */}
+                        {/* Report */}
 
                         <Route
                             path={ROUTES.ADMIN_REPORTS}
@@ -609,7 +608,7 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Admin AI Suggestion */}
+                        {/* AI Monitoring */}
 
                         <Route
                             path={ROUTES.ADMIN_AI_SUGGESTIONS}
@@ -631,9 +630,9 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* =================================================
+                        {/* =============================================
                 EQUIPMENT
-            ================================================= */}
+            ============================================= */}
 
                         <Route
                             path={ROUTES.ADMIN_EQUIPMENT}
@@ -733,29 +732,21 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* =================================================
-                STAFF
-            ================================================= */}
+                        {/* =============================================
+                CHECK-IN ADMIN / STAFF
+            ============================================= */}
 
                         <Route
-                            path={
-                                ROUTES.ADMIN_CHECKIN
-                            }
+                            path={ROUTES.ADMIN_CHECKIN}
                             element={
-                                <RoleGuard
-                                    roles={[
-                                        "ROLE_ADMIN",
-                                    ]}
-                                >
+                                <RoleGuard roles={["ROLE_ADMIN"]}>
                                     <CheckinPage />
                                 </RoleGuard>
                             }
                         />
 
                         <Route
-                            path={
-                                ROUTES.STAFF_CHECKIN
-                            }
+                            path={ROUTES.STAFF_CHECKIN}
                             element={
                                 <RoleGuard
                                     roles={[
@@ -771,11 +762,16 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.STAFF_CHECKIN_HISTORY}
                             element={
-                                <Navigate to={ROUTES.STAFF_CHECKIN} replace />
+                                <Navigate
+                                    to={ROUTES.STAFF_CHECKIN}
+                                    replace
+                                />
                             }
                         />
 
-                        {/* Staff Profile */}
+                        {/* =============================================
+                STAFF
+            ============================================= */}
 
                         <Route
                             path={ROUTES.STAFF_PROFILE}
@@ -790,8 +786,6 @@ export default function AppRouter() {
                                 </RoleGuard>
                             }
                         />
-
-                        {/* Staff Invoices */}
 
                         <Route
                             path={ROUTES.STAFF_INVOICES}
@@ -821,8 +815,6 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Staff Subscriptions */}
-
                         <Route
                             path={ROUTES.STAFF_SUBSCRIPTION_SUPPORT}
                             element={
@@ -837,16 +829,21 @@ export default function AppRouter() {
                             }
                         />
 
+                        {/* Legacy Staff Subscription URL */}
+
                         <Route
                             path="/staff/subscription"
                             element={
-                                <Navigate to={ROUTES.STAFF_SUBSCRIPTION_SUPPORT} replace />
+                                <Navigate
+                                    to={ROUTES.STAFF_SUBSCRIPTION_SUPPORT}
+                                    replace
+                                />
                             }
                         />
 
-                        {/* =================================================
+                        {/* =============================================
                 TRAINER
-            ================================================= */}
+            ============================================= */}
 
                         <Route
                             path={ROUTES.TRAINER_SCHEDULE}
@@ -950,7 +947,9 @@ export default function AppRouter() {
                             }
                         />
 
-                        {/* Protected 404 */}
+                        {/* =============================================
+                PROTECTED 404
+            ============================================= */}
 
                         <Route
                             path="*"
@@ -959,7 +958,9 @@ export default function AppRouter() {
                     </Route>
                 </Route>
 
-                {/* Public 404 */}
+                {/* =================================================
+            PUBLIC 404
+        ================================================= */}
 
                 <Route
                     path="*"

@@ -1,226 +1,929 @@
-import { usePageAnimation } from "../../hooks/usePageAnimation";
-import { Link } from "react-router-dom";
-import { 
-  Activity, Calendar as CalendarIcon, CreditCard, Dumbbell, 
-  Flame, Heart, History, TrendingUp, ChevronRight, QrCode 
+import {
+  Activity,
+  Apple,
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  CreditCard,
+  Dumbbell,
+  HeartPulse,
+  QrCode,
+  Sparkles,
+  Target,
+  Utensils,
+  WalletCards,
 } from "lucide-react";
-import PageHeader from "../../components/common/PageHeader";
-import Card from "../../components/common/Card";
+
+import {
+  Link,
+} from "react-router-dom";
+
 import Badge from "../../components/common/Badge";
-import { useMemberHome } from "../../hooks/useMemberHome";
+import Card from "../../components/common/Card";
+import PageHeader from "../../components/common/PageHeader";
+
+import {
+  ROUTES,
+} from "../../config/routes";
+
+import {
+  useMemberHome,
+} from "../../hooks/useMemberHome";
+
+import {
+  usePageAnimation,
+} from "../../hooks/usePageAnimation";
 
 export default function MemberHomePage() {
-  const containerRef = usePageAnimation();
-  const { user, activeSub, latestMetric, loading, calculateDaysLeft } = useMemberHome();
+  const containerRef =
+      usePageAnimation();
 
-  const bmiVal = latestMetric?.bmi 
-    ? latestMetric.bmi.toFixed(1)
-    : latestMetric?.heightCm && latestMetric?.weightKg
-    ? (latestMetric.weightKg / Math.pow(latestMetric.heightCm / 100, 2)).toFixed(1)
-    : "22.4";
+  const {
+    user,
+    activeSub,
+    latestMetric,
+    loading,
+    calculateDaysLeft,
+  } = useMemberHome();
 
-  const statCards = [
-    { title: "Ngày tập tháng này", value: "12", unit: "ngày", icon: <CalendarIcon className="h-6 w-6" />, color: "from-blue-500 to-cyan-400" },
-    { title: "Calories đốt cháy", value: "3,240", unit: "kcal", icon: <Flame className="h-6 w-6" />, color: "from-orange-500 to-red-400" },
-    { title: "Thời gian tập", value: "14.5", unit: "giờ", icon: <Activity className="h-6 w-6" />, color: "from-emerald-500 to-teal-400" },
-    { title: "Chỉ số BMI", value: bmiVal, unit: latestMetric ? `${latestMetric.weightKg}kg / ${latestMetric.heightCm}cm` : "Bình thường", icon: <Heart className="h-6 w-6" />, color: "from-purple-500 to-indigo-400" },
-  ];
+  // =====================================================
+  // LOADING
+  // =====================================================
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-fit-primary border-t-transparent"></div>
-      </div>
+        <div className="flex min-h-[420px] items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-fit-primary border-t-transparent" />
+
+            <p className="mt-4 text-sm font-medium text-slate-500">
+              Đang tải Dashboard...
+            </p>
+          </div>
+        </div>
     );
   }
 
-  return (
-    <div className="space-y-8 pb-10" ref={containerRef}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <PageHeader 
-          title={`Chào mừng trở lại, ${user?.fullName?.split(" ").pop() || "Hội viên"}! 👋`}
-          description="Cùng xem lại tiến trình tập luyện của bạn hôm nay nhé."
-        />
-        <Link
-          to="/member/checkins"
-          className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-600/25 hover:from-emerald-500 hover:to-teal-500 hover:shadow-xl hover:shadow-emerald-600/35 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shrink-0 self-start sm:self-auto"
-        >
-          <QrCode className="w-5 h-5" />
-          <span>Check in phòng tập</span>
-        </Link>
-      </div>
+  // =====================================================
+  // DERIVED DATA
+  // =====================================================
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
-        {statCards.map((stat, idx) => (
-          <div
-            key={idx}
-            className="gsap-animate"
+  const displayName =
+      user?.fullName
+          ?.trim()
+          .split(/\s+/)
+          .pop() ||
+      "Hội viên";
+
+  const bmiValue =
+      latestMetric?.bmi ??
+      (
+          latestMetric?.heightCm &&
+          latestMetric?.weightKg
+              ? latestMetric.weightKg /
+              Math.pow(
+                  latestMetric.heightCm /
+                  100,
+                  2,
+              )
+              : null
+      );
+
+  const daysLeft =
+      activeSub?.endDate
+          ? calculateDaysLeft(
+              activeSub.endDate,
+          )
+          : null;
+
+  const subscriptionExpiredSoon =
+      daysLeft !== null &&
+      daysLeft >= 0 &&
+      daysLeft <= 7;
+
+  // =====================================================
+  // QUICK ACTIONS
+  // =====================================================
+
+  const quickActions = [
+    {
+      title:
+          "Giáo án tập luyện",
+      description:
+          "Xem các kế hoạch và buổi tập.",
+      icon: Dumbbell,
+      route:
+      ROUTES.MEMBER_WORKOUTS,
+      iconClass:
+          "bg-violet-50 text-violet-600",
+    },
+    {
+      title:
+          "Dinh dưỡng",
+      description:
+          "Theo dõi kế hoạch ăn uống.",
+      icon: Apple,
+      route:
+      ROUTES.MEMBER_NUTRITION,
+      iconClass:
+          "bg-emerald-50 text-emerald-600",
+    },
+    {
+      title:
+          "Chỉ số cơ thể",
+      description:
+          "Cập nhật cân nặng và BMI.",
+      icon: HeartPulse,
+      route:
+      ROUTES.MEMBER_BODY_METRICS,
+      iconClass:
+          "bg-blue-50 text-blue-600",
+    },
+    {
+      title:
+          "FitLife AI",
+      description:
+          "Phân tích và nhận gợi ý AI.",
+      icon: Sparkles,
+      route:
+      ROUTES.MEMBER_AI,
+      iconClass:
+          "bg-rose-50 text-rose-600",
+    },
+  ];
+
+  return (
+      <div
+          ref={containerRef}
+          className="space-y-6 pb-6"
+      >
+        {/* =================================================
+          HERO
+      ================================================= */}
+
+        <section
+            className="
+          gsap-animate
+          flex
+          flex-col
+          gap-5
+          lg:flex-row
+          lg:items-center
+          lg:justify-between
+        "
+        >
+          <PageHeader
+              title={`Chào mừng trở lại, ${displayName}! 👋`}
+              description="Theo dõi gói tập, chỉ số cơ thể và kế hoạch luyện tập của bạn hôm nay."
+          />
+
+          <Link
+              to={
+                ROUTES.MEMBER_CHECKINS
+              }
+              className="
+            inline-flex
+            min-h-12
+            shrink-0
+            items-center
+            justify-center
+            gap-2
+            self-start
+            rounded-xl
+            bg-emerald-600
+            px-5
+            text-sm
+            font-bold
+            text-white
+            shadow-lg
+            shadow-emerald-600/15
+            transition
+            hover:-translate-y-0.5
+            hover:bg-emerald-700
+            lg:self-auto
+          "
           >
-            <Card className="p-5 h-full overflow-hidden relative group cursor-pointer border-none shadow-md hover:shadow-lg transition-all">
-              <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${stat.color} opacity-10 transition-transform group-hover:scale-150`}></div>
-              <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-sm`}>
-                {stat.icon}
-              </div>
-              <p className="text-sm font-medium text-fit-muted">{stat.title}</p>
-              <div className="mt-1 flex items-baseline gap-1">
-                <h3 className="text-2xl font-black text-fit-text">{stat.value}</h3>
-                <span className="text-xs font-medium text-fit-muted">{stat.unit}</span>
+            <QrCode className="h-5 w-5" />
+
+            Check-in phòng tập
+          </Link>
+        </section>
+
+        {/* =================================================
+          OVERVIEW
+      ================================================= */}
+
+        <section
+            className="
+          grid
+          gap-4
+          sm:grid-cols-2
+          xl:grid-cols-4
+        "
+        >
+          {/* Subscription */}
+
+          <DashboardMetric
+              icon={
+                <CreditCard className="h-5 w-5" />
+              }
+              iconClass="bg-emerald-50 text-emerald-600"
+              label="Gói tập hiện tại"
+              value={
+                activeSub
+                    ? activeSub.gymPackageName ||
+                    "FitLife"
+                    : "Chưa đăng ký"
+              }
+              description={
+                activeSub
+                    ? "Đang sử dụng"
+                    : "Chưa có gói hoạt động"
+              }
+          />
+
+          {/* Days Left */}
+
+          <DashboardMetric
+              icon={
+                <CalendarDays className="h-5 w-5" />
+              }
+              iconClass={
+                subscriptionExpiredSoon
+                    ? "bg-amber-50 text-amber-600"
+                    : "bg-blue-50 text-blue-600"
+              }
+              label="Thời hạn gói"
+              value={
+                daysLeft !== null
+                    ? `${Math.max(
+                        0,
+                        daysLeft,
+                    )} ngày`
+                    : "—"
+              }
+              description={
+                subscriptionExpiredSoon
+                    ? "Gói sắp hết hạn"
+                    : activeSub
+                        ? "Thời gian còn lại"
+                        : "Chưa có gói"
+              }
+          />
+
+          {/* Weight */}
+
+          <DashboardMetric
+              icon={
+                <Activity className="h-5 w-5" />
+              }
+              iconClass="bg-sky-50 text-sky-600"
+              label="Cân nặng gần nhất"
+              value={
+                latestMetric?.weightKg
+                    ? `${latestMetric.weightKg} kg`
+                    : "—"
+              }
+              description={
+                latestMetric
+                    ? "Body Metric mới nhất"
+                    : "Chưa có dữ liệu"
+              }
+          />
+
+          {/* BMI */}
+
+          <DashboardMetric
+              icon={
+                <HeartPulse className="h-5 w-5" />
+              }
+              iconClass="bg-violet-50 text-violet-600"
+              label="BMI hiện tại"
+              value={
+                bmiValue !== null
+                    ? Number(
+                        bmiValue,
+                    ).toFixed(1)
+                    : "—"
+              }
+              description={
+                getBmiLabel(
+                    bmiValue,
+                )
+              }
+          />
+        </section>
+
+        {/* =================================================
+          ACTIVE SUBSCRIPTION + DAILY ACTIONS
+      ================================================= */}
+
+        <section
+            className="
+          grid
+          gap-6
+          xl:grid-cols-12
+        "
+        >
+          {/* Subscription */}
+
+          <div className="gsap-animate min-w-0 xl:col-span-7">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-lg font-black text-slate-900">
+                <CreditCard className="h-5 w-5 text-emerald-600" />
+
+                Gói tập hiện tại
+              </h2>
+
+              <Link
+                  to={
+                    ROUTES.MEMBER_SUBSCRIPTION
+                  }
+                  className="
+                inline-flex
+                items-center
+                gap-1
+                text-xs
+                font-bold
+                text-emerald-600
+                hover:text-emerald-700
+              "
+              >
+                Quản lý
+
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {activeSub ? (
+                <Card
+                    className="
+                relative
+                h-full
+                overflow-hidden
+                border-0
+                bg-slate-950
+                p-0
+                text-white
+                shadow-xl
+              "
+                >
+                  <div
+                      className="
+                  absolute
+                  -right-20
+                  -top-20
+                  h-64
+                  w-64
+                  rounded-full
+                  bg-emerald-500/15
+                  blur-3xl
+                "
+                  />
+
+                  <div
+                      className="
+                  relative
+                  z-10
+                  grid
+                  gap-6
+                  p-6
+                  sm:p-7
+                  md:grid-cols-[1fr_auto]
+                  md:items-center
+                "
+                  >
+                    <div className="min-w-0">
+                      <Badge variant="success">
+                        Đang hoạt động
+                      </Badge>
+
+                      <h3 className="mt-4 truncate text-2xl font-black">
+                        {activeSub.gymPackageName ||
+                            "Gói tập FitLife"}
+                      </h3>
+
+                      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400">
+                        {activeSub.startDate && (
+                            <span>
+                        Bắt đầu:{" "}
+                              {
+                                activeSub.startDate
+                              }
+                      </span>
+                        )}
+
+                        {activeSub.endDate && (
+                            <span>
+                        Hết hạn:{" "}
+                              {
+                                activeSub.endDate
+                              }
+                      </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div
+                        className="
+                    min-w-[140px]
+                    rounded-2xl
+                    border
+                    border-white/10
+                    bg-white/5
+                    p-5
+                    text-center
+                    backdrop-blur
+                  "
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Còn lại
+                      </p>
+
+                      <p
+                          className={`
+                      mt-1
+                      text-4xl
+                      font-black
+                      ${
+                              subscriptionExpiredSoon
+                                  ? "text-amber-400"
+                                  : "text-emerald-400"
+                          }
+                    `}
+                      >
+                        {Math.max(
+                            0,
+                            daysLeft ?? 0,
+                        )}
+                      </p>
+
+                      <p className="text-xs text-slate-400">
+                        ngày
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+            ) : (
+                <Card className="flex min-h-[215px] flex-col items-center justify-center border-2 border-dashed border-slate-200 p-8 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                    <CreditCard className="h-6 w-6" />
+                  </div>
+
+                  <h3 className="mt-4 font-black text-slate-900">
+                    Chưa có gói tập
+                  </h3>
+
+                  <p className="mt-1 max-w-sm text-sm text-slate-500">
+                    Đăng ký một gói tập để sử dụng đầy đủ các dịch vụ của FitLife.
+                  </p>
+
+                  <Link
+                      to={
+                        ROUTES.MEMBER_PACKAGES
+                      }
+                      className="
+                  mt-4
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-xl
+                  bg-emerald-600
+                  px-4
+                  py-2.5
+                  text-sm
+                  font-bold
+                  text-white
+                  hover:bg-emerald-700
+                "
+                  >
+                    Xem gói tập
+
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Card>
+            )}
+          </div>
+
+          {/* Today */}
+
+          <div className="gsap-animate min-w-0 xl:col-span-5">
+            <div className="mb-3">
+              <h2 className="flex items-center gap-2 text-lg font-black text-slate-900">
+                <Target className="h-5 w-5 text-emerald-600" />
+
+                Hôm nay
+              </h2>
+            </div>
+
+            <Card className="h-full p-5 sm:p-6">
+              <div className="space-y-3">
+                <DailyAction
+                    icon={
+                      <Dumbbell className="h-5 w-5" />
+                    }
+                    iconClass="bg-violet-50 text-violet-600"
+                    title="Buổi tập hôm nay"
+                    description="Mở kế hoạch tập luyện hiện tại."
+                    route={
+                      ROUTES.MEMBER_WORKOUTS
+                    }
+                />
+
+                <DailyAction
+                    icon={
+                      <Utensils className="h-5 w-5" />
+                    }
+                    iconClass="bg-emerald-50 text-emerald-600"
+                    title="Dinh dưỡng hôm nay"
+                    description="Xem kế hoạch ăn uống đang áp dụng."
+                    route={
+                      ROUTES.MEMBER_NUTRITION_TODAY
+                    }
+                />
+
+                <DailyAction
+                    icon={
+                      <QrCode className="h-5 w-5" />
+                    }
+                    iconClass="bg-blue-50 text-blue-600"
+                    title="Check-in"
+                    description="Xem lịch sử và check-in phòng tập."
+                    route={
+                      ROUTES.MEMBER_CHECKINS
+                    }
+                />
               </div>
             </Card>
           </div>
-        ))}
-      </div>
+        </section>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
-          
-          <section>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-fit-text flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-fit-primary" />
-                Gói tập hiện tại
-              </h2>
-              <Link to="/member/subscription" className="text-sm font-medium text-fit-primary hover:underline flex items-center">
-                Quản lý gói <ChevronRight className="w-4 h-4" />
+        {/* =================================================
+          AI BANNER
+      ================================================= */}
+
+        <section className="gsap-animate">
+          <Card
+              className="
+            overflow-hidden
+            border
+            border-emerald-100
+            bg-gradient-to-r
+            from-emerald-50
+            via-white
+            to-teal-50
+            p-0
+          "
+          >
+            <div
+                className="
+              flex
+              flex-col
+              gap-6
+              p-6
+              sm:p-7
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
+            "
+            >
+              <div className="flex min-w-0 gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-600">
+                    FitLife AI
+                  </p>
+
+                  <h2 className="mt-1 text-xl font-black text-slate-950">
+                    Trợ lý luyện tập và dinh dưỡng
+                  </h2>
+
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+                    Sử dụng hồ sơ và chỉ số cơ thể để nhận phân tích, giáo án và gợi ý dinh dưỡng phù hợp.
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                  to={
+                    ROUTES.MEMBER_AI
+                  }
+                  className="
+                inline-flex
+                min-h-11
+                shrink-0
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-slate-950
+                px-5
+                text-sm
+                font-bold
+                text-white
+                hover:bg-slate-800
+              "
+              >
+                Mở FitLife AI
+
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-            
-            {activeSub ? (
-              <Card className="p-0 overflow-hidden border-none shadow-xl bg-slate-900 text-white">
-                <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-                  <div>
-                    <Badge variant="success">Đang hoạt động</Badge>
-                    <h3 className="mt-3 text-2xl font-black">{activeSub.gymPackageName || "Gói tập FitLife"}</h3>
-                    <p className="mt-1 text-slate-400 text-sm">Hiệu lực đến: {activeSub.endDate}</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 text-center min-w-[120px]">
-                    <p className="text-xs text-slate-300 font-medium">Còn lại</p>
-                    <p className="text-3xl font-black text-emerald-400">{calculateDaysLeft(activeSub.endDate || "")}</p>
-                    <p className="text-xs text-slate-300">ngày</p>
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              <Card className="p-8 text-center border-dashed border-2">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 mb-3">
-                  <CreditCard className="h-6 w-6 text-slate-400" />
-                </div>
-                <h3 className="font-bold text-slate-900">Chưa có gói tập</h3>
-                <p className="text-sm text-slate-500 mt-1 mb-4">Bạn cần đăng ký gói tập để sử dụng dịch vụ.</p>
-                <Link to="/member/packages" className="text-fit-primary font-bold hover:underline">
-                  Xem bảng giá ngay
-                </Link>
-              </Card>
+          </Card>
+        </section>
+
+        {/* =================================================
+          QUICK ACTIONS
+      ================================================= */}
+
+        <section className="gsap-animate">
+          <div className="mb-3">
+            <h2 className="text-lg font-black text-slate-900">
+              Truy cập nhanh
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Các chức năng chính dành cho hội viên.
+            </p>
+          </div>
+
+          <div
+              className="
+            grid
+            gap-4
+            sm:grid-cols-2
+            xl:grid-cols-4
+          "
+          >
+            {quickActions.map(
+                (item) => {
+                  const Icon =
+                      item.icon;
+
+                  return (
+                      <Link
+                          key={
+                            item.title
+                          }
+                          to={
+                            item.route
+                          }
+                          className="
+                    group
+                    min-w-0
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    bg-white
+                    p-5
+                    shadow-sm
+                    transition
+                    hover:-translate-y-0.5
+                    hover:border-emerald-200
+                    hover:shadow-md
+                  "
+                      >
+                        <div
+                            className={`
+                      flex
+                      h-11
+                      w-11
+                      items-center
+                      justify-center
+                      rounded-xl
+                      ${item.iconClass}
+                    `}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </div>
+
+                        <h3 className="mt-4 font-black text-slate-900">
+                          {
+                            item.title
+                          }
+                        </h3>
+
+                        <p className="mt-1 text-sm leading-5 text-slate-500">
+                          {
+                            item.description
+                          }
+                        </p>
+
+                        <div className="mt-4 flex items-center gap-1 text-xs font-bold text-emerald-600">
+                          Truy cập
+
+                          <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                        </div>
+                      </Link>
+                  );
+                },
             )}
-          </section>
+          </div>
+        </section>
 
-          <section>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-fit-text flex items-center gap-2">
-                <Dumbbell className="w-5 h-5 text-fit-primary" />
-                Bài tập hôm nay
-              </h2>
-            </div>
-            <Card className="p-6 border-l-4 border-l-fit-primary">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">Lịch tập Ngực & Tay sau (Chest & Triceps)</h3>
-                  <p className="text-sm text-fit-muted mt-1">Cấp độ: Trung bình • Thời gian: 60 phút</p>
-                </div>
-                <Badge variant="warning">Chưa hoàn thành</Badge>
+        {/* =================================================
+          ACCOUNT / PAYMENT
+      ================================================= */}
+
+        <section
+            className="
+          gsap-animate
+          grid
+          gap-4
+          md:grid-cols-2
+        "
+        >
+          <Link
+              to={
+                ROUTES.MEMBER_PAYMENT
+              }
+          >
+            <Card className="group flex h-full items-center gap-4 p-5 transition hover:border-emerald-200 hover:shadow-md">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <WalletCards className="h-5 w-5" />
               </div>
-              <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { name: "Bench Press", sets: "4 sets x 10 reps" },
-                  { name: "Incline DB Press", sets: "3 sets x 12 reps" },
-                  { name: "Cable Crossover", sets: "3 sets x 15 reps" },
-                  { name: "Tricep Pushdown", sets: "4 sets x 12 reps" }
-                ].map((exercise, i) => (
-                  <div key={i} className="bg-fit-bg p-3 rounded-lg border border-fit-border">
-                    <p className="font-bold text-sm text-slate-800">{exercise.name}</p>
-                    <p className="text-xs text-fit-muted mt-1">{exercise.sets}</p>
-                  </div>
-                ))}
+
+              <div className="min-w-0 flex-1">
+                <p className="font-black text-slate-900">
+                  Thanh toán
+                </p>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Theo dõi lịch sử và trạng thái thanh toán.
+                </p>
               </div>
-              <div className="mt-6">
-                <button className="w-full py-3 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">
-                  Đánh dấu hoàn thành
-                </button>
-              </div>
+
+              <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 group-hover:text-emerald-600" />
             </Card>
-          </section>
+          </Link>
 
-        </div>
-
-        <div className="space-y-8">
-          <section>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-fit-text flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-fit-primary" />
-                Mục tiêu tuần
-              </h2>
-            </div>
-            <Card className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium text-slate-700">Số buổi tập</span>
-                    <span className="font-bold text-fit-primary">3/5 buổi</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-fit-primary rounded-full w-[60%]"></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium text-slate-700">Calories tiêu hao</span>
-                    <span className="font-bold text-orange-500">1,200/2,000 kcal</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-orange-500 rounded-full w-[60%]"></div>
-                  </div>
-                </div>
+          <Link
+              to={
+                ROUTES.MEMBER_BODY_METRICS
+              }
+          >
+            <Card className="group flex h-full items-center gap-4 p-5 transition hover:border-emerald-200 hover:shadow-md">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                <CheckCircle2 className="h-5 w-5" />
               </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="font-black text-slate-900">
+                  Cập nhật tiến độ
+                </p>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Ghi nhận chỉ số cơ thể mới để theo dõi thay đổi.
+                </p>
+              </div>
+
+              <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 group-hover:text-emerald-600" />
             </Card>
-          </section>
-
-          <section>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-fit-text flex items-center gap-2">
-                <History className="w-5 h-5 text-fit-primary" />
-                Hoạt động gần đây
-              </h2>
-            </div>
-            <Card className="p-0 overflow-hidden">
-              <div className="divide-y divide-slate-100">
-                {[
-                  { title: "Check-in thành công", desc: "Cơ sở Q1", time: "Hôm nay, 17:30", type: "checkin" },
-                  { title: "Hoàn thành bài tập", desc: "Cardio & Bụng", time: "Hôm qua, 18:45", type: "workout" },
-                  { title: "Gia hạn gói tập", desc: "Premium 3 tháng", time: "2 ngày trước", type: "payment" }
-                ].map((log, i) => (
-                  <div key={i} className="p-4 flex gap-4 hover:bg-slate-50 transition-colors">
-                    <div className="mt-1">
-                      {log.type === 'checkin' && <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5" />}
-                      {log.type === 'workout' && <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5" />}
-                      {log.type === 'payment' && <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5" />}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{log.title}</p>
-                      <p className="text-xs text-slate-500">{log.desc}</p>
-                    </div>
-                    <div className="ml-auto text-xs text-slate-400 whitespace-nowrap">{log.time}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
-                <Link to="/member/checkins" className="text-sm font-medium text-fit-primary hover:underline">
-                  Xem tất cả lịch sử
-                </Link>
-              </div>
-            </Card>
-          </section>
-        </div>
+          </Link>
+        </section>
       </div>
-    </div>
   );
+}
+
+// =====================================================
+// COMPONENTS
+// =====================================================
+
+interface DashboardMetricProps {
+  icon: React.ReactNode;
+  iconClass: string;
+  label: string;
+  value: string;
+  description: string;
+}
+
+function DashboardMetric({
+                           icon,
+                           iconClass,
+                           label,
+                           value,
+                           description,
+                         }: DashboardMetricProps) {
+  return (
+      <Card className="gsap-animate min-w-0 p-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+              className={`
+            flex
+            h-11
+            w-11
+            shrink-0
+            items-center
+            justify-center
+            rounded-xl
+            ${iconClass}
+          `}
+          >
+            {icon}
+          </div>
+
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold text-slate-400">
+              {label}
+            </p>
+
+            <p className="mt-1 truncate text-xl font-black text-slate-900">
+              {value}
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-4 text-xs font-medium text-slate-500">
+          {description}
+        </p>
+      </Card>
+  );
+}
+
+interface DailyActionProps {
+  icon: React.ReactNode;
+  iconClass: string;
+  title: string;
+  description: string;
+  route: string;
+}
+
+function DailyAction({
+                       icon,
+                       iconClass,
+                       title,
+                       description,
+                       route,
+                     }: DailyActionProps) {
+  return (
+      <Link
+          to={route}
+          className="
+        group
+        flex
+        items-center
+        gap-4
+        rounded-2xl
+        border
+        border-slate-100
+        p-4
+        transition
+        hover:border-emerald-200
+        hover:bg-emerald-50/30
+      "
+      >
+        <div
+            className={`
+          flex
+          h-11
+          w-11
+          shrink-0
+          items-center
+          justify-center
+          rounded-xl
+          ${iconClass}
+        `}
+        >
+          {icon}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-slate-800">
+            {title}
+          </p>
+
+          <p className="mt-0.5 text-xs text-slate-500">
+            {description}
+          </p>
+        </div>
+
+        <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-600" />
+      </Link>
+  );
+}
+
+function getBmiLabel(
+    bmi: number | null,
+): string {
+  if (bmi === null) {
+    return "Chưa có dữ liệu";
+  }
+
+  if (bmi < 18.5) {
+    return "Thiếu cân";
+  }
+
+  if (bmi < 25) {
+    return "Bình thường";
+  }
+
+  if (bmi < 30) {
+    return "Thừa cân";
+  }
+
+  return "Béo phì";
 }
