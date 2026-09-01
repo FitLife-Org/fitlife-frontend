@@ -118,6 +118,7 @@ export default function DashboardLayout({
                     flex-1
                     flex-col
                     overflow-x-hidden
+                    lg:pl-[280px]
                 "
             >
                 <Header />

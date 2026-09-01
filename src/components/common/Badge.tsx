@@ -8,6 +8,7 @@ export type BadgeVariant =
     | "danger"
     | "info"
     | "purple"
+    | "primary"
     | "default";
 
 interface BadgeProps {
@@ -34,6 +35,9 @@ const variants:
 
   purple:
       "border-violet-200 bg-violet-50 text-violet-700",
+
+  primary:
+      "border-emerald-200 bg-emerald-50 text-emerald-700",
 
   default:
       "border-slate-200 bg-slate-100 text-slate-600",

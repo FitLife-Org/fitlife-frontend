@@ -65,6 +65,9 @@ export const ROUTES = {
   // Profile
   ADMIN_PROFILE: "/admin/profile",
 
+  ADMIN_CHECKIN:
+      "/admin/checkin",
+
   // =====================================================
   // MEMBER
   // =====================================================

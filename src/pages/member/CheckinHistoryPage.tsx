@@ -8,11 +8,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  MapPin,
-  Clock
+  Clock,
+  Camera,
+  QrCode
 } from "lucide-react";
 import { usePageAnimation } from "../../hooks/usePageAnimation";
 import { useCheckinHistory } from "../../hooks/useCheckinHistory";
+import MemberRearCameraScannerModal from "../../components/checkin/MemberRearCameraScannerModal";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -23,7 +25,11 @@ export default function CheckinHistoryPage() {
 
   const {
     history,
-    loading
+    currentStatus,
+    loading,
+    showScanner,
+    setShowScanner,
+    handleScanSuccess,
   } = useCheckinHistory();
 
   // Quản lý state cho Lịch
@@ -106,11 +112,26 @@ export default function CheckinHistoryPage() {
         ) : (
             <>
               {/* Header */}
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">Check-in</h1>
-                  <p className="text-slate-500 mt-1">Sử dụng mã QR để điểm danh khi đến phòng tập.</p>
+                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">Lịch sử Check-in</h1>
+                  <p className="text-slate-500 mt-1">Sử dụng camera sau để quét mã QR điểm danh khi đến phòng tập.</p>
+                  {currentStatus?.isInside && (
+                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Đang ở trong phòng tập (Vào lúc {new Date(currentStatus.checkInTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })})
+                    </div>
+                  )}
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowScanner(true)}
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-600/25 hover:from-emerald-500 hover:to-teal-500 hover:shadow-xl hover:shadow-emerald-600/35 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shrink-0 self-start sm:self-auto group cursor-pointer"
+                >
+                  <Camera className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span>Quét QR check in bằng camera sau</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -278,6 +299,13 @@ export default function CheckinHistoryPage() {
             </div>
           </div>
               </div>
+
+              <MemberRearCameraScannerModal
+                isOpen={showScanner}
+                onClose={() => setShowScanner(false)}
+                onScanSuccess={handleScanSuccess}
+                isInside={currentStatus?.isInside}
+              />
             </>
         )}
       </div>

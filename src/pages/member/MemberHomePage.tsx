@@ -2,7 +2,7 @@ import { usePageAnimation } from "../../hooks/usePageAnimation";
 import { Link } from "react-router-dom";
 import { 
   Activity, Calendar as CalendarIcon, CreditCard, Dumbbell, 
-  Flame, Heart, History, TrendingUp, ChevronRight 
+  Flame, Heart, History, TrendingUp, ChevronRight, QrCode 
 } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
@@ -36,11 +36,18 @@ export default function MemberHomePage() {
 
   return (
     <div className="space-y-8 pb-10" ref={containerRef}>
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <PageHeader 
           title={`Chào mừng trở lại, ${user?.fullName?.split(" ").pop() || "Hội viên"}! 👋`}
           description="Cùng xem lại tiến trình tập luyện của bạn hôm nay nhé."
         />
+        <Link
+          to="/member/checkins"
+          className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-600/25 hover:from-emerald-500 hover:to-teal-500 hover:shadow-xl hover:shadow-emerald-600/35 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shrink-0 self-start sm:self-auto"
+        >
+          <QrCode className="w-5 h-5" />
+          <span>Check in phòng tập</span>
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">

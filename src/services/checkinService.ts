@@ -21,6 +21,11 @@ export const adminQrService = {
   async regenerateGymQrToken(id: number): Promise<AdminCheckInQrResponse> {
     const response = await apiClient.post<ApiResponse<AdminCheckInQrResponse>>(`/admin/checkin-qr-codes/${id}/rotate`);
     return response.data.data;
+  },
+
+  async createGymQr(data: { name: string; location?: string; token?: string; active?: boolean }): Promise<AdminCheckInQrResponse> {
+    const response = await apiClient.post<ApiResponse<AdminCheckInQrResponse>>("/admin/checkin-qr-codes", data);
+    return response.data.data;
   }
 };
 

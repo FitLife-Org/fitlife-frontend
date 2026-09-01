@@ -189,17 +189,6 @@ const menuItems:
     },
 
     {
-        label: "Mã QR của tôi",
-        path:
-        ROUTES.MEMBER_QR,
-        icon:
-        ScanLine,
-        roles: [
-            "ROLE_MEMBER",
-        ],
-    },
-
-    {
         label:
             "Lịch sử Check-in",
         path:
@@ -384,6 +373,18 @@ const menuItems:
     },
 
     {
+        label:
+            "Điểm danh & Ra vào",
+        path:
+        ROUTES.ADMIN_CHECKIN,
+        icon:
+        ScanLine,
+        roles: [
+            "ROLE_ADMIN",
+        ],
+    },
+
+    {
         label: "Hồ sơ",
         path: ROUTES.ADMIN_PROFILE,
         icon: UserRound,
@@ -398,26 +399,13 @@ const menuItems:
 
     {
         label:
-            "Check In",
+            "Điểm danh & Ra vào",
         path:
         ROUTES.STAFF_CHECKIN,
         icon:
         ScanLine,
         roles: [
             "ROLE_STAFF",
-        ],
-    },
-
-    {
-        label:
-            "Lịch sử check-in",
-        path:
-        ROUTES.STAFF_CHECKIN_HISTORY,
-        icon:
-        History,
-        roles: [
-            "ROLE_STAFF",
-            "ROLE_ADMIN",
         ],
     },
 
@@ -658,7 +646,7 @@ export default function Sidebar() {
                 sidebarOpen
                     ? "translate-x-0"
                     : "-translate-x-full"
-            } fixed inset-y-0 left-0 z-40 flex w-[280px] flex-col border-r border-slate-900 bg-slate-950 shadow-2xl transition-transform duration-500 ease-out lg:static lg:translate-x-0 lg:shadow-none`}
+            } fixed inset-y-0 left-0 z-40 flex w-[280px] h-screen flex-col border-r border-slate-900 bg-slate-950 shadow-2xl transition-transform duration-500 ease-out lg:translate-x-0 lg:shadow-none`}
         >
             {/* =================================================
        * BRAND

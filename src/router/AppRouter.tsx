@@ -4,6 +4,7 @@ import type {
 
 import {
     BrowserRouter,
+    Navigate,
     Outlet,
     Route,
     Routes,
@@ -258,6 +259,19 @@ export default function AppRouter() {
                                 <RoleGuard roles={["ROLE_MEMBER"]}>
                                     <BodyMetricPage />
                                 </RoleGuard>
+                            }
+                        />
+
+                        {/* Member QR redirect */}
+                        <Route
+                            path={
+                                ROUTES.MEMBER_QR
+                            }
+                            element={
+                                <Navigate
+                                    to={ROUTES.MEMBER_PROFILE}
+                                    replace
+                                />
                             }
                         />
 
@@ -649,7 +663,24 @@ export default function AppRouter() {
             ================================================= */}
 
                         <Route
-                            path={ROUTES.STAFF_CHECKIN}
+                            path={
+                                ROUTES.ADMIN_CHECKIN
+                            }
+                            element={
+                                <RoleGuard
+                                    roles={[
+                                        "ROLE_ADMIN",
+                                    ]}
+                                >
+                                    <CheckinPage />
+                                </RoleGuard>
+                            }
+                        />
+
+                        <Route
+                            path={
+                                ROUTES.STAFF_CHECKIN
+                            }
                             element={
                                 <RoleGuard
                                     roles={[
@@ -665,14 +696,7 @@ export default function AppRouter() {
                         <Route
                             path={ROUTES.STAFF_CHECKIN_HISTORY}
                             element={
-                                <RoleGuard
-                                    roles={[
-                                        "ROLE_STAFF",
-                                        "ROLE_ADMIN",
-                                    ]}
-                                >
-                                    <StaffCheckinHistoryPage />
-                                </RoleGuard>
+                                <Navigate to={ROUTES.STAFF_CHECKIN} replace />
                             }
                         />
 
