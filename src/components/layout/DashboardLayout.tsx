@@ -7,11 +7,11 @@ import {
     useLocation,
 } from "react-router-dom";
 
-import gsap from "gsap";
-
 import {
     useGSAP,
 } from "@gsap/react";
+
+import gsap from "gsap";
 
 import Footer from "./Footer";
 import Header from "./Header";
@@ -50,20 +50,22 @@ export default function DashboardLayout({
 
     useGSAP(
         () => {
-            if (!mainRef.current) {
+            if (
+                !mainRef.current
+            ) {
                 return;
             }
 
             gsap.fromTo(
                 mainRef.current,
                 {
-                    y: 12,
+                    y: 10,
                     opacity: 0,
                 },
                 {
                     y: 0,
                     opacity: 1,
-                    duration: 0.32,
+                    duration: 0.28,
                     ease: "power2.out",
                     clearProps:
                         "transform,opacity",
@@ -81,14 +83,16 @@ export default function DashboardLayout({
     return (
         <div
             className="
-                flex
-                min-h-screen
-                w-full
-                max-w-full
-                overflow-x-hidden
-                bg-slate-50
-            "
+        min-h-screen
+        w-full
+        overflow-x-hidden
+        bg-slate-50
+      "
         >
+            {/* =================================================
+          MOBILE SIDEBAR OVERLAY
+      ================================================= */}
+
             {sidebarOpen && (
                 <button
                     type="button"
@@ -97,53 +101,58 @@ export default function DashboardLayout({
                         setSidebarOpen(false)
                     }
                     className="
-                        fixed
-                        inset-0
-                        z-30
-                        bg-slate-950/40
-                        backdrop-blur-[1px]
-                        lg:hidden
-                    "
+            fixed
+            inset-0
+            z-30
+            bg-slate-950/45
+            backdrop-blur-[1px]
+            lg:hidden
+          "
                 />
             )}
 
+            {/* =================================================
+          SIDEBAR
+      ================================================= */}
+
             <Sidebar />
+
+            {/* =================================================
+          APPLICATION CONTENT
+      ================================================= */}
 
             <div
                 className="
-                    flex
-                    min-h-screen
-                    min-w-0
-                    max-w-full
-                    flex-1
-                    flex-col
-                    overflow-x-hidden
-                    lg:pl-[280px]
-                "
+          flex
+          min-h-screen
+          min-w-0
+          flex-col
+          overflow-x-hidden
+          lg:pl-[280px]
+        "
             >
                 <Header />
 
                 <main
                     ref={mainRef}
                     className="
-                        min-w-0
-                        max-w-full
-                        flex-1
-                        overflow-x-hidden
-                        px-4
-                        py-6
-                        sm:px-6
-                        lg:px-8
-                        xl:px-10
-                    "
+            min-w-0
+            flex-1
+            overflow-x-hidden
+          "
                 >
                     <div
                         className="
-                            mx-auto
-                            w-full
-                            min-w-0
-                            max-w-[1600px]
-                        "
+              mx-auto
+              w-full
+              max-w-[1600px]
+              px-4
+              py-6
+              sm:px-6
+              lg:px-8
+              lg:py-8
+              xl:px-10
+            "
                     >
                         {children}
                     </div>
