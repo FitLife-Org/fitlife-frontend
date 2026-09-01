@@ -73,5 +73,28 @@ export const trainerService = {
   async getTrainerSchedule(): Promise<TrainerSession[]> {
     const response = await apiClient.get<ApiResponse<TrainerSession[]>>("/trainers/me/schedule");
     return response.data.data;
+  },
+
+  async getTrainerRequests(): Promise<import("../types/trainer.type").TrainerAssignmentRequest[]> {
+    const response = await apiClient.get<ApiResponse<import("../types/trainer.type").TrainerAssignmentRequest[]>>("/trainer/members/requests");
+    return response.data.data;
+  },
+
+  async approveTrainerRequest(assignmentId: number | string): Promise<void> {
+    await apiClient.post<ApiResponse<void>>(`/trainer/members/requests/${assignmentId}/approve`);
+  },
+
+  async rejectTrainerRequest(assignmentId: number | string): Promise<void> {
+    await apiClient.post<ApiResponse<void>>(`/trainer/members/requests/${assignmentId}/reject`);
+  },
+
+  async getMyAcceptingStatus(): Promise<boolean> {
+    const response = await apiClient.get<ApiResponse<boolean>>("/trainer/members/accepting-status");
+    return response.data.data;
+  },
+
+  async toggleMyAcceptingStatus(): Promise<boolean> {
+    const response = await apiClient.post<ApiResponse<boolean>>("/trainer/members/toggle-accepting");
+    return response.data.data;
   }
 };

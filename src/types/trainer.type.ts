@@ -1,3 +1,5 @@
+import type { UserStatus } from "./user.type";
+
 export interface Trainer {
   id: number;
   userId?: number;
@@ -11,6 +13,23 @@ export interface Trainer {
   bio?: string;
   phone?: string;
   email?: string;
+  status?: UserStatus;
+  isAcceptingMembers?: boolean;
+  assignmentStatus?: "PENDING" | "ACTIVE" | "PENDING_CANCEL";
+  assignmentId?: number;
+}
+
+export interface TrainerAssignmentRequest {
+  assignmentId: number;
+  memberId: number;
+  memberCode: string;
+  fullName: string;
+  phone?: string;
+  avatarUrl?: string;
+  packageName: string;
+  requestType: "NEW_ASSIGNMENT" | "CANCEL_ASSIGNMENT";
+  status: "PENDING" | "PENDING_CANCEL";
+  createdAt: string;
 }
 
 export interface TrainerMember {

@@ -184,18 +184,21 @@ export default function Header() {
     return "Hội viên";
   };
 
-  const getProfileRoute =
-      (): string => {
-        if (
-            user?.roles.includes(
-                "ROLE_MEMBER",
-            )
-        ) {
-          return ROUTES.MEMBER_PROFILE;
-        }
-
-        return ROUTES.COMMON_SETTINGS;
-      };
+  const getProfileRoute = (): string => {
+    if (user?.roles.includes("ROLE_MEMBER")) {
+      return ROUTES.MEMBER_PROFILE;
+    }
+    if (user?.roles.includes("ROLE_ADMIN")) {
+      return ROUTES.ADMIN_PROFILE;
+    }
+    if (user?.roles.includes("ROLE_STAFF")) {
+      return ROUTES.STAFF_PROFILE;
+    }
+    if (user?.roles.includes("ROLE_TRAINER")) {
+      return ROUTES.TRAINER_PROFILE;
+    }
+    return ROUTES.COMMON_SETTINGS;
+  };
 
   const navigateTo = (
       path: string,

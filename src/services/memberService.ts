@@ -674,7 +674,20 @@ export const memberService = {
         return response.data.data;
     },
 
+    async getMyAssignedTrainers(): Promise<Trainer[]> {
+        const response = await apiClient.get<ApiResponse<Trainer[]>>("/members/me/trainers");
+        return response.data.data || [];
+    },
+
     async bookTrainer(trainerId: number | string): Promise<void> {
         await apiClient.post<ApiResponse<void>>(`/members/me/book-trainer/${trainerId}`);
+    },
+
+    async cancelTrainerBooking(trainerId?: number | string): Promise<void> {
+        if (trainerId) {
+            await apiClient.post<ApiResponse<void>>(`/members/me/cancel-trainer/${trainerId}`);
+        } else {
+            await apiClient.post<ApiResponse<void>>("/members/me/cancel-trainer");
+        }
     },
 };

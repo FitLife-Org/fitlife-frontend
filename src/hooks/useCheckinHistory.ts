@@ -67,6 +67,7 @@ export function useCheckinHistory() {
 
   return {
     history,
+    currentStatus,
     loading,
     showQrModal,
     showScanner,
