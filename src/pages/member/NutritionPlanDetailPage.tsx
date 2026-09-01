@@ -10,6 +10,7 @@ import {
     CheckCircle2,
     Droplets,
     Flame,
+    Pencil,
     RefreshCw,
     Salad,
     Utensils,
@@ -109,8 +110,8 @@ function getSourceLabel(
         case "MEMBER_CREATED":
             return "Hội viên";
 
-        case "MANUAL":
-            return "Thủ công";
+        case "SYSTEM_TEMPLATE":
+            return "Mẫu hệ thống";
 
         default:
             return source;
@@ -382,6 +383,25 @@ export default function NutritionPlanDetailPage() {
 
                         Tải lại
                     </Button>
+
+                    {plan.status ===
+                        "DRAFT" && (
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    navigate(
+                                        ROUTES.MEMBER_NUTRITION_EDIT.replace(
+                                            ":id",
+                                            String(plan.id),
+                                        ),
+                                    )
+                                }
+                            >
+                                <Pencil className="h-4 w-4" />
+
+                                Chỉnh sửa
+                            </Button>
+                        )}
 
                     {plan.status ===
                         "DRAFT" && (
