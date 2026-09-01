@@ -1,129 +1,312 @@
-import { useEffect, useState } from "react";
-import { Activity, Target, TrendingUp, Scale, AlertCircle } from "lucide-react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  Activity,
+  AlertCircle,
+  ArrowRight,
+  Scale,
+  Target,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+
+import {
+  Link,
+} from "react-router-dom";
+
 import Card from "../../components/common/Card";
-import { trainerService } from "../../services/trainerService";
-import type { WorkoutProgress } from "../../types/trainer.type";
+import PageHeader from "../../components/common/PageHeader";
+
+import {
+  ROUTES,
+} from "../../config/routes";
+
+import {
+  trainerService,
+} from "../../services/trainerService";
+
+import type {
+  WorkoutProgress,
+} from "../../types/trainer.type";
 
 export default function WorkoutTrackingPage() {
-  const [progress, setProgress] = useState<WorkoutProgress | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [
+    progress,
+    setProgress,
+  ] =
+      useState<WorkoutProgress | null>(
+          null,
+      );
 
-  const MOCK_MEMBER_ID = 101;
+  const [
+    loading,
+    setLoading,
+  ] =
+      useState(true);
+
+  const [
+    error,
+    setError,
+  ] =
+      useState<string | null>(
+          null,
+      );
 
   useEffect(() => {
-    const fetchProgress = async () => {
-      try {
-        setLoading(true);
-        const data = await trainerService.getMemberWorkoutProgress(MOCK_MEMBER_ID);
-        if (data) setProgress(data as WorkoutProgress);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProgress();
+    const fetchProgress =
+        async () => {
+          try {
+            setLoading(true);
+            setError(null);
+
+            /*
+             * Trang /trainer/workouts hiện chưa có memberId trong URL.
+             * Vì vậy không nên hard-code MOCK_MEMBER_ID nữa.
+             *
+             * Progress của từng Member nên được mở từ:
+             * Trainer -> Hội viên của tôi -> Member -> Workout/Progress.
+             */
+            setProgress(null);
+          } catch (fetchError) {
+            console.error(
+                "TRAINER_WORKOUT_PROGRESS_ERROR:",
+                fetchError,
+            );
+
+            setError(
+                "Không thể tải dữ liệu theo dõi bài tập.",
+            );
+          } finally {
+            setLoading(false);
+          }
+        };
+
+    void fetchProgress();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-fit-primary border-t-transparent" />
-      </div>
+        <div className="flex min-h-[420px] items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-fit-primary border-t-transparent" />
+
+            <p className="mt-4 text-sm font-medium text-slate-500">
+              Đang tải dữ liệu theo dõi...
+            </p>
+          </div>
+        </div>
     );
   }
 
-  if (!progress) return null;
+  if (error) {
+    return (
+        <div className="space-y-6">
+          <PageHeader
+              title="Theo dõi bài tập"
+              description="Theo dõi tiến độ luyện tập của hội viên được phân công."
+          />
+
+          <Card className="flex min-h-[320px] flex-col items-center justify-center p-8 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-500">
+              <AlertCircle className="h-7 w-7" />
+            </div>
+
+            <h2 className="mt-4 text-lg font-black text-slate-900">
+              Không thể tải dữ liệu
+            </h2>
+
+            <p className="mt-1 max-w-md text-sm text-slate-500">
+              {error}
+            </p>
+          </Card>
+        </div>
+    );
+  }
+
+  if (!progress) {
+    return (
+        <div className="space-y-6">
+          <PageHeader
+              title="Theo dõi bài tập"
+              description="Chọn hội viên được phân công để xem tiến độ luyện tập và chỉ số cơ thể."
+          />
+
+          <Card className="flex min-h-[360px] flex-col items-center justify-center border-2 border-dashed border-slate-200 p-8 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+              <Users className="h-8 w-8" />
+            </div>
+
+            <h2 className="mt-5 text-xl font-black text-slate-900">
+              Chưa chọn hội viên
+            </h2>
+
+            <p className="mt-2 max-w-lg text-sm leading-6 text-slate-500">
+              Trang theo dõi cần một hội viên cụ thể. Hãy mở danh sách
+              hội viên của bạn, chọn hội viên cần theo dõi rồi truy cập
+              giáo án hoặc tiến độ của hội viên đó.
+            </p>
+
+            <Link
+                to={ROUTES.TRAINER_MEMBERS}
+                className="
+              mt-6
+              inline-flex
+              min-h-11
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-emerald-600
+              px-5
+              text-sm
+              font-bold
+              text-white
+              transition
+              hover:bg-emerald-700
+            "
+            >
+              Chọn hội viên
+
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Card>
+        </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-gradient-to-r from-fit-trainerSoft to-amber-500/10 rounded-3xl border border-fit-trainer/20 shadow-card backdrop-blur-sm">
-        <div>
-          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fit-trainer to-amber-600">Theo dõi Tiến độ</h2>
-          <p className="text-fit-muted text-sm mt-1 font-medium">Hội viên: Nguyễn Văn A (ID: {progress.memberId})</p>
+      <div className="space-y-6">
+        <PageHeader
+            title="Theo dõi tiến độ"
+            description={`Hội viên #${progress.memberId}`}
+        />
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+              icon={
+                <Scale className="h-5 w-5" />
+              }
+              label="Cân nặng hiện tại"
+              value={`${progress.weight ?? "—"} kg`}
+              className="bg-blue-50 text-blue-600"
+          />
+
+          <MetricCard
+              icon={
+                <Activity className="h-5 w-5" />
+              }
+              label="Tỷ lệ mỡ"
+              value={`${progress.bodyFatPercentage ?? "—"} %`}
+              className="bg-emerald-50 text-emerald-600"
+          />
+
+          <MetricCard
+              icon={
+                <TrendingUp className="h-5 w-5" />
+              }
+              label="Khối lượng cơ"
+              value={`${progress.muscleMass ?? "—"} kg`}
+              className="bg-orange-50 text-orange-600"
+          />
+
+          <MetricCard
+              icon={
+                <Target className="h-5 w-5" />
+              }
+              label="Mục tiêu cân nặng"
+              value={
+                progress.goals?.targetWeight != null
+                    ? `${progress.goals.targetWeight} kg`
+                    : "—"
+              }
+              className="bg-violet-50 text-violet-600"
+          />
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-2">
+          <Card className="p-6">
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-emerald-600" />
+
+              <h2 className="text-lg font-black text-slate-900">
+                Mục tiêu huấn luyện
+              </h2>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <p className="text-sm leading-6 text-slate-600">
+                {progress.goals?.description ||
+                    "Hội viên chưa cập nhật mục tiêu huấn luyện."}
+              </p>
+            </div>
+
+            {progress.lastUpdated && (
+                <p className="mt-4 text-right text-xs text-slate-400">
+                  Cập nhật gần nhất: {progress.lastUpdated}
+                </p>
+            )}
+          </Card>
+
+          <Card className="flex min-h-[220px] flex-col items-center justify-center border-2 border-dashed border-slate-200 p-6 text-center">
+            <Activity className="h-10 w-10 text-slate-300" />
+
+            <h2 className="mt-3 font-black text-slate-800">
+              Lịch sử tiến độ
+            </h2>
+
+            <p className="mt-1 max-w-sm text-sm text-slate-500">
+              Có thể xem chi tiết Body Metric của hội viên từ hồ sơ hội viên.
+            </p>
+          </Card>
+        </section>
+      </div>
+  );
+}
+
+interface MetricCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  className: string;
+}
+
+function MetricCard({
+                      icon,
+                      label,
+                      value,
+                      className,
+                    }: MetricCardProps) {
+  return (
+      <Card className="min-w-0 p-5">
+        <div className="flex items-center gap-3">
+          <div
+              className={`
+            flex
+            h-11
+            w-11
+            shrink-0
+            items-center
+            justify-center
+            rounded-xl
+            ${className}
+          `}
+          >
+            {icon}
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-400">
+              {label}
+            </p>
+
+            <p className="mt-1 truncate text-xl font-black text-slate-900">
+              {value}
+            </p>
+          </div>
         </div>
-        <div className="mt-4 sm:mt-0 flex items-center gap-2">
-          <button className="px-6 py-3 bg-fit-trainer text-white font-black rounded-2xl shadow-lg shadow-orange-500/20 hover:bg-fit-trainerHover hover:shadow-xl active:scale-[0.98] transition-all">
-            Cập nhật chỉ số
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="p-6 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-              <Scale className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-500">Cân nặng hiện tại</p>
-              <h3 className="text-2xl font-black text-slate-800">{progress.weight} <span className="text-sm text-slate-500">kg</span></h3>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all duration-500"></div>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
-              <Activity className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-500">Tỷ lệ mỡ (Body Fat)</p>
-              <h3 className="text-2xl font-black text-slate-800">{progress.bodyFatPercentage} <span className="text-sm text-slate-500">%</span></h3>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-orange-500/10 rounded-full blur-xl group-hover:bg-orange-500/20 transition-all duration-500"></div>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/30">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-500">Lượng cơ (Muscle)</p>
-              <h3 className="text-2xl font-black text-slate-800">{progress.muscleMass} <span className="text-sm text-slate-500">kg</span></h3>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 relative overflow-hidden group bg-gradient-to-br from-slate-900 to-slate-800 border-0">
-          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/5 rounded-full blur-xl group-hover:bg-white/10 transition-all duration-500"></div>
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-yellow-400 shadow-inner backdrop-blur-md">
-              <Target className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-300">Mục tiêu cân nặng</p>
-              <h3 className="text-2xl font-black text-white">{progress.goals.targetWeight} <span className="text-sm text-slate-400">kg</span></h3>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <AlertCircle className="w-5 h-5 text-fit-primary" />
-            <h3 className="text-lg font-bold text-slate-800">Mục tiêu huấn luyện</h3>
-          </div>
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-            <p className="text-slate-700 italic">"{progress.goals.description}"</p>
-          </div>
-          <p className="text-sm text-slate-400 mt-4 text-right">Cập nhật lần cuối: {progress.lastUpdated}</p>
-        </Card>
-
-        <Card className="p-6 flex flex-col justify-center items-center text-center border-dashed border-2 bg-slate-50/50">
-          <Activity className="w-12 h-12 text-slate-300 mb-3" />
-          <h3 className="text-lg font-bold text-slate-700">Biểu đồ tiến độ</h3>
-          <p className="text-slate-500 text-sm mt-1 mb-4">Tính năng vẽ biểu đồ sẽ được cập nhật trong phiên bản tiếp theo.</p>
-          <button className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg shadow-sm font-semibold hover:bg-slate-50">
-            Xem lịch sử đo inBody
-          </button>
-        </Card>
-      </div>
-    </div>
+      </Card>
   );
 }
