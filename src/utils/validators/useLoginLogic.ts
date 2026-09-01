@@ -457,6 +457,9 @@ export function useLoginLogic() {
                         password:
                             errors.password?.[0],
                     });
+                    
+                    const firstError = errors.identifier?.[0] || errors.password?.[0] || "Vui lòng kiểm tra lại thông tin đăng nhập.";
+                    showAlert.warning("Vui lòng kiểm tra lại", firstError);
 
                     return;
                 }

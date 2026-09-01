@@ -157,11 +157,11 @@ export default function LoginPage() {
     return (
         <main
             ref={containerRef}
-            className="relative min-h-screen w-full bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
+            className="relative h-screen overflow-y-auto lg:overflow-hidden w-full bg-[url('https://images.unsplash.com/photo-1593079831268-3381b0c42369?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center"
         >
             <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]" />
 
-            <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-2 py-8 lg:py-0">
+            <div className="relative z-10 grid h-full w-full lg:grid-cols-2 py-8 lg:py-0">
                 <section
                     ref={introRef}
                     className="hidden flex-col justify-center p-12 text-slate-900 lg:flex lg:pl-24"

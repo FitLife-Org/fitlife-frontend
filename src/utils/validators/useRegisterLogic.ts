@@ -504,6 +504,16 @@ export function useRegisterLogic() {
                             0
                             ],
                 });
+                
+                const firstError = 
+                    errors.username?.[0] || 
+                    errors.fullName?.[0] || 
+                    errors.email?.[0] || 
+                    errors.phone?.[0] || 
+                    errors.password?.[0] || 
+                    errors.confirmPassword?.[0] || 
+                    "Vui lòng kiểm tra lại thông tin đăng ký.";
+                showAlert.warning("Vui lòng kiểm tra lại", firstError);
 
                 return;
             }
