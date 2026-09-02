@@ -1,4 +1,4 @@
-export type EquipmentStatus = "ACTIVE" | "MAINTENANCE" | "INACTIVE";
+  export type EquipmentStatus = "ACTIVE" | "MAINTENANCE" | "INACTIVE";
 
 export interface Equipment {
   id: string;
@@ -10,6 +10,9 @@ export interface Equipment {
   lastMaintenance: string | null;
   nextMaintenance: string | null;
   daysToNextMaintenance?: number | null;
+  purchaseDate?: string | null;
+  warrantyExpiry?: string | null;
+  description?: string | null;
 }
 
 export interface EquipmentSummary {
@@ -18,4 +21,40 @@ export interface EquipmentSummary {
   maintenance: { count: number; percentage: number };
   inactive: { count: number; percentage: number };
   upcomingMaintenance: { count: number; timeFrame: string };
+}
+
+export interface AdminEquipmentCreateRequest {
+  equipmentCode: string;
+  name: string;
+  category?: string;
+  area?: string;
+  purchaseDate?: string;
+  warrantyExpiry?: string;
+  status?: string;
+  description?: string;
+  image?: string;
+}
+
+export interface AdminEquipmentUpdateRequest {
+  name: string;
+  category?: string;
+  area?: string;
+  purchaseDate?: string;
+  warrantyExpiry?: string;
+  status?: string;
+  description?: string;
+  image?: string;
+}
+
+export interface EquipmentAreaRequest {
+  name: string;
+  description?: string;
+}
+
+export interface EquipmentAreaResponse {
+  id: number;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
 }

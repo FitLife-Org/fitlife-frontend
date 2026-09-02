@@ -1,4 +1,6 @@
-import type { Role } from "./common.type";
+import type {
+  Role,
+} from "./common.type";
 
 export interface LoginRequest {
   identifier: string;
@@ -11,6 +13,7 @@ export interface RegisterRequest {
   email: string;
   phone?: string;
   password: string;
+  confirmPassword: string;
 }
 
 export interface GoogleLoginRequest {
@@ -28,24 +31,60 @@ export interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface LogoutRequest {
+  refreshToken: string;
+}
+
+export interface ResendVerificationEmailRequest {
+  email: string;
+}
+
 export interface AuthResponsePayload {
-  accessToken?: string;
-  token?: string;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  token?: string | null;
+
   tokenType?: string;
+
   userId?: number;
+  id?: number;
+
+  username?: string;
   email?: string;
   fullName?: string;
+
+  avatarUrl?: string | null;
+
+  role?: Role;
   roles?: Role[];
+  authorities?: Role[];
 }
 
 export interface AuthUser {
   userId: number;
+  username?: string;
+
   email: string;
   fullName: string;
+
+  avatarUrl?: string | null;
+
   roles: Role[];
 }
 
 export interface AuthSession {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   user: AuthUser;
+}
+
+export interface RegisterResult {
+  userId: number;
+  email: string;
+  fullName: string;
+  roles: Role[];
 }

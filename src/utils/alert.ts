@@ -1,6 +1,6 @@
 import Swal, { SweetAlertOptions } from 'sweetalert2';
 
-// Cấu hình chung cho SweetAlert2 để phù hợp với theme FitLife
+
 const fitAlert = Swal.mixin({
   customClass: {
     confirmButton: 'fit-auth-button w-auto px-8 mx-2',

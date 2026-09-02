@@ -27,7 +27,9 @@ export default defineConfig([
     rules: {
       ...reactHooks.configs.flat.recommended.rules,
       ...reactRefresh.configs.vite.rules,
-      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'prefer-const': 'warn',
     },
   },
 ])

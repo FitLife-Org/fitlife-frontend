@@ -7,24 +7,28 @@ export default function GuestFooter() {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
           <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <HeartPulse className="h-8 w-8 text-fit-primary" />
-              <div className="flex flex-col">
+            <div className="w-30">
+              <img
+                  src="https://res.cloudinary.com/duopgsqbv/image/upload/v1779720149/z7845595736939_488081c4d5d966b4de13e74e5d1ed1aa-removebg-preview_jnqo49.png"
+                  alt="Logo"></img>
+            </div>
+            <div className="flex flex-col">
                  <span className="text-2xl font-bold tracking-tight text-slate-900 leading-none">
                    FitLife
                  </span>
-                 <span className="text-[10px] text-slate-500 font-medium">Sống khỏe mỗi ngày</span>
-              </div>
-            </Link>
-            <p className="text-slate-500 text-sm mb-6 max-w-sm">
-              Phần mềm quản lý phòng gym thông minh giúp bạn vận hành hiệu quả và tăng trưởng bền vững.
-            </p>
-            <p className="text-slate-400 text-xs">
-              © {new Date().getFullYear()} FitLife. Tất cả quyền được bảo lưu.
+              <span className="text-[10px] text-slate-500 font-medium">Sống khỏe mỗi ngày</span>
+            </div>
+
+          <p className="text-slate-500 text-sm mb-6 max-w-sm">
+            Phần mềm quản lý phòng gym thông minh giúp bạn vận hành hiệu quả và tăng trưởng bền vững.
+          </p>
+          <p className="text-slate-400 text-xs">
+            © {new Date().getFullYear()} FitLife. Tất cả quyền được bảo lưu.
             </p>
           </div>
 
           <div>
+
             <h4 className="font-bold text-slate-900 mb-4">Sản phẩm</h4>
             <ul className="space-y-3 text-sm text-slate-600">
               <li><a href="#features" className="hover:text-fit-primary transition-colors">Tính năng</a></li>

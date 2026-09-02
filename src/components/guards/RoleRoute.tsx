@@ -1,25 +1,79 @@
-import { Navigate } from "react-router-dom";
+import type {
+    ReactNode,
+} from "react";
+
+import {
+    Navigate,
+    useLocation,
+} from "react-router-dom";
+
 import { ROUTES } from "../../config/routes";
 import { useAuthStore } from "../../store/authStore";
-import type { Role } from "../../types/common.type";
 
-type RoleRouteProps = {
-  roles: Role[];
-  children: React.ReactNode;
-};
+import type {
+    Role,
+} from "../../types/common.type";
 
-export default function RoleRoute({ roles, children }: RoleRouteProps) {
-  const user = useAuthStore((state) => state.user);
+interface RoleRouteProps {
+    roles: readonly Role[];
+    children: ReactNode;
+}
 
-  if (!user) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
-  }
+export default function RoleRoute({
+                                      roles,
+                                      children,
+                                  }: RoleRouteProps) {
+    const location = useLocation();
 
-  const hasPermission = roles.some((role) => user.roles.includes(role));
+    const isAuthenticated =
+        useAuthStore(
+            (state) =>
+                state.isAuthenticated,
+        );
 
-  if (!hasPermission) {
-    return <Navigate to={ROUTES.FORBIDDEN} replace />;
-  }
+    const user =
+        useAuthStore(
+            (state) =>
+                state.user,
+        );
 
-  return <>{children}</>;
+    const returnUrl =
+        `${location.pathname}${location.search}`;
+
+    if (
+        !isAuthenticated ||
+        !user
+    ) {
+        return (
+            <Navigate
+                to={ROUTES.LOGIN}
+                replace
+                state={{
+                    from: returnUrl,
+                }}
+            />
+        );
+    }
+
+    const hasPermission =
+        roles.some(
+            (requiredRole) =>
+                user.roles.includes(
+                    requiredRole,
+                ),
+        );
+
+    if (!hasPermission) {
+        return (
+            <Navigate
+                to={ROUTES.FORBIDDEN}
+                replace
+                state={{
+                    from: returnUrl,
+                }}
+            />
+        );
+    }
+
+    return <>{children}</>;
 }

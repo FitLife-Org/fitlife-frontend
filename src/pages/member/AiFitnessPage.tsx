@@ -1,260 +1,1677 @@
-import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { Bot, CalendarPlus, Mic, Send, Utensils, Activity, User, Sparkles, Loader2 } from "lucide-react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import Card from "../../components/common/Card";
+import {
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+    type KeyboardEvent,
+} from "react";
+
+import {
+    Activity,
+    Bot,
+    ClipboardList,
+    Dumbbell,
+    History,
+    Loader2,
+    Send,
+    Utensils,
+    Wand2,
+    X,
+} from "lucide-react";
+
+import { showAlert } from "../../utils/alert";
+
+import { usePageAnimation } from "../../hooks/usePageAnimation";
+
+import AiAdvancedPlanModal from "../../components/ai/AiAdvancedPlanModal";
+import AiChatMessage from "../../components/ai/AiChatMessage";
+import AiFeedbackForm from "../../components/ai/AiFeedbackForm";
+import AiHistoryDrawer from "../../components/ai/AiHistoryDrawer";
+import AiPlanViewer from "../../components/ai/AiPlanViewer";
+import AiUsageCard from "../../components/ai/AiUsageCard";
+
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
 import PageHeader from "../../components/common/PageHeader";
-import type { ChatMessage } from "../../types/ai.type";
 
-const INITIAL_MESSAGE: ChatMessage = {
-  id: "msg-0",
-  sender: "ai",
-  text: "Chào bạn! Mình là Trợ lý AI FitLife. Mình có thể giúp bạn tạo lịch tập, gợi ý thực đơn hoặc tính toán các chỉ số cơ thể. Bạn cần hỗ trợ gì hôm nay?",
-  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-};
+import { aiService } from "../../services/aiService";
 
-const QUICK_ACTIONS = [
-  { label: "Tạo lịch tập", icon: CalendarPlus, prompt: "Tạo giúp mình lịch tập 4 buổi/tuần cho người mới bắt đầu để giảm mỡ." },
-  { label: "Gợi ý meal plan", icon: Utensils, prompt: "Mình cần một thực đơn 2000 kcal giàu protein, dễ chuẩn bị." },
-  { label: "Phân tích BMI", icon: Activity, prompt: "Mình cao 1m75, nặng 80kg. Hãy phân tích BMI và đưa ra lời khuyên." },
-  { label: "Hỏi PT", icon: Bot, prompt: "Làm sao để tập Squat đúng kỹ thuật không bị đau lưng?" },
+import type {
+    AiAdvancedPlanFormValue,
+    AiChatMessageModel,
+    AiPlanFormMode,
+    AiSuggestionDetailResponse,
+    AiSuggestionResponse,
+    AiUsageTodayResponse,
+} from "../../types/ai.type";
+
+import {
+    getApiErrorMessage,
+} from "../../utils/apiError";
+
+interface QuickAction {
+    label: string;
+
+    description: string;
+
+    icon: typeof Bot;
+
+    type:
+        | AiPlanFormMode
+        | "BODY_ANALYSIS";
+}
+
+const QUICK_ACTIONS: QuickAction[] = [
+    {
+        label: "Kế hoạch toàn diện",
+        description:
+            "Kết hợp lịch tập và dinh dưỡng trong một kế hoạch cá nhân hóa.",
+        icon: ClipboardList,
+        type: "FULL_PLAN",
+    },
+
+    {
+        label: "Phân tích cơ thể",
+        description:
+            "Phân tích Body Metric mới nhất và nhận đánh giá từ FitLife AI.",
+        icon: Activity,
+        type: "BODY_ANALYSIS",
+    },
+
+    {
+        label: "Kế hoạch tập luyện",
+        description:
+            "Tạo lịch tập riêng dựa trên mục tiêu, trình độ và thời gian của bạn.",
+        icon: Dumbbell,
+        type: "WORKOUT_PLAN",
+    },
+
+    {
+        label: "Kế hoạch dinh dưỡng",
+        description:
+            "Đề xuất calorie, macro và các bữa ăn phù hợp với mục tiêu.",
+        icon: Utensils,
+        type: "NUTRITION_PLAN",
+    },
 ];
 
-export default function AiFitnessPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
-  const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const chatListRef = useRef<HTMLDivElement>(null);
+function createTimestamp(): string {
+    return new Date().toLocaleTimeString(
+        "vi-VN",
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+        },
+    );
+}
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+function createMessageId(
+    prefix: string,
+): string {
+    return `${prefix}-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`;
+}
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+const INITIAL_MESSAGE:
+    AiChatMessageModel = {
+    id: "initial-ai-message",
 
-  useGSAP(() => {
-    gsap.from(".quick-action-card", {
-      y: 20,
-      opacity: 0,
-      duration: 0.5,
-      stagger: 0.1,
-      ease: "power2.out",
-    });
-  }, { scope: containerRef });
+    sender: "ai",
 
-  // Simulate AI Response
-  const generateAiResponse = (userText: string) => {
-    setIsTyping(true);
-    
-    // Simulate network delay
-    setTimeout(() => {
-      let aiText = "Mình đã ghi nhận yêu cầu của bạn. Hiện tại hệ thống Backend AI đang trong quá trình nâng cấp, mình sẽ phản hồi chi tiết sau nhé!";
-      
-      const lowerText = userText.toLowerCase();
-      if (lowerText.includes("lịch tập")) {
-        aiText = "Dựa trên yêu cầu của bạn, mình gợi ý lịch tập chia nhóm cơ (Split Routine):\n\n- Thứ 2: Ngực, Vai, Tay sau\n- Thứ 3: Lưng, Tay trước\n- Thứ 4: Nghỉ ngơi\n- Thứ 5: Chân, Mông, Bụng\n- Thứ 6: Toàn thân (Full body) hoặc Cardio\n- Cuối tuần: Nghỉ ngơi.\n\nBạn có muốn mình điều chỉnh số buổi hoặc bài tập cụ thể không?";
-      } else if (lowerText.includes("thực đơn") || lowerText.includes("meal plan")) {
-        aiText = "Với nhu cầu 2000 kcal giàu protein, bạn có thể tham khảo:\n- Sáng: 3 quả trứng luộc, 2 lát bánh mì đen, 1 ly sữa không đường.\n- Trưa: 200g ức gà áp chảo, 1 chén cơm gạo lứt, 1 đĩa salad trộn dầu giấm.\n- Chiều (Snack): 1 quả chuối, 1 muỗng whey protein.\n- Tối: 150g cá hồi nướng, khoai lang luộc, măng tây.\n\nNhớ uống đủ 2-3 lít nước mỗi ngày nhé!";
-      } else if (lowerText.includes("bmi") || lowerText.includes("cao")) {
-        aiText = "Chỉ số BMI của bạn là 26.1 (Thừa cân nhẹ).\n\nLời khuyên: Bạn nên áp dụng chế độ thâm hụt calo nhẹ (khoảng 300-500 kcal/ngày) kết hợp tập luyện sức mạnh 3-4 buổi/tuần và cardio 2 buổi/tuần để giảm mỡ hiệu quả mà vẫn giữ được cơ bắp.";
-      } else if (lowerText.includes("squat")) {
-        aiText = "Để tập Squat không bị đau lưng, bạn cần chú ý:\n1. Gồng chặt cơ bụng (Bracing) trước khi hạ người.\n2. Giữ lưng thẳng tự nhiên, không võng hoặc gù.\n3. Đẩy hông ra sau trước khi gập gối.\n4. Trọng tâm dồn vào giữa bàn chân.\n5. Đừng xuống quá sâu nếu độ linh hoạt chưa tốt (tránh hiện tượng butt wink).";
-      }
+    text:
+        "Chào bạn! Mình là Trợ lý AI FitLife. Mình có thể phân tích chỉ số cơ thể, xây dựng kế hoạch tập luyện và đề xuất dinh dưỡng dựa trên dữ liệu cá nhân của bạn.",
 
-      const newMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        sender: "ai",
-        text: aiText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      
-      setMessages(prev => [...prev, newMsg]);
-      setIsTyping(false);
-    }, 1500);
-  };
+    timestamp:
+        createTimestamp(),
+};
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+function getGoalLabel(
+    goal: string,
+): string {
+    const labels:
+        Record<string, string> = {
+        LOSE_WEIGHT:
+            "Giảm mỡ",
 
-    const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      sender: "user",
-      text: input.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        GAIN_MUSCLE:
+            "Tăng cơ",
+
+        BODY_RECOMPOSITION:
+            "Tăng cơ giảm mỡ",
+
+        MAINTAIN_FITNESS:
+            "Duy trì thể lực",
+
+        IMPROVE_ENDURANCE:
+            "Cải thiện sức bền",
     };
 
-    setMessages(prev => [...prev, newMsg]);
-    setInput("");
-    generateAiResponse(newMsg.text);
-  };
+    return labels[goal] ?? goal;
+}
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+function getActivityLevelLabel(
+    value: string,
+): string {
+    const labels:
+        Record<string, string> = {
+        SEDENTARY:
+            "Ít vận động",
+
+        LIGHT:
+            "Vận động nhẹ",
+
+        MODERATE:
+            "Vận động vừa",
+
+        ACTIVE:
+            "Vận động nhiều",
+
+        VERY_ACTIVE:
+            "Vận động rất nhiều",
+    };
+
+    return labels[value] ?? value;
+}
+
+function getExperienceLabel(
+    value: string,
+): string {
+    const labels:
+        Record<string, string> = {
+        BEGINNER:
+            "Người mới",
+
+        INTERMEDIATE:
+            "Trung bình",
+
+        ADVANCED:
+            "Nâng cao",
+    };
+
+    return labels[value] ?? value;
+}
+
+function createPlanRequestMessage(
+    mode: AiPlanFormMode,
+    value:
+    AiAdvancedPlanFormValue,
+): string {
+    const parts = [
+        `mục tiêu ${getGoalLabel(
+            value.goal,
+        )}`,
+
+        `mức vận động ${getActivityLevelLabel(
+            value.activityLevel,
+        )}`,
+    ];
+
+    if (
+        mode === "FULL_PLAN" ||
+        mode === "WORKOUT_PLAN"
+    ) {
+        parts.push(
+            `trình độ ${getExperienceLabel(
+                value.experienceLevel,
+            )}`,
+
+            `${value.workoutDaysPerWeek} buổi/tuần`,
+
+            `${value.workoutDurationMinutes} phút/buổi`,
+        );
     }
-  };
 
-  const handleQuickAction = (prompt: string) => {
-    setInput(prompt);
-  };
+    if (
+        mode === "FULL_PLAN" ||
+        mode === "NUTRITION_PLAN"
+    ) {
+        parts.push(
+            `${value.mealsPerDay} bữa/ngày`,
+        );
+    }
 
-  return (
-    <div ref={containerRef} className="space-y-6 h-[calc(100vh-80px)] flex flex-col pb-6">
-      <div className="flex-none">
-        <PageHeader 
-          title={<span className="bg-gradient-to-r from-blue-600 to-emerald-500 bg-clip-text text-transparent flex items-center gap-2"><Sparkles className="w-6 h-6 text-emerald-500"/> AI Fitness Assistant</span>} 
-          description="Trợ lý cá nhân ảo hỗ trợ lên lịch tập, thực đơn và giải đáp thắc mắc fitness 24/7." 
-        />
-      </div>
+    const note =
+        value.userNote.trim();
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px] flex-1 min-h-0">
-        <div className="flex flex-col min-h-0 bg-white/50 rounded-3xl border border-slate-200/60 shadow-sm backdrop-blur-xl overflow-hidden">
-          {/* Quick Actions */}
-          <div className="p-4 border-b border-slate-100 bg-white/40 flex-none overflow-x-auto custom-scrollbar">
-            <div className="flex gap-3 min-w-max">
-              {QUICK_ACTIONS.map(({ label, icon: Icon, prompt }) => (
-                <button
-                  key={label}
-                  onClick={() => handleQuickAction(prompt)}
-                  className="quick-action-card flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-md hover:text-emerald-600 text-slate-600 text-sm font-medium transition-all duration-300 active:scale-95"
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+    if (note) {
+        parts.push(
+            `ghi chú: ${note}`,
+        );
+    }
 
-          {/* Chat History */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar scroll-smooth" ref={chatListRef}>
-            {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`flex gap-3 max-w-[85%] ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                  <div className="flex-shrink-0">
-                    {msg.sender === "user" ? (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md border-2 border-white">
-                        <User className="w-5 h-5" />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-md border-2 border-white">
-                        <Bot className="w-5 h-5" />
-                      </div>
-                    )}
-                  </div>
-                  <div className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}>
-                    <div 
-                      className={`px-5 py-3.5 rounded-2xl shadow-sm text-[15px] leading-relaxed whitespace-pre-wrap ${
-                        msg.sender === "user" 
-                          ? "bg-slate-900 text-white rounded-tr-sm" 
-                          : "bg-white border border-slate-100 text-slate-700 rounded-tl-sm"
-                      }`}
+    const title =
+        mode === "WORKOUT_PLAN"
+            ? "kế hoạch tập luyện"
+            : mode ===
+            "NUTRITION_PLAN"
+                ? "kế hoạch dinh dưỡng"
+                : "kế hoạch toàn diện";
+
+    return `Tạo ${title} với ${parts.join(", ")}.`;
+}
+
+function getSuccessMessage(
+    mode: AiPlanFormMode,
+): string {
+    switch (mode) {
+        case "WORKOUT_PLAN":
+            return "Đã tạo kế hoạch tập luyện.";
+
+        case "NUTRITION_PLAN":
+            return "Đã tạo kế hoạch dinh dưỡng.";
+
+        case "FULL_PLAN":
+        default:
+            return "Đã tạo kế hoạch toàn diện.";
+    }
+}
+
+export default function AiFitnessPage() {
+    const containerRef =
+        usePageAnimation();
+
+    const [
+        messages,
+        setMessages,
+    ] =
+        useState<
+            AiChatMessageModel[]
+        >([
+            INITIAL_MESSAGE,
+        ]);
+
+    const [
+        input,
+        setInput,
+    ] =
+        useState("");
+
+    const [
+        isTyping,
+        setIsTyping,
+    ] =
+        useState(false);
+
+    const [
+        showAdvancedForm,
+        setShowAdvancedForm,
+    ] =
+        useState(false);
+
+    const [
+        planFormMode,
+        setPlanFormMode,
+    ] =
+        useState<AiPlanFormMode>(
+            "FULL_PLAN",
+        );
+
+    const [
+        historyOpen,
+        setHistoryOpen,
+    ] =
+        useState(false);
+
+    const [
+        historyItems,
+        setHistoryItems,
+    ] =
+        useState<
+            AiSuggestionResponse[]
+        >([]);
+
+    const [
+        historyLoading,
+        setHistoryLoading,
+    ] =
+        useState(false);
+
+    const [
+        historyError,
+        setHistoryError,
+    ] =
+        useState<string | null>(
+            null,
+        );
+
+    const [
+        selectedHistoryItem,
+        setSelectedHistoryItem,
+    ] =
+        useState<
+            AiSuggestionDetailResponse | null
+        >(null);
+
+    const [
+        detailLoading,
+        setDetailLoading,
+    ] =
+        useState(false);
+
+    const [
+        usage,
+        setUsage,
+    ] =
+        useState<
+            AiUsageTodayResponse | null
+        >(null);
+
+    const [
+        usageLoading,
+        setUsageLoading,
+    ] =
+        useState(false);
+
+    const [
+        usageError,
+        setUsageError,
+    ] =
+        useState<string | null>(
+            null,
+        );
+
+    const messagesEndRef =
+        useRef<HTMLDivElement>(
+            null,
+        );
+
+    // =====================================================
+    // USAGE
+    // =====================================================
+
+    const loadUsage =
+        useCallback(
+            async (): Promise<void> => {
+                try {
+                    setUsageLoading(
+                        true,
+                    );
+
+                    setUsageError(
+                        null,
+                    );
+
+                    /*
+                     * Không dùng mock nữa.
+                     *
+                     * GET
+                     * /ai/suggestions/usage/today
+                     */
+                    const result =
+                        await aiService
+                            .getTodayUsage();
+
+                    setUsage(
+                        result,
+                    );
+                } catch (error) {
+                    setUsage(
+                        null,
+                    );
+
+                    setUsageError(
+                        getApiErrorMessage(
+                            error,
+                            "Không thể tải lượt sử dụng AI.",
+                        ),
+                    );
+                } finally {
+                    setUsageLoading(
+                        false,
+                    );
+                }
+            },
+            [],
+        );
+
+    // =====================================================
+    // HISTORY
+    // =====================================================
+
+    const loadHistory =
+        useCallback(
+            async (): Promise<void> => {
+                try {
+                    setHistoryLoading(
+                        true,
+                    );
+
+                    setHistoryError(
+                        null,
+                    );
+
+                    const page =
+                        await aiService
+                            .getAiHistory(
+                                0,
+                                20,
+                            );
+
+                    setHistoryItems(
+                        page.content ??
+                        [],
+                    );
+                } catch (error) {
+                    setHistoryError(
+                        getApiErrorMessage(
+                            error,
+                            "Không thể tải lịch sử AI.",
+                        ),
+                    );
+                } finally {
+                    setHistoryLoading(
+                        false,
+                    );
+                }
+            },
+            [],
+        );
+
+    // =====================================================
+    // INITIAL LOAD
+    // =====================================================
+
+    useEffect(() => {
+        void Promise.all([
+            loadUsage(),
+            loadHistory(),
+        ]);
+    }, [
+        loadHistory,
+        loadUsage,
+    ]);
+
+    // =====================================================
+    // AUTO SCROLL
+    // =====================================================
+
+    useEffect(() => {
+        messagesEndRef.current
+            ?.scrollIntoView({
+                behavior: "smooth",
+                block: "end",
+            });
+    }, [
+        messages,
+        isTyping,
+    ]);
+
+    // =====================================================
+    // MESSAGE
+    // =====================================================
+
+    const appendUserMessage = (
+        text: string,
+    ): void => {
+        setMessages(
+            (previous) => [
+                ...previous,
+
+                {
+                    id:
+                        createMessageId(
+                            "user",
+                        ),
+
+                    sender:
+                        "user",
+
+                    text,
+
+                    timestamp:
+                        createTimestamp(),
+                },
+            ],
+        );
+    };
+
+    const appendAiMessage = (
+        text: string,
+
+        suggestionDetail?:
+        AiSuggestionDetailResponse,
+    ): void => {
+        setMessages(
+            (previous) => [
+                ...previous,
+
+                {
+                    id:
+                        createMessageId(
+                            "ai",
+                        ),
+
+                    sender:
+                        "ai",
+
+                    text,
+
+                    timestamp:
+                        createTimestamp(),
+
+                    suggestionDetail,
+                },
+            ],
+        );
+    };
+
+    // =====================================================
+    // UPDATE SUGGESTION
+    // =====================================================
+
+    const updateSuggestionEverywhere =
+        useCallback(
+            (
+                updated:
+                AiSuggestionDetailResponse,
+            ): void => {
+                setSelectedHistoryItem(
+                    (current) =>
+                        current?.id ===
+                        updated.id
+                            ? updated
+                            : current,
+                );
+
+                setMessages(
+                    (previous) =>
+                        previous.map(
+                            (
+                                message,
+                            ) =>
+                                message
+                                    .suggestionDetail
+                                    ?.id ===
+                                updated.id
+                                    ? {
+                                        ...message,
+
+                                        suggestionDetail:
+                                        updated,
+                                    }
+                                    : message,
+                        ),
+                );
+
+                setHistoryItems(
+                    (previous) =>
+                        previous.map(
+                            (
+                                item,
+                            ) =>
+                                item.id ===
+                                updated.id
+                                    ? {
+                                        ...item,
+                                        ...updated,
+                                    }
+                                    : item,
+                        ),
+                );
+
+                /*
+                 * Đồng bộ status / usage từ backend.
+                 */
+                void Promise.all([
+                    loadHistory(),
+                    loadUsage(),
+                ]);
+            },
+            [
+                loadHistory,
+                loadUsage,
+            ],
+        );
+
+    // =====================================================
+    // OPEN PLAN FORM
+    // =====================================================
+
+    const openPlanForm = (
+        mode:
+        AiPlanFormMode,
+    ): void => {
+        if (isTyping) {
+            return;
+        }
+
+        setPlanFormMode(
+            mode,
+        );
+
+        setShowAdvancedForm(
+            true,
+        );
+    };
+
+    // =====================================================
+    // GENERATE PLAN
+    // =====================================================
+
+    const submitPlanForm =
+        async (
+            value:
+            AiAdvancedPlanFormValue,
+        ): Promise<void> => {
+            if (isTyping) {
+                return;
+            }
+
+            appendUserMessage(
+                createPlanRequestMessage(
+                    planFormMode,
+                    value,
+                ),
+            );
+
+            setIsTyping(
+                true,
+            );
+
+            try {
+                let result:
+                    AiSuggestionResponse;
+
+                /*
+                 * Đây là phần quan trọng:
+                 *
+                 * FULL_PLAN
+                 * → generateFullPlan()
+                 *
+                 * WORKOUT_PLAN
+                 * → generateWorkoutPlan()
+                 *
+                 * NUTRITION_PLAN
+                 * → generateNutritionPlan()
+                 */
+                switch (
+                    planFormMode
+                    ) {
+                    case "WORKOUT_PLAN":
+                        result =
+                            await aiService
+                                .generateWorkoutPlan(
+                                    {
+                                        goal:
+                                        value.goal,
+
+                                        experienceLevel:
+                                        value
+                                            .experienceLevel,
+
+                                        activityLevel:
+                                        value
+                                            .activityLevel,
+
+                                        workoutDaysPerWeek:
+                                        value
+                                            .workoutDaysPerWeek,
+
+                                        workoutDurationMinutes:
+                                        value
+                                            .workoutDurationMinutes,
+
+                                        preferredLanguage:
+                                        value
+                                            .preferredLanguage,
+
+                                        userNote:
+                                            value
+                                                .userNote
+                                                .trim() ||
+                                            undefined,
+                                    },
+                                );
+
+                        break;
+
+                    case "NUTRITION_PLAN":
+                        result =
+                            await aiService
+                                .generateNutritionPlan(
+                                    {
+                                        goal:
+                                        value.goal,
+
+                                        activityLevel:
+                                        value
+                                            .activityLevel,
+
+                                        mealsPerDay:
+                                        value
+                                            .mealsPerDay,
+
+                                        preferredLanguage:
+                                        value
+                                            .preferredLanguage,
+
+                                        userNote:
+                                            value
+                                                .userNote
+                                                .trim() ||
+                                            undefined,
+                                    },
+                                );
+
+                        break;
+
+                    case "FULL_PLAN":
+                    default:
+                        result =
+                            await aiService
+                                .generateFullPlan(
+                                    {
+                                        goal:
+                                        value.goal,
+
+                                        experienceLevel:
+                                        value
+                                            .experienceLevel,
+
+                                        activityLevel:
+                                        value
+                                            .activityLevel,
+
+                                        workoutDaysPerWeek:
+                                        value
+                                            .workoutDaysPerWeek,
+
+                                        workoutDurationMinutes:
+                                        value
+                                            .workoutDurationMinutes,
+
+                                        mealsPerDay:
+                                        value
+                                            .mealsPerDay,
+
+                                        preferredLanguage:
+                                        value
+                                            .preferredLanguage,
+
+                                        userNote:
+                                            value
+                                                .userNote
+                                                .trim() ||
+                                            undefined,
+                                    },
+                                );
+
+                        break;
+                }
+
+                /*
+                 * Generate API trả summary response.
+                 *
+                 * Query detail để lấy:
+                 * - aiResponse
+                 * - items
+                 * - applied IDs
+                 * - feedback
+                 */
+                const detail =
+                    await aiService
+                        .getAiSuggestionDetail(
+                            result.id,
+                        );
+
+                appendAiMessage(
+                    detail.summary ||
+                    "FitLife AI đã hoàn thành yêu cầu của bạn.",
+
+                    detail,
+                );
+
+                setShowAdvancedForm(
+                    false,
+                );
+
+                void showAlert.success("Thành công", 
+                    getSuccessMessage(
+                        planFormMode,
+                    ),
+                );
+
+                await Promise.all([
+                    loadHistory(),
+                    loadUsage(),
+                ]);
+            } catch (error) {
+                const message =
+                    getApiErrorMessage(
+                        error,
+                        "Không thể tạo kế hoạch AI.",
+                    );
+
+                appendAiMessage(
+                    `Xin lỗi, yêu cầu chưa thể hoàn thành.\n\n${message}`,
+                );
+
+                void showAlert.error("Đã xảy ra lỗi", 
+                    message,
+                );
+            } finally {
+                setIsTyping(
+                    false,
+                );
+            }
+        };
+
+    // =====================================================
+    // BODY ANALYSIS
+    // =====================================================
+
+    const handleBodyAnalysis =
+        async (): Promise<void> => {
+            if (isTyping) {
+                return;
+            }
+
+            appendUserMessage(
+                "Phân tích chỉ số cơ thể hiện tại và đưa ra khuyến nghị thực tế.",
+            );
+
+            setIsTyping(
+                true,
+            );
+
+            try {
+                /*
+                 * analyzeBody() đã trả
+                 * AiSuggestionDetailResponse.
+                 *
+                 * Không cần query detail lần hai.
+                 */
+                const detail =
+                    await aiService
+                        .analyzeBody(
+                            {
+                                preferredLanguage:
+                                    "vi",
+
+                                userNote:
+                                    "Phân tích ngắn gọn, thực tế và ưu tiên an toàn.",
+                            },
+                        );
+
+                appendAiMessage(
+                    detail.summary ||
+                    "FitLife AI đã hoàn thành phân tích cơ thể.",
+
+                    detail,
+                );
+
+                void showAlert.success("Thành công", 
+                    "Đã phân tích cơ thể.",
+                );
+
+                await Promise.all([
+                    loadHistory(),
+                    loadUsage(),
+                ]);
+            } catch (error) {
+                const message =
+                    getApiErrorMessage(
+                        error,
+                        "Không thể phân tích cơ thể.",
+                    );
+
+                appendAiMessage(
+                    `Xin lỗi, mình chưa thể phân tích cơ thể lúc này.\n\n${message}`,
+                );
+
+                void showAlert.error("Đã xảy ra lỗi", 
+                    message,
+                );
+            } finally {
+                setIsTyping(
+                    false,
+                );
+            }
+        };
+
+    // =====================================================
+    // QUICK ACTION
+    // =====================================================
+
+    const handleQuickAction = (
+        action:
+        QuickAction,
+    ): void => {
+        if (
+            action.type ===
+            "BODY_ANALYSIS"
+        ) {
+            void handleBodyAnalysis();
+
+            return;
+        }
+
+        openPlanForm(
+            action.type,
+        );
+    };
+
+    // =====================================================
+    // CHAT PLACEHOLDER
+    // =====================================================
+
+    const handleSend =
+        (): void => {
+            const normalizedInput =
+                input.trim();
+
+            if (
+                !normalizedInput ||
+                isTyping
+            ) {
+                return;
+            }
+
+            appendUserMessage(
+                normalizedInput,
+            );
+
+            setInput("");
+
+            /*
+             * Chưa có backend Chat AI.
+             *
+             * Không fake AI response như thể
+             * chatbot đang hoạt động.
+             */
+            appendAiMessage(
+                "Chat tự do hiện chưa được bật. Bạn có thể sử dụng Phân tích cơ thể, Kế hoạch toàn diện, Kế hoạch tập luyện hoặc Kế hoạch dinh dưỡng.",
+            );
+        };
+
+    const handleKeyDown = (
+        event:
+        KeyboardEvent<HTMLInputElement>,
+    ): void => {
+        if (
+            event.key ===
+            "Enter" &&
+            !event.shiftKey
+        ) {
+            event.preventDefault();
+
+            handleSend();
+        }
+    };
+
+    // =====================================================
+    // HISTORY DETAIL
+    // =====================================================
+
+    const openHistoryDetail =
+        async (
+            item:
+            AiSuggestionResponse,
+        ): Promise<void> => {
+            try {
+                setHistoryOpen(
+                    false,
+                );
+
+                setSelectedHistoryItem(
+                    null,
+                );
+
+                setDetailLoading(
+                    true,
+                );
+
+                const detail =
+                    await aiService
+                        .getAiSuggestionDetail(
+                            item.id,
+                        );
+
+                setSelectedHistoryItem(
+                    detail,
+                );
+            } catch (error) {
+                void showAlert.error("Đã xảy ra lỗi", 
+                    getApiErrorMessage(
+                        error,
+                        "Không thể tải chi tiết lịch sử AI.",
+                    ),
+                );
+            } finally {
+                setDetailLoading(
+                    false,
+                );
+            }
+        };
+
+    // =====================================================
+    // UI
+    // =====================================================
+
+    return (
+        <div
+            ref={
+                containerRef
+            }
+            className="
+                relative
+                flex
+                min-h-[calc(100vh-8rem)]
+                flex-col
+            "
+        >
+            <PageHeader
+                eyebrow="FitLife Intelligence"
+                title="FitLife AI"
+                description="Phân tích dữ liệu cơ thể và xây dựng kế hoạch tập luyện, dinh dưỡng phù hợp với mục tiêu của bạn."
+                action={
+                    <Button
+                        variant="outline"
+                        onClick={() =>
+                            setHistoryOpen(
+                                true,
+                            )
+                        }
+                        className="rounded-full"
                     >
-                      {msg.text}
+                        <History className="h-4 w-4" />
+
+                        Lịch sử AI
+                    </Button>
+                }
+            />
+
+            {/* =================================================
+             * USAGE
+             * ================================================= */}
+
+            <div className="mb-5">
+                <AiUsageCard
+                    usage={
+                        usage
+                    }
+                    loading={
+                        usageLoading
+                    }
+                    error={
+                        usageError
+                    }
+                    onReload={() => {
+                        void loadUsage();
+                    }}
+                />
+            </div>
+
+            {/* =================================================
+             * AI WORKSPACE
+             * ================================================= */}
+
+            <div
+                className="
+                    flex
+                    min-h-[650px]
+                    flex-1
+                    flex-col
+                    overflow-hidden
+                    rounded-3xl
+                    border
+                    border-slate-200
+                    bg-white
+                    shadow-sm
+                "
+            >
+                {/* =============================================
+                 * CHAT BODY
+                 * ============================================= */}
+
+                <div
+                    className="
+                        flex-1
+                        overflow-y-auto
+                        bg-slate-50/70
+                        p-4
+                        sm:p-6
+                    "
+                >
+                    {/* =========================================
+                     * QUICK ACTIONS
+                     * ========================================= */}
+
+                    {messages.length ===
+                        1 && (
+                            <section className="mb-8">
+                                <div>
+                                    <h2 className="text-lg font-black text-slate-900">
+                                        Bạn muốn FitLife AI hỗ trợ gì?
+                                    </h2>
+
+                                    <p className="mt-1 text-sm text-slate-500">
+                                        Chọn một chức năng để bắt đầu từ dữ liệu thực tế của bạn.
+                                    </p>
+                                </div>
+
+                                <div
+                                    className="
+                                    mt-4
+                                    grid
+                                    grid-cols-1
+                                    gap-4
+                                    sm:grid-cols-2
+                                    xl:grid-cols-4
+                                "
+                                >
+                                    {QUICK_ACTIONS.map(
+                                        (
+                                            action,
+                                        ) => {
+                                            const Icon =
+                                                action.icon;
+
+                                            return (
+                                                <button
+                                                    key={
+                                                        action.type
+                                                    }
+                                                    type="button"
+                                                    disabled={
+                                                        isTyping
+                                                    }
+                                                    onClick={() =>
+                                                        handleQuickAction(
+                                                            action,
+                                                        )
+                                                    }
+                                                    className="
+                                                    group
+                                                    rounded-2xl
+                                                    border
+                                                    border-slate-200
+                                                    bg-white
+                                                    p-5
+                                                    text-left
+                                                    shadow-sm
+                                                    transition-all
+                                                    duration-200
+
+                                                    hover:-translate-y-1
+                                                    hover:border-emerald-300
+                                                    hover:shadow-lg
+
+                                                    disabled:cursor-not-allowed
+                                                    disabled:opacity-60
+                                                "
+                                                >
+                                                    <div
+                                                        className="
+                                                        flex
+                                                        h-11
+                                                        w-11
+                                                        items-center
+                                                        justify-center
+                                                        rounded-2xl
+                                                        bg-gradient-to-br
+                                                        from-emerald-100
+                                                        to-violet-100
+                                                        text-emerald-700
+                                                        transition
+                                                        group-hover:scale-110
+                                                    "
+                                                    >
+                                                        <Icon className="h-5 w-5" />
+                                                    </div>
+
+                                                    <h3 className="mt-4 font-black text-slate-900">
+                                                        {
+                                                            action.label
+                                                        }
+                                                    </h3>
+
+                                                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                                                        {
+                                                            action.description
+                                                        }
+                                                    </p>
+                                                </button>
+                                            );
+                                        },
+                                    )}
+                                </div>
+                            </section>
+                        )}
+
+                    {/* =========================================
+                     * MESSAGES
+                     * ========================================= */}
+
+                    <div className="space-y-6">
+                        {messages.map(
+                            (
+                                message,
+                            ) => (
+                                <AiChatMessage
+                                    key={
+                                        message.id
+                                    }
+                                    message={
+                                        message
+                                    }
+                                    onSuggestionChanged={
+                                        updateSuggestionEverywhere
+                                    }
+                                />
+                            ),
+                        )}
+
+                        {isTyping && (
+                            <div className="flex max-w-4xl gap-4">
+                                <div
+                                    className="
+                                        mt-1
+                                        flex
+                                        h-9
+                                        w-9
+                                        shrink-0
+                                        items-center
+                                        justify-center
+                                        rounded-xl
+                                        bg-gradient-to-br
+                                        from-emerald-500
+                                        to-violet-600
+                                        text-white
+                                    "
+                                >
+                                    <Bot className="h-4 w-4" />
+                                </div>
+
+                                <div
+                                    className="
+                                        flex
+                                        items-center
+                                        gap-3
+                                        rounded-2xl
+                                        rounded-tl-md
+                                        border
+                                        border-slate-200
+                                        bg-white
+                                        px-4
+                                        py-3
+                                        shadow-sm
+                                    "
+                                >
+                                    <Loader2 className="h-4 w-4 animate-spin text-violet-600" />
+
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-700">
+                                            FitLife AI đang xử lý...
+                                        </p>
+
+                                        <p className="text-xs text-slate-400">
+                                            Quá trình có thể mất từ 10 đến 120 giây.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div
+                            ref={
+                                messagesEndRef
+                            }
+                        />
                     </div>
-                    <span className="text-[11px] text-slate-400 mt-1.5 font-medium px-1">{msg.timestamp}</span>
-                  </div>
                 </div>
-              </div>
-            ))}
 
-            {/* Typing Indicator */}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="flex gap-3 max-w-[85%] flex-row">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-md border-2 border-white flex-shrink-0">
-                    <Bot className="w-5 h-5" />
-                  </div>
-                  <div className="px-5 py-4 rounded-2xl rounded-tl-sm bg-white border border-slate-100 shadow-sm flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
-                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
-                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
-                  </div>
+                {/* =============================================
+                 * CHAT INPUT
+                 * ============================================= */}
+
+                <div
+                    className="
+                        border-t
+                        border-slate-200
+                        bg-white
+                        p-4
+                    "
+                >
+                    <div
+                        className="
+                            mx-auto
+                            flex
+                            max-w-5xl
+                            items-center
+                            gap-2
+                        "
+                    >
+                        <button
+                            type="button"
+                            disabled={
+                                isTyping
+                            }
+                            onClick={() =>
+                                openPlanForm(
+                                    "FULL_PLAN",
+                                )
+                            }
+                            title="Tạo kế hoạch AI"
+                            aria-label="Tạo kế hoạch AI"
+                            className="
+                                flex
+                                h-11
+                                w-11
+                                shrink-0
+                                items-center
+                                justify-center
+                                rounded-xl
+                                bg-violet-100
+                                text-violet-700
+                                transition
+                                hover:bg-violet-200
+
+                                disabled:cursor-not-allowed
+                                disabled:opacity-50
+                            "
+                        >
+                            <Wand2 className="h-5 w-5" />
+                        </button>
+
+                        <div className="relative flex-1">
+                            <Input
+                                id="ai-chat-input"
+                                value={
+                                    input
+                                }
+                                disabled={
+                                    isTyping
+                                }
+                                onChange={(
+                                    event,
+                                ) =>
+                                    setInput(
+                                        event
+                                            .target
+                                            .value,
+                                    )
+                                }
+                                onKeyDown={
+                                    handleKeyDown
+                                }
+                                placeholder="Nhập câu hỏi hoặc chọn một chức năng AI..."
+                                className="mt-0 pr-14"
+                            />
+
+                            <Button
+                                variant="primary"
+                                disabled={
+                                    !input.trim() ||
+                                    isTyping
+                                }
+                                onClick={
+                                    handleSend
+                                }
+                                aria-label="Gửi yêu cầu"
+                                className="
+                                    absolute
+                                    right-1.5
+                                    top-1/2
+                                    h-9
+                                    min-h-9
+                                    w-9
+                                    -translate-y-1/2
+                                    rounded-lg
+                                    p-0
+                                "
+                            >
+                                <Send className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+
+                    <p className="mx-auto mt-2 max-w-5xl text-center text-[10px] text-slate-400">
+                        FitLife AI cung cấp gợi ý hỗ trợ, không thay thế chẩn đoán hoặc tư vấn y tế chuyên môn.
+                    </p>
                 </div>
-              </div>
+            </div>
+
+            {/* =================================================
+             * PLAN MODAL
+             * ================================================= */}
+
+            <AiAdvancedPlanModal
+                mode={
+                    planFormMode
+                }
+                open={
+                    showAdvancedForm
+                }
+                submitting={
+                    isTyping
+                }
+                onClose={() => {
+                    if (
+                        !isTyping
+                    ) {
+                        setShowAdvancedForm(
+                            false,
+                        );
+                    }
+                }}
+                onSubmit={
+                    submitPlanForm
+                }
+            />
+
+            {/* =================================================
+             * HISTORY DRAWER
+             * ================================================= */}
+
+            <AiHistoryDrawer
+                open={
+                    historyOpen
+                }
+                items={
+                    historyItems
+                }
+                loading={
+                    historyLoading
+                }
+                error={
+                    historyError
+                }
+                onClose={() =>
+                    setHistoryOpen(
+                        false,
+                    )
+                }
+                onReload={() => {
+                    void loadHistory();
+                }}
+                onSelect={(
+                    item,
+                ) => {
+                    void openHistoryDetail(
+                        item,
+                    );
+                }}
+            />
+
+            {/* =================================================
+             * HISTORY DETAIL
+             * ================================================= */}
+
+            {(
+                selectedHistoryItem ||
+                detailLoading
+            ) && (
+                <>
+                    <button
+                        type="button"
+                        aria-label="Đóng chi tiết AI"
+                        onClick={() => {
+                            if (
+                                !detailLoading
+                            ) {
+                                setSelectedHistoryItem(
+                                    null,
+                                );
+                            }
+                        }}
+                        className="
+                            fixed
+                            inset-0
+                            z-50
+                            cursor-default
+                            bg-slate-950/60
+                            backdrop-blur-sm
+                        "
+                    />
+
+                    <section
+                        role="dialog"
+                        aria-modal="true"
+                        className="
+                            fixed
+                            inset-3
+                            z-[60]
+                            flex
+                            flex-col
+                            overflow-hidden
+                            rounded-3xl
+                            border
+                            border-slate-200
+                            bg-slate-50
+                            shadow-2xl
+
+                            sm:inset-8
+                        "
+                    >
+                        <header
+                            className="
+                                flex
+                                items-center
+                                justify-between
+                                border-b
+                                border-slate-200
+                                bg-white
+                                px-5
+                                py-4
+                            "
+                        >
+                            <div>
+                                <h2 className="font-black text-slate-900">
+                                    Chi tiết gợi ý AI
+                                </h2>
+
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                    Xem nội dung, áp dụng kế hoạch và gửi đánh giá.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                disabled={
+                                    detailLoading
+                                }
+                                onClick={() =>
+                                    setSelectedHistoryItem(
+                                        null,
+                                    )
+                                }
+                                className="
+                                    flex
+                                    h-9
+                                    w-9
+                                    items-center
+                                    justify-center
+                                    rounded-xl
+                                    bg-slate-100
+                                    text-slate-500
+                                    transition
+
+                                    hover:bg-slate-200
+                                    hover:text-slate-900
+                                "
+                                aria-label="Đóng chi tiết AI"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </header>
+
+                        <div
+                            className="
+                                flex-1
+                                overflow-y-auto
+                                p-4
+                                sm:p-6
+                            "
+                        >
+                            {detailLoading &&
+                            !selectedHistoryItem ? (
+                                <div
+                                    className="
+                                        flex
+                                        min-h-80
+                                        flex-col
+                                        items-center
+                                        justify-center
+                                    "
+                                >
+                                    <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+
+                                    <p className="mt-3 text-sm font-semibold text-slate-500">
+                                        Đang tải chi tiết...
+                                    </p>
+                                </div>
+                            ) : (
+                                selectedHistoryItem && (
+                                    <div className="mx-auto max-w-5xl">
+                                        <AiPlanViewer
+                                            suggestion={
+                                                selectedHistoryItem
+                                            }
+                                            onChanged={
+                                                updateSuggestionEverywhere
+                                            }
+                                        />
+
+                                        {selectedHistoryItem.status ===
+                                            "SUCCESS" &&
+                                            !selectedHistoryItem
+                                                .feedback && (
+                                                <AiFeedbackForm
+                                                    suggestionId={
+                                                        selectedHistoryItem.id
+                                                    }
+                                                    onSubmitted={() => {
+                                                        void aiService
+                                                            .getAiSuggestionDetail(
+                                                                selectedHistoryItem.id,
+                                                            )
+                                                            .then(
+                                                                updateSuggestionEverywhere,
+                                                            )
+                                                            .catch(
+                                                                (
+                                                                    error,
+                                                                ) => {
+                                                                    void showAlert.error("Đã xảy ra lỗi", 
+                                                                        getApiErrorMessage(
+                                                                            error,
+                                                                            "Không thể tải lại đánh giá AI.",
+                                                                        ),
+                                                                    );
+                                                                },
+                                                            );
+                                                    }}
+                                                />
+                                            )}
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    </section>
+                </>
             )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Chat Input */}
-          <div className="p-4 bg-white/80 border-t border-slate-100 flex-none backdrop-blur-md">
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full p-1.5 focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-400 transition-all shadow-sm">
-              <button className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors">
-                <Mic className="w-5 h-5" />
-              </button>
-              <input 
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Nhập câu hỏi hoặc yêu cầu của bạn..."
-                className="flex-1 bg-transparent px-2 text-slate-700 outline-none placeholder:text-slate-400 text-[15px]"
-                disabled={isTyping}
-              />
-              <button 
-                onClick={handleSend}
-                disabled={!input.trim() || isTyping}
-                className="p-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-md flex items-center justify-center"
-              >
-                {isTyping ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 translate-x-px -translate-y-px" />}
-              </button>
-            </div>
-            <p className="text-center text-[11px] text-slate-400 mt-3 font-medium">
-              AI có thể mắc sai lầm. Hãy kiểm tra lại các thông tin quan trọng.
-            </p>
-          </div>
         </div>
-
-        {/* Sidebar Cards */}
-        <aside className="space-y-4 flex-none hidden xl:block overflow-y-auto custom-scrollbar pb-4 pr-2">
-          <Card className="p-5 border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><CalendarPlus className="w-5 h-5"/></div>
-              <h3 className="font-bold text-slate-800">Lịch tập hiện tại</h3>
-            </div>
-            <p className="text-sm text-slate-600 font-medium">Push (Ngực - Vai - Tay sau)</p>
-            <div className="mt-3 flex items-center gap-2">
-              <div className="h-2 flex-1 rounded-full bg-slate-100 overflow-hidden"><div className="h-full w-[40%] bg-blue-500 rounded-full"/></div>
-              <span className="text-xs font-bold text-slate-500">2/5 buổi</span>
-            </div>
-          </Card>
-
-          <Card className="p-5 border-l-4 border-l-emerald-500 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><Utensils className="w-5 h-5"/></div>
-              <h3 className="font-bold text-slate-800">Mục tiêu dinh dưỡng</h3>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm"><span className="text-slate-500">Calo</span><span className="font-bold text-slate-700">2,100 kcal</span></div>
-              <div className="flex justify-between text-sm"><span className="text-slate-500">Protein</span><span className="font-bold text-emerald-600">150g</span></div>
-            </div>
-          </Card>
-
-          <Card className="p-5 border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-purple-50 text-purple-600 rounded-lg"><Activity className="w-5 h-5"/></div>
-              <h3 className="font-bold text-slate-800">Chỉ số BMI</h3>
-            </div>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-black text-slate-800">22.4</span>
-              <span className="text-sm font-bold text-emerald-600 mb-1 bg-emerald-50 px-2 py-0.5 rounded">Bình thường</span>
-            </div>
-            <p className="text-xs text-slate-500 mt-2">Dựa trên cân nặng 70kg, chiều cao 1m77</p>
-          </Card>
-          
-          <Card className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles className="w-24 h-24"/></div>
-            <h3 className="font-bold text-lg mb-2 relative z-10">Premium AI</h3>
-            <p className="text-sm text-slate-300 relative z-10 mb-4">Nâng cấp để mở khóa phân tích video tư thế tập và gọi điện trực tiếp với AI Coach.</p>
-            <button className="w-full py-2 bg-white text-slate-900 rounded-lg text-sm font-bold hover:bg-slate-100 transition-colors relative z-10">Nâng cấp ngay</button>
-          </Card>
-        </aside>
-      </div>
-    </div>
-  );
+    );
 }

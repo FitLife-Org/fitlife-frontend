@@ -1,0 +1,1163 @@
+import {
+    useCallback,
+    useEffect,
+    useState,
+    type FormEvent,
+} from "react";
+
+import {
+    showAlert,
+} from "../utils/alert";
+
+import {
+    getApiErrorMessage,
+} from "../utils/apiError";
+
+import {
+    memberService,
+} from "../services/memberService";
+
+import {
+    validateAdminMemberForm,
+} from "../utils/validators/adminMemberValidator";
+
+import type {
+    MemberProfile,
+    MemberStatus,
+    AdminMemberCreateRequest,
+    AdminMemberUpdateRequest,
+} from "../types/member.type";
+
+import type {
+    Subscription,
+} from "../types/subscription.type";
+
+import type {
+    CheckinRecord,
+} from "../types/checkin.type";
+
+const PAGE_SIZE = 20;
+
+// =====================================================
+// TYPES
+// =====================================================
+
+type MemberDetailTab =
+    | "profile"
+    | "subscription"
+    | "checkin"
+    | "timeline";
+
+type MemberFormValues =
+    Partial<MemberProfile> & {
+    username?: string;
+    password?: string;
+};
+
+// =====================================================
+// EMPTY FORM
+// =====================================================
+
+function createEmptyForm():
+    MemberFormValues {
+    return {
+        username: "",
+        password: "123456",
+
+        fullName: "",
+        email: "",
+        phone: "",
+
+        gender: "MALE",
+        dateOfBirth: "",
+
+        /**
+         * Chỉ dùng để UI hiển thị.
+         *
+         * Không gửi status trong create/update profile.
+         */
+        address: "",
+
+        emergencyContactName: "",
+        emergencyContactPhone: "",
+
+        fitnessGoal: null,
+
+        healthNote: "",
+    };
+}
+
+export function useUserManagement() {
+    // =====================================================
+    // LIST STATE
+    // =====================================================
+
+    const [
+        members,
+        setMembers,
+    ] =
+        useState<MemberProfile[]>(
+            [],
+        );
+
+    const [
+        totalItems,
+        setTotalItems,
+    ] =
+        useState(0);
+
+    const [
+        totalPages,
+        setTotalPages,
+    ] =
+        useState(0);
+
+    /**
+     * Spring Pageable bắt đầu từ page = 0.
+     */
+    const [
+        currentPage,
+        setCurrentPage,
+    ] =
+        useState(0);
+
+    const [
+        loading,
+        setLoading,
+    ] =
+        useState(true);
+
+    const [stats, setStats] = useState({
+        total: 0,
+        active: 0,
+        suspended: 0,
+        inactive: 0,
+    });
+
+    // =====================================================
+    // FILTER
+    // =====================================================
+
+    const [
+        searchTerm,
+        setSearchTerm,
+    ] =
+        useState("");
+
+    const [
+        submittedSearchTerm,
+        setSubmittedSearchTerm,
+    ] =
+        useState("");
+
+    const [
+        statusFilter,
+        setStatusFilter,
+    ] =
+        useState<
+            MemberStatus | "ALL"
+        >("ALL");
+
+    // =====================================================
+    // DETAIL
+    // =====================================================
+
+    const [
+        detailModalOpen,
+        setDetailModalOpen,
+    ] =
+        useState(false);
+
+    const [
+        selectedMember,
+        setSelectedMember,
+    ] =
+        useState<
+            MemberProfile | null
+        >(null);
+
+    const [
+        detailTab,
+        setDetailTab,
+    ] =
+        useState<MemberDetailTab>(
+            "profile",
+        );
+
+    const [
+        memberSubscriptions,
+        setMemberSubscriptions,
+    ] =
+        useState<Subscription[]>(
+            [],
+        );
+
+    const [
+        memberCheckins,
+        setMemberCheckins,
+    ] =
+        useState<CheckinRecord[]>(
+            [],
+        );
+
+    const [
+        detailLoading,
+        setDetailLoading,
+    ] =
+        useState(false);
+
+    // =====================================================
+    // FORM
+    // =====================================================
+
+    const [
+        showFormView,
+        setShowFormView,
+    ] =
+        useState(false);
+
+    const [
+        isEditMode,
+        setIsEditMode,
+    ] =
+        useState(false);
+
+    const [
+        formValues,
+        setFormValues,
+    ] =
+        useState<MemberFormValues>(
+            createEmptyForm(),
+        );
+
+    const [
+        formLoading,
+        setFormLoading,
+    ] =
+        useState(false);
+
+    // =====================================================
+    // FETCH LIST
+    // =====================================================
+
+    const fetchMembers =
+        useCallback(
+            async (
+                page = 0,
+            ): Promise<void> => {
+                try {
+                    setLoading(
+                        true,
+                    );
+
+                    const keyword = submittedSearchTerm.trim() || undefined;
+
+                    const [data, allStats, activeStats, suspendedStats, inactiveStats] = await Promise.all([
+                        memberService.getMembers({
+                            page,
+                            size: PAGE_SIZE,
+                            keyword,
+                            status: (statusFilter === "ALL" ? undefined : statusFilter) as any,
+                        }),
+                        memberService.getMembers({ size: 1, keyword }),
+                        memberService.getMembers({ size: 1, keyword, status: "ACTIVE" as any }),
+                        memberService.getMembers({ size: 1, keyword, status: "SUSPENDED" as any }),
+                        memberService.getMembers({ size: 1, keyword, status: "INACTIVE" as any }),
+                    ]);
+
+                    setMembers(data.content ?? []);
+                    setTotalItems(data.totalElements ?? 0);
+                    setTotalPages(data.totalPages ?? 0);
+                    setCurrentPage(data.page ?? page);
+
+                    setStats({
+                        total: allStats.totalElements ?? 0,
+                        active: activeStats.totalElements ?? 0,
+                        suspended: suspendedStats.totalElements ?? 0,
+                        inactive: inactiveStats.totalElements ?? 0,
+                    });
+                } catch (
+                    error:
+                    unknown
+                    ) {
+                    console.error(
+                        "API error fetching members:",
+                        error,
+                    );
+
+                    setMembers(
+                        [],
+                    );
+
+                    setTotalItems(
+                        0,
+                    );
+
+                    setTotalPages(
+                        0,
+                    );
+
+                    showAlert.error(
+                        "Không thể tải hội viên",
+
+                        getApiErrorMessage(
+                            error,
+                            "Không thể tải danh sách hội viên.",
+                        ),
+                    );
+                } finally {
+                    setLoading(
+                        false,
+                    );
+                }
+            },
+            [
+                statusFilter,
+                submittedSearchTerm,
+            ],
+        );
+
+    useEffect(() => {
+        void fetchMembers(
+            currentPage,
+        );
+    }, [
+        currentPage,
+        fetchMembers,
+    ]);
+
+    /**
+     * Khi đổi filter:
+     * quay lại trang đầu.
+     */
+    useEffect(() => {
+        setCurrentPage(
+            0,
+        );
+    }, [
+        statusFilter,
+    ]);
+
+    // =====================================================
+    // SEARCH
+    // =====================================================
+
+    const handleSearchSubmit =
+        (
+            event:
+            FormEvent<HTMLFormElement>,
+        ): void => {
+            event.preventDefault();
+
+            setCurrentPage(
+                0,
+            );
+
+            setSubmittedSearchTerm(
+                searchTerm.trim(),
+            );
+        };
+
+    // =====================================================
+    // DETAIL
+    // =====================================================
+
+    const handleOpenDetail =
+        async (
+            member:
+            MemberProfile,
+        ): Promise<void> => {
+            setSelectedMember(
+                member,
+            );
+
+            setDetailTab(
+                "profile",
+            );
+
+            setDetailModalOpen(
+                true,
+            );
+
+            setDetailLoading(
+                true,
+            );
+
+            try {
+                const [
+                    detailedProfile,
+                    subscriptions,
+                    checkins,
+                ] =
+                    await Promise.allSettled([
+                        memberService
+                            .getMemberById(
+                                member.id,
+                            ),
+
+                        memberService
+                            .getMemberSubscriptions(
+                                member.id,
+                            ),
+
+                        memberService
+                            .getMemberCheckins(
+                                member.id,
+                            ),
+                    ]);
+
+                if (
+                    detailedProfile.status ===
+                    "fulfilled"
+                ) {
+                    setSelectedMember(
+                        detailedProfile.value,
+                    );
+                }
+
+                setMemberSubscriptions(
+                    subscriptions.status ===
+                    "fulfilled"
+                        ? subscriptions.value
+                        : [],
+                );
+
+                setMemberCheckins(
+                    checkins.status ===
+                    "fulfilled"
+                        ? checkins.value
+                        : [],
+                );
+            } catch (
+                error:
+                unknown
+                ) {
+                console.error(
+                    "Failed to load member details:",
+                    error,
+                );
+
+                setMemberSubscriptions(
+                    [],
+                );
+
+                setMemberCheckins(
+                    [],
+                );
+            } finally {
+                setDetailLoading(
+                    false,
+                );
+            }
+        };
+
+    // =====================================================
+    // CREATE
+    // =====================================================
+
+    const handleOpenCreate =
+        (): void => {
+            setSelectedMember(
+                null,
+            );
+
+            setIsEditMode(
+                false,
+            );
+
+            setFormValues(
+                createEmptyForm(),
+            );
+
+            setShowFormView(
+                true,
+            );
+        };
+
+    // =====================================================
+    // EDIT
+    // =====================================================
+
+    const handleOpenEdit =
+        (
+            member:
+            MemberProfile,
+        ): void => {
+            setIsEditMode(
+                true,
+            );
+
+            setSelectedMember(
+                member,
+            );
+
+            setFormValues({
+                id:
+                member.id,
+
+                username:
+                member.username,
+
+                fullName:
+                member.fullName,
+
+                email:
+                member.email,
+
+                phone:
+                    member.phone ??
+                    "",
+
+                gender:
+                    member.gender ??
+                    "MALE",
+
+                dateOfBirth:
+                    member.dateOfBirth ??
+                    "",
+
+                /**
+                 * Chỉ hiển thị trên UI.
+                 *
+                 * Không gửi trong updatePayload.
+                 */
+                address:
+                    member.address ??
+                    "",
+
+                emergencyContactName:
+                    member
+                        .emergencyContactName ??
+                    "",
+
+                emergencyContactPhone:
+                    member
+                        .emergencyContactPhone ??
+                    "",
+
+                fitnessGoal:
+                    member.fitnessGoal ??
+                    null,
+
+                healthNote:
+                    member.healthNote ??
+                    "",
+            });
+
+            setShowFormView(
+                true,
+            );
+        };
+
+    // =====================================================
+    // FORM SUBMIT
+    // =====================================================
+
+    const handleFormSubmit =
+        async (
+            event:
+            FormEvent<HTMLFormElement>,
+        ): Promise<void> => {
+            event.preventDefault();
+
+            /**
+             * UPDATE PROFILE
+             *
+             * Không gửi status.
+             * Status sử dụng endpoint riêng.
+             */
+            const updatePayload:
+                AdminMemberUpdateRequest = {
+                fullName:
+                formValues.fullName,
+
+                email:
+                formValues.email,
+
+                phone:
+                formValues.phone,
+
+                gender:
+                formValues.gender,
+
+                dateOfBirth:
+                formValues.dateOfBirth,
+
+                address:
+                formValues.address,
+
+                emergencyContactName:
+                formValues
+                    .emergencyContactName,
+
+                emergencyContactPhone:
+                formValues
+                    .emergencyContactPhone,
+
+                fitnessGoal:
+                formValues
+                    .fitnessGoal,
+
+                healthNote:
+                formValues
+                    .healthNote,
+            };
+
+            /**
+             * CREATE MEMBER
+             */
+            const createPayload:
+                AdminMemberCreateRequest = {
+                username:
+                    formValues.username ??
+                    "",
+
+                password:
+                    formValues.password ??
+                    "",
+
+                fullName:
+                    formValues.fullName ??
+                    "",
+
+                email:
+                    formValues.email ??
+                    "",
+
+                phone:
+                formValues.phone,
+
+                gender:
+                formValues.gender,
+
+                dateOfBirth:
+                formValues.dateOfBirth,
+
+                address:
+                formValues.address,
+
+                emergencyContactName:
+                formValues
+                    .emergencyContactName,
+
+                emergencyContactPhone:
+                formValues
+                    .emergencyContactPhone,
+
+                fitnessGoal:
+                formValues
+                    .fitnessGoal,
+
+                healthNote:
+                formValues
+                    .healthNote,
+            };
+
+            const validationPayload:
+                | AdminMemberCreateRequest
+                | AdminMemberUpdateRequest =
+                isEditMode
+                    ? updatePayload
+                    : createPayload;
+
+            const isValid =
+                validateAdminMemberForm(
+                    validationPayload,
+
+                    !isEditMode,
+
+                    members,
+
+                    selectedMember
+                        ?.id,
+                );
+
+            if (!isValid) {
+                return;
+            }
+
+            try {
+                setFormLoading(
+                    true,
+                );
+
+                if (
+                    isEditMode &&
+                    selectedMember
+                ) {
+                    let updatedMember =
+                        await memberService
+                            .updateMember(
+                                selectedMember.id,
+                                updatePayload,
+                            );
+
+                    if (formValues.status && formValues.status !== selectedMember.status) {
+                        await memberService.updateMemberStatus(selectedMember.id, formValues.status as MemberStatus);
+                        updatedMember = { ...updatedMember, status: formValues.status as MemberStatus };
+                    }
+
+                    setMembers(
+                        (
+                            previous,
+                        ) =>
+                            previous.map(
+                                (
+                                    member,
+                                ) =>
+                                    member.id ===
+                                    updatedMember.id
+                                        ? updatedMember
+                                        : member,
+                            ),
+                    );
+
+                    setSelectedMember(
+                        updatedMember,
+                    );
+
+                    showAlert.success(
+                        "Thành công",
+                        "Đã cập nhật thông tin hội viên.",
+                    );
+                } else {
+                    await memberService
+                        .createMember(
+                            createPayload,
+                        );
+
+                    showAlert.success(
+                        "Thành công",
+                        "Đã thêm hội viên mới.",
+                    );
+                }
+
+                setShowFormView(
+                    false,
+                );
+
+                /**
+                 * Sau create/update:
+                 * reload lại list từ backend.
+                 */
+                if (
+                    currentPage !==
+                    0
+                ) {
+                    setCurrentPage(
+                        0,
+                    );
+                } else {
+                    await fetchMembers(
+                        0,
+                    );
+                }
+            } catch (
+                error:
+                unknown
+                ) {
+                console.error(
+                    "Member form submit error:",
+                    error,
+                );
+
+                showAlert.error(
+                    "Thao tác thất bại",
+
+                    getApiErrorMessage(
+                        error,
+                        "Vui lòng kiểm tra lại thông tin.",
+                    ),
+                );
+            } finally {
+                setFormLoading(
+                    false,
+                );
+            }
+        };
+
+    // =====================================================
+    // STATUS
+    // =====================================================
+
+    const handleToggleStatus =
+        async (
+            member:
+            MemberProfile,
+        ): Promise<void> => {
+            /**
+             * FitLife Member:
+             *
+             * ACTIVE
+             *     ↓ khóa
+             * SUSPENDED
+             *
+             * SUSPENDED
+             *     ↓ mở
+             * ACTIVE
+             */
+            const currentlySuspended =
+                member.status === "SUSPENDED" || member.status === "INACTIVE";
+
+            const newStatus:
+                MemberStatus =
+                currentlySuspended
+                    ? "ACTIVE"
+                    : "SUSPENDED";
+
+            const actionText =
+                currentlySuspended
+                    ? "Mở khóa"
+                    : "Khóa";
+
+            const result =
+                await showAlert.confirm(
+                    `${actionText} tài khoản?`,
+
+                    `Bạn có chắc chắn muốn ${actionText.toLowerCase()} tài khoản của hội viên ${member.fullName}?`,
+                );
+
+            if (
+                !result.isConfirmed
+            ) {
+                return;
+            }
+
+            try {
+                await memberService.updateMemberStatus(member.id, newStatus);
+                const updatedMember = { ...member, status: newStatus as any };
+
+                await fetchMembers();
+
+                showAlert.success(
+                    "Thành công",
+                    `Đã ${actionText.toLowerCase()} tài khoản hội viên.`,
+                );
+
+                /**
+                 * Reload để đồng bộ tuyệt đối
+                 * với dữ liệu backend.
+                 */
+                await fetchMembers(
+                    currentPage,
+                );
+            } catch (
+                error:
+                unknown
+                ) {
+                console.error(
+                    "Failed to update member status:",
+                    error,
+                );
+
+                showAlert.error(
+                    "Thao tác thất bại",
+
+                    getApiErrorMessage(
+                        error,
+
+                        `Không thể ${actionText.toLowerCase()} tài khoản hội viên.`,
+                    ),
+                );
+            }
+        };
+
+    const handleDeleteMember = async (member: MemberProfile): Promise<void> => {
+        const isInactive = member.status === "INACTIVE";
+        const actionText = isInactive ? "Khôi phục" : "Ngưng hoạt động";
+        const result = await showAlert.confirm(
+            `${actionText} tài khoản?`,
+            `Bạn có chắc chắn muốn ${actionText.toLowerCase()} tài khoản của hội viên ${member.fullName}?`
+        );
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+            if (isInactive) {
+                await memberService.updateMemberStatus(member.id, "ACTIVE");
+            } else {
+                await memberService.updateMemberStatus(member.id, "INACTIVE");
+            }
+
+            showAlert.success(
+                "Thành công",
+                `Đã ${actionText.toLowerCase()} tài khoản hội viên.`
+            );
+
+            await fetchMembers(currentPage);
+        } catch (error: unknown) {
+            console.error(`Failed to ${isInactive ? 'restore' : 'delete'} member:`, error);
+            showAlert.error(
+                "Thao tác thất bại",
+                getApiErrorMessage(error, `Không thể ${actionText.toLowerCase()} tài khoản hội viên.`)
+            );
+        }
+    };
+
+    // =====================================================
+    // CLIENT FILTER
+    // =====================================================
+
+    /**
+     * Backend search bằng submittedSearchTerm.
+     *
+     * Client filter được giữ để UI phản hồi
+     * trong lúc người dùng đang nhập.
+     */
+    const filteredMembers =
+        members.filter(
+            (
+                member,
+            ) => {
+                const keyword =
+                    searchTerm
+                        .trim()
+                        .toLowerCase();
+
+                if (!keyword) {
+                    return true;
+                }
+
+                return (
+                    (
+                        member.fullName ??
+                        ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            keyword,
+                        )
+                    ||
+                    (
+                        member.email ??
+                        ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            keyword,
+                        )
+                    ||
+                    (
+                        member.phone ??
+                        ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            keyword,
+                        )
+                    ||
+                    (
+                        member.memberCode ??
+                        ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            keyword,
+                        )
+                );
+            },
+        );
+
+    // =====================================================
+    // SUMMARY
+    // =====================================================
+
+    const totalCount = stats.total;
+    const activeCount = stats.active;
+    const suspendedCount = stats.suspended;
+    const inactiveCount = stats.inactive;
+
+    const lockedCount = stats.suspended;
+    const pendingCount = stats.inactive;
+
+    // =====================================================
+    // BMI
+    // =====================================================
+
+    const getBmiInfo =
+        (
+            heightCm?: number,
+            weightKg?: number,
+            providedBmi?: number,
+        ) => {
+            let bmiValue =
+                providedBmi;
+
+            if (!bmiValue) {
+                if (
+                    !heightCm ||
+                    !weightKg
+                ) {
+                    return {
+                        value:
+                            "-",
+
+                        label:
+                            "Chưa có chỉ số",
+
+                        color:
+                            "text-slate-400",
+                    };
+                }
+
+                const heightInMeters =
+                    heightCm /
+                    100;
+
+                bmiValue =
+                    Number(
+                        (
+                            weightKg /
+                            (
+                                heightInMeters *
+                                heightInMeters
+                            )
+                        ).toFixed(
+                            1,
+                        ),
+                    );
+            }
+
+            if (
+                bmiValue <
+                18.5
+            ) {
+                return {
+                    value:
+                    bmiValue,
+
+                    label:
+                        "Gầy",
+
+                    color:
+                        "text-blue-500 bg-blue-50",
+                };
+            }
+
+            if (
+                bmiValue <
+                24.9
+            ) {
+                return {
+                    value:
+                    bmiValue,
+
+                    label:
+                        "Bình thường",
+
+                    color:
+                        "text-emerald-500 bg-emerald-50",
+                };
+            }
+
+            if (
+                bmiValue <
+                29.9
+            ) {
+                return {
+                    value:
+                    bmiValue,
+
+                    label:
+                        "Tiền béo phì",
+
+                    color:
+                        "text-amber-500 bg-amber-50",
+                };
+            }
+
+            return {
+                value:
+                bmiValue,
+
+                label:
+                    "Béo phì",
+
+                color:
+                    "text-rose-500 bg-rose-50",
+            };
+        };
+
+    // =====================================================
+    // RETURN
+    // =====================================================
+
+    return {
+        members,
+        filteredMembers,
+
+        totalItems,
+        totalPages,
+
+        currentPage,
+
+        pageSize:
+        PAGE_SIZE,
+
+        setCurrentPage,
+
+        loading,
+
+        searchTerm,
+        statusFilter,
+
+        setSearchTerm,
+        setStatusFilter,
+
+        detailModalOpen,
+        setDetailModalOpen,
+
+        showFormView,
+        setShowFormView,
+
+        selectedMember,
+
+        detailTab,
+        setDetailTab,
+
+        memberSubscriptions,
+        memberCheckins,
+
+        detailLoading,
+
+        isEditMode,
+
+        formValues,
+        setFormValues,
+
+        formLoading,
+
+        handleSearchSubmit,
+
+        handleOpenDetail,
+
+        handleOpenCreate,
+
+        handleOpenEdit,
+
+        handleFormSubmit,
+
+        handleToggleStatus,
+        handleDeleteMember,
+
+        totalCount,
+
+        activeCount,
+
+        suspendedCount,
+        inactiveCount,
+
+        /**
+         * Compatibility với UI cũ.
+         */
+        lockedCount,
+        pendingCount,
+
+        getBmiInfo,
+
+        refreshMembers:
+        fetchMembers,
+    };
+}

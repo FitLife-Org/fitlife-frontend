@@ -1,19 +1,49 @@
-import Card from "../../components/common/Card";
+import { Package, Clock } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
-import { formatCurrency } from "../../utils/formatCurrency";
+import GymPackageTab from "./components/GymPackageTab";
+import PackageDurationTab from "./components/PackageDurationTab";
+import { usePackageManagement } from "../../hooks/usePackageManagement";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
 
 export default function PackageManagementPage() {
+  const { activeTab, setActiveTab } = usePackageManagement();
+  const containerRef = usePageAnimation();
+
   return (
-    <>
-      <PageHeader title="Quản lý gói tập" description="Cấu hình giá, thời hạn và quyền lợi từng gói" />
-      <div className="grid gap-6 md:grid-cols-4">
-        {[
-          ["Basic", 199000],
-          ["Standard", 349000],
-          ["Premium", 599000],
-          ["PT Pro", 999000],
-        ].map(([name, price]) => <Card className="p-6" key={name}><h2 className="text-2xl font-black text-fit-text">{name}</h2><p className="mt-4 text-3xl font-black text-fit-primary">{formatCurrency(Number(price))}</p></Card>)}
+    <div className="space-y-6" ref={containerRef}>
+      <PageHeader 
+        title="Cấu hình Gói tập & Thời hạn" 
+        description="Quản lý thông tin gói tập Gym và cấu hình thời hạn chung (1 tháng, 3 tháng...)" 
+      />
+
+      <div className="relative flex space-x-2 bg-slate-900/5 p-1.5 rounded-2xl w-fit border border-white/40 shadow-sm backdrop-blur-md">
+        <button
+          onClick={() => setActiveTab("packages")}
+          className={`relative flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+            activeTab === "packages"
+              ? "bg-gradient-to-r from-fit-primary to-blue-600 text-white shadow-lg shadow-fit-primary/30 scale-[1.02]"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+          }`}
+        >
+          <Package className={`w-5 h-5 ${activeTab === 'packages' ? 'animate-bounce' : ''}`} />
+          Danh sách Gói tập
+        </button>
+        <button
+          onClick={() => setActiveTab("durations")}
+          className={`relative flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+            activeTab === "durations"
+              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+          }`}
+        >
+          <Clock className={`w-5 h-5 ${activeTab === 'durations' ? 'animate-pulse' : ''}`} />
+          Thời hạn Gói tập
+        </button>
       </div>
-    </>
+
+      <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+        {activeTab === "packages" ? <GymPackageTab /> : <PackageDurationTab />}
+      </div>
+    </div>
   );
 }

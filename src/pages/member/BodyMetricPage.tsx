@@ -1,33 +1,104 @@
-import Card from "../../components/common/Card";
+import { Plus } from "lucide-react";
+
 import PageHeader from "../../components/common/PageHeader";
+import { useBodyMetric } from "../../hooks/useBodyMetric";
+import { usePageAnimation } from "../../hooks/usePageAnimation";
+
+import { BodyMetricCards } from "./components/body-metric/BodyMetricCards";
+import { BodyMetricCharts } from "./components/body-metric/BodyMetricCharts";
+import { BodyMetricHistory } from "./components/body-metric/BodyMetricHistory";
+import { BodyMetricFormModal } from "./components/body-metric/BodyMetricFormModal";
 
 export default function BodyMetricPage() {
-  return (
-    <>
-      <PageHeader title="Chỉ số cơ thể" description="Theo dõi BMI, cân nặng, mỡ cơ thể và cơ bắp" />
-      <div className="grid gap-6 md:grid-cols-4">
-        {[
-          ["BMI", "22.4", "Bình thường"],
-          ["Cân nặng", "66.1 kg", "-1.2 kg"],
-          ["Body Fat", "15.8%", "-0.6%"],
-          ["Cơ bắp", "34.2 kg", "+0.8 kg"],
-        ].map(([label, value, note]) => (
-          <Card className="p-6" key={label}>
-            <p className="text-fit-muted">{label}</p>
-            <p className="mt-3 text-3xl font-black text-fit-text">{value}</p>
-            <p className="mt-2 text-sm font-semibold text-fit-primary">{note}</p>
-          </Card>
-        ))}
-      </div>
-      <Card className="mt-6 p-6">
-        <h2 className="text-xl font-bold text-fit-text">Tiến độ 8 tuần qua</h2>
-        <div className="mt-6 h-72 rounded-3xl bg-gradient-to-b from-white to-emerald-50 p-6">
-          <svg className="h-full w-full" viewBox="0 0 800 260">
-            {[50, 100, 150, 200].map((y) => <line key={y} x1="0" x2="800" y1={y} y2={y} stroke="#e5e7eb" />)}
-            <polyline fill="none" points="20,70 100,74 180,96 260,118 340,142 420,150 500,170 580,180 660,205 740,220" stroke="#059669" strokeWidth="5" strokeLinecap="round" />
-          </svg>
+  const {
+    metrics,
+    latestMetric,
+    chartData,
+
+    formData,
+    formOpen,
+
+    loading,
+    saving,
+
+    currentPage,
+    totalPages,
+
+    bmiLevel,
+    bmiLabel,
+
+    setField,
+
+    openCreateForm,
+    closeCreateForm,
+    createMetric,
+
+    changePage,
+  } = useBodyMetric();
+
+  const containerRef = usePageAnimation();
+
+  const previousMetric = metrics.length > 1 ? metrics[1] : null;
+
+  if (loading && metrics.length === 0) {
+    return (
+        <div className="flex h-72 items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-fit-primary border-t-transparent" />
+
+            <p className="text-sm font-semibold text-slate-500">
+              Đang tải chỉ số cơ thể...
+            </p>
+          </div>
         </div>
-      </Card>
-    </>
+    );
+  }
+
+  return (
+      <div ref={containerRef}>
+        <div className="mx-auto max-w-7xl space-y-6 pb-10">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center gsap-animate">
+            <PageHeader
+                title="Chỉ số cơ thể"
+                description="Theo dõi cân nặng, BMI và sự thay đổi cơ thể theo thời gian."
+            />
+
+            <button
+                type="button"
+                onClick={openCreateForm}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-fit-primary px-5 py-3 font-black text-white shadow-lg shadow-emerald-600/20 transition hover:bg-fit-primaryHover active:scale-[0.98]"
+            >
+              <Plus className="h-5 w-5" />
+              Ghi nhận chỉ số
+            </button>
+          </div>
+
+          <BodyMetricCards
+              latestMetric={latestMetric}
+              previousMetric={previousMetric}
+              bmiLevel={bmiLevel}
+              bmiLabel={bmiLabel}
+              openCreateForm={openCreateForm}
+          />
+
+          <BodyMetricCharts chartData={chartData} />
+
+          <BodyMetricHistory
+              metrics={metrics}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              changePage={changePage}
+          />
+        </div>
+
+        <BodyMetricFormModal
+            formOpen={formOpen}
+            closeCreateForm={closeCreateForm}
+            formData={formData}
+            setField={setField}
+            createMetric={createMetric}
+            saving={saving}
+        />
+      </div>
   );
 }
