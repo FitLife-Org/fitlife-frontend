@@ -14,133 +14,6 @@ import { calculatePromotionDiscount, calculateUpgradeCredit } from "../../utils/
 
 type ActiveTab = "MEMBERSHIP" | "PT_PACKAGES" | "ADDONS";
 
-const DEFAULT_GYM_PACKAGES: GymPackage[] = [
-  {
-    id: 1,
-    code: "PKG_BASIC",
-    name: "Basic",
-    packageLevel: "BASIC",
-    packageType: "BASIC",
-    accessType: "LIMITED_TIME",
-    basePrice: 399000,
-    shortDescription: "Dành cho người mới tập, học sinh - sinh viên.",
-    description: "Giờ tập 08:00 - 16:00, máy tập, cardio, phòng thay đồ, check-in QR.",
-    targetAudience: "Người mới tập, HSSV",
-    hasAiWorkoutPlan: false,
-    hasNutritionPlan: false,
-    ptSessionsPerMonth: 0,
-    benefits: "Máy tập & Cardio,Check-in QR nhanh chóng,Phòng thay đồ riêng,Khung giờ 08:00 - 16:00",
-    status: "ACTIVE",
-  },
-  {
-    id: 2,
-    code: "PKG_STANDARD",
-    name: "Standard",
-    packageLevel: "STANDARD",
-    packageType: "STANDARD",
-    accessType: "FULL_TIME",
-    basePrice: 599000,
-    shortDescription: "Toàn thời gian cho người tập luyện thường xuyên.",
-    description: "Tập toàn thời gian, tham gia lớp Yoga/Zumba/Aerobic, gợi ý từ FitLife AI.",
-    targetAudience: "Người tập thường xuyên",
-    hasAiWorkoutPlan: true,
-    hasNutritionPlan: true,
-    ptSessionsPerMonth: 0,
-    benefits: "Tập toàn thời gian 24/7,Lớp nhóm Yoga/Zumba/Aerobic,Đo chỉ số cơ thể hàng tháng,Lịch tập & FitLife AI gợi ý",
-    status: "ACTIVE",
-    featured: true,
-  },
-  {
-    id: 3,
-    code: "PKG_PREMIUM",
-    name: "Premium",
-    packageLevel: "PREMIUM",
-    packageType: "PREMIUM",
-    accessType: "FULL_TIME",
-    basePrice: 999000,
-    shortDescription: "Dành cho người có mục tiêu cụ thể, tặng 2 buổi PT/tháng.",
-    description: "PT 2 buổi/tháng, khăn tập miễn phí, kế hoạch tập & dinh dưỡng cá nhân, hỗ trợ đóng băng.",
-    targetAudience: "Người có mục tiêu tăng cơ / giảm cân",
-    hasAiWorkoutPlan: true,
-    hasNutritionPlan: true,
-    ptSessionsPerMonth: 2,
-    benefits: "PT cá nhân 2 buổi/tháng,Đánh giá thể trạng chuyên sâu,Khăn tập miễn phí mỗi buổi,Khu vực phục hồi cơ bản,Quyền lợi đóng băng gói",
-    status: "ACTIVE",
-  },
-  {
-    id: 4,
-    code: "PKG_VIP",
-    name: "VIP",
-    packageLevel: "VIP",
-    packageType: "VIP",
-    accessType: "FULL_TIME",
-    basePrice: 3190000,
-    shortDescription: "Gói cao cấp nhất với 8 buổi PT/tháng và đặc quyền riêng biệt.",
-    description: "8 buổi PT/tháng, PT chính theo dõi 1-1, tủ đồ cố định, nước uống, quyền chuyển nhượng.",
-    targetAudience: "Hội viên cao cấp, cần PT theo dõi 1-1",
-    hasAiWorkoutPlan: true,
-    hasNutritionPlan: true,
-    ptSessionsPerMonth: 8,
-    benefits: "8 buổi PT/tháng với 1 PT chính 1-1,Tủ đồ cố định & khăn tập riêng,Ưu tiên đặt lịch & nước uống miễn phí,Đánh giá cơ thể 2 lần/tháng,Quyền chuyển nhượng 1 lần",
-    status: "ACTIVE",
-  },
-];
-
-function enrichPackageData(backendPkgs: GymPackage[]): GymPackage[] {
-  if (!backendPkgs || backendPkgs.length === 0) {
-    return DEFAULT_GYM_PACKAGES;
-  }
-
-  const enrichedDefaults: GymPackage[] = DEFAULT_GYM_PACKAGES.map((defPkg) => {
-    const defCode = (defPkg.code || "").toUpperCase();
-    const defLevel = (defPkg.packageLevel || defPkg.packageType || defPkg.name || "").toUpperCase();
-
-    const match = backendPkgs.find((b) => {
-      const bCode = (b.code || "").toUpperCase();
-      const bLevel = (b.packageLevel || b.packageType || b.name || "").toUpperCase();
-      return (
-        (bCode && bCode === defCode) ||
-        (bLevel && (bLevel.includes(defLevel) || defLevel.includes(bLevel)))
-      );
-    });
-
-    if (!match) return defPkg;
-
-    return {
-      ...defPkg,
-      ...match,
-      name: match.name || defPkg.name,
-      packageLevel: match.packageLevel || match.packageType || defPkg.packageLevel,
-      packageType: match.packageType || match.packageLevel || defPkg.packageType,
-      shortDescription: (match.shortDescription && match.shortDescription.trim() !== "") ? match.shortDescription : defPkg.shortDescription,
-      description: (match.description && match.description.trim() !== "") ? match.description : defPkg.description,
-      targetAudience: (match.targetAudience && match.targetAudience.trim() !== "") ? match.targetAudience : defPkg.targetAudience,
-      benefits: (match.benefits && match.benefits.trim() !== "") ? match.benefits : defPkg.benefits,
-      ptSessionsPerMonth: (match.ptSessionsPerMonth !== undefined && match.ptSessionsPerMonth !== null && match.ptSessionsPerMonth > 0) ? match.ptSessionsPerMonth : defPkg.ptSessionsPerMonth,
-      hasAiWorkoutPlan: match.hasAiWorkoutPlan !== undefined ? match.hasAiWorkoutPlan : defPkg.hasAiWorkoutPlan,
-      hasNutritionPlan: match.hasNutritionPlan !== undefined ? match.hasNutritionPlan : defPkg.hasNutritionPlan,
-    };
-  });
-
-  const extraBackendPkgs = backendPkgs.filter((b) => {
-    const bCode = (b.code || "").toUpperCase();
-    const bLevel = (b.packageLevel || b.packageType || b.name || "").toUpperCase();
-    return !DEFAULT_GYM_PACKAGES.some((d) => {
-      const dCode = (d.code || "").toUpperCase();
-      const dLevel = (d.packageLevel || d.packageType || d.name || "").toUpperCase();
-      return (bCode && dCode === bCode) || (bLevel && bLevel.includes(dLevel));
-    });
-  }).map((b) => ({
-    ...b,
-    shortDescription: b.shortDescription || b.description || "Gói tập FitLife cao cấp",
-    benefits: b.benefits || "Máy tập & Cardio,Check-in QR nhanh chóng,Phòng thay đồ riêng",
-    packageLevel: b.packageLevel || b.packageType || "STANDARD",
-    packageType: b.packageType || b.packageLevel || "STANDARD",
-  }));
-
-  return [...enrichedDefaults, ...extraBackendPkgs];
-}
-
 function getTierLevelNumber(type?: string | null): number {
   if (!type) return 0;
   const upper = type.trim().toUpperCase();
@@ -156,7 +29,7 @@ export default function PackageListPage() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("MEMBERSHIP");
-  const [packages, setPackages] = useState<GymPackage[]>(DEFAULT_GYM_PACKAGES);
+  const [packages, setPackages] = useState<GymPackage[]>([]);
   const [durations, setDurations] = useState<PackageDuration[]>([]);
   const [ptPackages, setPtPackages] = useState<PTPackage[]>([]);
   const [addonServices, setAddonServices] = useState<AddonService[]>([]);
@@ -193,9 +66,7 @@ export default function PackageListPage() {
 
         if (!isMounted) return;
 
-        if (pkgRes && pkgRes.length > 0) {
-          setPackages(enrichPackageData(pkgRes));
-        }
+        if (pkgRes) setPackages(pkgRes);
         setMySubscription(subRes);
         if (durRes && durRes.length > 0) setDurations(durRes);
         if (ptRes) setPtPackages(ptRes);
