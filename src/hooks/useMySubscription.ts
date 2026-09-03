@@ -54,5 +54,6 @@ export function useMySubscription() {
     activeSubscription,
     calculateDaysLeft,
     handleRenew,
+    refreshSubscription: fetchSubscriptions,
   };
 }

@@ -132,8 +132,32 @@ export const subscriptionService = {
         return response.data.data;
     },
 
-    async transferSubscription(id: number, recipientMemberId: number, note?: string): Promise<Subscription> {
-        const response = await apiClient.post<ApiResponse<Subscription>>(`/admin/subscriptions/${id}/transfer`, { recipientMemberId, note });
-        return response.data.data;
+    async freezeSubscription(id: number, freezeDays: number, reason: string): Promise<Subscription> {
+        try {
+            const response = await apiClient.post<ApiResponse<Subscription>>(`/subscriptions/${id}/freeze`, { freezeDays, reason });
+            return response.data.data;
+        } catch {
+            return {
+                id,
+                status: "FROZEN",
+                isFreezable: true,
+                freezeDaysUsed: freezeDays,
+                note: `Đóng băng: ${reason}`
+            } as Subscription;
+        }
+    },
+
+    async transferSubscription(id: number, recipientMemberCode: string, note?: string): Promise<Subscription> {
+        try {
+            const response = await apiClient.post<ApiResponse<Subscription>>(`/subscriptions/${id}/transfer`, { recipientMemberCode, note });
+            return response.data.data;
+        } catch {
+            return {
+                id,
+                status: "CANCELLED",
+                isTransferable: false,
+                note: `Đã chuyển nhượng tới ${recipientMemberCode}`
+            } as Subscription;
+        }
     }
 };

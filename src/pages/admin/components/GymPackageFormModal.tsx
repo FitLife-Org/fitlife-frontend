@@ -165,7 +165,7 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
               </div>
               
               <Input
-                label="Giá cơ bản (VNĐ)"
+                label="Giá cơ bản (VNĐ)"
                 type="number"
                 min="0"
                 placeholder="VD: 1200000"
@@ -226,7 +226,7 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
               </div>
 
               <div className="md:col-span-1">
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Quyền lợi (cách nhau bởi dấu phẩy hoặc xuống dòng)</label>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Quyềnn lợi (cách nhau bởi dấu phẩy hoặc xuống dòng)</label>
                 <textarea
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-fit-primary focus:outline-none focus:ring-1 focus:ring-fit-primary shadow-sm hover:border-slate-300"
                   rows={3}
@@ -246,7 +246,7 @@ export function GymPackageFormModal({ open, onClose, onSuccess, pkg }: GymPackag
             disabled={isSubmitting}
             className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
           >
-            Hủy bỏ
+            Hủy bỏ
           </button>
           <Button type="submit" form="gym-package-form" disabled={isSubmitting} className="px-8 py-2.5 rounded-xl shadow-lg flex items-center gap-2">
             {isSubmitting && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}

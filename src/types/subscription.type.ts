@@ -1,6 +1,7 @@
 export type SubscriptionStatus =
     | "PENDING_PAYMENT"
     | "ACTIVE"
+    | "FROZEN"
     | "EXPIRED"
     | "CANCELLED";
 
@@ -14,6 +15,7 @@ export interface Subscription {
   gymPackageId?: number;
   gymPackageCode?: string;
   gymPackageName?: string;
+  packageLevel?: string;
 
   packageDurationId?: number;
   packageDurationCode?: string;
@@ -32,6 +34,15 @@ export interface Subscription {
   endDate?: string | null;
 
   status: SubscriptionStatus;
+
+  // Quyền lợi & Vòng đời gói (Phần 6)
+  isFreezable?: boolean;
+  isTransferable?: boolean;
+  freezeDaysTotal?: number;
+  freezeDaysUsed?: number;
+  freezeStartDate?: string | null;
+  freezeEndDate?: string | null;
+  transfersLeft?: number;
 
   autoRenew?: boolean;
   note?: string;
@@ -57,6 +68,7 @@ export interface Subscription {
 export interface PreviewPriceRequest {
   gymPackageId: number;
   packageDurationId: number;
+  promotionCode?: string;
 }
 
 export interface PreviewPriceResponse {
@@ -74,13 +86,47 @@ export interface PreviewPriceResponse {
   discountAmount: number;
   finalPrice: number;
 
+  promotionCode?: string;
+  promotionDiscount?: number;
+
   ptSessionsTotal?: number;
 }
 
 export interface CreateSubscriptionRequest {
   gymPackageId: number;
   packageDurationId: number;
+  promotionCode?: string;
   paidCash?: boolean;
   autoRenew?: boolean;
+  note?: string;
+}
+
+// =====================================================
+// LIFECYCLE REQUESTS (Phần 6)
+// =====================================================
+export interface UpgradeSubscriptionRequest {
+  currentSubscriptionId: number;
+  targetPackageDurationId: number;
+}
+
+export interface UpgradeCalculationResult {
+  currentSubscriptionId: number;
+  currentPackageName: string;
+  daysRemaining: number;
+  remainingValueCredit: number;
+  targetPackageName: string;
+  targetPackagePrice: number;
+  finalAmountToPay: number;
+}
+
+export interface FreezeSubscriptionRequest {
+  subscriptionId: number;
+  freezeDays: number;
+  reason: string;
+}
+
+export interface TransferSubscriptionRequest {
+  subscriptionId: number;
+  recipientMemberCode: string;
   note?: string;
 }

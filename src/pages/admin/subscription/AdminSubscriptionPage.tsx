@@ -177,7 +177,7 @@ export default function AdminSubscriptionPage() {
             setIsSubmitting(true);
             await subscriptionService.transferSubscription(
                 selectedSubToTransfer.id,
-                transferRecipient.id,
+                transferRecipient.memberCode || String(transferRecipient.id),
                 transferNote
             );
             setIsTransferModalOpen(false);

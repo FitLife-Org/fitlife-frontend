@@ -46,15 +46,15 @@ export const validateProfileForm = (formData: UpdateProfileRequest): boolean => 
 
 export const validateChangePassword = (oldPass: string, newPass: string, confirmPass: string): boolean => {
   if (!oldPass || !newPass || !confirmPass) {
-    showAlert.error("L?i", "Vui l?ng �i?n �?y �? th�ng tin m?t kh?u");
+    showAlert.error("Lỗi", "Vui lòng điền đầy đủ thông tin mật khẩu");
     return false;
   }
   if (newPass !== confirmPass) {
-    showAlert.error("L?i", "M?t kh?u m?i kh�ng tr�ng kh?p");
+    showAlert.error("Lỗi", "Mật khẩu mới không trùng khớp");
     return false;
   }
   if (newPass.length < 6) {
-    showAlert.error("L?i", "M?t kh?u ph?i t? 6 k? t? tr? l�n");
+    showAlert.error("Lỗi", "Mật khẩu phải từ 6 ký tự trở lên");
     return false;
   }
   return true;
